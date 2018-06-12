@@ -13,7 +13,6 @@
 /**
  * @brief The Primitive class
  * A primitive for all hardware components - describes the node structure in the datapath graph.
- * Keeps a record of all instantiated primitives and can thus propagate every object that has been created.
  */
 
 namespace ripes {

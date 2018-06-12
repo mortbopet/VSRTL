@@ -51,6 +51,7 @@ public:
 
         if (specialRegisterFile) {
             // Enable writing and reading from register file in the same cycle
+            /** @todo clock and propagate register file before rest of circuit*/
         }
 
         // Each registers input value is saved before clocking it, to ensure that register -> register connections
