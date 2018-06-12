@@ -1,0 +1,6 @@
+*.user
+*.stash
+*.autosave
+*.o
+Makefile
+build*/
