@@ -22,6 +22,7 @@ public:
         // Create objects
         auto alu_ctrl = create<Constant<ALUctrlWidth(), ALU_OPCODE::ADD>>();
         auto c4 = create<Constant<32, m_cVal>>();
+        auto c0 = create<Constant<32, 0>>();
         auto alu = create<ALU<32>>();
         m_reg = create<Register<32>>();
 
@@ -32,6 +33,11 @@ public:
         alu->connectAdditional<0>(alu_ctrl);
         alu->connect<1>(m_reg);
         m_reg->connect<0>(alu);
+
+        rf->connect<0>(c4);
+        rf->connectAdditional<RegisterFile::writeRegister>(c0);
+        rf->connectAdditional<RegisterFile::writeEnable>(c0);
+        rf->connectAdditional<RegisterFile::writeData>(c0);
     }
 };
 }  // namespace ripes

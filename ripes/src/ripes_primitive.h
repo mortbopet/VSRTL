@@ -23,6 +23,11 @@ public:
     virtual void verify() const = 0;
     virtual void resetPropagation() { m_isPropagated = false; }
 
+    template <typename T = uint32_t>
+    T getValue() {
+        return static_cast<T>(*this);
+    }
+
     // Casting operators
     virtual operator int() const = 0;
     virtual operator uint32_t() const = 0;
@@ -62,10 +67,6 @@ public:
         std::get<additionalInputPort>(m_additionalInputs) = connectFrom;
     }
 
-    template <typename T = uint32_t>
-    T getValue() {
-        return static_cast<T>(*this);
-    }
     virtual void propagate() override = 0;  // Implementation of propagate() must call propagateBase
 
     /**

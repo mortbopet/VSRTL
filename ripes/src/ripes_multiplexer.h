@@ -21,7 +21,7 @@ public:
 
     void verifySubtype() const override {
         ASSERT_CONNECTION_DEFINED(m_control);
-        ASSERT_CONNECTION_EXPR(this->m_inputs.size() == width);
+        ASSERT_BOOL_EXPR(this->m_inputs.size() == width);
     }
 
 private:

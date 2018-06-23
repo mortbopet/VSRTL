@@ -13,7 +13,10 @@ public:
     Assignable() : Primitive("Assignable") {}
 
     void propagate() override { this->propagateBase(m_f); }
-    void verifySubtype() const override { ASSERT_CONNECTION_EXPR(m_f != nullptr); }
+    void verifySubtype() const override {
+        // Verify that instantiating component has set a propagation functor
+        ASSERT_BOOL_EXPR(m_f != nullptr);
+    }
 
     void setFunctor(std::function<std::array<bool, width>()> f) { m_f = f; }
 
