@@ -21,7 +21,7 @@ public:
     PrimitiveBase() {}
     virtual void propagate() = 0;
     virtual void verify() const = 0;
-    void resetPropagation() { m_isPropagated = false; }
+    virtual void resetPropagation() { m_isPropagated = false; }
 
     // Casting operators
     virtual operator int() const = 0;
@@ -51,7 +51,11 @@ public:
      */
     template <uint32_t inputPort>
     void connect(std::shared_ptr<PrimitiveBase> connectFrom) {
-        std::get<inputPort>(m_inputs) = connectFrom;
+        if (std::get<inputPort>(m_inputs) == nullptr) {
+            std::get<inputPort>(m_inputs) = connectFrom;
+        } else {
+            throw std::runtime_error("Input port has already been assigned");
+        }
     }
     template <uint32_t additionalInputPort>
     void connectAdditional(std::shared_ptr<PrimitiveBase> connectFrom) {

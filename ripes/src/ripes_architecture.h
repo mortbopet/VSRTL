@@ -1,6 +1,7 @@
 #ifndef ARCHITECTURE_H
 #define ARCHITECTURE_H
 
+#include "ripes_defines.h"
 #include "ripes_memory.h"
 #include "ripes_register.h"
 #include "ripes_registerfile.h"
@@ -19,13 +20,12 @@ namespace ripes {
 template <int stageCount>
 class Architecture {
 public:
-    enum Flags { registerFile = 1 << 0, memory = 1 << 1 };
     Architecture(int flags = 0) {
         // Primitives are now recorded, and architecture-constant objects can be instantiated
-        if (flags & memory)
-            m_memory = std::make_unique<Memory>();
-        if (flags & registerFile)
-            m_registerFile = std::make_unique<RegisterFile>();
+        if (flags & dataMemory)
+            m_dataMemory = create<Assignable<REGISTERWIDTH>>();
+        if (flags & instructionMemory)
+            m_instrutionMemory = create<Assignable<REGISTERWIDTH>>();
     }
 
     template <typename T, typename... Args>
@@ -86,6 +86,12 @@ public:
         propagate();
     }
 
+    void loadProgram(const std::vector<char>& p) {
+        if (m_memory == nullptr) {
+            throw std::runtime_error("The architecture does not contain a memory. Set")
+        }
+    };
+
 private:
     /**
      * @brief propagate
@@ -116,10 +122,13 @@ private:
 
     std::array<std::vector<RegisterBase*>, stageCount> m_stageRegisterBanks;
 
-    std::unique_ptr<Memory> m_memory;
     std::unique_ptr<RegisterFile> m_registerFile;
     std::vector<std::shared_ptr<PrimitiveBase>> m_primitives;
     std::vector<std::shared_ptr<RegisterBase>> m_registers;
+
+    std::unique_ptr<Memory> m_memory;
+    std::shared_ptr<Assignable<REGISTERWIDTH>> m_instrutionMemory;
+    std::shared_ptr<Assignable<REGISTERWIDTH>> m_dataMemory;
 };
 }  // namespace ripes
 

@@ -13,5 +13,7 @@ namespace ripes {
 #define R_UINT uint32_t
 #endif
 #define REGISTERCOUNT 32
+
+enum ArchitectureFlags { instructionMemory = 1 << 0, dataMemory = 1 << 1 };
 }
 #endif  // RIPESDEFINES_H

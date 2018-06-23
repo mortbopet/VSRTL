@@ -6,18 +6,30 @@
 #include "ripes_primitive.h"
 
 namespace ripes {
-
-class RegisterFile : public Primitive<REGISTERWIDTH, 1, 3> {
+/**
+ * @brief The RegisterFile class
+ *
+ * Additional inputs:
+ *      1. writeRegister    : [1:31], register to write to
+ *      2. writeEnable      : Triggers writing of input from writeData to writeRegister
+ *      3. writeData        : Data to write to register
+ *      4. instruction      : Instruction from which to decode register operands 1 and 2
+ *
+ * Implementing architecture does not know about m_readData values in its Primitive container, so resetting and
+ * propagating is done manually
+ */
+class RegisterFile : public Primitive<REGISTERWIDTH, 1, 4> {
     // friend class Architecture;
 
 public:
     RegisterFile() : Primitive("Register file") {
-        // use std::get to do compile time check of m_additionalInputs array size
-        std::get<0>(m_additionalInputs) = m_writeRegister;
-        std::get<1>(m_additionalInputs) = m_writeData;
-        std::get<2>(m_additionalInputs) = m_instruction;
-
         // Set assignable functors
+    }
+
+    void resetPropagation() override {
+        PrimitiveBase::resetPropagation();
+        m_readData1.resetPropagation();
+        m_readData2.resetPropagation();
     }
 
     void reset() {
@@ -26,19 +38,16 @@ public:
         }
     }
 
-    void propagate() override {}
+    void propagate() override {
+        m_readData1.propagate();
+        m_readData2.propagate();
+    }
     void verifySubtype() const override {}
 
+protected:
     // Outputs - Public, so implementing Architecture can set destinations
     Assignable<REGISTERWIDTH> m_readData1;
     Assignable<REGISTERWIDTH> m_readData2;
-
-private:
-    // Inputs
-
-    std::shared_ptr<Primitive<5>> m_writeRegister;
-    std::shared_ptr<Primitive<REGISTERWIDTH>> m_writeData;
-    std::shared_ptr<Primitive<REGISTERWIDTH>> m_instruction;
 
     // Registers
     std::vector<uint32_t> m_reg = std::vector<uint32_t>(REGISTERCOUNT, 0);
