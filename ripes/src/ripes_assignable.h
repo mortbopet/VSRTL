@@ -10,7 +10,7 @@ namespace ripes {
 template <uint32_t width>
 class Assignable : public Primitive<width> {
 public:
-    Assignable() : Primitive("Assignable") {}
+    Assignable() : Primitive<width>("Assignable") {}
 
     void propagate() override { this->propagateBase(m_f); }
     void verifySubtype() const override {

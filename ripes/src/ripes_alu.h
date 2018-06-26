@@ -30,7 +30,7 @@ static constexpr unsigned int ALUctrlWidth() {
 template <uint32_t width>
 class ALU : public Primitive<width, /*Input ports:*/ 2, /*Additional inputs:*/ 1> {
 public:
-    ALU() : Primitive("ALU") {}
+    ALU() : Primitive<width, 2, 1>("ALU") {}
 
     void propagate() override {
         this->propagateBase([=] { return calculateOutput(); });
@@ -44,7 +44,7 @@ private:
         uint32_t uop2 = static_cast<uint32_t>(*(this->m_inputs[1]));
         int32_t op1 = static_cast<int32_t>(*(this->m_inputs[0]));
         int32_t op2 = static_cast<int32_t>(*(this->m_inputs[1]));
-        switch ((ALU_OPCODE) static_cast<uint32_t>(*m_additionalInputs[0])) {
+        switch ((ALU_OPCODE) static_cast<uint32_t>(*this->m_additionalInputs[0])) {
             case ALU_OPCODE::ADD:
                 return buildUnsignedArr<width>(uop1 + uop2);
                 break;

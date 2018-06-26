@@ -7,7 +7,7 @@
 
 namespace ripes {
 
-class RISCV_RegisterFile : public RegisterFile {
+class RISCV_RegisterFile : public RegisterFile<2> {
 public:
     RISCV_RegisterFile() {
         // the instruction decoder should be specified as per the instruction set that you use. In case of RISC-V,
@@ -16,8 +16,8 @@ public:
         // extracting the fields should be specified
         instructionDecoder = generateBitFieldDecoder(std::array<R_UINT, 6>{7, 5, 3, 5, 5, 7});  // from LSB to MSB);
 
-        // For illustration, each step is described:
-        m_readData1.setFunctor([this] {
+        // For illustration, each step in setting the propagation function for each operand is described here:
+        getOperand<0>()->setFunctor([this] {
             // Get instruction
             const auto instruction = m_inputs[0]->getValue();
             // Decode instruction into its separate bit-fields
@@ -28,7 +28,7 @@ public:
             const auto registerValue = m_reg[registerNumber];
             return buildUnsignedArr<REGISTERWIDTH>(registerValue);
         });
-        m_readData2.setFunctor(
+        getOperand<1>()->setFunctor(
             [this] { return buildUnsignedArr<REGISTERWIDTH>(m_reg[instructionDecoder(m_inputs[0]->getValue())[4]]); });
     }
 

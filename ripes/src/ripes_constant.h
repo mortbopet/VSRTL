@@ -21,7 +21,7 @@ constexpr bool valueFitsInBitWidth(uint32_t width, int value) {
 template <uint32_t width, int value>
 class Constant : public Primitive<width> {
 public:
-    Constant() : Primitive("Constant") { buildArr<width>(m_value, value); }
+    Constant() : Primitive<width>("Constant") { buildArr<width>(this->m_value, value); }
 
     static_assert(valueFitsInBitWidth(width, value), "Value cannot fit inside specified width of signal");
 

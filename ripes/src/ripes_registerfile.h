@@ -9,7 +9,7 @@ namespace ripes {
 /**
  * @brief The RegisterFile class
  * Inputs:
- *      1. Instruction : Instruction from which to decode register operands 1 and 2
+ *      1. Instruction : Instruction from which to decode register nOperands 1 and 2
  *
  * Additional inputs:
  *      1. writeRegister    : [1:31], register to write to
@@ -19,16 +19,24 @@ namespace ripes {
  * Implementing architecture does not know about m_readData values in its Primitive container, so resetting,
  * propagating and verifying is done manually
  */
+template <int nOperands>
 class RegisterFile : public Primitive<REGISTERWIDTH, 1, 3> {
 public:
+    static_assert(nOperands > 0 && nOperands <= REGISTERCOUNT, "Register file invariant");
+
     enum AdditionalInputs { writeRegister = 0, writeEnable = 1, writeData = 2 };
 
-    RegisterFile() : Primitive("Register file") {}
+    RegisterFile() : Primitive("Register file") {
+        for (int i = 0; i < nOperands; i++) {
+            m_operands[i] = std::make_shared<Assignable<REGISTERWIDTH>>();
+        }
+    }
 
     void resetPropagation() override {
         PrimitiveBase::resetPropagation();
-        m_readData1.resetPropagation();
-        m_readData2.resetPropagation();
+        for (auto& operand : m_operands) {
+            operand->resetPropagation();
+        }
     }
 
     void reset() {
@@ -38,18 +46,32 @@ public:
     }
 
     void propagate() override {
-        m_readData1.propagate();
-        m_readData2.propagate();
+        // Write data to registers
+        if (this->m_additionalInputs[writeEnable]) {
+            m_reg[this->m_additionalInputs[writeRegister]->getValue()] =
+                this->m_additionalInputs[writeData]->getValue();
+        }
+
+        // Propagate operands (read data from registers)
+        for (auto& operand : m_operands) {
+            operand->propagate();
+        }
     }
     void verifySubtype() const override {
-        m_readData1.verify();
-        m_readData2.verify();
+        for (auto& operand : m_operands) {
+            operand->verify();
+        }
+    }
+
+    template <int operand>
+    std::shared_ptr<Assignable<REGISTERWIDTH>> getOperand() {
+        static_assert(operand >= 0 && operand < nOperands, "Operand not available");
+        return m_operands[operand];
     }
 
 protected:
-    // Outputs - Public, so implementing Architecture can set destinations
-    Assignable<REGISTERWIDTH> m_readData1;
-    Assignable<REGISTERWIDTH> m_readData2;
+    // Operand outputs - Public, so implementing Architecture can set destinations
+    std::array<std::shared_ptr<Assignable<REGISTERWIDTH>>, nOperands> m_operands;
 
     // Registers
     std::vector<uint32_t> m_reg = std::vector<uint32_t>(REGISTERCOUNT, 0);

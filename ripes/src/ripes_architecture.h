@@ -31,7 +31,7 @@ public:
     template <typename T, typename... Args>
     std::shared_ptr<T> create(Args&&... args) {
         auto ptr = std::make_shared<T>(std::forward<Args>(args)...);
-        m_primitives.push_back(ptr);
+        this->m_primitives.push_back(ptr);
         if (std::is_base_of<RegisterBase, T>()) {
             m_registers.push_back(std::dynamic_pointer_cast<RegisterBase>(ptr));
         }
@@ -71,7 +71,7 @@ public:
     void reset() {
         // reset all registers
         // propagate everything combinational
-        std::for_each(m_registers->begin(), m_registers->end(), [](auto& reg) { reg->reset(); });
+        std::for_each(m_registers.begin(), m_registers.end(), [](auto& reg) { reg->reset(); });
     }
 
     /**
@@ -88,7 +88,7 @@ public:
 
     void loadProgram(const std::vector<char>& p) {
         if (m_memory == nullptr) {
-            throw std::runtime_error("The architecture does not contain a memory. Set")
+            throw std::runtime_error("The architecture does not contain a memory. Set");
         }
     };
 
@@ -122,7 +122,6 @@ private:
 
     std::array<std::vector<RegisterBase*>, stageCount> m_stageRegisterBanks;
 
-    std::unique_ptr<RegisterFile> m_registerFile;
     std::vector<std::shared_ptr<PrimitiveBase>> m_primitives;
     std::vector<std::shared_ptr<RegisterBase>> m_registers;
 

@@ -18,16 +18,16 @@ public:
 template <uint32_t width>
 class Register : public RegisterBase, public Primitive<width, /*Input ports:*/ 1> {
 public:
-    Register() : Primitive("Register") {}
+    Register() : Primitive<width, 1>("Register") {}
     void propagate() override { /* Propagation has no effect on registers*/
     }
 
     void verifySubtype() const override {}
 
 protected:
-    void reset() override final { buildArr<width>(m_value, 0); }
-    void save() override final { m_savedValue = static_cast<uint32_t>(*m_inputs[0]); }
-    void clock() override final { buildArr<width>(m_value, m_savedValue); }
+    void reset() override final { buildArr<width>(this->m_value, 0); }
+    void save() override final { m_savedValue = static_cast<uint32_t>(*this->m_inputs[0]); }
+    void clock() override final { buildArr<width>(this->m_value, this->m_savedValue); }
 
     uint32_t m_savedValue;
 };
