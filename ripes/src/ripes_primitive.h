@@ -37,6 +37,14 @@ protected:
     bool m_isPropagated = false;
 };
 
+template <int... widths>
+struct bundle {
+    using index_sequence = std::integer_sequence<std::size_t, widths...>;
+    index_sequence seq;
+    std::array<int, sizeof...(widths)> numbers;
+    bundle() : numbers{{widths...}} {}
+};
+
 template <uint32_t width, uint32_t inputs = 0, uint32_t additionalInputs = 0>
 class Primitive : public PrimitiveBase {
 public:

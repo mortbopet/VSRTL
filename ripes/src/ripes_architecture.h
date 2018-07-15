@@ -20,6 +20,8 @@ namespace ripes {
 template <int stageCount>
 class Architecture {
 public:
+    static_assert(stageCount >= 0, "number of stages must be positive");
+
     Architecture(int flags = 0) {
         // Primitives are now recorded, and architecture-constant objects can be instantiated
         if (flags & dataMemory)
