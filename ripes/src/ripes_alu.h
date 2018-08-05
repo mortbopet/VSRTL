@@ -31,9 +31,12 @@ static constexpr unsigned int ALUctrlWidth() {
 
 template <uint32_t width>
 class ALU : public Component {
+    NON_REGISTER_COMPONENT
 public:
     // clang-format off
-    ALU(){}
+    ALU() : Component("ALU"){
+        m_output->setPropagationFunction([=]{return calculateOutput();});
+    }
     void propagate() { calculateOutput(); }
 
     INPUTSIGNAL(m_op1, width);

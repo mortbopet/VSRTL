@@ -24,7 +24,7 @@ class RegisterFile : public Component {
 public:
     static_assert(nOperands > 0 && nOperands <= REGISTERCOUNT, "Register file invariant");
 
-    RegisterFile() {}
+    RegisterFile() : Component("Register File") {}
 
     INPUTSIGNAL(m_instruction, REGISTERWIDTH);
     INPUTSIGNAL(m_writeRegister, REGISTERWIDTH);

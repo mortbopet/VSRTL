@@ -10,6 +10,8 @@
 #include "ripes_binutils.h"
 #include "ripes_defines.h"
 
+// Signals cannot exist outside of components!
+
 namespace ripes {
 
 class Component;
@@ -18,20 +20,22 @@ class SignalBase {
     friend class Component;
 
 public:
-    SignalBase() {}
+    SignalBase(Component* parent) : m_parent(parent) {}
 
     // Checks whether a propagation function has been set for the signal - required for the signal to generate its
     // next-state value
     virtual bool hasPropagationFunction() const = 0;
     virtual void propagate() = 0;
+    Component* getParent() { return m_parent; }
 
 private:
+    Component* m_parent = nullptr;
 };
 
 template <uint32_t width>
 class Signal : public SignalBase {
 public:
-    Signal() {}
+    Signal(Component* parent) : SignalBase(parent) {}
 
     template <typename T = uint32_t>
     T value() {
@@ -51,12 +55,12 @@ public:
     void setValue(std::array<bool, width> v) { m_value = v; }
 
     void propagate() { m_value = m_propagationFunction(); }
-    bool hasPropagationFunction() const override { return m_propagationFunction == nullptr; }
+    bool hasPropagationFunction() const override { return m_propagationFunction != nullptr; }
     void setPropagationFunction(std::function<std::array<bool, width>()> f) { m_propagationFunction = f; }
 
 private:
     // Binary array representing the current value of the primitive
-    std::array<bool, width> m_value;
+    std::array<bool, width> m_value = buildUnsignedArr<width>(0);
     std::function<std::array<bool, width>()> m_propagationFunction;
 };
 

@@ -13,9 +13,6 @@ namespace ripes {
 
 typedef std::function<std::vector<R_UINT>(R_UINT)> bitFieldDecoder;
 
-#define ASSERT_CONNECTION_DEFINED(primitive) assert(primitive != nullptr);
-#define ASSERT_BOOL_EXPR(expr) assert(expr);
-
 // Sign extension of arbitrary bitfield size.
 // Courtesy of http://graphics.stanford.edu/~seander/bithacks.html#FixedSignExtend
 template <typename T, unsigned B>

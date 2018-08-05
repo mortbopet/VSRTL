@@ -21,7 +21,7 @@ public:
     SUBCOMPONENT(c_instr, Constant, 32, resReg << (7 + 5));
     SUBCOMPONENT(alu, ALU, 32);
 
-    tst_addOp() : Architecture(ArchitectureFlags::instructionMemory) {
+    tst_addOp() : Architecture() {
         // Connect objects
         c4 >> alu->m_op1;
         alu_ctrl >> alu->m_ctrl;
@@ -43,5 +43,5 @@ TEST_CASE("Test architecture creation") {
         a.clock();
 
     // We expect that m_cVal has been added to the register value n times
-    // REQUIRE(static_cast<uint32_t>(*a.m_reg) == expectedValue);
+    // REQUIRE(a.m_reg->m_output.value<uint32_t>() == expectedValue);
 }

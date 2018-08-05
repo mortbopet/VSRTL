@@ -1,5 +1,4 @@
 #include "ripes_alu.h"
-#include "ripes_architecture.h"
 #include "ripes_constant.h"
 #include "ripes_register.h"
 #include "ripes_registerfile.h"

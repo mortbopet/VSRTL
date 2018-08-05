@@ -21,8 +21,9 @@ constexpr bool valueFitsInBitWidth(uint32_t width, int value) {
  */
 template <uint32_t width, int constantValue>
 class Constant : public Component {
+    NON_REGISTER_COMPONENT
 public:
-    Constant() {
+    Constant() : Component("Constant") {
         m_output->setPropagationFunction([] {
             const static auto cArr = buildUnsignedArr<width>(constantValue);
             return cArr;

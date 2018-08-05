@@ -5,6 +5,8 @@
 
 #include "catch.hpp"
 
+#include <iostream>
+
 namespace ripes {
 /**
  * @brief tst_adderAndReg
@@ -35,7 +37,7 @@ TEST_CASE("Test adder and reg") {
 
     // Verify that all instantiated objects in the circuit have been connected as they require
     a.verifyAndInitialize();
-
+    std::cout << "value " << std::endl;
     const int n = 10;
     const int expectedValue = n * a.m_cVal;
     // Clock the circuit n times
@@ -43,5 +45,6 @@ TEST_CASE("Test adder and reg") {
         a.clock();
 
     // We expect that m_cVal has been added to the register value n times
+    std::cout << "value " << a.reg->m_output->value<uint32_t>() << std::endl;
     REQUIRE(a.reg->m_output->value<uint32_t>() == expectedValue);
 }

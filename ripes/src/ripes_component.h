@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -23,12 +24,13 @@ namespace ripes {
 #define INPUTS_CONTAINER _inputs
 #define OUTPUTS_CONTAINER _outputs
 
+#define NON_REGISTER_COMPONENT \
+    void checkIfRegister() override {}
+
 /**
  * @brief InputPair
  * maintains a relationship between a signal and the container in which it resides
  */
-typedef std::pair<Component*, SignalBase**> InputPair;
-
 class Component;
 
 // Component object generator that registers objects in parent upon creation
@@ -46,42 +48,27 @@ std::unique_ptr<T> create_component(Component* parent, Args&&... args) {
 
 class Component {
 public:
-    Component(std::string displayName = "unnamed") : m_displayName(displayName) {}
-    /**
-     * @brief verify
-     * Ensures that all inputs are well defined
-     */
+    Component(std::string displayName) : m_displayName(displayName) {}
 
+    virtual void checkIfRegister() = 0;
     virtual void resetPropagation() { m_isPropagated = false; }
 
-    void verifyComponent() const {
-        verifySubcomponents();
-        /*
-        for (const auto& p : m_inputs) {
-        // Verify that all inputs are defined and that the parent containers of the inputs are set (not nullptr)
-            ASSERT_CONNECTION_DEFINED(p)
+    void getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
+        // Register adjacent components (child components) in the graph, and add subcomponents to graph
+        componentGraph[this];
+        for (auto& c : COMPONENT_CONTAINER) {
+            componentGraph[this].push_back(c);
+            c->getComponentGraph(componentGraph);
         }
-        */
-        isVerifiedAndInitialized = true;
-        std::cout << "IMPLEMENT ME!" << std::endl;
     }
 
-    /**
-     * @brief verifyDesign
-     * Calls verify() on each subcomponent withing the component and checks for combinational loops
-     */
-    void verifySubcomponents() const { /** @todo check for combinational loops */
-        for (const auto& component : COMPONENT_CONTAINER) {
-            component->verifyComponent();
-        }
-    }
     mutable bool isVerifiedAndInitialized = false;
 
     void addSubcomponent(Component* subcomponent) { COMPONENT_CONTAINER.push_back(subcomponent); }
 
     template <uint32_t width>
     std::unique_ptr<Signal<width>> createOutputSignal() {
-        auto signal = std::make_unique<Signal<width>>();
+        auto signal = std::make_unique<Signal<width>>(this);
         OUTPUTS_CONTAINER.push_back(&*signal);
         return signal;
     }
@@ -89,32 +76,56 @@ public:
 
     template <uint32_t width>
     std::unique_ptr<Signal<width>*> createInputSignal() {
-        auto signal = std::make_unique<Signal<width>*>();
-        InputPair p =
-            std::make_pair(reinterpret_cast<Component*>(nullptr), reinterpret_cast<SignalBase**>(signal.get()));
-        INPUTS_CONTAINER.push_back(p);
+        std::unique_ptr<Signal<width>*> signal = std::make_unique<Signal<width>*>();
+        INPUTS_CONTAINER.push_back(reinterpret_cast<SignalBase**>(signal.get()));
         return signal;
     }
 #define INPUTSIGNAL(name, width) std::unique_ptr<Signal<width>*> name = this->createInputSignal<width>()
 #define SIGNAL_VALUE(input, type) (*input)->value<type>()
     void propagateComponent() {
+        checkIfRegister();
         if (!m_isPropagated) {
             propagateInputs();
-
-            // Inputs are propagated, propagate top-level outputs of the component
 
             // propagate all subcomponents of the component
             for (auto component : COMPONENT_CONTAINER) {
                 component->propagateComponent();
             }
 
-            // Reset propagation flag of all components & signals
-            for (auto component : COMPONENT_CONTAINER) {
-                component->resetPropagation();
+            // Propagate outputs of the component
+            for (auto s : OUTPUTS_CONTAINER) {
+                s->propagate();
             }
 
             m_isPropagated = true;
         }
+    }
+
+    /**
+     * @brief verifyInputs
+     * Checks whether all inputs have been fully specified (connected)
+     * @return
+     */
+    bool verifyInputs() {
+        for (const auto& i : INPUTS_CONTAINER) {
+            if (*i == nullptr) {
+                return false;
+            }
+        }
+        return true;
+    }
+    /**
+     * @brief verifyOutputs
+     * Verifies that all outputs of this component has a propagation function
+     * @return
+     */
+    bool verifyOutputs() {
+        for (const auto& i : OUTPUTS_CONTAINER) {
+            if (!i->hasPropagationFunction()) {
+                return false;
+            }
+        }
+        return true;
     }
 
 protected:
@@ -127,7 +138,7 @@ private:
      */
     void propagateInputs() {
         for (auto input : INPUTS_CONTAINER) {
-            input.first->propagateComponent();
+            (*input)->getParent()->propagateComponent();
         }
     }
 
@@ -136,7 +147,7 @@ private:
     std::string m_displayName;
 
     std::vector<SignalBase*> OUTPUTS_CONTAINER;
-    std::vector<InputPair> INPUTS_CONTAINER;
+    std::vector<SignalBase**> INPUTS_CONTAINER;
     std::vector<Component*> COMPONENT_CONTAINER;
 };
 }  // namespace ripes
