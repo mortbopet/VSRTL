@@ -46,25 +46,17 @@ constexpr uint32_t bitcount(int n) {
     return count;
 }
 
-template <unsigned int width>
-inline uint32_t accBArr(const std::array<bool, width> v) {
+template <uint32_t width>
+uint32_t accBVec(const std::array<bool, width>& v) {
     uint32_t r = 0;
-    for (size_t i = 0; i < v.size(); i++) {
+    for (auto i = 0; i < width; i++) {
         r |= v[i] << i;
     }
     return r;
 }
 
 template <unsigned int width>
-void buildArr(std::array<bool, width>& a, uint32_t v) {
-    for (size_t i = 0; i < width; i++) {
-        a[i] = v & 0b1;
-        v >>= 1;
-    }
-}
-
-template <unsigned int width>
-inline std::array<bool, width> buildUnsignedArr(uint32_t v) {
+std::array<bool, width> buildUnsignedArr(uint32_t v) {
     std::array<bool, width> r;
     for (size_t i = 0; i < width; i++) {
         r[i] = v & 0b1;

@@ -2,7 +2,8 @@
 #define CONSTANT_H
 
 #include "ripes_binutils.h"
-#include "ripes_primitive.h"
+#include "ripes_component.h"
+#include "ripes_signal.h"
 
 namespace ripes {
 
@@ -18,19 +19,27 @@ constexpr bool valueFitsInBitWidth(uint32_t width, int value) {
  * @param width Must be able to contain the signed bitfield of value
  *
  */
-template <uint32_t width, int value>
-class Constant : public Primitive<width> {
+template <uint32_t width, int constantValue>
+class Constant : public Component {
 public:
-    Constant() : Primitive<width>("Constant") { buildArr<width>(this->m_value, value); }
-
-    static_assert(valueFitsInBitWidth(width, value), "Value cannot fit inside specified width of signal");
-
-    void propagate() override {
-        this->propagateBase([=] { return this->m_value; });
+    Constant() {
+        m_output->setPropagationFunction([] {
+            const static auto cArr = buildUnsignedArr<width>(constantValue);
+            return cArr;
+        });
     }
 
-    void verifySubtype() const override {}
+    OUTPUTSIGNAL(m_output, width);
+
+    static_assert(valueFitsInBitWidth(width, constantValue), "Value does not fit inside provided bit-width");
 };
+
+// Connection operator
+template <uint32_t width, int constantValue>
+inline void operator>>(std::unique_ptr<Constant<width, constantValue>>& c, std::unique_ptr<Signal<width>*>& toInput) {
+    *toInput = c->m_output.get();
+}
+
 }  // namespace ripes
 
 #endif  // CONSTANT_H

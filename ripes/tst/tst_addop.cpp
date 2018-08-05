@@ -2,9 +2,6 @@
 #include "ripes_architecture.h"
 #include "ripes_constant.h"
 #include "ripes_register.h"
-#include "ripes_registerfile.h"
-
-#include "RISC-V/riscv_registerfile.h"
 
 #include "catch.hpp"
 
@@ -16,27 +13,20 @@ namespace ripes {
 class tst_addOp : public Architecture<0> {
 public:
     static constexpr int resReg = 5;
+    // Create objects
+    SUBCOMPONENT(alu_ctrl, Constant, ALUctrlWidth(), ALU_OPCODE::ADD);
+    SUBCOMPONENT(c5, Constant, 32, resReg);
+    SUBCOMPONENT(c4, Constant, 32, 4);
+    SUBCOMPONENT(c1, Constant, 32, 1);
+    SUBCOMPONENT(c_instr, Constant, 32, resReg << (7 + 5));
+    SUBCOMPONENT(alu, ALU, 32);
 
     tst_addOp() : Architecture(ArchitectureFlags::instructionMemory) {
-        // Create objects
-        auto alu_ctrl = create<Constant<ALUctrlWidth(), ALU_OPCODE::ADD>>();
-        auto c5 = create<Constant<32, resReg>>();
-        auto c4 = create<Constant<32, 4>>();
-        auto c1 = create<Constant<32, 1>>();
-        auto c_instr = create<Constant<32, resReg << (7 + 5)>>();
-        auto alu = create<ALU<32>>();
-
-        auto rf = create<RISCV_RegisterFile>();
-
         // Connect objects
-        alu->connect<0>(c4);
-        alu->connect<1>(rf->getOperand<0>());
-        alu->connectAdditional<0>(alu_ctrl);
-
-        rf->connect<0>(c_instr);
-        rf->connectAdditional<RISCV_RegisterFile::AdditionalInputs::writeRegister>(c5);
-        rf->connectAdditional<RISCV_RegisterFile::AdditionalInputs::writeEnable>(c1);
-        rf->connectAdditional<RISCV_RegisterFile::AdditionalInputs::writeData>(alu);
+        c4 >> alu->m_op1;
+        alu_ctrl >> alu->m_ctrl;
+        // c4 >> alu->connect<1>(rf->getOperand<0>());
+        // alu->connectAdditional<0>(alu_ctrl);
     }
 };
 }  // namespace ripes

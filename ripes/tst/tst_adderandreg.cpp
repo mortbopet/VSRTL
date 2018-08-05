@@ -13,20 +13,19 @@ namespace ripes {
 class tst_adderAndReg : public Architecture<3> {
 public:
     static constexpr int m_cVal = 4;
-    std::shared_ptr<Register<32>> m_reg;
+
+    // Create objects
+    SUBCOMPONENT(alu_ctrl, Constant, ALUctrlWidth(), ALU_OPCODE::ADD);
+    SUBCOMPONENT(c4, Constant, 32, 4);
+    SUBCOMPONENT(alu, ALU, 32);
+    SUBCOMPONENT(reg, Register, 32);
 
     tst_adderAndReg() : Architecture() {
-        // Create objects
-        auto alu_ctrl = create<Constant<ALUctrlWidth(), ALU_OPCODE::ADD>>();
-        auto c4 = create<Constant<32, m_cVal>>();
-        auto alu = create<ALU<32>>();
-        m_reg = create<Register<32>>();
-
         // Connect objects
-        alu->connect<0>(c4);
-        alu->connectAdditional<0>(alu_ctrl);
-        alu->connect<1>(m_reg);
-        m_reg->connect<0>(alu);
+        c4->m_output >> alu->m_op1;
+        reg >> alu->m_op2;
+        alu_ctrl >> alu->m_ctrl;
+        alu->m_output >> reg;
     }
 };
 }  // namespace ripes
@@ -44,5 +43,5 @@ TEST_CASE("Test adder and reg") {
         a.clock();
 
     // We expect that m_cVal has been added to the register value n times
-    REQUIRE(static_cast<uint32_t>(*a.m_reg) == expectedValue);
+    REQUIRE(a.reg->m_output->value<uint32_t>() == expectedValue);
 }

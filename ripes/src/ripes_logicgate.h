@@ -8,7 +8,7 @@ namespace ripes {
 enum class LogicGateType { AND, OR, XOR, NOT, NAND, NOR, XNOR };
 
 template <uint32_t inputCount, uint32_t width>
-class LogicGate : public Primitive<width> {
+class LogicGate : public Component<width> {
 public:
     LogicGate(LogicGateType t) {
         static_assert(inputCount > 0, "Input count must be greater than 0");
@@ -57,7 +57,7 @@ public:
         }
     }
 
-    void propagate() override { propagateBase(m_f); }
+    void propagate() override { propagateComponent(m_f); }
 
     void verifySubtype() const override {
         // Nothing to verify

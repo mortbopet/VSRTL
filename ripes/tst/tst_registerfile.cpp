@@ -8,16 +8,28 @@
 
 #include "catch.hpp"
 
-namespace ripes {
 /**
  * @brief tst_adderAndReg
  * Small test connecting an ALU, a constant and a register to test clocking of simple circuits
  */
+/*
+namespace ripes {
 class tst_registerFile : public Architecture<3> {
 public:
     static constexpr int resReg = 5;
 
     tst_registerFile() : Architecture() {
+        // clang-format off
+        Component<
+                bundle<
+                    P("clk", 1),
+                    P("sig", 1)
+                >,
+                bundle<
+                    P("out", 1)
+                >> a;
+        // clang-format on
+
         // Create objects
         auto alu_ctrl = create<Constant<ALUctrlWidth(), ALU_OPCODE::ADD>>();
         auto c5 = create<Constant<32, resReg>>();
@@ -29,6 +41,7 @@ public:
         auto rf = create<RISCV_RegisterFile>();
 
         // Connect objects
+
         alu->connect<0>(c4);
         alu->connect<1>(rf->getOperand<0>());
         alu->connectAdditional<0>(alu_ctrl);
@@ -42,11 +55,6 @@ public:
 }  // namespace ripes
 
 TEST_CASE("Test architecture creation") {
-    ripes::bundle<1, 2, 3> b1;
-    ripes::bundle<2, 2, 3> b2;
-
-    static_assert(std::is_same<typeof(b1.seq), typeof(b2.seq)>::value, "a");
-
     ripes::tst_registerFile a;
 
     // Verify that all instantiated objects in the circuit have been connected as they require
@@ -60,3 +68,4 @@ TEST_CASE("Test architecture creation") {
     // We expect that m_cVal has been added to the register value n times
     // REQUIRE(static_cast<uint32_t>(*a.m_reg) == expectedValue);
 }
+*/

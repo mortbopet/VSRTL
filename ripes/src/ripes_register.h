@@ -1,14 +1,15 @@
 #ifndef REGISTER_H
 #define REGISTER_H
 
-#include "ripes_primitive.h"
+#include "ripes_component.h"
+#include "ripes_signal.h"
 
 #include <algorithm>
 #include <vector>
 
 namespace ripes {
 
-class RegisterBase {
+class RegisterBase : public Component {
 public:
     virtual void reset() = 0;
     virtual void clock() = 0;
@@ -16,21 +17,32 @@ public:
 };
 
 template <uint32_t width>
-class Register : public RegisterBase, public Primitive<width, /*Input ports:*/ 1> {
+class Register : public RegisterBase {
 public:
-    Register() : Primitive<width, 1>("Register") {}
-    void propagate() override { /* Propagation has no effect on registers*/
-    }
+    Register() {}
 
-    void verifySubtype() const override {}
+    void reset() override final { m_output->setValue(buildUnsignedArr<width>(0)); }
+    void save() override final { m_savedValue = (*m_input)->value<uint32_t>(); }
+    void clock() override final { m_output->propagate(); }
 
-protected:
-    void reset() override final { buildArr<width>(this->m_value, 0); }
-    void save() override final { m_savedValue = static_cast<uint32_t>(*this->m_inputs[0]); }
-    void clock() override final { buildArr<width>(this->m_value, this->m_savedValue); }
+    INPUTSIGNAL(m_input, width);
+    OUTPUTSIGNAL(m_output, width);
 
+private:
     uint32_t m_savedValue;
 };
+
+// Connection operators
+template <uint32_t width>
+inline void operator>>(std::unique_ptr<Register<width>>& r, std::unique_ptr<Signal<width>*>& toInput) {
+    *toInput = r->m_output.get();
+}
+
+template <uint32_t width>
+inline void operator>>(std::unique_ptr<Signal<width>>& s, std::unique_ptr<Register<width>>& r) {
+    *r->m_input = s.get();
+}
+
 }  // namespace ripes
 
 #endif  // REGISTER_H

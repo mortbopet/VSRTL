@@ -2,7 +2,9 @@
 #define ALU_H
 
 #include <cstdint>
-#include "ripes_primitive.h"
+#include "ripes_component.h"
+#include "ripes_defines.h"
+#include "ripes_signal.h"
 
 namespace ripes {
 
@@ -28,23 +30,25 @@ static constexpr unsigned int ALUctrlWidth() {
 }
 
 template <uint32_t width>
-class ALU : public Primitive<width, /*Input ports:*/ 2, /*Additional inputs:*/ 1> {
+class ALU : public Component {
 public:
-    ALU() : Primitive<width, 2, 1>("ALU") {}
+    // clang-format off
+    ALU(){}
+    void propagate() { calculateOutput(); }
 
-    void propagate() override {
-        this->propagateBase([=] { return calculateOutput(); });
-    }
+    INPUTSIGNAL(m_op1, width);
+    INPUTSIGNAL(m_op2, width);
+    INPUTSIGNAL(m_ctrl, ALUctrlWidth());
 
-    void verifySubtype() const override {}
+    OUTPUTSIGNAL(m_output, width);
 
 private:
     std::array<bool, width> calculateOutput() {
-        uint32_t uop1 = static_cast<uint32_t>(*(this->m_inputs[0]));
-        uint32_t uop2 = static_cast<uint32_t>(*(this->m_inputs[1]));
-        int32_t op1 = static_cast<int32_t>(*(this->m_inputs[0]));
-        int32_t op2 = static_cast<int32_t>(*(this->m_inputs[1]));
-        switch ((ALU_OPCODE) static_cast<uint32_t>(*this->m_additionalInputs[0])) {
+        uint32_t uop1 = (*m_op1)->value<uint32_t>();
+        uint32_t uop2 = (*m_op2)->value<uint32_t>();
+        int32_t op1 = (*m_op1)->value<int32_t>();
+        int32_t op2 = (*m_op2)->value<int32_t>();
+        switch ((ALU_OPCODE)(*m_ctrl)->value<uint32_t>()) {
             case ALU_OPCODE::ADD:
                 return buildUnsignedArr<width>(uop1 + uop2);
                 break;

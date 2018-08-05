@@ -11,21 +11,16 @@ namespace ripes {
  */
 
 template <uint32_t inputCount, uint32_t width>
-class Multiplexer : public Primitive<width> {
+class Multiplexer : public Component<width> {
 public:
-    Multiplexer() : Primitive("MUX") { this->m_additionalInputs.insert(0, m_control); }
+    Multiplexer() : Component("MUX") { this->m_additionalInputs.insert(0, m_control); }
 
     void propagate() override {
-        propagateBase([=] { return this->m_inputs[m_control->getValue()]; });
-    }
-
-    void verifySubtype() const override {
-        ASSERT_CONNECTION_DEFINED(m_control);
-        ASSERT_BOOL_EXPR(this->m_inputs.size() == width);
+        propagateComponent([=] { return this->m_inputs[m_control->getValue()]; });
     }
 
 private:
-    Primitive<ceillog2(inputCount)>* m_control;
+    Component<ceillog2(inputCount)>* m_control;
 };
 }  // namespace ripes
 

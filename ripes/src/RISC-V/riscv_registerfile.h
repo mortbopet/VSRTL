@@ -16,10 +16,19 @@ public:
         // extracting the fields should be specified
         instructionDecoder = generateBitFieldDecoder(std::array<R_UINT, 6>{7, 5, 3, 5, 5, 7});  // from LSB to MSB);
 
+        // Create functor for storing inputs of the register file - this is done before setting the output of
+        // the register file
+        auto rfWriter = [=] {
+            if (*m_writeEnable) {
+                m_reg[SIGNAL_VALUE(m_writeRegister, uint32_t)] = SIGNAL_VALUE(m_writeData, uint32_t);
+            }
+        };
+
         // For illustration, each step in setting the propagation function for each operand is described here:
-        getOperand<0>()->setFunctor([this] {
+        getOperand<0>()->setPropagationFunction([=] {
+            rfWriter();
             // Get instruction
-            const auto instruction = m_inputs[0]->getValue();
+            const auto instruction = SIGNAL_VALUE(m_instruction, uint32_t);
             // Decode instruction into its separate bit-fields
             const auto instructionFields = instructionDecoder(instruction);
             // Get the register number from the instruction - in this case, rs1 is specified in field 3 (0-indexed)
@@ -28,8 +37,11 @@ public:
             const auto registerValue = m_reg[registerNumber];
             return buildUnsignedArr<REGISTERWIDTH>(registerValue);
         });
-        getOperand<1>()->setFunctor(
-            [this] { return buildUnsignedArr<REGISTERWIDTH>(m_reg[instructionDecoder(m_inputs[0]->getValue())[4]]); });
+
+        getOperand<1>()->setPropagationFunction([=] {
+            rfWriter();
+            return buildUnsignedArr<REGISTERWIDTH>(m_reg[instructionDecoder(SIGNAL_VALUE(m_instruction, uint32_t))[4]]);
+        });
     }
 
 private:
