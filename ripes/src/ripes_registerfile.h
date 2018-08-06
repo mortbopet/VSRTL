@@ -5,6 +5,8 @@
 #include "ripes_defines.h"
 #include "ripes_signal.h"
 
+#include <memory>
+
 namespace ripes {
 /**
  * @brief The RegisterFile class
@@ -21,15 +23,20 @@ namespace ripes {
  */
 template <int nOperands>
 class RegisterFile : public Component {
+    REGISTER_COMPONENT
 public:
     static_assert(nOperands > 0 && nOperands <= REGISTERCOUNT, "Register file invariant");
 
-    RegisterFile() : Component("Register File") {}
+    RegisterFile() : Component("Register File") {
+        for (int i = 0; i < nOperands; i++) {
+            operands.push_back(createOutputSignal<REGISTERWIDTH>());
+        }
+    }
 
-    INPUTSIGNAL(m_instruction, REGISTERWIDTH);
-    INPUTSIGNAL(m_writeRegister, REGISTERWIDTH);
-    INPUTSIGNAL(m_writeEnable, REGISTERWIDTH);
-    INPUTSIGNAL(m_writeData, REGISTERWIDTH);
+    INPUTSIGNAL(instruction, REGISTERWIDTH);
+    INPUTSIGNAL(writeRegister, REGISTERWIDTH);
+    INPUTSIGNAL(writeEnable, REGISTERWIDTH);
+    INPUTSIGNAL(writeData, REGISTERWIDTH);
 
     void reset() {
         for (auto& reg : m_reg) {
@@ -37,12 +44,20 @@ public:
         }
     }
 
+    uint32_t value(uint32_t index) const {
+        if (index >= 0 || index < 32) {
+            return m_reg[index];
+        } else {
+            return 0;
+        }
+    }
+
     template <int operand>
     Signal<REGISTERWIDTH>* getOperand() {
         static_assert(operand >= 0 && operand < nOperands, "Operand not available");
-        return m_operands[operand].get();
+        return operands[operand].get();
     }
-    std::array<std::unique_ptr<Signal<REGISTERWIDTH>>, nOperands> m_operands;
+    std::vector<std::unique_ptr<Signal<REGISTERWIDTH>>> operands;
 
 protected:
     // Registers

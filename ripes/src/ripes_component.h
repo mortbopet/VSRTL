@@ -25,7 +25,10 @@ namespace ripes {
 #define OUTPUTS_CONTAINER _outputs
 
 #define NON_REGISTER_COMPONENT \
-    void checkIfRegister() override {}
+    bool isRegister() override { return false; }
+
+#define REGISTER_COMPONENT \
+    bool isRegister() override { return true; }
 
 /**
  * @brief InputPair
@@ -46,11 +49,14 @@ std::unique_ptr<T> create_component(Component* parent, Args&&... args) {
 #define SUBCOMPONENT(name, type, ...) \
     std::unique_ptr<type<__VA_ARGS__>> name = create_component<type<__VA_ARGS__>>(this)
 
+// Non-templated subcomponent construction macro
+#define SUBCOMPONENT_NT(name, type) std::unique_ptr<type> name = create_component<type>(this)
+
 class Component {
 public:
     Component(std::string displayName) : m_displayName(displayName) {}
 
-    virtual void checkIfRegister() = 0;
+    virtual bool isRegister() = 0;
     virtual void resetPropagation() { m_isPropagated = false; }
 
     void getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
@@ -72,6 +78,7 @@ public:
         OUTPUTS_CONTAINER.push_back(&*signal);
         return signal;
     }
+
 #define OUTPUTSIGNAL(name, width) std::unique_ptr<Signal<width>> name = createOutputSignal<width>()
 
     template <uint32_t width>
@@ -83,9 +90,15 @@ public:
 #define INPUTSIGNAL(name, width) std::unique_ptr<Signal<width>*> name = this->createInputSignal<width>()
 #define SIGNAL_VALUE(input, type) (*input)->value<type>()
     void propagateComponent() {
-        checkIfRegister();
         if (!m_isPropagated) {
-            propagateInputs();
+            /** @note Registers do NOT require propagated inputs (these have been implicitely propagated during the last
+             * cycle)
+              * This is the logic which helps simulate digital electronics
+              *
+              */
+            if (!isRegister()) {
+                propagateInputs();
+            }
 
             // propagate all subcomponents of the component
             for (auto component : COMPONENT_CONTAINER) {

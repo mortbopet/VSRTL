@@ -19,8 +19,8 @@ public:
         // Create functor for storing inputs of the register file - this is done before setting the output of
         // the register file
         auto rfWriter = [=] {
-            if (*m_writeEnable) {
-                m_reg[SIGNAL_VALUE(m_writeRegister, uint32_t)] = SIGNAL_VALUE(m_writeData, uint32_t);
+            if (*writeEnable) {
+                m_reg[SIGNAL_VALUE(writeRegister, uint32_t)] = SIGNAL_VALUE(writeData, uint32_t);
             }
         };
 
@@ -28,9 +28,9 @@ public:
         getOperand<0>()->setPropagationFunction([=] {
             rfWriter();
             // Get instruction
-            const auto instruction = SIGNAL_VALUE(m_instruction, uint32_t);
+            const auto instr = SIGNAL_VALUE(instruction, uint32_t);
             // Decode instruction into its separate bit-fields
-            const auto instructionFields = instructionDecoder(instruction);
+            const auto instructionFields = instructionDecoder(instr);
             // Get the register number from the instruction - in this case, rs1 is specified in field 3 (0-indexed)
             const auto registerNumber = instructionFields[3];
             // Read the register value
@@ -40,7 +40,7 @@ public:
 
         getOperand<1>()->setPropagationFunction([=] {
             rfWriter();
-            return buildUnsignedArr<REGISTERWIDTH>(m_reg[instructionDecoder(SIGNAL_VALUE(m_instruction, uint32_t))[4]]);
+            return buildUnsignedArr<REGISTERWIDTH>(m_reg[instructionDecoder(SIGNAL_VALUE(instruction, uint32_t))[4]]);
         });
     }
 
