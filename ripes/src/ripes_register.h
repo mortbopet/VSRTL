@@ -22,15 +22,15 @@ template <uint32_t width>
 class Register : public RegisterBase {
 public:
     Register() {
-        m_output->setPropagationFunction([=] { return buildUnsignedArr<width>(m_savedValue); });
+        out->setPropagationFunction([=] { return buildUnsignedArr<width>(m_savedValue); });
     }
 
-    void reset() override final { m_output->setValue(buildUnsignedArr<width>(0)); }
-    void save() override final { m_savedValue = (*m_input)->value<uint32_t>(); }
-    void clock() override final { m_output->propagate(); }
+    void reset() override final { out->setValue(buildUnsignedArr<width>(0)); }
+    void save() override final { m_savedValue = (*(*in))->template value<uint32_t>(); }
+    void clock() override final { out->propagate(); }
 
-    INPUTSIGNAL(m_input, width);
-    OUTPUTSIGNAL(m_output, width);
+    INPUTSIGNAL(in, width);
+    OUTPUTSIGNAL(out, width);
 
 private:
     uint32_t m_savedValue = 0;
@@ -38,13 +38,13 @@ private:
 
 // Connection operators
 template <uint32_t width>
-inline void operator>>(std::unique_ptr<Register<width>>& r, std::unique_ptr<Signal<width>*>& toInput) {
-    *toInput = r->m_output.get();
+void operator>>(Register<width>*& r, Signal<width>***& toInput) {
+    r->out >> toInput;
 }
 
 template <uint32_t width>
-inline void operator>>(std::unique_ptr<Signal<width>>& s, std::unique_ptr<Register<width>>& r) {
-    *r->m_input = s.get();
+void operator>(Signal<width>& fromOutput, Register<width>*& toRegister) {
+    fromOutput >> toRegister->in;
 }
 
 }  // namespace ripes

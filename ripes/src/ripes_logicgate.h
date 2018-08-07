@@ -16,9 +16,9 @@ public:
         switch (t) {
             case LogicGateType::AND: {
                 m_f = [=] {
-                    auto out = this->m_inputs[0];
-                    for (int i = 1; i < this->m_inputs.size(); i++) {
-                        out &= this->m_inputs[i];
+                    auto out = this->ins[0];
+                    for (int i = 1; i < this->ins.size(); i++) {
+                        out &= this->ins[i];
                     }
                     return out;
                 };
@@ -26,9 +26,9 @@ public:
             }
             case LogicGateType::OR: {
                 m_f = [=] {
-                    auto out = this->m_inputs[0];
-                    for (int i = 1; i < this->m_inputs.size(); i++) {
-                        out |= this->m_inputs[i];
+                    auto out = this->ins[0];
+                    for (int i = 1; i < this->ins.size(); i++) {
+                        out |= this->ins[i];
                     }
                     return out;
                 };
@@ -39,7 +39,7 @@ public:
                 break;
             }
             case LogicGateType::NOT: {
-                m_f = [=] { return ~this->m_inputs[0]; };
+                m_f = [=] { return ~this->ins[0]; };
                 break;
             }
             case LogicGateType::NAND: {

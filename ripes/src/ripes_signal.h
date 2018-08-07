@@ -42,6 +42,10 @@ public:
         return static_cast<T>(*this);
     }
 
+    std::function<std::array<bool, width>()> getFunctor() {
+        return [=] { return m_value; };
+    }
+
     // Casting operators
     operator int() const { return signextend<int32_t, width>(accBVec<width>(m_value)); }
     operator uint32_t() const { return accBVec<width>(m_value); }
@@ -64,10 +68,14 @@ private:
     std::function<std::array<bool, width>()> m_propagationFunction;
 };
 
-// Connection operator
 template <uint32_t width>
-void operator>>(std::unique_ptr<Signal<width>>& fromThisOutput, std::unique_ptr<Signal<width>*>& toThisInput) {
-    *toThisInput = &*fromThisOutput;
+void connect(Signal<width>*& fromThisOutput, Signal<width>***& toThisInput) {
+    *(*toThisInput) = fromThisOutput;
+}
+
+template <uint32_t width>
+void connect(Signal<width>***& fromThisInput, Signal<width>***& toThisInput) {
+    *toThisInput = *fromThisInput;
 }
 
 }  // namespace ripes

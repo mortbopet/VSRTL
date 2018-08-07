@@ -174,7 +174,7 @@ public:
 private:
     std::array<std::vector<RegisterBase*>, stageCount> m_stageRegisterBanks;
 
-    std::unique_ptr<Memory> m_memory;
+    std::shared_ptr<Memory> m_memory;
 
     std::map<Component*, std::vector<Component*>> m_componentGraph;
     std::set<RegisterBase*> m_registers;

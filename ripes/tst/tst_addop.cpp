@@ -24,15 +24,16 @@ public:
     SUBCOMPONENT(alu, ALU, 32);
     SUBCOMPONENT_NT(regs, RISCV_RegisterFile);
 
-    tst_addOp() : Architecture() {
+    tst_addOp() {
         // Connect objects
-        c4 >> alu->m_op1;
-        alu_ctrl >> alu->m_ctrl;
-        regs->operands[0] >> alu->m_op2;
-        c1 >> regs->writeEnable;
-        c5 >> regs->writeRegister;
-        alu->m_output >> regs->writeData;
-        c_instr >> regs->instruction;
+
+        connect(c4->out, alu->op1);
+        connect(alu_ctrl->out, alu->ctrl);
+        connect(regs->operands[0], alu->op2);
+        connect(c1->out, regs->writeEnable);
+        connect(c5->out, regs->writeRegister);
+        connect(alu->out, regs->writeData);
+        connect(c_instr->out, regs->instruction);
     }
 };
 }  // namespace ripes

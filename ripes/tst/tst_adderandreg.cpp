@@ -24,10 +24,10 @@ public:
 
     tst_adderAndReg() : Architecture() {
         // Connect objects
-        c4->m_output >> alu->m_op1;
-        reg >> alu->m_op2;
-        alu_ctrl >> alu->m_ctrl;
-        alu->m_output >> reg;
+        connect(c4->out, alu->op1);
+        connect(reg->out, alu->op2);
+        connect(alu_ctrl->out, alu->ctrl);
+        connect(alu->out, reg->in);
     }
 };
 }  // namespace ripes
@@ -45,6 +45,6 @@ TEST_CASE("Test adder and reg") {
         a.clock();
 
     // We expect that m_cVal has been added to the register value n times
-    std::cout << "value " << a.reg->m_output->value<uint32_t>() << std::endl;
-    REQUIRE(a.reg->m_output->value<uint32_t>() == expectedValue);
+    std::cout << "value " << a.reg->out->value<uint32_t>() << std::endl;
+    REQUIRE(a.reg->out->value<uint32_t>() == expectedValue);
 }

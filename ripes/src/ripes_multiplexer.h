@@ -7,7 +7,7 @@ namespace ripes {
 
 /**
  * @brief The Multiplexer class
- * Control signal for the multiplexer is always m_inputs[0].
+ * Control signal for the multiplexer is always ins[0].
  */
 
 template <uint32_t inputCount, uint32_t width>
@@ -16,7 +16,7 @@ public:
     Multiplexer() : Component("MUX") { this->m_additionalInputs.insert(0, m_control); }
 
     void propagate() override {
-        propagateComponent([=] { return this->m_inputs[m_control->getValue()]; });
+        propagateComponent([=] { return this->ins[m_control->getValue()]; });
     }
 
 private:

@@ -36,23 +36,24 @@ class ALU : public Component {
 public:
     // clang-format off
     ALU() : Component("ALU"){
-        m_output->setPropagationFunction([=]{return calculateOutput();});
+        out->setPropagationFunction([=]{return calculateOutput();});
     }
     void propagate() { calculateOutput(); }
 
-    INPUTSIGNAL(m_op1, width);
-    INPUTSIGNAL(m_op2, width);
-    INPUTSIGNAL(m_ctrl, ALUctrlWidth());
+    INPUTSIGNAL(op1, width);
+    INPUTSIGNAL(op2, width);
+    INPUTSIGNAL(ctrl, ALUctrlWidth());
 
-    OUTPUTSIGNAL(m_output, width);
+    OUTPUTSIGNAL(out, width);
 
 private:
     std::array<bool, width> calculateOutput() {
-        uint32_t uop1 = (*m_op1)->value<uint32_t>();
-        uint32_t uop2 = (*m_op2)->value<uint32_t>();
-        int32_t op1 = (*m_op1)->value<int32_t>();
-        int32_t op2 = (*m_op2)->value<int32_t>();
-        switch ((ALU_OPCODE)(*m_ctrl)->value<uint32_t>()) {
+
+        uint32_t uop1 = SIGNAL_VALUE(op1, uint32_t);
+        uint32_t uop2 = SIGNAL_VALUE(op2, uint32_t);
+        int32_t _op1 = SIGNAL_VALUE(op1, int32_t);
+        int32_t _op2 = SIGNAL_VALUE(op1, int32_t);
+        switch ((ALU_OPCODE)SIGNAL_VALUE(ctrl, uint32_t)) {
             case ALU_OPCODE::ADD:
                 return buildUnsignedArr<width>(uop1 + uop2);
                 break;
@@ -78,7 +79,7 @@ private:
                 return buildUnsignedArr<width>(uop1 << uop2);
                 break;
             case ALU_OPCODE::SRA:
-                return buildUnsignedArr<width>(op1 >> uop2);
+                return buildUnsignedArr<width>(_op1 >> uop2);
                 break;
             case ALU_OPCODE::SRL:
                 return buildUnsignedArr<width>(uop1 >> uop2);
@@ -87,7 +88,7 @@ private:
                 return buildUnsignedArr<width>(uop2);
                 break;
             case ALU_OPCODE::LT:
-                return buildUnsignedArr<width>(op1 < op2 ? 1 : 0);
+                return buildUnsignedArr<width>(_op1 < _op2 ? 1 : 0);
                 break;
             case ALU_OPCODE::LTU:
                 return buildUnsignedArr<width>(uop1 < uop2 ? 1 : 0);

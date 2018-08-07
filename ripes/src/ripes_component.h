@@ -36,21 +36,10 @@ namespace ripes {
  */
 class Component;
 
-// Component object generator that registers objects in parent upon creation
-template <typename T, typename... Args>
-std::unique_ptr<T> create_component(Component* parent, Args&&... args) {
-    auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
-    if (parent) {
-        parent->addSubcomponent(static_cast<Component*>(ptr.get()));
-    }
-    return ptr;
-}
-
-#define SUBCOMPONENT(name, type, ...) \
-    std::unique_ptr<type<__VA_ARGS__>> name = create_component<type<__VA_ARGS__>>(this)
+#define SUBCOMPONENT(name, type, ...) type<__VA_ARGS__>* name = create_component<type<__VA_ARGS__>>(this)
 
 // Non-templated subcomponent construction macro
-#define SUBCOMPONENT_NT(name, type) std::unique_ptr<type> name = create_component<type>(this)
+#define SUBCOMPONENT_NT(name, type) type* name = create_component<type>(this)
 
 class Component {
 public:
@@ -73,29 +62,31 @@ public:
     void addSubcomponent(Component* subcomponent) { COMPONENT_CONTAINER.push_back(subcomponent); }
 
     template <uint32_t width>
-    std::unique_ptr<Signal<width>> createOutputSignal() {
-        auto signal = std::make_unique<Signal<width>>(this);
-        OUTPUTS_CONTAINER.push_back(&*signal);
+    Signal<width>* createOutputSignal() {
+        auto signal = new Signal<width>(this);
+        OUTPUTS_CONTAINER.push_back(signal);
         return signal;
     }
 
-#define OUTPUTSIGNAL(name, width) std::unique_ptr<Signal<width>> name = createOutputSignal<width>()
+#define OUTPUTSIGNAL(name, width) Signal<width>* name = createOutputSignal<width>()
 
     template <uint32_t width>
-    std::unique_ptr<Signal<width>*> createInputSignal() {
-        std::unique_ptr<Signal<width>*> signal = std::make_unique<Signal<width>*>();
-        INPUTS_CONTAINER.push_back(reinterpret_cast<SignalBase**>(signal.get()));
+    Signal<width>*** createInputSignal() {
+        Signal<width>*** signal = new Signal<width>**();
+        *signal = new Signal<width>*();
+        **signal = nullptr;
+        INPUTS_CONTAINER.push_back(reinterpret_cast<SignalBase***>(signal));
         return signal;
     }
-#define INPUTSIGNAL(name, width) std::unique_ptr<Signal<width>*> name = this->createInputSignal<width>()
-#define SIGNAL_VALUE(input, type) (*input)->value<type>()
+#define INPUTSIGNAL(name, width) Signal<width>*** name = this->createInputSignal<width>()
+#define SIGNAL_VALUE(input, type) (*(*input))->template value<type>()
     void propagateComponent() {
         if (!m_isPropagated) {
             /** @note Registers do NOT require propagated inputs (these have been implicitely propagated during the last
              * cycle)
-              * This is the logic which helps simulate digital electronics
-              *
-              */
+             * This is the logic which helps simulate digital electronics
+             *
+             */
             if (!isRegister()) {
                 propagateInputs();
             }
@@ -151,7 +142,7 @@ private:
      */
     void propagateInputs() {
         for (auto input : INPUTS_CONTAINER) {
-            (*input)->getParent()->propagateComponent();
+            (*(*input))->getParent()->propagateComponent();
         }
     }
 
@@ -160,9 +151,20 @@ private:
     std::string m_displayName;
 
     std::vector<SignalBase*> OUTPUTS_CONTAINER;
-    std::vector<SignalBase**> INPUTS_CONTAINER;
+    std::vector<SignalBase***> INPUTS_CONTAINER;
     std::vector<Component*> COMPONENT_CONTAINER;
 };
+
+// Component object generator that registers objects in parent upon creation
+template <typename T, typename... Args>
+T* create_component(Component* parent, Args&&... args) {
+    auto ptr = new T(std::forward<Args>(args)...);
+    if (parent) {
+        parent->addSubcomponent(static_cast<Component*>(ptr));
+    }
+    return ptr;
+}
+
 }  // namespace ripes
 
 #endif  // PRIMITIVE_H

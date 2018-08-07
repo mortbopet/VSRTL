@@ -24,21 +24,21 @@ class Constant : public Component {
     NON_REGISTER_COMPONENT
 public:
     Constant() : Component("Constant") {
-        m_output->setPropagationFunction([] {
+        out->setPropagationFunction([] {
             const static auto cArr = buildUnsignedArr<width>(constantValue);
             return cArr;
         });
     }
 
-    OUTPUTSIGNAL(m_output, width);
+    OUTPUTSIGNAL(out, width);
 
     static_assert(valueFitsInBitWidth(width, constantValue), "Value does not fit inside provided bit-width");
 };
 
 // Connection operator
 template <uint32_t width, int constantValue>
-inline void operator>>(std::unique_ptr<Constant<width, constantValue>>& c, std::unique_ptr<Signal<width>*>& toInput) {
-    *toInput = c->m_output.get();
+void operator>>(const Constant<width, constantValue>*& c, Signal<width>***& toInput) {
+    c->out >> toInput;
 }
 
 }  // namespace ripes
