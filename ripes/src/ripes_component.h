@@ -46,7 +46,7 @@ public:
     Component(std::string displayName) : m_displayName(displayName) {}
 
     virtual bool isRegister() = 0;
-    virtual void resetPropagation() { m_isPropagated = false; }
+    virtual void resetPropagation() { m_propagationState = PropagationState::unpropagated; }
 
     void getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
         // Register adjacent components (child components) in the graph, and add subcomponents to graph
@@ -81,10 +81,13 @@ public:
 #define INPUTSIGNAL(name, width) Signal<width>*** name = this->createInputSignal<width>()
 #define SIGNAL_VALUE(input, type) (*(*input))->template value<type>()
     void propagateComponent() {
-        if (!m_isPropagated) {
-            /** @note Registers do NOT require propagated inputs (these have been implicitely propagated during the last
-             * cycle)
-             * This is the logic which helps simulate digital electronics
+        if (m_propagationState == PropagationState::unpropagated) {
+            // if subcomponents are connected together, propapagation can look like a combinational loop
+            // Below flag ensures that propagation is only started once for a component.
+            // Checking for combinational loop? hmm..
+            m_propagationState = PropagationState::propagating;
+            /** @note Registers do NOT require propagated inputs (these have been implicitely propagated during the
+             * last cycle) This is the logic which helps simulate digital electronics
              *
              */
             if (!isRegister()) {
@@ -101,7 +104,9 @@ public:
                 s->propagate();
             }
 
-            m_isPropagated = true;
+            m_propagationState = PropagationState::propagated;
+        } else {
+            // throw std::runtime_error("Combinational loop detected");
         }
     }
 
@@ -133,7 +138,8 @@ public:
     }
 
 protected:
-    bool m_isPropagated = false;
+    enum class PropagationState { unpropagated, propagating, propagated };
+    PropagationState m_propagationState = PropagationState::unpropagated;
 
 private:
     /**
