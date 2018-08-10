@@ -22,6 +22,8 @@ include_directories(${Qt5Core_INCLUDE_DIRS})
 
 ######################################################################
 
+include_directories("core")
+
 set(CORE_LIB ${PROJECT_NAME}_core_lib)
 add_subdirectory(core)
 set(GRAPHICS_LIB ${PROJECT_NAME}_gfx_lib)

@@ -171,6 +171,13 @@ public:
         }
     }
 
+    std::set<Component*> getComponentSet() const {
+        std::set<Component*> components;
+        for (auto& c : m_componentGraph)
+            components.insert(c.first);
+        return components;
+    }
+
 private:
     std::array<std::vector<RegisterBase*>, stageCount> m_stageRegisterBanks;
 

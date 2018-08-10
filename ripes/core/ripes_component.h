@@ -48,15 +48,6 @@ public:
     virtual bool isRegister() = 0;
     virtual void resetPropagation() { m_propagationState = PropagationState::unpropagated; }
 
-    void getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
-        // Register adjacent components (child components) in the graph, and add subcomponents to graph
-        componentGraph[this];
-        for (auto& c : COMPONENT_CONTAINER) {
-            componentGraph[this].push_back(c);
-            c->getComponentGraph(componentGraph);
-        }
-    }
-
     mutable bool isVerifiedAndInitialized = false;
 
     void addSubcomponent(Component* subcomponent) { COMPONENT_CONTAINER.push_back(subcomponent); }
@@ -137,15 +128,27 @@ public:
         return true;
     }
 
+    const std::string& getDisplayName() const { return m_displayName; }
+
 protected:
     enum class PropagationState { unpropagated, propagating, propagated };
     PropagationState m_propagationState = PropagationState::unpropagated;
+
+    void getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
+        // Register adjacent components (child components) in the graph, and add subcomponents to graph
+        componentGraph[this];
+        for (auto& c : COMPONENT_CONTAINER) {
+            componentGraph[this].push_back(c);
+            c->getComponentGraph(componentGraph);
+        }
+    }
 
 private:
     /**
      * @brief propagateInputs
      * For all registered input signals of this component, propagate the parent component of the input signal
      */
+
     void propagateInputs() {
         for (auto input : INPUTS_CONTAINER) {
             (*(*input))->getParent()->propagateComponent();

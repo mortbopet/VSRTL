@@ -19,13 +19,13 @@ public:
     OUTPUTSIGNAL(out, 32);
 
     Exponenter() : Component("Exponenter") {
-        connect(mul->out, reg->in);
+        connectSignal(mul->out, reg->in);
 
-        connect(out, in);
+        connectSignal(out, in);
 
-        connect(in, mul->op1);
-        connect(in, mul->op2);
-        connect(aluOp->out, mul->ctrl);
+        connectSignal(in, mul->op1);
+        connectSignal(in, mul->op2);
+        connectSignal(aluOp->out, mul->ctrl);
 
         out->setPropagationFunction(reg->out->getFunctor());
     }
@@ -42,16 +42,16 @@ public:
     SUBCOMPONENT(aluOp, Constant, ALUctrlWidth(), ALU_OPCODE::ADD);
 
     tst_nestedComponents() {
-        connect(exp->out, adder->op1);
-        connect(reg->out, adder->op2);
-        connect(aluOp->out, adder->ctrl);
+        connectSignal(exp->out, adder->op1);
+        connectSignal(reg->out, adder->op2);
+        connectSignal(aluOp->out, adder->ctrl);
 
-        connect(add2->out, reg->in);
-        connect(adder->out, exp->in);
+        connectSignal(add2->out, reg->in);
+        connectSignal(adder->out, exp->in);
 
-        connect(adder->out, add2->op1);
-        connect(c2->out, add2->op2);
-        connect(aluOp->out, add2->ctrl);
+        connectSignal(adder->out, add2->op1);
+        connectSignal(c2->out, add2->op2);
+        connectSignal(aluOp->out, add2->ctrl);
     }
 };
 }  // namespace ripes

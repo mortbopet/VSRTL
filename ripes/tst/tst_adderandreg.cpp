@@ -24,10 +24,10 @@ public:
 
     tst_adderAndReg() : Architecture() {
         // Connect objects
-        connect(c4->out, alu->op1);
-        connect(reg->out, alu->op2);
-        connect(alu_ctrl->out, alu->ctrl);
-        connect(alu->out, reg->in);
+        connectSignal(c4->out, alu->op1);
+        connectSignal(reg->out, alu->op2);
+        connectSignal(alu_ctrl->out, alu->ctrl);
+        connectSignal(alu->out, reg->in);
     }
 };
 }  // namespace ripes

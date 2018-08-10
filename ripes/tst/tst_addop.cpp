@@ -27,13 +27,13 @@ public:
     tst_addOp() {
         // Connect objects
 
-        connect(c4->out, alu->op1);
-        connect(alu_ctrl->out, alu->ctrl);
-        connect(regs->operands[0], alu->op2);
-        connect(c1->out, regs->writeEnable);
-        connect(c5->out, regs->writeRegister);
-        connect(alu->out, regs->writeData);
-        connect(c_instr->out, regs->instruction);
+        connectSignal(c4->out, alu->op1);
+        connectSignal(alu_ctrl->out, alu->ctrl);
+        connectSignal(regs->operands[0], alu->op2);
+        connectSignal(c1->out, regs->writeEnable);
+        connectSignal(c5->out, regs->writeRegister);
+        connectSignal(alu->out, regs->writeData);
+        connectSignal(c_instr->out, regs->instruction);
     }
 };
 }  // namespace ripes

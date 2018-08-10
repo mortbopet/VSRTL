@@ -1,13 +1,22 @@
 #include "ripes_mainwindow.h"
-//#include "ui_ripes_mainwindow.h"
+#include "ui_ripes_mainwindow.h"
 
-Ripes_MainWindow::Ripes_MainWindow(QWidget* parent)
-    : QMainWindow(parent)
-//,ui(new Ui::Ripes_MainWindow)
-{
-    // ui->setupUi(this);
+#include <QGraphicsScene>
+
+namespace ripes {
+
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
+    ui->setupUi(this);
+
+    m_scene = new QGraphicsScene(this);
+    ui->view->setScene(m_scene);
 }
 
-Ripes_MainWindow::~Ripes_MainWindow() {
-    // delete ui;
+MainWindow::~MainWindow() {
+    delete ui;
+}
+
+void MainWindow::addComponent(ComponentGraphic* g) {
+    m_scene->addItem(g);
+}
 }

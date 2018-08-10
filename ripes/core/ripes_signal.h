@@ -69,12 +69,12 @@ private:
 };
 
 template <uint32_t width>
-void connect(Signal<width>*& fromThisOutput, Signal<width>***& toThisInput) {
+void connectSignal(Signal<width>*& fromThisOutput, Signal<width>***& toThisInput) {
     *(*toThisInput) = fromThisOutput;
 }
 
 template <uint32_t width>
-void connect(Signal<width>***& fromThisInput, Signal<width>***& toThisInput) {
+void connectSignal(Signal<width>***& fromThisInput, Signal<width>***& toThisInput) {
     *toThisInput = *fromThisInput;
 }
 

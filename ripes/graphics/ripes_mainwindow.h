@@ -2,20 +2,30 @@
 #define RIPES_MAINWINDOW_H
 
 #include <QMainWindow>
+#include "ripes_componentgraphic.h"
+
+QT_FORWARD_DECLARE_CLASS(QGraphicsScene)
+
+namespace ripes {
 
 namespace Ui {
-class Ripes_MainWindow;
+class MainWindow;
 }
 
-class Ripes_MainWindow : public QMainWindow {
+class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit Ripes_MainWindow(QWidget* parent = 0);
-    ~Ripes_MainWindow();
+    explicit MainWindow(QWidget* parent = 0);
+    ~MainWindow();
+
+    void addComponent(ComponentGraphic* g);
 
 private:
-    // Ui::Ripes_MainWindow *ui;
+    Ui::MainWindow* ui;
+
+    QGraphicsScene* m_scene;
 };
+}
 
 #endif  // RIPES_MAINWINDOW_H
