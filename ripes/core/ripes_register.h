@@ -36,17 +36,6 @@ private:
     uint32_t m_savedValue = 0;
 };
 
-// Connection operators
-template <uint32_t width>
-void operator>>(Register<width>*& r, Signal<width>***& toInput) {
-    r->out >> toInput;
-}
-
-template <uint32_t width>
-void operator>(Signal<width>& fromOutput, Register<width>*& toRegister) {
-    fromOutput >> toRegister->in;
-}
-
 }  // namespace ripes
 
 #endif  // REGISTER_H

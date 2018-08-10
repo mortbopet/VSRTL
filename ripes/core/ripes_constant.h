@@ -35,12 +35,6 @@ public:
     static_assert(valueFitsInBitWidth(width, constantValue), "Value does not fit inside provided bit-width");
 };
 
-// Connection operator
-template <uint32_t width, int constantValue>
-void operator>>(const Constant<width, constantValue>*& c, Signal<width>***& toInput) {
-    c->out >> toInput;
-}
-
 }  // namespace ripes
 
 #endif  // CONSTANT_H
