@@ -1,4 +1,4 @@
-#include "catch.hpp"
+#include <QtTest/QTest>
 
 #include "ripes_alu.h"
 #include "ripes_architecture.h"
@@ -31,7 +31,7 @@ public:
     }
 };
 
-class tst_nestedComponents : public Architecture<0> {
+class NestedComponents : public Architecture<0> {
 public:
     // Create objects
     SUBCOMPONENT_NT(exp, Exponenter);
@@ -41,7 +41,7 @@ public:
     SUBCOMPONENT(c2, Constant, 32, 2);
     SUBCOMPONENT(aluOp, Constant, ALUctrlWidth(), ALU_OPCODE::ADD);
 
-    tst_nestedComponents() {
+    NestedComponents() {
         connectSignal(exp->out, adder->op1);
         connectSignal(reg->out, adder->op2);
         connectSignal(aluOp->out, adder->ctrl);
@@ -56,8 +56,12 @@ public:
 };
 }  // namespace ripes
 
-TEST_CASE("Test nested components") {
-    ripes::tst_nestedComponents a;
+class tst_NestedComponents : public QObject {
+    Q_OBJECT private slots : void functionalTest();
+};
+
+void tst_NestedComponents::functionalTest() {
+    ripes::NestedComponents a;
 
     // Verify that all instantiated objects in the circuit have been connected as they require
     a.verifyAndInitialize();
@@ -70,3 +74,5 @@ TEST_CASE("Test nested components") {
     // We expect that m_cVal has been added to the register value n times
     // REQUIRE(a.regs->value(5) == 40);
 }
+QTEST_MAIN(tst_NestedComponents)
+#include "tst_nestedcomponent.moc"

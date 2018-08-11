@@ -3,16 +3,14 @@
 #include "ripes_constant.h"
 #include "ripes_register.h"
 
-#include "catch.hpp"
-
-#include <iostream>
+#include <QtTest/QTest>
 
 namespace ripes {
 /**
  * @brief tst_adderAndReg
  * Small test connecting an ALU, a constant and a register to test clocking of simple circuits
  */
-class tst_adderAndReg : public Architecture<3> {
+class AdderAndReg : public Architecture<3> {
 public:
     static constexpr int m_cVal = 4;
 
@@ -22,7 +20,7 @@ public:
     SUBCOMPONENT(alu, ALU, 32);
     SUBCOMPONENT(reg, Register, 32);
 
-    tst_adderAndReg() : Architecture() {
+    AdderAndReg() : Architecture() {
         // Connect objects
         connectSignal(c4->out, alu->op1);
         connectSignal(reg->out, alu->op2);
@@ -32,8 +30,12 @@ public:
 };
 }  // namespace ripes
 
-TEST_CASE("Test adder and reg") {
-    ripes::tst_adderAndReg a;
+class tst_adderAndReg : public QObject {
+    Q_OBJECT private slots : void functionalTest();
+};
+
+void tst_adderAndReg::functionalTest() {
+    ripes::AdderAndReg a;
 
     // Verify that all instantiated objects in the circuit have been connected as they require
     a.verifyAndInitialize();
@@ -46,5 +48,8 @@ TEST_CASE("Test adder and reg") {
 
     // We expect that m_cVal has been added to the register value n times
     std::cout << "value " << a.reg->out->value<uint32_t>() << std::endl;
-    REQUIRE(a.reg->out->value<uint32_t>() == expectedValue);
+    QVERIFY(a.reg->out->value<uint32_t>() == expectedValue);
 }
+
+QTEST_MAIN(tst_adderAndReg)
+#include "tst_adderandreg.moc"

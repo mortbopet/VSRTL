@@ -6,11 +6,7 @@
 #include "ripes_componentgraphic.h"
 #include "ripes_mainwindow.h"
 
-#include "tst_util.h"
-
-#include "catch.hpp"
-
-#include <QApplication>
+#include <QtTest/QTest>
 
 namespace ripes {
 
@@ -36,9 +32,16 @@ public:
 
 using namespace ripes;
 
-TEST_CASE("Test main window") {
+class tst_MainWindow : public QObject {
+    Q_OBJECT
+private slots:
+    void testSimpleArchitecture();
+};
+
+void tst_MainWindow::testSimpleArchitecture() {
     int dummy;
     QApplication app(dummy, nullptr);
+
     MainWindow w;
     adderAndReg design;
     design.createComponentGraph();
@@ -53,8 +56,10 @@ TEST_CASE("Test main window") {
         i->setPosition(QPointF(x, 0));
         x += 150;
     }
-
     w.show();
 
     app.exec();
 }
+
+QTEST_APPLESS_MAIN(tst_MainWindow)
+#include "tst_mainwindow.moc"

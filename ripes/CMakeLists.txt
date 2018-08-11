@@ -30,3 +30,9 @@ set(GRAPHICS_LIB ${PROJECT_NAME}_gfx_lib)
 add_subdirectory(graphics)
 set(TEST_LIB ${PROJECT_NAME}_tst_lib)
 add_subdirectory(tst)
+
+set(APP_NAME app)
+
+add_executable(${APP_NAME} app.cpp)
+target_link_libraries(${APP_NAME} Qt5::Core Qt5::Widgets)
+target_link_libraries(${APP_NAME} ${CORE_LIB} ${GRAPHICS_LIB})

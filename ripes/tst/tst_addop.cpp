@@ -5,7 +5,7 @@
 
 #include "RISC-V/riscv_registerfile.h"
 
-#include "catch.hpp"
+#include <QtTest/QTest>
 
 static constexpr int resReg = 5;
 namespace ripes {
@@ -13,7 +13,7 @@ namespace ripes {
  * @brief tst_adderAndReg
  * Small test connecting an ALU, a constant and a register to test clocking of simple circuits
  */
-class tst_addOp : public Architecture<0> {
+class addOp : public Architecture<0> {
 public:
     // Create objects
     SUBCOMPONENT(alu_ctrl, Constant, ALUctrlWidth(), ALU_OPCODE::ADD);
@@ -24,7 +24,7 @@ public:
     SUBCOMPONENT(alu, ALU, 32);
     SUBCOMPONENT_NT(regs, RISCV_RegisterFile);
 
-    tst_addOp() {
+    addOp() {
         // Connect objects
 
         connectSignal(c4->out, alu->op1);
@@ -38,8 +38,14 @@ public:
 };
 }  // namespace ripes
 
-TEST_CASE("Test architecture creation") {
-    ripes::tst_addOp a;
+class tst_AddOp : public QObject {
+    Q_OBJECT
+private slots:
+    void functionalTest();
+};
+
+void tst_AddOp::functionalTest() {
+    ripes::addOp a;
 
     // Verify that all instantiated objects in the circuit have been connected as they require
     a.verifyAndInitialize();
@@ -50,5 +56,8 @@ TEST_CASE("Test architecture creation") {
         a.clock();
 
     // We expect that m_cVal has been added to the register value n times
-    REQUIRE(a.regs->value(5) == 40);
+    QVERIFY(a.regs->value(5) == 40);
 }
+
+QTEST_MAIN(tst_AddOp)
+#include "tst_addop.moc"
