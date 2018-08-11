@@ -52,7 +52,7 @@ void tst_MainWindow::testSimpleArchitecture() {
         ComponentGraphic* i = new ComponentGraphic(c);
         w.addComponent(i);
         i->initialize();
-        i->setPosition(QPointF(x, 0));
+        i->setPos(QPointF(x, 0));
         x += 150;
     }
     w.show();

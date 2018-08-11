@@ -11,40 +11,39 @@ namespace ripes {
 
 class ComponentGraphic : public QGraphicsItem {
 public:
-    ComponentGraphic(Component* c, ComponentGraphic* parent = nullptr);
+    ComponentGraphic(Component* c);
 
     QRectF boundingRect() const override;
+    QRectF baseRect() const { return m_baseRect; }
+    QRectF sceneBaseRect() const;
     /** @todo remember to implement shape()
      * We do not want our bounding rectangle to be the shape of the object, since the IO pins of an object shouldnt be
      * factored into collisions - wherease shape() should be ONLY the object
      */
     // QPainterPath shape() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
-    void setPosition(const QPointF& pos);
     void initialize();
-
-    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
 private slots:
     void setExpandState(bool state);
 
 private:
-    void moveChildrenToAnchor(const QPointF& pos);
     void calculateBaseRect();
     void calculateTextPosition();
     void createSubcomponents();
     void calculateIOPositions();
     void calculateGeometry();
+    void calculateSubcomponentRect();
+    void getSubGraphicsItems(QGraphicsItemGroup& g);
 
     bool m_isExpanded = false;
-    bool m_hasSubcomponents;
-
-    ComponentGraphic* m_parent;
+    bool m_hasSubcomponents = false;
 
     std::vector<ComponentGraphic*> m_subcomponents;
 
@@ -54,6 +53,7 @@ private:
     QRectF m_baseRect;
     QRectF m_boundingRect;
     QRectF m_textRect;
+    QRectF m_subcomponentRect;
     QFont m_font;
     QString m_displayText;
 

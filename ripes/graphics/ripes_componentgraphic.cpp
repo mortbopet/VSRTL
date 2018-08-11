@@ -1,7 +1,9 @@
 #include "ripes_componentgraphic.h"
 
 #include "ripes_graphics_defines.h"
+#include "ripes_graphics_util.h"
 
+#include <qmath.h>
 #include <QGraphicsProxyWidget>
 #include <QGraphicsScene>
 #include <QPainter>
@@ -9,7 +11,7 @@
 
 namespace ripes {
 
-ComponentGraphic::ComponentGraphic(Component* c, ComponentGraphic* parent) : m_component(c), m_parent(parent) {}
+ComponentGraphic::ComponentGraphic(Component* c) : m_component(c) {}
 
 void ComponentGraphic::initialize() {
     Q_ASSERT(scene() != nullptr);
@@ -35,6 +37,7 @@ void ComponentGraphic::initialize() {
         m_expandButton->setCheckable(true);
         QObject::connect(m_expandButton, &QToolButton::toggled, [=](bool state) { setExpandState(state); });
         m_expandButtonProxy = scene()->addWidget(m_expandButton);
+        m_expandButtonProxy->setParentItem(this);
 
         setExpandState(false);
     }
@@ -46,27 +49,15 @@ void ComponentGraphic::initialize() {
 
 void ComponentGraphic::createSubcomponents() {
     for (auto& c : m_component->getSubComponents()) {
-        m_subcomponents.push_back(new ComponentGraphic(c));
+        auto nc = new ComponentGraphic(c);
+        scene()->addItem(nc);
+        nc->initialize();
+        nc->setParentItem(this);
+        m_subcomponents.push_back(nc);
+        if (!m_isExpanded) {
+            nc->hide();
+        }
     }
-}
-
-void ComponentGraphic::moveChildrenToAnchor(const QPointF& pos) {
-    // Move button
-    if (m_hasSubcomponents)
-        m_expandButtonProxy->setPos(pos + m_expandButtonPos);
-}
-
-QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
-    if (change == ItemPositionChange) {
-        moveChildrenToAnchor(value.toPointF());
-    }
-    return QGraphicsItem::itemChange(change, value);
-}
-
-void ComponentGraphic::setPosition(const QPointF& pos) {
-    Q_ASSERT(scene() != nullptr);
-    moveChildrenToAnchor(pos);
-    setPos(pos);
 }
 
 void ComponentGraphic::setExpandState(bool expanded) {
@@ -74,8 +65,14 @@ void ComponentGraphic::setExpandState(bool expanded) {
 
     if (!m_isExpanded) {
         m_expandButton->setIcon(QIcon(":/icons/plus.svg"));
+        for (const auto& c : m_subcomponents) {
+            c->hide();
+        }
     } else {
         m_expandButton->setIcon(QIcon(":/icons/minus.svg"));
+        for (const auto& c : m_subcomponents) {
+            c->show();
+        }
     }
 
     // Recalculate geometry based on now showing child components
@@ -86,9 +83,44 @@ void ComponentGraphic::setExpandState(bool expanded) {
 
 void ComponentGraphic::calculateGeometry() {
     // Order matters!
+    calculateSubcomponentRect();
     calculateBaseRect();
     calculateTextPosition();
     calculateIOPositions();
+}
+
+void ComponentGraphic::calculateSubcomponentRect() {
+    if (m_isExpanded) {
+        QRectF subBoundingRect(pos(), QSize(0, 0));
+        for (const auto& c : m_subcomponents) {
+            // c->setPosition(subBoundingRect.topRight());
+            subBoundingRect = boundingRectOfRects(subBoundingRect, c->boundingRect());
+        }
+        m_subcomponentRect = subBoundingRect;
+    } else {
+        m_subcomponentRect = QRectF();
+    }
+}
+
+QRectF ComponentGraphic::sceneBaseRect() const {
+    return baseRect().translated(scenePos());
+}
+
+QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
+    if (change == ItemPositionChange && scene() && parentItem()) {
+        // Restrict position changes to inside parent item
+        const QRectF parentRect = static_cast<ComponentGraphic*>(parentItem())->baseRect();
+        const QRectF thisRect = boundingRect();
+        const QPointF offset = thisRect.topLeft();
+        QPointF newPos = value.toPointF();
+        if (!parentRect.contains(thisRect.translated(newPos))) {
+            // Keep the item inside the scene rect.
+            newPos.setX(qMin(parentRect.right() - thisRect.width(), qMax(newPos.x(), parentRect.left())));
+            newPos.setY(qMin(parentRect.bottom() - thisRect.height(), qMax(newPos.y(), parentRect.top())));
+            return newPos - offset;
+        }
+    }
+    return QGraphicsItem::itemChange(change, value);
 }
 
 void ComponentGraphic::calculateTextPosition() {
@@ -134,6 +166,11 @@ void ComponentGraphic::calculateBaseRect() {
     if (m_hasSubcomponents) {
         baseRect.adjust(0, 0, m_expandButtonProxy->boundingRect().width(),
                         m_expandButtonProxy->boundingRect().height());
+
+        // Adjust for size of the subcomponent rectangle
+        if (m_isExpanded) {
+            baseRect.adjust(0, 0, m_subcomponentRect.width(), m_subcomponentRect.height());
+        }
     }
 
     m_baseRect = baseRect;
@@ -211,6 +248,16 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             painter->drawLine(p, p + QPointF(IO_PIN_LEN, 0));
         }
     }
+
+    // DEBUG: draw bounding rect and base rect
+    painter->setPen(QPen(Qt::red, 1));
+    painter->drawRect(boundingRect());
+    painter->setPen(QPen(Qt::blue, 1));
+    painter->drawRect(baseRect());
+    painter->setPen(oldPen);
+    painter->setPen(QPen(Qt::red, 5));
+    painter->drawPoint(mapFromScene(pos()));
+    painter->setPen(oldPen);
 
     if (m_hasSubcomponents) {
         // Determine whether expand button should be shown

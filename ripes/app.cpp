@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
         ripes::ComponentGraphic* i = new ripes::ComponentGraphic(c);
         w.addComponent(i);
         i->initialize();
-        i->setPosition(QPointF(x, 0));
+        i->setPos(QPointF(x, 0));
         x += 150;
     }
     x = 0;
