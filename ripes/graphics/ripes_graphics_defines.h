@@ -12,5 +12,8 @@ namespace ripes {
 #define IO_PIN_LEN SIDE_MARGIN / 2
 
 #define SHADOW_OFFSET SIDE_MARGIN / 8
+#define SHADOW_WIDTH 1
+
+#define BUTTON_INDENT 2
 }
 #endif  // RIPES_GRAPHICS_DEFINES_H

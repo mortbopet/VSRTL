@@ -11,6 +11,9 @@ RipesView::RipesView(QWidget* parent) : QGraphicsView(parent) {
     m_zoom = 250;
 
     setDragMode(QGraphicsView::RubberBandDrag);
+    setOptimizationFlag(QGraphicsView::DontSavePainterState);
+    setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setInteractive(true);
 }
 

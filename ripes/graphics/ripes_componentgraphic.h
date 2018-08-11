@@ -23,6 +23,8 @@ public:
     void setPosition(const QPointF& pos);
     void initialize();
 
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
@@ -32,12 +34,20 @@ private slots:
     void setExpandState(bool state);
 
 private:
-    QRectF calculateBaseRect();
+    void moveChildrenToAnchor(const QPointF& pos);
+    void calculateBaseRect();
+    void calculateTextPosition();
+
+    bool m_isExpanded = false;
 
     QRectF m_baseRect;
+    QRectF m_boundingRect;
+    QRectF m_textRect;
     QFont m_font;
     QString m_displayText;
+
     QPointF m_textPos;
+    QPointF m_expandButtonPos;
 
     Component* m_component;
 

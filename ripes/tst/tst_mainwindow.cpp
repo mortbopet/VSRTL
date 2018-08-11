@@ -44,9 +44,8 @@ void tst_MainWindow::testSimpleArchitecture() {
 
     MainWindow w;
     adderAndReg design;
-    design.createComponentGraph();
 
-    auto components = design.getComponentSet();
+    auto components = design.getTopLevelComponents();
 
     int x = 0;
     for (auto& c : components) {

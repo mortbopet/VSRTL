@@ -14,6 +14,9 @@ ComponentGraphic::ComponentGraphic(Component* c) : m_component(c) {}
 void ComponentGraphic::initialize() {
     Q_ASSERT(scene() != nullptr);
 
+    setFlags(ItemIsSelectable | ItemIsMovable | ItemSendsScenePositionChanges);
+    setAcceptHoverEvents(true);
+
     m_displayText = QString::fromStdString(m_component->getDisplayName());
     m_font = QFont("Times", 10);
 
@@ -23,36 +26,77 @@ void ComponentGraphic::initialize() {
     QObject::connect(m_expandButton, &QToolButton::toggled, [=](bool state) { setExpandState(state); });
     m_expandButtonProxy = scene()->addWidget(m_expandButton);
 
-    m_baseRect = calculateBaseRect();
     setExpandState(false);
+
+    /** @warning calculateBaseRect should always be last! */
+    calculateBaseRect();
+}
+
+void ComponentGraphic::moveChildrenToAnchor(const QPointF& pos) {
+    // Move button
+    m_expandButtonProxy->setPos(pos + m_expandButtonPos);
+}
+
+QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
+    if (change == ItemPositionChange) {
+        moveChildrenToAnchor(value.toPointF());
+    }
+    return QGraphicsItem::itemChange(change, value);
 }
 
 void ComponentGraphic::setPosition(const QPointF& pos) {
     Q_ASSERT(scene() != nullptr);
-    m_expandButtonProxy->setPos(pos);
+    moveChildrenToAnchor(pos);
     setPos(pos);
 }
 
 void ComponentGraphic::setExpandState(bool expanded) {
-    if (!expanded) {
+    m_isExpanded = expanded;
+
+    if (!m_isExpanded) {
         m_expandButton->setIcon(QIcon(":/icons/plus.svg"));
     } else {
         m_expandButton->setIcon(QIcon(":/icons/minus.svg"));
     }
+
+    // Recalculate geometry based on now showing child components
+    calculateTextPosition();
+
+    update();
 }
 
-QRectF ComponentGraphic::calculateBaseRect() {
+void ComponentGraphic::calculateTextPosition() {
+    QPointF basePos(m_baseRect.width() / 2 - m_textRect.width() / 2, 0);
+    if (m_isExpanded) {
+        // Move text to top of component to make space for subcomponents
+        basePos.setY(BUTTON_INDENT + m_textRect.height());
+    } else {
+        basePos.setY(m_baseRect.height() / 2);
+    }
+    m_textPos = basePos;
+}
+
+void ComponentGraphic::calculateBaseRect() {
+    // ------------------ Base rect ------------------------
     QRectF baseRect(0, 0, TOP_MARGIN + BOT_MARGIN, SIDE_MARGIN * 2);
 
     // Calculate text width
     QFontMetrics fm(m_font);
-    auto textRect = fm.boundingRect(m_displayText);
-    baseRect.adjust(0, 0, textRect.width(), textRect.height());
+    m_textRect = fm.boundingRect(m_displayText);
+    baseRect.adjust(0, 0, m_textRect.width(), m_textRect.height());
 
-    // Calculate drawing position of display text
-    m_textPos = QPointF(baseRect.width() / 2 - textRect.width() / 2, baseRect.height() / 2 + textRect.height() / 4);
+    // Include expand button in baserect sizing
+    baseRect.adjust(0, 0, m_expandButtonProxy->boundingRect().width(), m_expandButtonProxy->boundingRect().height());
 
-    return baseRect;
+    m_baseRect = baseRect;
+    // ------------------ Post Base rect ------------------------
+    m_expandButtonPos = QPointF(BUTTON_INDENT, BUTTON_INDENT);
+    calculateTextPosition();
+
+    // ------------------ Bounding rect ------------------------
+    m_boundingRect = baseRect;
+    // Adjust for a potential shadow
+    m_boundingRect.adjust(0, 0, SHADOW_OFFSET + SHADOW_WIDTH, SHADOW_OFFSET + SHADOW_WIDTH);
 }
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
@@ -89,8 +133,8 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     painter->setBrush(b);
 
     // Draw shadow
-    if (lod >= 1) {
-        painter->setPen(QPen(Qt::gray, 1));
+    if (lod >= 0.5) {
+        painter->setPen(QPen(Qt::gray, SHADOW_WIDTH));
         painter->drawLine(m_baseRect.topRight() + QPointF(SHADOW_OFFSET, 0),
                           m_baseRect.bottomRight() + QPointF(SHADOW_OFFSET, SHADOW_OFFSET));
         painter->drawLine(m_baseRect.bottomLeft() + QPointF(0, SHADOW_OFFSET),
@@ -99,17 +143,24 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     }
 
     // Draw text
-    if (lod >= 1.0) {
+    if (lod >= 0.35) {
         painter->setFont(m_font);
         painter->save();
         // painter->scale(0.1, 0.1);
         painter->drawText(m_textPos, m_displayText);
         painter->restore();
     }
+
+    // Determine whether expand button should be shown
+    if (lod >= 0.35) {
+        m_expandButtonProxy->show();
+    } else {
+        m_expandButtonProxy->hide();
+    }
 }
 
 QRectF ComponentGraphic::boundingRect() const {
-    return m_baseRect;
+    return m_boundingRect;
 }
 
 void ComponentGraphic::mousePressEvent(QGraphicsSceneMouseEvent* event) {

@@ -153,6 +153,15 @@ public:
         return false;
     }
 
+    void loadProgram(const std::vector<char>& p) {
+        if (m_memory == nullptr) {
+            throw std::runtime_error("The architecture does not contain a memory. Set");
+        }
+    }
+
+    const std::vector<Component*>& getTopLevelComponents() const { return COMPONENT_CONTAINER; }
+
+private:
     void createComponentGraph() {
         m_componentGraph.clear();
         getComponentGraph(m_componentGraph);
@@ -165,20 +174,6 @@ public:
         }
     }
 
-    void loadProgram(const std::vector<char>& p) {
-        if (m_memory == nullptr) {
-            throw std::runtime_error("The architecture does not contain a memory. Set");
-        }
-    }
-
-    std::set<Component*> getComponentSet() const {
-        std::set<Component*> components;
-        for (auto& c : m_componentGraph)
-            components.insert(c.first);
-        return components;
-    }
-
-private:
     std::array<std::vector<RegisterBase*>, stageCount> m_stageRegisterBanks;
 
     std::shared_ptr<Memory> m_memory;

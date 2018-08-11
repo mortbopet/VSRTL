@@ -143,7 +143,7 @@ protected:
         }
     }
 
-private:
+protected:
     /**
      * @brief propagateInputs
      * For all registered input signals of this component, propagate the parent component of the input signal
