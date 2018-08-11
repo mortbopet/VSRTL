@@ -8,7 +8,6 @@ namespace ripes {
 #define SIDE_MARGIN TOP_MARGIN
 
 #define IO_MIN_SPACING TOP_MARGIN / 2
-
 #define IO_PIN_LEN SIDE_MARGIN / 2
 
 #define SHADOW_OFFSET SIDE_MARGIN / 8

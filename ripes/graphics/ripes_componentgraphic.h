@@ -11,13 +11,13 @@ namespace ripes {
 
 class ComponentGraphic : public QGraphicsItem {
 public:
-    ComponentGraphic(Component* c);
+    ComponentGraphic(Component* c, ComponentGraphic* parent = nullptr);
 
     QRectF boundingRect() const override;
     /** @todo remember to implement shape()
      * We do not want our bounding rectangle to be the shape of the object, since the IO pins of an object shouldnt be
      * factored into collisions - wherease shape() should be ONLY the object
-    */
+     */
     // QPainterPath shape() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void setPosition(const QPointF& pos);
@@ -37,8 +37,19 @@ private:
     void moveChildrenToAnchor(const QPointF& pos);
     void calculateBaseRect();
     void calculateTextPosition();
+    void createSubcomponents();
+    void calculateIOPositions();
+    void calculateGeometry();
 
     bool m_isExpanded = false;
+    bool m_hasSubcomponents;
+
+    ComponentGraphic* m_parent;
+
+    std::vector<ComponentGraphic*> m_subcomponents;
+
+    QMap<SignalBase***, QPointF> m_inputPositionMap;
+    QMap<SignalBase*, QPointF> m_outputPositionMap;
 
     QRectF m_baseRect;
     QRectF m_boundingRect;
@@ -54,6 +65,6 @@ private:
     QToolButton* m_expandButton;
     QGraphicsProxyWidget* m_expandButtonProxy;
 };
-}
+}  // namespace ripes
 
 #endif  // RIPES_COMPONENTGRAPHIC_H

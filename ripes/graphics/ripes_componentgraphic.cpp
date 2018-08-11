@@ -9,7 +9,7 @@
 
 namespace ripes {
 
-ComponentGraphic::ComponentGraphic(Component* c) : m_component(c) {}
+ComponentGraphic::ComponentGraphic(Component* c, ComponentGraphic* parent) : m_component(c), m_parent(parent) {}
 
 void ComponentGraphic::initialize() {
     Q_ASSERT(scene() != nullptr);
@@ -20,21 +20,40 @@ void ComponentGraphic::initialize() {
     m_displayText = QString::fromStdString(m_component->getDisplayName());
     m_font = QFont("Times", 10);
 
-    // Setup expand button
-    m_expandButton = new QToolButton();
-    m_expandButton->setCheckable(true);
-    QObject::connect(m_expandButton, &QToolButton::toggled, [=](bool state) { setExpandState(state); });
-    m_expandButtonProxy = scene()->addWidget(m_expandButton);
+    // Get IO of Component
+    for (const auto& c : m_component->getInputs()) {
+        m_inputPositionMap[c] = QPointF();
+    }
+    for (const auto& c : m_component->getOutputs()) {
+        m_outputPositionMap[c] = QPointF();
+    }
 
-    setExpandState(false);
+    m_hasSubcomponents = m_component->getSubComponents().size() > 0;
+    if (m_hasSubcomponents) {
+        // Setup expand button
+        m_expandButton = new QToolButton();
+        m_expandButton->setCheckable(true);
+        QObject::connect(m_expandButton, &QToolButton::toggled, [=](bool state) { setExpandState(state); });
+        m_expandButtonProxy = scene()->addWidget(m_expandButton);
 
-    /** @warning calculateBaseRect should always be last! */
-    calculateBaseRect();
+        setExpandState(false);
+    }
+
+    createSubcomponents();
+
+    calculateGeometry();
+}
+
+void ComponentGraphic::createSubcomponents() {
+    for (auto& c : m_component->getSubComponents()) {
+        m_subcomponents.push_back(new ComponentGraphic(c));
+    }
 }
 
 void ComponentGraphic::moveChildrenToAnchor(const QPointF& pos) {
     // Move button
-    m_expandButtonProxy->setPos(pos + m_expandButtonPos);
+    if (m_hasSubcomponents)
+        m_expandButtonProxy->setPos(pos + m_expandButtonPos);
 }
 
 QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
@@ -60,9 +79,16 @@ void ComponentGraphic::setExpandState(bool expanded) {
     }
 
     // Recalculate geometry based on now showing child components
-    calculateTextPosition();
+    calculateGeometry();
 
     update();
+}
+
+void ComponentGraphic::calculateGeometry() {
+    // Order matters!
+    calculateBaseRect();
+    calculateTextPosition();
+    calculateIOPositions();
 }
 
 void ComponentGraphic::calculateTextPosition() {
@@ -76,6 +102,25 @@ void ComponentGraphic::calculateTextPosition() {
     m_textPos = basePos;
 }
 
+void ComponentGraphic::calculateIOPositions() {
+    if (m_isExpanded) {
+        // Some fancy logic for positioning IO positions in the best way to facilitate nice signal lines between
+        // components
+    } else {
+        // Component is unexpanded - IO should be positionen in even positions
+        int i = 0;
+        for (auto& c : m_inputPositionMap) {
+            c = QPointF(m_baseRect.left(), (m_baseRect.height() / (m_inputPositionMap.size() + 1)) * (1 + i));
+            i++;
+        }
+        i = 0;
+        for (auto& c : m_outputPositionMap) {
+            c = QPointF(m_baseRect.right(), (m_baseRect.height() / (m_outputPositionMap.size() + 1)) * (1 + i));
+            i++;
+        }
+    }
+}
+
 void ComponentGraphic::calculateBaseRect() {
     // ------------------ Base rect ------------------------
     QRectF baseRect(0, 0, TOP_MARGIN + BOT_MARGIN, SIDE_MARGIN * 2);
@@ -86,17 +131,22 @@ void ComponentGraphic::calculateBaseRect() {
     baseRect.adjust(0, 0, m_textRect.width(), m_textRect.height());
 
     // Include expand button in baserect sizing
-    baseRect.adjust(0, 0, m_expandButtonProxy->boundingRect().width(), m_expandButtonProxy->boundingRect().height());
+    if (m_hasSubcomponents) {
+        baseRect.adjust(0, 0, m_expandButtonProxy->boundingRect().width(),
+                        m_expandButtonProxy->boundingRect().height());
+    }
 
     m_baseRect = baseRect;
     // ------------------ Post Base rect ------------------------
     m_expandButtonPos = QPointF(BUTTON_INDENT, BUTTON_INDENT);
-    calculateTextPosition();
 
     // ------------------ Bounding rect ------------------------
     m_boundingRect = baseRect;
     // Adjust for a potential shadow
     m_boundingRect.adjust(0, 0, SHADOW_OFFSET + SHADOW_WIDTH, SHADOW_OFFSET + SHADOW_WIDTH);
+
+    // Adjust for IO pins
+    m_boundingRect.adjust(-IO_PIN_LEN, 0, IO_PIN_LEN, 0);
 }
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
@@ -151,13 +201,26 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         painter->restore();
     }
 
-    // Determine whether expand button should be shown
-    if (lod >= 0.35) {
-        m_expandButtonProxy->show();
-    } else {
-        m_expandButtonProxy->hide();
+    // Draw IO markers
+    if (lod >= 0.5) {
+        painter->setPen(QPen(Qt::black, 1));
+        for (const auto& p : m_inputPositionMap) {
+            painter->drawLine(p, p - QPointF(IO_PIN_LEN, 0));
+        }
+        for (const auto& p : m_outputPositionMap) {
+            painter->drawLine(p, p + QPointF(IO_PIN_LEN, 0));
+        }
     }
-}
+
+    if (m_hasSubcomponents) {
+        // Determine whether expand button should be shown
+        if (lod >= 0.35) {
+            m_expandButtonProxy->show();
+        } else {
+            m_expandButtonProxy->hide();
+        }
+    }
+}  // namespace ripes
 
 QRectF ComponentGraphic::boundingRect() const {
     return m_boundingRect;
@@ -176,4 +239,4 @@ void ComponentGraphic::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     QGraphicsItem::mouseReleaseEvent(event);
     update();
 }
-}
+}  // namespace ripes

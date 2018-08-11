@@ -23,6 +23,7 @@ class Register : public RegisterBase {
 public:
     Register() {
         out->setPropagationFunction([=] { return buildUnsignedArr<width>(m_savedValue); });
+        m_displayName = "Register";
     }
 
     void reset() override final { out->setValue(buildUnsignedArr<width>(0)); }

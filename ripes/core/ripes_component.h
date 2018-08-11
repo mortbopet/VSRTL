@@ -129,6 +129,9 @@ public:
     }
 
     const std::string& getDisplayName() const { return m_displayName; }
+    const std::vector<Component*> getSubComponents() const { return COMPONENT_CONTAINER; }
+    const std::vector<SignalBase*> getOutputs() const { return OUTPUTS_CONTAINER; }
+    const std::vector<SignalBase***> getInputs() const { return INPUTS_CONTAINER; }
 
 protected:
     enum class PropagationState { unpropagated, propagating, propagated };
