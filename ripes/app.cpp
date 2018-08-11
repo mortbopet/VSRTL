@@ -1,40 +1,33 @@
 #include <QApplication>
+#include "ripes_adderandreg.h"
+#include "ripes_componentgraphic.h"
 #include "ripes_mainwindow.h"
 
 #include <chrono>
 
 #include <QDebug>
+#include <QFile>
 
 int main(int argc, char** argv) {
-    /*
-     Q_INIT_RESOURCE(icons);
-     QApplication app(argc, argv);
+    QApplication app(argc, argv);
 
-     ripes::MainWindow w;
-     ripes::AdderAndReg design;
-     design.createComponentGraph();
+    Q_INIT_RESOURCE(icons);
 
-     auto components = design.getComponentSet();
+    ripes::MainWindow w;
+    ripes::AdderAndReg design;
+    design.createComponentGraph();
 
-     int x = 0;
-     for (auto& c : components) {
-         ComponentGraphic* i = new ComponentGraphic(c);
-         w.addComponent(i);
-         i->initialize();
-         i->setPosition(QPointF(x, 0));
-         x += 150;
-     }
-     w.show();
+    auto components = design.getComponentSet();
 
-     app.exec();
+    int x = 0;
+    for (auto& c : components) {
+        ripes::ComponentGraphic* i = new ripes::ComponentGraphic(c);
+        w.addComponent(i);
+        i->initialize();
+        i->setPosition(QPointF(x, 0));
+        x += 150;
+    }
+    w.show();
 
-     ripes::MainWindow window(projectFileName);
-
-     QCoreApplication::setApplicationName("RTOC");
-     window.setWindowTitle(QCoreApplication::applicationName());
-
-     window.show();
-
-     return a.exec();
-     */
+    app.exec();
 }

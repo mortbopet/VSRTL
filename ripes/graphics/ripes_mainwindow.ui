@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QGraphicsView" name="view"/>
+     <layout class="QGridLayout" name="viewLayout"/>
     </item>
    </layout>
   </widget>

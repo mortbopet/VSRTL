@@ -18,9 +18,9 @@ void ComponentGraphic::initialize() {
     m_font = QFont("Times", 10);
 
     // Setup expand button
-    m_expandButton = new QPushButton();
+    m_expandButton = new QToolButton();
     m_expandButton->setCheckable(true);
-    QObject::connect(m_expandButton, &QPushButton::toggled, [=](bool state) { setExpandState(state); });
+    QObject::connect(m_expandButton, &QToolButton::toggled, [=](bool state) { setExpandState(state); });
     m_expandButtonProxy = scene()->addWidget(m_expandButton);
 
     m_baseRect = calculateBaseRect();
@@ -35,9 +35,9 @@ void ComponentGraphic::setPosition(const QPointF& pos) {
 
 void ComponentGraphic::setExpandState(bool expanded) {
     if (!expanded) {
-        m_expandButton->setIcon(QIcon("resources/plus.svg"));
+        m_expandButton->setIcon(QIcon(":/icons/plus.svg"));
     } else {
-        m_expandButton->setIcon(QIcon(":/minus.svg"));
+        m_expandButton->setIcon(QIcon(":/icons/minus.svg"));
     }
 }
 

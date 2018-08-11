@@ -3,7 +3,7 @@
 
 #include <QFont>
 #include <QGraphicsItem>
-#include <QPushButton>
+#include <QToolButton>
 
 #include "ripes_component.h"
 
@@ -41,7 +41,7 @@ private:
 
     Component* m_component;
 
-    QPushButton* m_expandButton;
+    QToolButton* m_expandButton;
     QGraphicsProxyWidget* m_expandButtonProxy;
 };
 }

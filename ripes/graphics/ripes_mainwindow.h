@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "ripes_componentgraphic.h"
+#include "ripes_ripesview.h"
 
 QT_FORWARD_DECLARE_CLASS(QGraphicsScene)
 
@@ -24,6 +25,7 @@ public:
 private:
     Ui::MainWindow* ui;
 
+    RipesView* m_view;
     QGraphicsScene* m_scene;
 };
 }

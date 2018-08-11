@@ -1,34 +1,6 @@
-#include "../core/ripes_alu.h"
-#include "ripes_architecture.h"
-#include "ripes_constant.h"
-#include "ripes_register.h"
-
 #include <QtTest/QTest>
 
-namespace ripes {
-/**
- * @brief tst_adderAndReg
- * Small test connecting an ALU, a constant and a register to test clocking of simple circuits
- */
-class AdderAndReg : public Architecture<3> {
-public:
-    static constexpr int m_cVal = 4;
-
-    // Create objects
-    SUBCOMPONENT(alu_ctrl, Constant, ALUctrlWidth(), ALU_OPCODE::ADD);
-    SUBCOMPONENT(c4, Constant, 32, 4);
-    SUBCOMPONENT(alu, ALU, 32);
-    SUBCOMPONENT(reg, Register, 32);
-
-    AdderAndReg() : Architecture() {
-        // Connect objects
-        connectSignal(c4->out, alu->op1);
-        connectSignal(reg->out, alu->op2);
-        connectSignal(alu_ctrl->out, alu->ctrl);
-        connectSignal(alu->out, reg->in);
-    }
-};
-}  // namespace ripes
+#include "ripes_adderandreg.h"
 
 class tst_adderAndReg : public QObject {
     Q_OBJECT private slots : void functionalTest();
