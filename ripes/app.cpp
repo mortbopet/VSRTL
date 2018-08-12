@@ -1,7 +1,7 @@
 #include <QApplication>
 #include "ripes_componentgraphic.h"
 #include "ripes_mainwindow.h"
-#include "ripes_nestedexponenter.h"
+#include "ripes_manynestedcomponents.h"
 
 #include <chrono>
 
@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     Q_INIT_RESOURCE(icons);
 
     ripes::MainWindow w;
-    ripes::NestedExponenter design;
+    ripes::ManyNestedComponents design;
 
     auto components = design.getTopLevelComponents();
 

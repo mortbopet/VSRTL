@@ -3,9 +3,10 @@
 
 namespace ripes {
 
-#define TOP_MARGIN 20
+#define TOP_MARGIN 10
 #define BOT_MARGIN TOP_MARGIN
 #define SIDE_MARGIN TOP_MARGIN
+#define RESIZE_CURSOR_MARGIN 10
 
 #define IO_MIN_SPACING TOP_MARGIN / 2
 #define IO_PIN_LEN SIDE_MARGIN / 2

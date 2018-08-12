@@ -28,28 +28,35 @@ protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+    void hoverMoveEvent(QGraphicsSceneHoverEvent* event);
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
 private slots:
     void setExpandState(bool state);
 
 private:
-    void calculateBaseRect();
+    enum GeometryChangeFlag { Resize = 1 << 0, Expand = 1 << 1, Collapse = 1 << 2, ChildJustExpanded = 1 << 3 };
+    void calculateBaseRect(GeometryChangeFlag flag);
     void calculateTextPosition();
     void createSubcomponents();
     void calculateIOPositions();
-    void calculateGeometry();
+    void calculateGeometry(GeometryChangeFlag flag);
     void calculateSubcomponentRect();
+    void calculateBoundingRect();
     void getSubGraphicsItems(QGraphicsItemGroup& g);
+    bool rectContainsAllSubcomponents(const QRectF& r) const;
 
     bool m_isExpanded = false;
     bool m_hasSubcomponents = false;
+    bool m_inDragZone = false;
+    bool m_dragging = false;
 
     std::vector<ComponentGraphic*> m_subcomponents;
 
     QMap<SignalBase***, QPointF> m_inputPositionMap;
     QMap<SignalBase*, QPointF> m_outputPositionMap;
 
+    QRectF m_savedBaseRect = QRectF();
     QRectF m_baseRect;
     QRectF m_boundingRect;
     QRectF m_textRect;

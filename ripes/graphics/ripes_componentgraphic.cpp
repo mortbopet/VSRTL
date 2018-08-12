@@ -6,6 +6,7 @@
 #include <qmath.h>
 #include <QGraphicsProxyWidget>
 #include <QGraphicsScene>
+#include <QGraphicsSceneHoverEvent>
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 
@@ -38,13 +39,14 @@ void ComponentGraphic::initialize() {
         QObject::connect(m_expandButton, &QToolButton::toggled, [=](bool state) { setExpandState(state); });
         m_expandButtonProxy = scene()->addWidget(m_expandButton);
         m_expandButtonProxy->setParentItem(this);
+        m_expandButtonProxy->setPos(QPointF(BUTTON_INDENT, BUTTON_INDENT));
 
         setExpandState(false);
     }
 
     createSubcomponents();
 
-    calculateGeometry();
+    calculateGeometry(Collapse);
 }
 
 void ComponentGraphic::createSubcomponents() {
@@ -63,12 +65,17 @@ void ComponentGraphic::createSubcomponents() {
 void ComponentGraphic::setExpandState(bool expanded) {
     m_isExpanded = expanded;
 
+    GeometryChangeFlag changeReason;
+
     if (!m_isExpanded) {
+        changeReason = Collapse;
+        m_savedBaseRect = m_baseRect;
         m_expandButton->setIcon(QIcon(":/icons/plus.svg"));
         for (const auto& c : m_subcomponents) {
             c->hide();
         }
     } else {
+        changeReason = Expand;
         m_expandButton->setIcon(QIcon(":/icons/minus.svg"));
         for (const auto& c : m_subcomponents) {
             c->show();
@@ -76,27 +83,38 @@ void ComponentGraphic::setExpandState(bool expanded) {
     }
 
     // Recalculate geometry based on now showing child components
-    calculateGeometry();
+    calculateGeometry(changeReason);
+}
+
+void ComponentGraphic::calculateGeometry(GeometryChangeFlag flag) {
+    // Rect will change when expanding, so notify canvas that the rect of the current component will be dirty
+    prepareGeometryChange();
+
+    // Order matters!
+    calculateSubcomponentRect();
+    calculateBaseRect(flag);
+    calculateBoundingRect();
+    calculateTextPosition();
+    calculateIOPositions();
+
+    // If we have a parent, they should now recalculate its geometry based on new size of this
+    if (parentItem() && flag & Expand) {
+        static_cast<ComponentGraphic*>(parentItem())->calculateGeometry(ChildJustExpanded);
+    }
 
     update();
 }
 
-void ComponentGraphic::calculateGeometry() {
-    // Order matters!
-    calculateSubcomponentRect();
-    calculateBaseRect();
-    calculateTextPosition();
-    calculateIOPositions();
-}
-
 void ComponentGraphic::calculateSubcomponentRect() {
     if (m_isExpanded) {
-        QRectF subBoundingRect(pos(), QSize(0, 0));
+        m_subcomponentRect = QRectF();
         for (const auto& c : m_subcomponents) {
-            // c->setPosition(subBoundingRect.topRight());
-            subBoundingRect = boundingRectOfRects(subBoundingRect, c->boundingRect());
+            // Bounding rects of subcomponents can have negative coordinates, but we want m_subcomponentRect to start in
+            // (0,0). Normalize to ensure.
+            m_subcomponentRect =
+                boundingRectOfRects<QRectF>(m_subcomponentRect, mapFromItem(c, c->boundingRect()).boundingRect());
         }
-        m_subcomponentRect = subBoundingRect;
+        m_subcomponentRect = normalizeRect(m_subcomponentRect);
     } else {
         m_subcomponentRect = QRectF();
     }
@@ -129,13 +147,13 @@ void ComponentGraphic::calculateTextPosition() {
         // Move text to top of component to make space for subcomponents
         basePos.setY(BUTTON_INDENT + m_textRect.height());
     } else {
-        basePos.setY(m_baseRect.height() / 2);
+        basePos.setY(m_baseRect.height() / 2 + m_textRect.height() / 4);
     }
     m_textPos = basePos;
 }
 
 void ComponentGraphic::calculateIOPositions() {
-    if (m_isExpanded) {
+    if (/*m_isExpanded*/ false) {
         // Some fancy logic for positioning IO positions in the best way to facilitate nice signal lines between
         // components
     } else {
@@ -153,32 +171,54 @@ void ComponentGraphic::calculateIOPositions() {
     }
 }
 
-void ComponentGraphic::calculateBaseRect() {
-    // ------------------ Base rect ------------------------
-    QRectF baseRect(0, 0, TOP_MARGIN + BOT_MARGIN, SIDE_MARGIN * 2);
+void ComponentGraphic::calculateBaseRect(GeometryChangeFlag flag) {
+    if (flag == Resize) {
+        // move operation has already resized base rect to a valid size
+        return;
+    }
+    if (flag == Expand && m_savedBaseRect != QRectF()) {
+        // Component has previously been expanded and potentially resized - just use the stored base rect size
+        m_baseRect = m_savedBaseRect;
+        return;
+    }
+
+    if (flag == ChildJustExpanded) {
+        if (!rectContainsAllSubcomponents(m_baseRect)) {
+            calculateSubcomponentRect();
+            m_baseRect.setBottomRight(m_subcomponentRect.bottomRight());
+        }
+        return;
+    }
+
+    m_baseRect = QRectF(0, 0, TOP_MARGIN + BOT_MARGIN, SIDE_MARGIN * 2);
 
     // Calculate text width
     QFontMetrics fm(m_font);
     m_textRect = fm.boundingRect(m_displayText);
-    baseRect.adjust(0, 0, m_textRect.width(), m_textRect.height());
+    m_baseRect.adjust(0, 0, m_textRect.width(), m_textRect.height());
 
     // Include expand button in baserect sizing
     if (m_hasSubcomponents) {
-        baseRect.adjust(0, 0, m_expandButtonProxy->boundingRect().width(),
-                        m_expandButtonProxy->boundingRect().height());
-
-        // Adjust for size of the subcomponent rectangle
-        if (m_isExpanded) {
-            baseRect.adjust(0, 0, m_subcomponentRect.width(), m_subcomponentRect.height());
-        }
+        m_baseRect.adjust(0, 0, m_expandButtonProxy->boundingRect().width(),
+                          m_expandButtonProxy->boundingRect().height());
     }
 
-    m_baseRect = baseRect;
+    // Adjust for size of the subcomponent rectangle
+    if (m_isExpanded) {
+        const auto dx = m_baseRect.width() - m_subcomponentRect.width() - SIDE_MARGIN * 2;
+        const auto dy =
+            m_baseRect.height() - m_subcomponentRect.height() - TOP_MARGIN - BOT_MARGIN - m_textRect.height();
+
+        // expand baseRect to fix subcomponent rect - this is the smallest possible base rect size, used for
+        m_baseRect.adjust(0, 0, dx < 0 ? -dx : 0, dy < 0 ? -dy : 0);
+    }
+
     // ------------------ Post Base rect ------------------------
     m_expandButtonPos = QPointF(BUTTON_INDENT, BUTTON_INDENT);
+}
 
-    // ------------------ Bounding rect ------------------------
-    m_boundingRect = baseRect;
+void ComponentGraphic::calculateBoundingRect() {
+    m_boundingRect = m_baseRect;
     // Adjust for a potential shadow
     m_boundingRect.adjust(0, 0, SHADOW_OFFSET + SHADOW_WIDTH, SHADOW_OFFSET + SHADOW_WIDTH);
 
@@ -187,7 +227,7 @@ void ComponentGraphic::calculateBaseRect() {
 }
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
-    QColor color(Qt::white);
+    QColor color = m_hasSubcomponents ? QColor("#ecf0f1") : QColor(Qt::white);
     QColor fillColor = (option->state & QStyle::State_Selected) ? color.dark(150) : color;
     if (option->state & QStyle::State_MouseOver)
         fillColor = fillColor.light(125);
@@ -216,6 +256,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     QBrush b = painter->brush();
     painter->setBrush(QBrush(fillColor.dark(option->state & QStyle::State_Sunken ? 120 : 100)));
 
+    painter->drawRect(m_baseRect);
     painter->drawRect(m_baseRect);
     painter->setBrush(b);
 
@@ -248,17 +289,12 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             painter->drawLine(p, p + QPointF(IO_PIN_LEN, 0));
         }
     }
-
-    // DEBUG: draw bounding rect and base rect
-    painter->setPen(QPen(Qt::red, 1));
-    painter->drawRect(boundingRect());
-    painter->setPen(QPen(Qt::blue, 1));
-    painter->drawRect(baseRect());
-    painter->setPen(oldPen);
-    painter->setPen(QPen(Qt::red, 5));
-    painter->drawPoint(mapFromScene(pos()));
-    painter->setPen(oldPen);
-
+    /*
+        // DEBUG: draw bounding rect and base rect
+        painter->setPen(QPen(Qt::red, 1));
+        painter->drawRect(boundingRect());
+        painter->setPen(oldPen);
+    */
     if (m_hasSubcomponents) {
         // Determine whether expand button should be shown
         if (lod >= 0.35) {
@@ -267,23 +303,60 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             m_expandButtonProxy->hide();
         }
     }
-}  // namespace ripes
+}
+
+bool ComponentGraphic::rectContainsAllSubcomponents(const QRectF& r) const {
+    bool allInside = true;
+    for (const auto& rect : m_subcomponents) {
+        auto r2 = mapFromItem(rect, rect->boundingRect()).boundingRect();
+        allInside &= r.contains(r2);
+    }
+    return allInside;
+}
 
 QRectF ComponentGraphic::boundingRect() const {
     return m_boundingRect;
 }
 
 void ComponentGraphic::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+    if (event->button() == Qt::LeftButton && m_inDragZone) {
+        // start resize drag
+        setFlags(flags() & ~ItemIsMovable);
+        m_dragging = true;
+    }
+
     QGraphicsItem::mousePressEvent(event);
-    update();
 }
 
 void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+    if (m_dragging) {
+        QPointF pos = event->pos();
+        auto newRect = m_baseRect;
+        newRect.setBottomRight(pos);
+        if (rectContainsAllSubcomponents(newRect)) {
+            m_baseRect = newRect;
+            calculateGeometry(Resize);
+        }
+    }
+
     QGraphicsItem::mouseMoveEvent(event);
 }
 
 void ComponentGraphic::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
+    setFlags(flags() | ItemIsMovable);
+    m_dragging = false;
+
     QGraphicsItem::mouseReleaseEvent(event);
-    update();
+}
+
+void ComponentGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
+    if (baseRect().width() - event->pos().x() <= RESIZE_CURSOR_MARGIN &&
+        baseRect().height() - event->pos().y() <= RESIZE_CURSOR_MARGIN && m_hasSubcomponents && m_isExpanded) {
+        this->setCursor(Qt::SizeFDiagCursor);
+        m_inDragZone = true;
+    } else {
+        this->setCursor(Qt::ArrowCursor);
+        m_inDragZone = false;
+    }
 }
 }  // namespace ripes
