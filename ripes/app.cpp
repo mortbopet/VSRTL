@@ -1,7 +1,7 @@
 #include <QApplication>
-#include "ripes_componentgraphic.h"
+#include "ripes_adderandreg.h"
 #include "ripes_mainwindow.h"
-#include "ripes_manynestedcomponents.h"
+#include "ripes_nestedexponenter.h"
 
 #include <chrono>
 
@@ -14,19 +14,9 @@ int main(int argc, char** argv) {
     Q_INIT_RESOURCE(icons);
 
     ripes::MainWindow w;
-    ripes::ManyNestedComponents design;
+    ripes::AdderAndReg design;
 
-    auto components = design.getTopLevelComponents();
-
-    int x = 0;
-    for (auto& c : components) {
-        ripes::ComponentGraphic* i = new ripes::ComponentGraphic(c);
-        w.addComponent(i);
-        i->initialize();
-        i->setPos(QPointF(x, 0));
-        x += 150;
-    }
-    x = 0;
+    w.initializeArchitecture(&design);
 
     w.show();
 

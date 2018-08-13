@@ -2,6 +2,7 @@
 #define RIPES_RIPESVIEW_H
 
 #include <QGraphicsView>
+#include "ripes_componentgraphic.h"
 
 namespace ripes {
 
@@ -9,6 +10,7 @@ class RipesView : public QGraphicsView {
     Q_OBJECT
 public:
     RipesView(QWidget* parent);
+    ComponentGraphic* lookupGraphicForComponent(const Component* c);
 
 protected:
     void wheelEvent(QWheelEvent*) override;

@@ -1,4 +1,5 @@
 #include "ripes_mainwindow.h"
+#include "ripes_architecture.h"
 #include "ui_ripes_mainwindow.h"
 
 #include <QGraphicsScene>
@@ -12,10 +13,21 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     m_scene = new QGraphicsScene(this);
     m_view->setScene(m_scene);
     ui->viewLayout->addWidget(m_view);
+
+    m_ch = new CircuitHandler(m_view);
 }
 
 MainWindow::~MainWindow() {
     delete ui;
+}
+
+void MainWindow::initializeArchitecture(Architecture* arch) {
+    ripes::ComponentGraphic* i = new ripes::ComponentGraphic(arch);
+    addComponent(i);
+    i->initialize();
+
+    // Order initial component view
+    m_ch->orderSubcomponents(i);
 }
 
 void MainWindow::addComponent(ComponentGraphic* g) {

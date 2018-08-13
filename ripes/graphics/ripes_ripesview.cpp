@@ -17,6 +17,17 @@ RipesView::RipesView(QWidget* parent) : QGraphicsView(parent) {
     setInteractive(true);
 }
 
+ComponentGraphic* RipesView::lookupGraphicForComponent(const Component* c) {
+    for (const auto& i : items()) {
+        auto d = dynamic_cast<ComponentGraphic*>(i);
+        if (d) {
+            if (d->getComponent() == c)
+                return d;
+        }
+    }
+    return nullptr;
+}
+
 void RipesView::wheelEvent(QWheelEvent* e) {
     if (e->modifiers() & Qt::ControlModifier) {
         if (e->delta() > 0)

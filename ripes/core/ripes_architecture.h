@@ -18,12 +18,9 @@ namespace ripes {
  * superclass for all architecture descriptions
  */
 
-template <int stageCount>
 class Architecture : public Component {
     NON_REGISTER_COMPONENT
 public:
-    static_assert(stageCount >= 0, "number of stages must be positive");
-
     Architecture(int flags = 0) : Component("Top") {
         // components are now recorded, and architecture-constant objects can be instantiated
         if (flags & dataMemory)
@@ -161,6 +158,11 @@ public:
 
     const std::vector<Component*>& getTopLevelComponents() const { return COMPONENT_CONTAINER; }
 
+    const std::map<Component*, std::vector<Component*>> getDesignGraph() {
+        assert(isVerifiedAndInitialized);
+        return m_componentGraph;
+    }
+
 private:
     void createComponentGraph() {
         m_componentGraph.clear();
@@ -173,8 +175,6 @@ private:
             }
         }
     }
-
-    std::array<std::vector<RegisterBase*>, stageCount> m_stageRegisterBanks;
 
     std::shared_ptr<Memory> m_memory;
 

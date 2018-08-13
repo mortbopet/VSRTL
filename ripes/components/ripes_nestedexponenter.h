@@ -12,10 +12,6 @@ namespace ripes {
 class Exponenter : public Component {
     NON_REGISTER_COMPONENT
 public:
-    SUBCOMPONENT(reg, Register, 32);
-    SUBCOMPONENT(mul, ALU, 32);
-    SUBCOMPONENT(aluOp, Constant, ALUctrlWidth(), ALU_OPCODE::MUL);
-
     INPUTSIGNAL(in, 32);
     OUTPUTSIGNAL(out, 32);
 
@@ -30,18 +26,14 @@ public:
 
         out->setPropagationFunction(reg->out->getFunctor());
     }
+
+    SUBCOMPONENT(reg, Register, 32);
+    SUBCOMPONENT(mul, ALU, 32);
+    SUBCOMPONENT(aluOp, Constant, ALUctrlWidth(), ALU_OPCODE::MUL);
 };
 
-class NestedExponenter : public Architecture<0> {
+class NestedExponenter : public Architecture {
 public:
-    // Create objects
-    SUBCOMPONENT_NT(exp, Exponenter);
-    SUBCOMPONENT(reg, Register, 32);
-    SUBCOMPONENT(adder, ALU, 32);
-    SUBCOMPONENT(add2, ALU, 32);
-    SUBCOMPONENT(c2, Constant, 32, 2);
-    SUBCOMPONENT(aluOp, Constant, ALUctrlWidth(), ALU_OPCODE::ADD);
-
     NestedExponenter() {
         connectSignal(exp->out, adder->op1);
         connectSignal(reg->out, adder->op2);
@@ -54,7 +46,14 @@ public:
         connectSignal(c2->out, add2->op2);
         connectSignal(aluOp->out, add2->ctrl);
     }
+    // Create objects
+    SUBCOMPONENT_NT(exp, Exponenter);
+    SUBCOMPONENT(reg, Register, 32);
+    SUBCOMPONENT(adder, ALU, 32);
+    SUBCOMPONENT(add2, ALU, 32);
+    SUBCOMPONENT(c2, Constant, 32, 2);
+    SUBCOMPONENT(aluOp, Constant, ALUctrlWidth(), ALU_OPCODE::ADD);
 };
 }  // namespace ripes
 
-#endif // RIPES_NESTEDEXPONENTER_H
+#endif  // RIPES_NESTEDEXPONENTER_H

@@ -57,7 +57,7 @@ void ComponentGraphic::createSubcomponents() {
         nc->setParentItem(this);
         m_subcomponents.push_back(nc);
         if (!m_isExpanded) {
-            nc->hide();
+            // nc->hide();
         }
     }
 }
@@ -125,7 +125,7 @@ QRectF ComponentGraphic::sceneBaseRect() const {
 }
 
 QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
-    if (change == ItemPositionChange && scene() && parentItem()) {
+    if (change == ItemPositionChange && scene() && parentItem() && false) {
         // Restrict position changes to inside parent item
         const QRectF parentRect = static_cast<ComponentGraphic*>(parentItem())->baseRect();
         const QRectF thisRect = boundingRect();

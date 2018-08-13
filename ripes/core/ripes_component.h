@@ -36,14 +36,18 @@ namespace ripes {
  */
 class Component;
 
-#define SUBCOMPONENT(name, type, ...) type<__VA_ARGS__>* name = create_component<type<__VA_ARGS__>>(this)
+#define SUBCOMPONENT(name, type, ...) \
+private:                              \
+    type<__VA_ARGS__>* name = create_component<type<__VA_ARGS__>>(this)
 
 // Non-templated subcomponent construction macro
-#define SUBCOMPONENT_NT(name, type) type* name = create_component<type>(this)
+#define SUBCOMPONENT_NT(name, type) \
+private:                            \
+    type* name = create_component<type>(this)
 
 class Component {
 public:
-    Component(std::string displayName) : m_displayName(displayName) {}
+    Component(std::string displayName, Component* parent = nullptr) : m_displayName(displayName), m_parent(parent) {}
 
     virtual bool isRegister() = 0;
     virtual void resetPropagation() { m_propagationState = PropagationState::unpropagated; }
@@ -128,10 +132,18 @@ public:
         return true;
     }
 
+    const Component* const& getParent() const { return m_parent; }
     const std::string& getDisplayName() const { return m_displayName; }
-    const std::vector<Component*> getSubComponents() const { return COMPONENT_CONTAINER; }
-    const std::vector<SignalBase*> getOutputs() const { return OUTPUTS_CONTAINER; }
-    const std::vector<SignalBase***> getInputs() const { return INPUTS_CONTAINER; }
+    const std::vector<Component*>& getSubComponents() const { return COMPONENT_CONTAINER; }
+    const std::vector<SignalBase*>& getOutputs() const { return OUTPUTS_CONTAINER; }
+    const std::vector<SignalBase***>& getInputs() const { return INPUTS_CONTAINER; }
+    std::vector<Component*> getInputComponents() const {
+        std::vector<Component*> v;
+        for (auto& s : INPUTS_CONTAINER) {
+            v.push_back((**s)->getParent());
+        }
+        return v;
+    }
 
 protected:
     enum class PropagationState { unpropagated, propagating, propagated };
@@ -162,6 +174,7 @@ protected:
 
     std::string m_displayName;
 
+    Component* m_parent = nullptr;
     std::vector<SignalBase*> OUTPUTS_CONTAINER;
     std::vector<SignalBase***> INPUTS_CONTAINER;
     std::vector<Component*> COMPONENT_CONTAINER;

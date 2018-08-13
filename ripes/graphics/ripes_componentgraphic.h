@@ -24,6 +24,8 @@ public:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void initialize();
 
+    const Component* getComponent() const { return m_component; }
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
