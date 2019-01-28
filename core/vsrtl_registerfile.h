@@ -45,7 +45,7 @@ public:
     }
 
     uint32_t value(uint32_t index) const {
-        if (index >= 0 || index < 32) {
+        if (index < 32) {
             return m_reg[index];
         } else {
             return 0;

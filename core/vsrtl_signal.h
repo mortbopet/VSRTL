@@ -58,7 +58,7 @@ public:
      */
     void setValue(std::array<bool, width> v) { m_value = v; }
 
-    void propagate() { m_value = m_propagationFunction(); }
+    void propagate() override { m_value = m_propagationFunction(); }
     bool hasPropagationFunction() const override { return m_propagationFunction != nullptr; }
     void setPropagationFunction(std::function<std::array<bool, width>()> f) { m_propagationFunction = f; }
 
