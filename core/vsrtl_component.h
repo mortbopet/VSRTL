@@ -56,9 +56,9 @@ public:
 
     void addSubcomponent(Component* subcomponent) { COMPONENT_CONTAINER.push_back(subcomponent); }
 
-    template <uint32_t width>
-    Signal<width>* createOutputSignal() {
-        auto signal = new Signal<width>(this);
+    template <uint32_t bitwidth>
+    Signal<bitwidth>* createOutputSignal() {
+        auto signal = new Signal<bitwidth>(this);
         OUTPUTS_CONTAINER.push_back(signal);
         return signal;
     }

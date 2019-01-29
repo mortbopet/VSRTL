@@ -27,54 +27,62 @@ public:
     virtual bool hasPropagationFunction() const = 0;
     virtual void propagate() = 0;
     Component* getParent() { return m_parent; }
+    virtual unsigned int width() const = 0;
+
+    // Value access operators
+    virtual explicit operator int() const = 0;
+    virtual explicit operator unsigned int() const = 0;
+    virtual explicit operator bool() const = 0;
 
 private:
     Component* m_parent = nullptr;
 };
 
-template <uint32_t width>
+template <unsigned int bitwidth>
 class Signal : public SignalBase {
 public:
     Signal(Component* parent) : SignalBase(parent) {}
 
-    template <typename T = uint32_t>
+    unsigned int width() const override { return bitwidth; }
+
+    template <typename T = unsigned int>
     T value() {
         return static_cast<T>(*this);
     }
 
-    std::function<std::array<bool, width>()> getFunctor() {
+    std::function<std::array<bool, bitwidth>()> getFunctor() {
         return [=] { return m_value; };
     }
 
     // Casting operators
-    operator int() const { return signextend<int32_t, width>(accBVec<width>(m_value)); }
-    operator uint32_t() const { return accBVec<width>(m_value); }
-    operator bool() const { return m_value[0]; }
+    explicit operator int() const override { return signextend<int32_t, bitwidth>(accBVec<bitwidth>(m_value)); }
+    explicit operator unsigned int() const override { return accBVec<bitwidth>(m_value); }
+    explicit operator bool() const override { return m_value[0]; }
 
     /**
      * @brief setValue
      * Used when hard-setting a signals value (ie. used by registers when resetting their output signals
      * @param v
      */
-    void setValue(std::array<bool, width> v) { m_value = v; }
+    void setValue(std::array<bool, bitwidth> v) { m_value = v; }
 
     void propagate() override { m_value = m_propagationFunction(); }
     bool hasPropagationFunction() const override { return m_propagationFunction != nullptr; }
-    void setPropagationFunction(std::function<std::array<bool, width>()> f) { m_propagationFunction = f; }
+    void setPropagationFunction(std::function<std::array<bool, bitwidth>()> f) { m_propagationFunction = f; }
 
 private:
     // Binary array representing the current value of the primitive
-    std::array<bool, width> m_value = buildUnsignedArr<width>(0);
-    std::function<std::array<bool, width>()> m_propagationFunction;
+    std::array<bool, bitwidth> m_value = buildUnsignedArr<bitwidth>(0);
+    std::function<std::array<bool, bitwidth>()> m_propagationFunction;
 };
 
-template <uint32_t width>
-void connectSignal(Signal<width>*& fromThisOutput, Signal<width>***& toThisInput) {
+template <unsigned int bitwidth>
+void connectSignal(Signal<bitwidth>*& fromThisOutput, Signal<bitwidth>***& toThisInput) {
     *(*toThisInput) = fromThisOutput;
 }
 
-template <uint32_t width>
-void connectSignal(Signal<width>***& fromThisInput, Signal<width>***& toThisInput) {
+template <unsigned int bitwidth>
+void connectSignal(Signal<bitwidth>***& fromThisInput, Signal<bitwidth>***& toThisInput) {
     *toThisInput = *fromThisInput;
 }
 
