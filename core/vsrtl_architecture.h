@@ -41,7 +41,7 @@ public:
      * @pre A call to propagate() must be done, to set the initial state of the circuit
      */
     void clock() {
-        if (!isVerifiedAndInitialized) {
+        if (!m_isVerifiedAndInitialized) {
             throw std::runtime_error("Design was not verified and initialized before clocking.");
         }
 
@@ -86,7 +86,7 @@ public:
      * propagates the circuit to set the initial state.
      */
     void verifyAndInitialize() {
-        if (isVerifiedAndInitialized)
+        if (m_isVerifiedAndInitialized)
             return;
 
         createComponentGraph();
@@ -108,7 +108,7 @@ public:
         // Propagate initial state of circuit elements through circuit (For the sake of constants being propagated)
         propagateDesign();
 
-        isVerifiedAndInitialized = true;
+        m_isVerifiedAndInitialized = true;
     }
 
     bool cycleUtil(Component* c, std::map<Component*, bool>& visited, std::map<Component*, bool>& recurseStack) {
@@ -149,7 +149,7 @@ public:
     const std::vector<Component*>& getTopLevelComponents() const { return COMPONENT_CONTAINER; }
 
     const std::map<Component*, std::vector<Component*>> getDesignGraph() {
-        assert(isVerifiedAndInitialized);
+        assert(m_isVerifiedAndInitialized);
         return m_componentGraph;
     }
 

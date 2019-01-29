@@ -52,7 +52,7 @@ public:
     virtual bool isRegister() const = 0;
     virtual void resetPropagation() { m_propagationState = PropagationState::unpropagated; }
 
-    mutable bool isVerifiedAndInitialized = false;
+    mutable bool m_isVerifiedAndInitialized = false;
 
     void addSubcomponent(Component* subcomponent) { COMPONENT_CONTAINER.push_back(subcomponent); }
 
