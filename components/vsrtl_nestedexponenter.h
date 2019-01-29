@@ -16,13 +16,13 @@ public:
     OUTPUTSIGNAL(out, 32);
 
     Exponenter() : Component("Exponenter") {
-        connectSignal(mul->out, reg->in);
+        mul->out >> reg->in;
 
-        connectSignal(out, in);
+        out >> in;
 
-        connectSignal(in, mul->op1);
-        connectSignal(in, mul->op2);
-        connectSignal(aluOp->value, mul->ctrl);
+        in >> mul->op1;
+        in >> mul->op2;
+        aluOp->value >> mul->ctrl;
 
         out.setPropagationFunction(reg->out.getFunctor());
     }
@@ -35,16 +35,16 @@ public:
 class NestedExponenter : public Architecture {
 public:
     NestedExponenter() {
-        connectSignal(exp->out, adder->op1);
-        connectSignal(reg->out, adder->op2);
-        connectSignal(aluOp->value, adder->ctrl);
+        exp->out >> adder->op1;
+        reg->out >> adder->op2;
+        aluOp->value >> adder->ctrl;
 
-        connectSignal(add2->out, reg->in);
-        connectSignal(adder->out, exp->in);
+        add2->out >> reg->in;
+        adder->out >> exp->in;
 
-        connectSignal(adder->out, add2->op1);
-        connectSignal(c2->value, add2->op2);
-        connectSignal(aluOp->value, add2->ctrl);
+        adder->out >> add2->op1;
+        c2->value >> add2->op2;
+        aluOp->value >> add2->ctrl;
     }
     // Create objects
     SUBCOMPONENT_NT(exp, Exponenter);

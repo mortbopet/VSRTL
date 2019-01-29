@@ -18,13 +18,13 @@ public:
     addOp() {
         // Connect objects
 
-        connectSignal(c4->value, alu->op1);
-        connectSignal(alu_ctrl->value, alu->ctrl);
-        connectSignal(*regs->operands[0], alu->op2);
-        connectSignal(c1->value, regs->writeEnable);
-        connectSignal(c5->value, regs->writeRegister);
-        connectSignal(alu->out, regs->writeData);
-        connectSignal(c_instr->value, regs->instruction);
+        c4->value >> alu->op1;
+        alu_ctrl->value >> alu->ctrl;
+        *regs->operands[0] >> alu->op2;
+        c1->value >> regs->writeEnable;
+        c5->value >> regs->writeRegister;
+        alu->out >> regs->writeData;
+        c_instr->value >> regs->instruction;
     }
 
     // Create objects

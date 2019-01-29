@@ -12,10 +12,10 @@ class AdderAndReg : public Architecture {
 public:
     AdderAndReg() : Architecture() {
         // Connect objects
-        connectSignal(c4->value, alu->op1);
-        connectSignal(reg->out, alu->op2);
-        connectSignal(alu_ctrl->value, alu->ctrl);
-        connectSignal(alu->out, reg->in);
+        c4->value >> alu->op1;
+        reg->out >> alu->op2;
+        alu_ctrl->value >> alu->ctrl;
+        alu->out >> reg->in;
     }
     static constexpr int m_cVal = 4;
 
