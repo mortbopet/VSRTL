@@ -6,6 +6,7 @@
 #include <initializer_list>
 #include <memory>
 #include <type_traits>
+#include <variant>
 
 #include "vsrtl_binutils.h"
 #include "vsrtl_defines.h"
@@ -20,7 +21,7 @@ class SignalBase {
     friend class Component;
 
 public:
-    SignalBase(Component* parent) : m_parent(parent) {}
+    SignalBase(Component* parent, const char* name) : m_name(name), m_parent(parent) {}
     virtual ~SignalBase() {}
 
     // Checks whether a propagation function has been set for the signal - required for the signal to generate its
@@ -35,24 +36,19 @@ public:
     virtual explicit operator unsigned int() const = 0;
     virtual explicit operator bool() const = 0;
 
-    const std::string& getName() const { return m_name; }
+    const char* getName() const { return m_name; }
 
 protected:
-    std::string m_name;
+    const char* m_name;
 
 private:
     Component* m_parent = nullptr;
 };
 
-using InputSignalRawPtr = SignalBase***;
-using OutputSignalRawPtr = SignalBase*;
-using InputSignal = InputSignalRawPtr;  // std::unique_ptr<SignalBase**>;
-using OutputSignal = std::unique_ptr<SignalBase>;
-
 template <unsigned int bitwidth>
 class Signal : public SignalBase {
 public:
-    Signal(Component* parent, const char* name = "") : SignalBase(parent) { m_name = name; }
+    Signal(Component* parent, const char* name) : SignalBase(parent, name) {}
 
     unsigned int width() const override { return bitwidth; }
 
@@ -87,31 +83,90 @@ private:
     std::function<std::array<bool, bitwidth>()> m_propagationFunction;
 };
 
+using InputSignalRawPtr = SignalBase***;
+using OutputSignalRawPtr = SignalBase*;
+using OutputSignal = std::unique_ptr<SignalBase>;
+
 /**
- * Two levels of indirection is needed for connecting components such as
- * input -> input -> output
+ * Input signals can either refer to other input signals, or to an output signal
+ * of other components. To represent this, we use std::variant
  */
 
-/*
-template <uint32_t width>
-class InputSignal {
-    InputSignal() {
-        *in = inPtr;
-        *inPtr = nullptr;
-    }
+class InputSignalBase {
+public:
+    InputSignalBase(Component* parent, const char* name) : m_name(name), m_parent(parent) {}
+    Component* getParent() { return m_parent; }
+    virtual bool isConnected() const = 0;
+
+    /*
+    Wish i could do something like
 
     template<typename T>
-    T value(){
-          return static_cast<T>(*inPtr);
-    }
+    virtual T getValue() const = 0;
+    */
+
+    virtual explicit operator int() const = 0;
+    virtual explicit operator unsigned int() const = 0;
+    virtual explicit operator bool() const = 0;
+
+    const char* getName() const { return m_name; }
 
 private:
-    Signal<width>** in = nullptr;
-    Signal<width>* inPtr = nullptr;
-
-    std::string m_name;
+    const char* m_name;
+    Component* m_parent = nullptr;
 };
 
+template <class... Ts>
+struct overloadVisitor : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts>
+overloadVisitor(Ts...)->overloadVisitor<Ts...>;
+
+template <uint32_t bitwidth>
+class InputSignalT : public InputSignalBase {
+public:
+    InputSignalT(Component* parent, const char* name) : InputSignalBase(parent, name) {
+        // Initially an input signal is connected to a null Signal
+        m_signal = static_cast<Signal<bitwidth>*>(nullptr);
+    }
+
+    explicit operator int() const override { return value<int>(); }
+    explicit operator unsigned int() const override { return value<unsigned int>(); }
+    explicit operator bool() const override { return value<bool>(); }
+
+    template <typename T>
+    T value() const {
+        T value;
+        std::visit(
+            overloadVisitor{
+                [&value](Signal<bitwidth>* arg) { value = arg->template value<T>(); },
+                [&value](InputSignalT<bitwidth>* arg) { value = arg->template value<T>(); },
+            },
+            m_signal);
+        return value;
+    }
+
+    bool isConnected() const override {
+        bool connected;
+        std::visit(
+            overloadVisitor{
+                [&connected](Signal<bitwidth>* arg) { connected = arg != nullptr; },
+                [&connected](InputSignalT<bitwidth>* arg) { connected = arg->isConnected(); },
+            },
+            m_signal);
+        return connected;
+    }
+
+    void connect(InputSignalT<bitwidth>& otherInput) { m_signal = &otherInput; }
+
+    void connect(Signal<bitwidth>* output) { m_signal = output; }
+
+private:
+    std::variant<Signal<bitwidth>*, InputSignalT<bitwidth>*> m_signal;
+};
+
+/*
 template <uint32_t width>
 class OutputSignal {
 
@@ -124,13 +179,23 @@ private:
 */
 
 template <unsigned int bitwidth>
-void connectSignal(Signal<bitwidth>* fromThisOutput, Signal<bitwidth>*** toThisInput) {
-    *(*toThisInput) = fromThisOutput;
+void operator>>(Signal<bitwidth>* output, InputSignalT<bitwidth>& input) {
+    input.connect(output);
 }
 
 template <unsigned int bitwidth>
-void connectSignal(Signal<bitwidth>*** fromThisInput, Signal<bitwidth>*** toThisInput) {
-    *toThisInput = *fromThisInput;
+void operator>>(InputSignalT<bitwidth>& fromInput, InputSignalT<bitwidth>& input) {
+    input.connect(fromInput);
+}
+
+template <unsigned int bitwidth>
+void connectSignal(Signal<bitwidth>* fromThisOutput, InputSignalT<bitwidth>* toThisInput) {
+    toThisInput->connect(fromThisOutput);
+}
+
+template <unsigned int bitwidth>
+void connectSignal(InputSignalT<bitwidth>* fromThisInput, InputSignalT<bitwidth>* toThisInput) {
+    toThisInput->connect(*fromThisInput);
 }
 
 }  // namespace vsrtl

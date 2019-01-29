@@ -22,7 +22,7 @@ public:
 
         connectSignal(in, mul->op1);
         connectSignal(in, mul->op2);
-        connectSignal(aluOp->out, mul->ctrl);
+        connectSignal(aluOp->value, mul->ctrl);
 
         out->setPropagationFunction(reg->out->getFunctor());
     }
@@ -37,14 +37,14 @@ public:
     NestedExponenter() {
         connectSignal(exp->out, adder->op1);
         connectSignal(reg->out, adder->op2);
-        connectSignal(aluOp->out, adder->ctrl);
+        connectSignal(aluOp->value, adder->ctrl);
 
         connectSignal(add2->out, reg->in);
         connectSignal(adder->out, exp->in);
 
         connectSignal(adder->out, add2->op1);
-        connectSignal(c2->out, add2->op2);
-        connectSignal(aluOp->out, add2->ctrl);
+        connectSignal(c2->value, add2->op2);
+        connectSignal(aluOp->value, add2->ctrl);
     }
     // Create objects
     SUBCOMPONENT_NT(exp, Exponenter);

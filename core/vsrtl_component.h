@@ -43,10 +43,10 @@ private:                              \
 private:                            \
     type* name = create_component<type>(this)
 
-#define INPUTSIGNAL(name, width) Signal<width>*** name = this->createInputSignal<width>()
-#define OUTPUTSIGNAL(name, width) Signal<width>* name = createOutputSignal<width>(#name)
+#define INPUTSIGNAL(name, bitwidth) InputSignalT<bitwidth>* name = this->createInputSignal<bitwidth>(#name)
+#define OUTPUTSIGNAL(name, bitwidth) Signal<bitwidth>* name = createOutputSignal<bitwidth>(#name)
 
-#define SIGNAL_VALUE(input, type) (*(*input))->template value<type>()
+#define SIGNAL_VALUE(input, type) input->value<type>()
 
 class Component {
 public:
@@ -76,11 +76,9 @@ public:
     }
 
     template <uint32_t bitwidth>
-    Signal<bitwidth>*** createInputSignal() {
-        Signal<bitwidth>*** signal = new Signal<bitwidth>**();
-        *signal = new Signal<bitwidth>*();
-        **signal = nullptr;
-        m_inputsignals.push_back(reinterpret_cast<SignalBase***>(signal));
+    InputSignalT<bitwidth>* createInputSignal(const char* name) {
+        InputSignalT<bitwidth>* signal = new InputSignalT<bitwidth>(this, name);
+        m_inputsignals.push_back(std::unique_ptr<InputSignalT<bitwidth>>(signal));
         return signal;
     }
 
@@ -121,7 +119,7 @@ public:
      */
     bool verifyInputs() {
         for (const auto& i : m_inputsignals) {
-            if (*i == nullptr) {
+            if (!i->isConnected()) {
                 return false;
             }
         }
@@ -145,11 +143,11 @@ public:
     const std::string& getDisplayName() const { return m_displayName; }
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
     const std::vector<std::unique_ptr<SignalBase>>& getOutputs() const { return m_outputsignals; }
-    const std::vector<InputSignal>& getInputs() const { return m_inputsignals; }
+    const std::vector<std::unique_ptr<InputSignalBase>>& getInputs() const { return m_inputsignals; }
     std::vector<Component*> getInputComponents() const {
         std::vector<Component*> v;
         for (auto& s : m_inputsignals) {
-            v.push_back((**s)->getParent());
+            v.push_back(s->getParent());
         }
         return v;
     }
@@ -175,7 +173,7 @@ protected:
 
     void propagateInputs() {
         for (auto& input : m_inputsignals) {
-            (*(*input))->getParent()->propagateComponent();
+            input->getParent()->propagateComponent();
         }
     }
 
@@ -185,7 +183,7 @@ protected:
 
     Component* m_parent = nullptr;
     std::vector<OutputSignal> m_outputsignals;
-    std::vector<InputSignal> m_inputsignals;
+    std::vector<std::unique_ptr<InputSignalBase>> m_inputsignals;
     std::vector<std::unique_ptr<Component>> m_subcomponents;
 };
 

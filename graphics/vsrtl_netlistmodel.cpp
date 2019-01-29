@@ -279,8 +279,8 @@ void NetlistModel::reloadNetlistData(TreeItem* parent, const Component& componen
         // Set component data (component name and signal value)S
         TreeItem* child = parent->child(parent->childCount() - 1);
 
-        child->setData(0, QString::fromStdString((*(*(*(input)))).getName()));
-        child->setData(1, static_cast<unsigned int>(*(*(*(input)))));
+        child->setData(0, QString::fromStdString(input->getName()));
+        child->setData(1, static_cast<unsigned int>(*input));
     }
     for (const auto& output : component.getOutputs()) {
         parent->insertChildren(parent->childCount(), 1, rootItem->columnCount());

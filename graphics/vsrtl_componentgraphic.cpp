@@ -25,7 +25,7 @@ void ComponentGraphic::initialize() {
 
     // Get IO of Component
     for (const auto& c : m_component.getInputs()) {
-        m_inputPositionMap[c] = QPointF();
+        m_inputPositionMap[c.get()] = QPointF();
     }
     for (const auto& c : m_component.getOutputs()) {
         m_outputPositionMap[c.get()] = QPointF();
