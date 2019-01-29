@@ -12,7 +12,7 @@ public:
         connectSignal(in, exp1->in);
         connectSignal(exp1->out, exp2->in);
 
-        out->setPropagationFunction(exp2->out->getFunctor());
+        out.setPropagationFunction(exp2->out.getFunctor());
     }
     INPUTSIGNAL(in, 32);
     OUTPUTSIGNAL(out, 32);

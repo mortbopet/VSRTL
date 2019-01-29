@@ -159,7 +159,7 @@ public:
 
     void connect(InputSignal<bitwidth>& otherInput) { m_signal = &otherInput; }
 
-    void connect(OutputSignal<bitwidth>* output) { m_signal = output; }
+    void connect(OutputSignal<bitwidth>& output) { m_signal = &output; }
 
 private:
     std::variant<OutputSignal<bitwidth>*, InputSignal<bitwidth>*> m_signal;
@@ -178,23 +178,13 @@ private:
 */
 
 template <unsigned int bitwidth>
-void operator>>(OutputSignal<bitwidth>* output, InputSignal<bitwidth>& input) {
-    input.connect(output);
+void operator>>(OutputSignal<bitwidth>& fromThisOutput, InputSignal<bitwidth>& toThisInput) {
+    toThisInput.connect(fromThisOutput);
 }
 
 template <unsigned int bitwidth>
-void operator>>(InputSignal<bitwidth>& fromInput, InputSignal<bitwidth>& input) {
-    input.connect(fromInput);
-}
-
-template <unsigned int bitwidth>
-void connectSignal(OutputSignal<bitwidth>* fromThisOutput, InputSignal<bitwidth>* toThisInput) {
-    toThisInput->connect(fromThisOutput);
-}
-
-template <unsigned int bitwidth>
-void connectSignal(InputSignal<bitwidth>* fromThisInput, InputSignal<bitwidth>* toThisInput) {
-    toThisInput->connect(*fromThisInput);
+void operator>>(InputSignal<bitwidth>& fromThisInput, InputSignal<bitwidth>& toThisInput) {
+    toThisInput.connect(fromThisInput);
 }
 
 }  // namespace vsrtl

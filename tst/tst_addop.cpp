@@ -20,7 +20,7 @@ public:
 
         connectSignal(c4->value, alu->op1);
         connectSignal(alu_ctrl->value, alu->ctrl);
-        connectSignal(regs->operands[0], alu->op2);
+        connectSignal(*regs->operands[0], alu->op2);
         connectSignal(c1->value, regs->writeEnable);
         connectSignal(c5->value, regs->writeRegister);
         connectSignal(alu->out, regs->writeData);

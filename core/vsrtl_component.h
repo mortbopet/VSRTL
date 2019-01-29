@@ -43,10 +43,10 @@ private:                              \
 private:                            \
     type* name = create_component<type>(this)
 
-#define INPUTSIGNAL(name, bitwidth) InputSignal<bitwidth>* name = this->createInputSignal<bitwidth>(#name)
-#define OUTPUTSIGNAL(name, bitwidth) OutputSignal<bitwidth>* name = createOutputSignal<bitwidth>(#name)
+#define INPUTSIGNAL(name, bitwidth) InputSignal<bitwidth>& name = this->createInputSignal<bitwidth>(#name)
+#define OUTPUTSIGNAL(name, bitwidth) OutputSignal<bitwidth>& name = createOutputSignal<bitwidth>(#name)
 
-#define SIGNAL_VALUE(input, type) input->value<type>()
+#define SIGNAL_VALUE(input, type) input.value<type>()
 
 class Component {
 public:
@@ -69,17 +69,17 @@ public:
     }
 
     template <uint32_t bitwidth>
-    OutputSignal<bitwidth>* createOutputSignal(const char* name) {
+    OutputSignal<bitwidth>& createOutputSignal(const char* name) {
         auto signal = new OutputSignal<bitwidth>(this, name);
         m_outputsignals.push_back(std::unique_ptr<OutputSignal<bitwidth>>(signal));
-        return signal;
+        return *signal;
     }
 
     template <uint32_t bitwidth>
-    InputSignal<bitwidth>* createInputSignal(const char* name) {
+    InputSignal<bitwidth>& createInputSignal(const char* name) {
         InputSignal<bitwidth>* signal = new InputSignal<bitwidth>(this, name);
         m_inputsignals.push_back(std::unique_ptr<InputSignal<bitwidth>>(signal));
-        return signal;
+        return *signal;
     }
 
     void propagateComponent() {

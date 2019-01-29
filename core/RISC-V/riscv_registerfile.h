@@ -19,7 +19,7 @@ public:
         // Create functor for storing inputs of the register file - this is done before setting the output of
         // the register file
         auto rfWriter = [=] {
-            if (*writeEnable) {
+            if (writeEnable.value<bool>()) {
                 m_reg[SIGNAL_VALUE(writeRegister, uint32_t)] = SIGNAL_VALUE(writeData, uint32_t);
             }
         };

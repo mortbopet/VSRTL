@@ -24,7 +24,7 @@ class Constant : public Component {
     NON_REGISTER_COMPONENT
 public:
     Constant() : Component("Constant") {
-        value->setPropagationFunction([] {
+        value.setPropagationFunction([] {
             const static auto cArr = buildUnsignedArr<width>(constantValue);
             return cArr;
         });

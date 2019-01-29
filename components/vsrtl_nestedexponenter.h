@@ -24,7 +24,7 @@ public:
         connectSignal(in, mul->op2);
         connectSignal(aluOp->value, mul->ctrl);
 
-        out->setPropagationFunction(reg->out->getFunctor());
+        out.setPropagationFunction(reg->out.getFunctor());
     }
 
     SUBCOMPONENT(reg, Register, 32);

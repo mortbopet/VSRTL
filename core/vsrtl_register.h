@@ -22,13 +22,13 @@ template <uint32_t width>
 class Register : public RegisterBase {
 public:
     Register() {
-        out->setPropagationFunction([=] { return buildUnsignedArr<width>(m_savedValue); });
+        out.setPropagationFunction([=] { return buildUnsignedArr<width>(m_savedValue); });
         m_displayName = "Register";
     }
 
-    void reset() override final { out->setValue(buildUnsignedArr<width>(0)); }
-    void save() override final { m_savedValue = in->template value<uint32_t>(); }
-    void clock() override final { out->propagate(); }
+    void reset() override final { out.setValue(buildUnsignedArr<width>(0)); }
+    void save() override final { m_savedValue = in.template value<uint32_t>(); }
+    void clock() override final { out.propagate(); }
 
     INPUTSIGNAL(in, width);
     OUTPUTSIGNAL(out, width);
