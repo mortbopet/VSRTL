@@ -53,11 +53,11 @@ public:
     }
 
     template <int operand>
-    Signal<REGISTERWIDTH>* getOperand() {
+    OutputSignal<REGISTERWIDTH>* getOperand() {
         static_assert(operand >= 0 && operand < nOperands, "Operand not available");
         return operands[operand];
     }
-    std::vector<Signal<REGISTERWIDTH>*> operands;
+    std::vector<OutputSignal<REGISTERWIDTH>*> operands;
 
 protected:
     // Registers

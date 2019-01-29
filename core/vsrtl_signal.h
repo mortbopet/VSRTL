@@ -17,12 +17,12 @@ namespace vsrtl {
 
 class Component;
 
-class SignalBase {
+class OutputSignalBase {
     friend class Component;
 
 public:
-    SignalBase(Component* parent, const char* name) : m_name(name), m_parent(parent) {}
-    virtual ~SignalBase() {}
+    OutputSignalBase(Component* parent, const char* name) : m_name(name), m_parent(parent) {}
+    virtual ~OutputSignalBase() {}
 
     // Checks whether a propagation function has been set for the signal - required for the signal to generate its
     // next-state value
@@ -46,9 +46,9 @@ private:
 };
 
 template <unsigned int bitwidth>
-class Signal : public SignalBase {
+class OutputSignal : public OutputSignalBase {
 public:
-    Signal(Component* parent, const char* name) : SignalBase(parent, name) {}
+    OutputSignal(Component* parent, const char* name) : OutputSignalBase(parent, name) {}
 
     unsigned int width() const override { return bitwidth; }
 
@@ -83,9 +83,8 @@ private:
     std::function<std::array<bool, bitwidth>()> m_propagationFunction;
 };
 
-using InputSignalRawPtr = SignalBase***;
-using OutputSignalRawPtr = SignalBase*;
-using OutputSignal = std::unique_ptr<SignalBase>;
+using InputSignalRawPtr = OutputSignalBase***;
+using OutputSignalRawPtr = OutputSignalBase*;
 
 /**
  * Input signals can either refer to other input signals, or to an output signal
@@ -124,11 +123,11 @@ template <class... Ts>
 overloadVisitor(Ts...)->overloadVisitor<Ts...>;
 
 template <uint32_t bitwidth>
-class InputSignalT : public InputSignalBase {
+class InputSignal : public InputSignalBase {
 public:
-    InputSignalT(Component* parent, const char* name) : InputSignalBase(parent, name) {
+    InputSignal(Component* parent, const char* name) : InputSignalBase(parent, name) {
         // Initially an input signal is connected to a null Signal
-        m_signal = static_cast<Signal<bitwidth>*>(nullptr);
+        m_signal = static_cast<OutputSignal<bitwidth>*>(nullptr);
     }
 
     explicit operator int() const override { return value<int>(); }
@@ -140,8 +139,8 @@ public:
         T value;
         std::visit(
             overloadVisitor{
-                [&value](Signal<bitwidth>* arg) { value = arg->template value<T>(); },
-                [&value](InputSignalT<bitwidth>* arg) { value = arg->template value<T>(); },
+                [&value](OutputSignal<bitwidth>* arg) { value = arg->template value<T>(); },
+                [&value](InputSignal<bitwidth>* arg) { value = arg->template value<T>(); },
             },
             m_signal);
         return value;
@@ -151,19 +150,19 @@ public:
         bool connected;
         std::visit(
             overloadVisitor{
-                [&connected](Signal<bitwidth>* arg) { connected = arg != nullptr; },
-                [&connected](InputSignalT<bitwidth>* arg) { connected = arg->isConnected(); },
+                [&connected](OutputSignal<bitwidth>* arg) { connected = arg != nullptr; },
+                [&connected](InputSignal<bitwidth>* arg) { connected = arg->isConnected(); },
             },
             m_signal);
         return connected;
     }
 
-    void connect(InputSignalT<bitwidth>& otherInput) { m_signal = &otherInput; }
+    void connect(InputSignal<bitwidth>& otherInput) { m_signal = &otherInput; }
 
-    void connect(Signal<bitwidth>* output) { m_signal = output; }
+    void connect(OutputSignal<bitwidth>* output) { m_signal = output; }
 
 private:
-    std::variant<Signal<bitwidth>*, InputSignalT<bitwidth>*> m_signal;
+    std::variant<OutputSignal<bitwidth>*, InputSignal<bitwidth>*> m_signal;
 };
 
 /*
@@ -179,22 +178,22 @@ private:
 */
 
 template <unsigned int bitwidth>
-void operator>>(Signal<bitwidth>* output, InputSignalT<bitwidth>& input) {
+void operator>>(OutputSignal<bitwidth>* output, InputSignal<bitwidth>& input) {
     input.connect(output);
 }
 
 template <unsigned int bitwidth>
-void operator>>(InputSignalT<bitwidth>& fromInput, InputSignalT<bitwidth>& input) {
+void operator>>(InputSignal<bitwidth>& fromInput, InputSignal<bitwidth>& input) {
     input.connect(fromInput);
 }
 
 template <unsigned int bitwidth>
-void connectSignal(Signal<bitwidth>* fromThisOutput, InputSignalT<bitwidth>* toThisInput) {
+void connectSignal(OutputSignal<bitwidth>* fromThisOutput, InputSignal<bitwidth>* toThisInput) {
     toThisInput->connect(fromThisOutput);
 }
 
 template <unsigned int bitwidth>
-void connectSignal(InputSignalT<bitwidth>* fromThisInput, InputSignalT<bitwidth>* toThisInput) {
+void connectSignal(InputSignal<bitwidth>* fromThisInput, InputSignal<bitwidth>* toThisInput) {
     toThisInput->connect(*fromThisInput);
 }
 
