@@ -21,13 +21,7 @@ namespace vsrtl {
 class Architecture : public Component {
     NON_REGISTER_COMPONENT
 public:
-    Architecture(int flags = 0) : Component("Top") {
-        // components are now recorded, and architecture-constant objects can be instantiated
-        if (flags & dataMemory)
-            OUTPUTSIGNAL(m_dataMemory, REGISTERWIDTH);
-        if (flags & instructionMemory)
-            OUTPUTSIGNAL(m_instructionMemory, REGISTERWIDTH);
-    }
+    Architecture() : Component("Top") {}
 
     /*
     template <typename T, typename... Args>
@@ -45,9 +39,8 @@ public:
      * @brief clock
      * Simulates clocking the circuit. Registers are clocked and the propagation algorithm is run
      * @pre A call to propagate() must be done, to set the initial state of the circuit
-     * @param specialRegisterFile @todo document this
      */
-    void clock(bool specialRegisterFile = false) {
+    void clock() {
         if (!isVerifiedAndInitialized) {
             throw std::runtime_error("Design was not verified and initialized before clocking.");
         }
@@ -118,17 +111,17 @@ public:
     bool cycleUtil(Component* c, std::map<Component*, bool>& visited, std::map<Component*, bool>& recurseStack) {
         visited[c] = true;
         recurseStack[c] = true;
-        if (!dynamic_cast<RegisterBase*>(c)) {  // Graph is cut at registers
+        if (!dynamic_cast<RegisterBase*>(c))  // Graph is cut at registers
             return false;
 
-            for (auto& neighbour : m_componentGraph[c]) {
-                if (!visited[neighbour] && cycleUtil(neighbour, visited, recurseStack)) {
-                    return true;
-                } else if (recurseStack[neighbour]) {
-                    return true;
-                }
+        for (auto& neighbour : m_componentGraph[c]) {
+            if (!visited[neighbour] && cycleUtil(neighbour, visited, recurseStack)) {
+                return true;
+            } else if (recurseStack[neighbour]) {
+                return true;
             }
         }
+
         recurseStack[c] = false;
         return false;
     }
@@ -148,12 +141,6 @@ public:
             }
         }
         return false;
-    }
-
-    void loadProgram(const std::vector<char>& p) {
-        if (m_memory == nullptr) {
-            throw std::runtime_error("The architecture does not contain a memory. Set");
-        }
     }
 
     const std::vector<Component*>& getTopLevelComponents() const { return COMPONENT_CONTAINER; }
@@ -180,11 +167,6 @@ private:
 
     std::map<Component*, std::vector<Component*>> m_componentGraph;
     std::set<RegisterBase*> m_registers;
-
-    /*
-    std::shared_ptr<Assignable<REGISTERWIDTH>> m_instructionutionMemory;
-    std::shared_ptr<Assignable<REGISTERWIDTH>> m_dataMemory;
-*/
 };
 }  // namespace vsrtl
 

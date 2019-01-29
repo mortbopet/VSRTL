@@ -25,10 +25,10 @@ namespace vsrtl {
 #define OUTPUTS_CONTAINER _outputs
 
 #define NON_REGISTER_COMPONENT \
-    bool isRegister() override { return false; }
+    bool isRegister() const override { return false; }
 
 #define REGISTER_COMPONENT \
-    bool isRegister() override { return true; }
+    bool isRegister() const override { return true; }
 
 /**
  * @brief InputPair
@@ -49,7 +49,7 @@ class Component {
 public:
     Component(std::string displayName, Component* parent = nullptr) : m_displayName(displayName), m_parent(parent) {}
 
-    virtual bool isRegister() = 0;
+    virtual bool isRegister() const = 0;
     virtual void resetPropagation() { m_propagationState = PropagationState::unpropagated; }
 
     mutable bool isVerifiedAndInitialized = false;
