@@ -17,10 +17,8 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget* parent = nullptr);
+    explicit MainWindow(Architecture& arch, QWidget* parent = nullptr);
     ~MainWindow();
-
-    void loadDesign(Architecture& arch);
 
 private:
     Ui::MainWindow* ui;

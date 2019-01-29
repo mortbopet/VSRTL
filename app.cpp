@@ -14,10 +14,8 @@ int main(int argc, char** argv) {
 
     Q_INIT_RESOURCE(icons);
 
-    vsrtl::MainWindow w;
     vsrtl::ManyNestedComponents design;
-
-    w.loadDesign(design);
+    vsrtl::MainWindow w(design);
 
     w.show();
 

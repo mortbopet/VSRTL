@@ -8,7 +8,7 @@
 
 namespace vsrtl {
 
-VSRTLWidget::VSRTLWidget(QWidget* parent) : QWidget(parent), ui(new Ui::VSRTLWidget) {
+VSRTLWidget::VSRTLWidget(Architecture& arch, QWidget* parent) : m_arch(arch), QWidget(parent), ui(new Ui::VSRTLWidget) {
     ui->setupUi(this);
 
     m_view = new VSRTLView(this);
@@ -17,6 +17,8 @@ VSRTLWidget::VSRTLWidget(QWidget* parent) : QWidget(parent), ui(new Ui::VSRTLWid
     ui->viewLayout->addWidget(m_view);
 
     m_ch = new CircuitHandler(m_view);
+
+    initializeDesign(arch);
 }
 
 VSRTLWidget::~VSRTLWidget() {
@@ -36,11 +38,11 @@ void VSRTLWidget::initializeDesign(Architecture& arch) {
 }
 
 void VSRTLWidget::clock() {
-    m_arch->clock();
+    m_arch.clock();
 }
 
 void VSRTLWidget::reset() {
-    m_arch->reset();
+    m_arch.reset();
 }
 
 void VSRTLWidget::addComponent(ComponentGraphic* g) {

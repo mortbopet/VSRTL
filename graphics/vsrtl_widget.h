@@ -20,24 +20,25 @@ class VSRTLWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit VSRTLWidget(QWidget* parent = nullptr);
+    explicit VSRTLWidget(Architecture& arch, QWidget* parent = nullptr);
     ~VSRTLWidget();
 
     void addComponent(ComponentGraphic* g);
-    void initializeDesign(Architecture& arch);
 
 public slots:
     void clock();
     void reset();
 
 private:
+    void initializeDesign(Architecture& arch);
+
     Ui::VSRTLWidget* ui;
 
     VSRTLView* m_view;
     QGraphicsScene* m_scene;
 
     CircuitHandler* m_ch;
-    Architecture* m_arch;
+    Architecture& m_arch;
 };
 
 }  // namespace vsrtl

@@ -9,9 +9,9 @@
 
 namespace vsrtl {
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
+MainWindow::MainWindow(Architecture& arch, QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
-    m_vsrtlWidget = new VSRTLWidget(this);
+    m_vsrtlWidget = new VSRTLWidget(arch, this);
 
     setCentralWidget(m_vsrtlWidget);
 
@@ -37,10 +37,6 @@ void MainWindow::createToolbar() {
     QLineEdit* cycleCount = new QLineEdit();
     cycleCount->setReadOnly(true);
     simulatorToolBar->addWidget(cycleCount);
-}
-
-void MainWindow::loadDesign(Architecture& arch) {
-    m_vsrtlWidget->initializeDesign(arch);
 }
 
 }  // namespace vsrtl

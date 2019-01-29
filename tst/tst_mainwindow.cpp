@@ -21,8 +21,8 @@ void tst_MainWindow::testSimpleArchitecture() {
     int dummy;
     QApplication app(dummy, nullptr);
 
-    VSRTLWidget w;
     AdderAndReg design;
+    VSRTLWidget w(design);
 
     auto components = design.getTopLevelComponents();
 
