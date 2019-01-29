@@ -314,6 +314,30 @@ bool ComponentGraphic::rectContainsAllSubcomponents(const QRectF& r) const {
     return allInside;
 }
 
+/**
+ * @brief Adjust bounds of r to snap on the boundaries of the subcomponent rect
+ * @param r: new rect to check against m_subcomponentRect
+ * @return is r different from the subcomponent rect
+ */
+bool ComponentGraphic::snapToSubcomponentRect(QRectF& r) const {
+    bool snap_r, snap_b;
+    snap_r = false;
+    snap_b = false;
+
+    if(r.right() < m_subcomponentRect.right()){
+        r.setRight(m_subcomponentRect.right());
+        snap_r = true;
+    }
+    if(r.bottom() < m_subcomponentRect.bottom()){
+        r.setBottom(m_subcomponentRect.bottom());
+        snap_b = true;
+    }
+
+    return !(snap_r & snap_b);
+}
+
+
+
 QRectF ComponentGraphic::boundingRect() const {
     return m_boundingRect;
 }
@@ -333,7 +357,7 @@ void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
         QPointF pos = event->pos();
         auto newRect = m_baseRect;
         newRect.setBottomRight(pos);
-        if (rectContainsAllSubcomponents(newRect)) {
+        if (snapToSubcomponentRect(newRect)) {
             m_baseRect = newRect;
             calculateGeometry(Resize);
         }

@@ -47,6 +47,7 @@ private:
     void calculateBoundingRect();
     void getSubGraphicsItems(QGraphicsItemGroup& g);
     bool rectContainsAllSubcomponents(const QRectF& r) const;
+    bool snapToSubcomponentRect(QRectF& r) const;
 
     bool m_isExpanded = false;
     bool m_hasSubcomponents = false;
