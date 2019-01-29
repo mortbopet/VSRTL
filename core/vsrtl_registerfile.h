@@ -29,7 +29,7 @@ public:
 
     RegisterFile() : Component("Register File") {
         for (int i = 0; i < nOperands; i++) {
-            operands.push_back(createOutputSignal<REGISTERWIDTH>());
+            operands.push_back(createOutputSignal<REGISTERWIDTH>("Operand"));
         }
     }
 

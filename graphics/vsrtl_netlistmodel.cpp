@@ -268,8 +268,6 @@ void NetlistModel::reloadNetlistData(TreeItem* parent, const Component& componen
         TreeItem* child = parent->child(parent->childCount() - 1);
         child->setData(0, QString::fromStdString(subcomponent->getDisplayName()));
 
-        child->setData(1, "Components doesnt have values...");
-
         // Recurse into the child
         reloadNetlistData(child, *subcomponent);
     }
@@ -278,9 +276,20 @@ void NetlistModel::reloadNetlistData(TreeItem* parent, const Component& componen
     for (const auto& input : component.getInputs()) {
         parent->insertChildren(parent->childCount(), 1, rootItem->columnCount());
 
-        // Set component data (component name and signal value)
+        // Set component data (component name and signal value)S
         TreeItem* child = parent->child(parent->childCount() - 1);
-        child->setData(1, "123");
+
+        child->setData(0, QString::fromStdString((*(*(*(input)))).getName()));
+        child->setData(1, static_cast<unsigned int>(*(*(*(input)))));
+    }
+    for (const auto& output : component.getOutputs()) {
+        parent->insertChildren(parent->childCount(), 1, rootItem->columnCount());
+
+        // Set component data (component name and signal value)S
+        TreeItem* child = parent->child(parent->childCount() - 1);
+
+        child->setData(0, QString::fromStdString((*(output)).getName()));
+        child->setData(1, static_cast<unsigned int>(*(output)));
     }
 }
 

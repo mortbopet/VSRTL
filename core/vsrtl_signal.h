@@ -35,6 +35,11 @@ public:
     virtual explicit operator unsigned int() const = 0;
     virtual explicit operator bool() const = 0;
 
+    const std::string& getName() const { return m_name; }
+
+protected:
+    std::string m_name;
+
 private:
     Component* m_parent = nullptr;
 };
@@ -47,7 +52,7 @@ using OutputSignal = std::unique_ptr<SignalBase>;
 template <unsigned int bitwidth>
 class Signal : public SignalBase {
 public:
-    Signal(Component* parent) : SignalBase(parent) {}
+    Signal(Component* parent, const char* name = "") : SignalBase(parent) { m_name = name; }
 
     unsigned int width() const override { return bitwidth; }
 
@@ -95,10 +100,27 @@ class InputSignal {
         *inPtr = nullptr;
     }
 
+    template<typename T>
+    T value(){
+          return static_cast<T>(*inPtr);
+    }
+
 private:
     Signal<width>** in = nullptr;
     Signal<width>* inPtr = nullptr;
+
+    std::string m_name;
 };
+
+template <uint32_t width>
+class OutputSignal {
+
+private:
+    Signal<width> m_out;
+    std::string m_name;
+
+}
+
 */
 
 template <unsigned int bitwidth>

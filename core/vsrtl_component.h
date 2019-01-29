@@ -44,7 +44,7 @@ private:                            \
     type* name = create_component<type>(this)
 
 #define INPUTSIGNAL(name, width) Signal<width>*** name = this->createInputSignal<width>()
-#define OUTPUTSIGNAL(name, width) Signal<width>* name = createOutputSignal<width>()
+#define OUTPUTSIGNAL(name, width) Signal<width>* name = createOutputSignal<width>(#name)
 
 #define SIGNAL_VALUE(input, type) (*(*input))->template value<type>()
 
@@ -69,8 +69,8 @@ public:
     }
 
     template <uint32_t bitwidth>
-    Signal<bitwidth>* createOutputSignal() {
-        auto signal = new Signal<bitwidth>(this);
+    Signal<bitwidth>* createOutputSignal(const char* name) {
+        auto signal = new Signal<bitwidth>(this, name);
         m_outputsignals.push_back(std::unique_ptr<Signal<bitwidth>>(signal));
         return signal;
     }
