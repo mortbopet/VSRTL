@@ -49,6 +49,10 @@ void ComponentGraphic::initialize() {
     calculateGeometry(Collapse);
 }
 
+/**
+ * @brief ComponentGraphic::createSubcomponents
+ * In charge of hide()ing subcomponents if the parent component (this) is not expanded
+ */
 void ComponentGraphic::createSubcomponents() {
     for (auto& c : m_component->getSubComponents()) {
         auto nc = new ComponentGraphic(c);
@@ -57,7 +61,7 @@ void ComponentGraphic::createSubcomponents() {
         nc->setParentItem(this);
         m_subcomponents.push_back(nc);
         if (!m_isExpanded) {
-            // nc->hide();
+            nc->hide();
         }
     }
 }
@@ -324,19 +328,17 @@ bool ComponentGraphic::snapToSubcomponentRect(QRectF& r) const {
     snap_r = false;
     snap_b = false;
 
-    if(r.right() < m_subcomponentRect.right()){
+    if (r.right() < m_subcomponentRect.right()) {
         r.setRight(m_subcomponentRect.right());
         snap_r = true;
     }
-    if(r.bottom() < m_subcomponentRect.bottom()){
+    if (r.bottom() < m_subcomponentRect.bottom()) {
         r.setBottom(m_subcomponentRect.bottom());
         snap_b = true;
     }
 
     return !(snap_r & snap_b);
 }
-
-
 
 QRectF ComponentGraphic::boundingRect() const {
     return m_boundingRect;
