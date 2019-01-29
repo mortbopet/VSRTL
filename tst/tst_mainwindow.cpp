@@ -24,7 +24,7 @@ void tst_MainWindow::testSimpleArchitecture() {
     AdderAndReg design;
     VSRTLWidget w(design);
 
-    auto components = design.getTopLevelComponents();
+    auto& components = design.getTopLevelComponents();
 
     int x = 0;
     for (auto& c : components) {

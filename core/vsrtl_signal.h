@@ -21,6 +21,7 @@ class SignalBase {
 
 public:
     SignalBase(Component* parent) : m_parent(parent) {}
+    virtual ~SignalBase() {}
 
     // Checks whether a propagation function has been set for the signal - required for the signal to generate its
     // next-state value
@@ -37,6 +38,11 @@ public:
 private:
     Component* m_parent = nullptr;
 };
+
+using InputSignalRawPtr = SignalBase***;
+using OutputSignalRawPtr = SignalBase*;
+using InputSignal = InputSignalRawPtr;  // std::unique_ptr<SignalBase**>;
+using OutputSignal = std::unique_ptr<SignalBase>;
 
 template <unsigned int bitwidth>
 class Signal : public SignalBase {
@@ -76,13 +82,32 @@ private:
     std::function<std::array<bool, bitwidth>()> m_propagationFunction;
 };
 
+/**
+ * Two levels of indirection is needed for connecting components such as
+ * input -> input -> output
+ */
+
+/*
+template <uint32_t width>
+class InputSignal {
+    InputSignal() {
+        *in = inPtr;
+        *inPtr = nullptr;
+    }
+
+private:
+    Signal<width>** in = nullptr;
+    Signal<width>* inPtr = nullptr;
+};
+*/
+
 template <unsigned int bitwidth>
-void connectSignal(Signal<bitwidth>*& fromThisOutput, Signal<bitwidth>***& toThisInput) {
+void connectSignal(Signal<bitwidth>* fromThisOutput, Signal<bitwidth>*** toThisInput) {
     *(*toThisInput) = fromThisOutput;
 }
 
 template <unsigned int bitwidth>
-void connectSignal(Signal<bitwidth>***& fromThisInput, Signal<bitwidth>***& toThisInput) {
+void connectSignal(Signal<bitwidth>*** fromThisInput, Signal<bitwidth>*** toThisInput) {
     *toThisInput = *fromThisInput;
 }
 

@@ -39,7 +39,7 @@ void setMatrixPos(ComponentMatrix& m, Component* ptr, const std::pair<int, int> 
 void CircuitHandler::orderSubcomponents(const ComponentGraphic* parent) {
     ComponentMatrix matrix;
     std::set<Component*> processedComponents;
-    const auto subComponents = parent->getComponent().getSubComponents();
+    const auto& subComponents = parent->getComponent().getSubComponents();
 
     // Start matrix ordering the component graph with a component that has an input
     auto c_iter = subComponents.begin();
@@ -49,7 +49,7 @@ void CircuitHandler::orderSubcomponents(const ComponentGraphic* parent) {
         assert(false);
     }
     const std::pair<int, int> initialPos(0, 0);
-    setMatrixPos(matrix, *c_iter, initialPos);
+    setMatrixPos(matrix, c_iter->get(), initialPos);
 
     // Calculate row widths
     std::map<int, int> columnWidths;

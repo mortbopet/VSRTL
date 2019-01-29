@@ -258,7 +258,7 @@ bool NetlistModel::setHeaderData(int section, Qt::Orientation orientation, const
 }
 
 void NetlistModel::reloadNetlistData(TreeItem* parent, const Component& component) {
-    auto subComponents = component.getSubComponents();
+    auto& subComponents = component.getSubComponents();
 
     // Subcomponents
     for (const auto& subcomponent : subComponents) {
@@ -280,7 +280,7 @@ void NetlistModel::reloadNetlistData(TreeItem* parent, const Component& componen
 
         // Set component data (component name and signal value)
         TreeItem* child = parent->child(parent->childCount() - 1);
-        // child->setData(1, input.get);
+        child->setData(1, "123");
     }
 }
 

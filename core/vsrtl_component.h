@@ -1,5 +1,5 @@
-#ifndef PRIMITIVE_H
-#define PRIMITIVE_H
+#ifndef VSRTL_COMPONENT_H
+#define VSRTL_COMPONENT_H
 
 #include <functional>
 #include <iostream>
@@ -20,19 +20,17 @@
 
 namespace vsrtl {
 
-#define COMPONENT_CONTAINER _components
-#define INPUTS_CONTAINER _inputs
-#define OUTPUTS_CONTAINER _outputs
-
 #define NON_REGISTER_COMPONENT \
     bool isRegister() const override { return false; }
 
 #define REGISTER_COMPONENT \
     bool isRegister() const override { return true; }
 
-/**
- * @brief InputPair
- * maintains a relationship between a signal and the container in which it resides
+/** @class Component
+ *
+ *  @note: Signals:
+ *         output signals are owned by components (as unique pointers) wherein
+ *         input signals are pointers to output signals.
  */
 class Component;
 
@@ -45,36 +43,47 @@ private:                              \
 private:                            \
     type* name = create_component<type>(this)
 
+#define INPUTSIGNAL(name, width) Signal<width>*** name = this->createInputSignal<width>()
+#define OUTPUTSIGNAL(name, width) Signal<width>* name = createOutputSignal<width>()
+
+#define SIGNAL_VALUE(input, type) (*(*input))->template value<type>()
+
 class Component {
 public:
     Component(std::string displayName, Component* parent = nullptr) : m_displayName(displayName), m_parent(parent) {}
+    virtual ~Component() {}
 
     virtual bool isRegister() const = 0;
     virtual void resetPropagation() { m_propagationState = PropagationState::unpropagated; }
 
     mutable bool m_isVerifiedAndInitialized = false;
 
-    void addSubcomponent(Component* subcomponent) { COMPONENT_CONTAINER.push_back(subcomponent); }
+    /**
+     * @brief addSubcomponent
+     *        Adds subcomponent to the current component (this).
+     *        (this) takes ownership of the component*
+     * @param subcomponent
+     */
+    void addSubcomponent(Component* subcomponent) {
+        m_subcomponents.push_back(std::unique_ptr<Component>(subcomponent));
+    }
 
     template <uint32_t bitwidth>
     Signal<bitwidth>* createOutputSignal() {
         auto signal = new Signal<bitwidth>(this);
-        OUTPUTS_CONTAINER.push_back(signal);
+        m_outputsignals.push_back(std::unique_ptr<Signal<bitwidth>>(signal));
         return signal;
     }
 
-#define OUTPUTSIGNAL(name, width) Signal<width>* name = createOutputSignal<width>()
-
-    template <uint32_t width>
-    Signal<width>*** createInputSignal() {
-        Signal<width>*** signal = new Signal<width>**();
-        *signal = new Signal<width>*();
+    template <uint32_t bitwidth>
+    Signal<bitwidth>*** createInputSignal() {
+        Signal<bitwidth>*** signal = new Signal<bitwidth>**();
+        *signal = new Signal<bitwidth>*();
         **signal = nullptr;
-        INPUTS_CONTAINER.push_back(reinterpret_cast<SignalBase***>(signal));
+        m_inputsignals.push_back(reinterpret_cast<SignalBase***>(signal));
         return signal;
     }
-#define INPUTSIGNAL(name, width) Signal<width>*** name = this->createInputSignal<width>()
-#define SIGNAL_VALUE(input, type) (*(*input))->template value<type>()
+
     void propagateComponent() {
         if (m_propagationState == PropagationState::unpropagated) {
             // if subcomponents are connected together, propapagation can look like a combinational loop
@@ -90,12 +99,12 @@ public:
             }
 
             // propagate all subcomponents of the component
-            for (auto component : COMPONENT_CONTAINER) {
+            for (auto& component : m_subcomponents) {
                 component->propagateComponent();
             }
 
             // Propagate outputs of the component
-            for (auto s : OUTPUTS_CONTAINER) {
+            for (auto& s : m_outputsignals) {
                 s->propagate();
             }
 
@@ -111,7 +120,7 @@ public:
      * @return
      */
     bool verifyInputs() {
-        for (const auto& i : INPUTS_CONTAINER) {
+        for (const auto& i : m_inputsignals) {
             if (*i == nullptr) {
                 return false;
             }
@@ -124,7 +133,7 @@ public:
      * @return
      */
     bool verifyOutputs() {
-        for (const auto& i : OUTPUTS_CONTAINER) {
+        for (const auto& i : m_outputsignals) {
             if (!i->hasPropagationFunction()) {
                 return false;
             }
@@ -132,14 +141,14 @@ public:
         return true;
     }
 
-    const Component* const getParent() const { return m_parent; }
+    const Component* getParent() const { return m_parent; }
     const std::string& getDisplayName() const { return m_displayName; }
-    const std::vector<Component*>& getSubComponents() const { return COMPONENT_CONTAINER; }
-    const std::vector<SignalBase*>& getOutputs() const { return OUTPUTS_CONTAINER; }
-    const std::vector<SignalBase***>& getInputs() const { return INPUTS_CONTAINER; }
+    const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
+    const std::vector<std::unique_ptr<SignalBase>>& getOutputs() const { return m_outputsignals; }
+    const std::vector<InputSignal>& getInputs() const { return m_inputsignals; }
     std::vector<Component*> getInputComponents() const {
         std::vector<Component*> v;
-        for (auto& s : INPUTS_CONTAINER) {
+        for (auto& s : m_inputsignals) {
             v.push_back((**s)->getParent());
         }
         return v;
@@ -152,8 +161,8 @@ protected:
     void getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
         // Register adjacent components (child components) in the graph, and add subcomponents to graph
         componentGraph[this];
-        for (auto& c : COMPONENT_CONTAINER) {
-            componentGraph[this].push_back(c);
+        for (auto& c : m_subcomponents) {
+            componentGraph[this].push_back(c.get());
             c->getComponentGraph(componentGraph);
         }
     }
@@ -165,7 +174,7 @@ protected:
      */
 
     void propagateInputs() {
-        for (auto input : INPUTS_CONTAINER) {
+        for (auto& input : m_inputsignals) {
             (*(*input))->getParent()->propagateComponent();
         }
     }
@@ -175,9 +184,9 @@ protected:
     std::string m_displayName;
 
     Component* m_parent = nullptr;
-    std::vector<SignalBase*> OUTPUTS_CONTAINER;
-    std::vector<SignalBase***> INPUTS_CONTAINER;
-    std::vector<Component*> COMPONENT_CONTAINER;
+    std::vector<OutputSignal> m_outputsignals;
+    std::vector<InputSignal> m_inputsignals;
+    std::vector<std::unique_ptr<Component>> m_subcomponents;
 };
 
 // Component object generator that registers objects in parent upon creation
@@ -192,4 +201,4 @@ T* create_component(Component* parent, Args&&... args) {
 
 }  // namespace vsrtl
 
-#endif  // PRIMITIVE_H
+#endif  // VSRTL_COMPONENT_H

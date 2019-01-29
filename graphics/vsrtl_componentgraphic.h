@@ -56,8 +56,8 @@ private:
 
     std::vector<ComponentGraphic*> m_subcomponents;
 
-    QMap<SignalBase***, QPointF> m_inputPositionMap;
-    QMap<SignalBase*, QPointF> m_outputPositionMap;
+    QMap<InputSignalRawPtr, QPointF> m_inputPositionMap;
+    QMap<OutputSignalRawPtr, QPointF> m_outputPositionMap;
 
     QRectF m_savedBaseRect = QRectF();
     QRectF m_baseRect;
