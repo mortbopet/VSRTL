@@ -3,6 +3,10 @@
 #include "vsrtl_architecture.h"
 #include "vsrtl_widget.h"
 
+#include <QAction>
+#include <QLineEdit>
+#include <QToolBar>
+
 namespace vsrtl {
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
@@ -10,6 +14,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
     m_vsrtlWidget = new VSRTLWidget(this);
 
     setCentralWidget(m_vsrtlWidget);
+
+    createToolbar();
 }
 
 MainWindow::~MainWindow() {
@@ -17,7 +23,23 @@ MainWindow::~MainWindow() {
     delete m_vsrtlWidget;
 }
 
-void MainWindow::loadDesign(Architecture* arch) {
+void MainWindow::createToolbar() {
+    QToolBar* simulatorToolBar = addToolBar("Simulator");
+
+    QAction* resetAct = new QAction("Reset", this);
+    connect(resetAct, &QAction::triggered, m_vsrtlWidget, &VSRTLWidget::reset);
+    simulatorToolBar->addAction(resetAct);
+
+    QAction* clockAct = new QAction("Clock", this);
+    connect(clockAct, &QAction::triggered, m_vsrtlWidget, &VSRTLWidget::clock);
+    simulatorToolBar->addAction(clockAct);
+
+    QLineEdit* cycleCount = new QLineEdit();
+    cycleCount->setReadOnly(true);
+    simulatorToolBar->addWidget(cycleCount);
+}
+
+void MainWindow::loadDesign(Architecture& arch) {
     m_vsrtlWidget->initializeDesign(arch);
 }
 

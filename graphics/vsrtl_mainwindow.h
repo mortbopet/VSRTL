@@ -2,6 +2,7 @@
 #define VSRTL_MAINWINDOW_H
 
 #include <QMainWindow>
+#include <memory>
 
 namespace vsrtl {
 
@@ -19,12 +20,14 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
-    void loadDesign(Architecture* arch);
+    void loadDesign(Architecture& arch);
 
 private:
     Ui::MainWindow* ui;
 
     VSRTLWidget* m_vsrtlWidget;
+
+    void createToolbar();
 };
 
 }  // namespace vsrtl
