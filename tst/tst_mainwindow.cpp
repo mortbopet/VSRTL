@@ -5,7 +5,7 @@
 
 #include "vsrtl_adderandreg.h"
 #include "vsrtl_componentgraphic.h"
-#include "vsrtl_mainwindow.h"
+#include "vsrtl_widget.h"
 
 #include <QtTest/QTest>
 
@@ -21,7 +21,7 @@ void tst_MainWindow::testSimpleArchitecture() {
     int dummy;
     QApplication app(dummy, nullptr);
 
-    MainWindow w;
+    VSRTLWidget w;
     AdderAndReg design;
 
     auto components = design.getTopLevelComponents();

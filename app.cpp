@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
     vsrtl::MainWindow w;
     vsrtl::ManyNestedComponents design;
 
-    w.initializeArchitecture(&design);
+    w.loadDesign(&design);
 
     w.show();
 
