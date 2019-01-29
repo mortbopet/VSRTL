@@ -4,10 +4,13 @@
 #include <QMainWindow>
 #include <memory>
 
+QT_FORWARD_DECLARE_CLASS(QTreeView)
+
 namespace vsrtl {
 
 class VSRTLWidget;
 class Architecture;
+class NetlistModel;
 
 namespace Ui {
 class MainWindow;
@@ -24,6 +27,8 @@ private:
     Ui::MainWindow* ui;
 
     VSRTLWidget* m_vsrtlWidget;
+    QTreeView* m_netlistView;
+    NetlistModel* m_netlistModel;
 
     void createToolbar();
 };
