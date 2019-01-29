@@ -2,6 +2,8 @@
 #include "ui_vsrtl_widget.h"
 #include "vsrtl_architecture.h"
 
+#include <memory>
+
 #include <QGraphicsScene>
 
 namespace vsrtl {
@@ -21,13 +23,24 @@ VSRTLWidget::~VSRTLWidget() {
     delete ui;
 }
 
-void VSRTLWidget::initializeDesign(Architecture* arch) {
+void VSRTLWidget::initializeDesign(Architecture& arch) {
+    // Verify the design in case user forgot to
+    arch.verifyAndInitialize();
+
     vsrtl::ComponentGraphic* i = new vsrtl::ComponentGraphic(arch);
     addComponent(i);
     i->initialize();
 
     // Order initial component view
     m_ch->orderSubcomponents(i);
+}
+
+void VSRTLWidget::clock() {
+    m_arch->clock();
+}
+
+void VSRTLWidget::reset() {
+    m_arch->reset();
 }
 
 void VSRTLWidget::addComponent(ComponentGraphic* g) {

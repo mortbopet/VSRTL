@@ -28,7 +28,7 @@ void tst_MainWindow::testSimpleArchitecture() {
 
     int x = 0;
     for (auto& c : components) {
-        ComponentGraphic* i = new ComponentGraphic(c);
+        ComponentGraphic* i = new ComponentGraphic(*c);
         w.addComponent(i);
         i->initialize();
         i->setPos(QPointF(x, 0));

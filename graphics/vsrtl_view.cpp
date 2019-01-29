@@ -21,7 +21,8 @@ ComponentGraphic* VSRTLView::lookupGraphicForComponent(const Component* c) {
     for (const auto& i : items()) {
         auto d = dynamic_cast<ComponentGraphic*>(i);
         if (d) {
-            if (d->getComponent() == c)
+            // Equality is based on pointer equality
+            if (&d->getComponent() == c)
                 return d;
         }
     }
@@ -58,4 +59,4 @@ void VSRTLView::setupMatrix() {
 
     setMatrix(matrix);
 }
-}
+}  // namespace vsrtl

@@ -12,7 +12,7 @@
 
 namespace vsrtl {
 
-ComponentGraphic::ComponentGraphic(Component* c) : m_component(c) {}
+ComponentGraphic::ComponentGraphic(Component& c) : m_component(c) {}
 
 void ComponentGraphic::initialize() {
     Q_ASSERT(scene() != nullptr);
@@ -20,18 +20,18 @@ void ComponentGraphic::initialize() {
     setFlags(ItemIsSelectable | ItemIsMovable | ItemSendsScenePositionChanges);
     setAcceptHoverEvents(true);
 
-    m_displayText = QString::fromStdString(m_component->getDisplayName());
+    m_displayText = QString::fromStdString(m_component.getDisplayName());
     m_font = QFont("Times", 10);
 
     // Get IO of Component
-    for (const auto& c : m_component->getInputs()) {
+    for (const auto& c : m_component.getInputs()) {
         m_inputPositionMap[c] = QPointF();
     }
-    for (const auto& c : m_component->getOutputs()) {
+    for (const auto& c : m_component.getOutputs()) {
         m_outputPositionMap[c] = QPointF();
     }
 
-    m_hasSubcomponents = m_component->getSubComponents().size() > 0;
+    m_hasSubcomponents = m_component.getSubComponents().size() > 0;
     if (m_hasSubcomponents) {
         // Setup expand button
         m_expandButton = new QToolButton();
@@ -54,8 +54,8 @@ void ComponentGraphic::initialize() {
  * In charge of hide()ing subcomponents if the parent component (this) is not expanded
  */
 void ComponentGraphic::createSubcomponents() {
-    for (auto& c : m_component->getSubComponents()) {
-        auto nc = new ComponentGraphic(c);
+    for (auto& c : m_component.getSubComponents()) {
+        auto nc = new ComponentGraphic(*c);
         scene()->addItem(nc);
         nc->initialize();
         nc->setParentItem(this);

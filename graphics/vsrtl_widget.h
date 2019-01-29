@@ -24,7 +24,11 @@ public:
     ~VSRTLWidget();
 
     void addComponent(ComponentGraphic* g);
-    void initializeDesign(Architecture* arch);
+    void initializeDesign(Architecture& arch);
+
+public slots:
+    void clock();
+    void reset();
 
 private:
     Ui::VSRTLWidget* ui;
@@ -33,6 +37,7 @@ private:
     QGraphicsScene* m_scene;
 
     CircuitHandler* m_ch;
+    Architecture* m_arch;
 };
 
 }  // namespace vsrtl

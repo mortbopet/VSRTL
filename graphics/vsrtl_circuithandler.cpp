@@ -5,11 +5,11 @@
 namespace vsrtl {
 
 // A reverse-direction map - index [column][row]
-typedef std::map<int, std::map<int, Component*>> Matrix;
+typedef std::map<int, std::map<int, Component*>> ComponentMatrix;
 
 CircuitHandler::CircuitHandler(VSRTLView* view) : m_view(view) {}
 
-bool getPos(const Matrix& m, const Component* c_ptr, std::pair<int, int>& pair) {
+bool getPos(const ComponentMatrix& m, const Component* c_ptr, std::pair<int, int>& pair) {
     for (const auto& c : m) {
         for (const auto& r : c.second) {
             if (r.second == c_ptr) {
@@ -21,7 +21,7 @@ bool getPos(const Matrix& m, const Component* c_ptr, std::pair<int, int>& pair) 
     return false;
 }
 
-void setMatrixPos(Matrix& m, Component* ptr, const std::pair<int, int> pos) {
+void setMatrixPos(ComponentMatrix& m, Component* ptr, const std::pair<int, int> pos) {
     m[pos.first][pos.second] = ptr;
 
     auto inputComponents = ptr->getInputComponents();
@@ -37,9 +37,9 @@ void setMatrixPos(Matrix& m, Component* ptr, const std::pair<int, int> pos) {
 }
 
 void CircuitHandler::orderSubcomponents(const ComponentGraphic* parent) {
-    Matrix matrix;
+    ComponentMatrix matrix;
     std::set<Component*> processedComponents;
-    const auto subComponents = parent->getComponent()->getSubComponents();
+    const auto subComponents = parent->getComponent().getSubComponents();
 
     // Start matrix ordering the component graph with a component that has an input
     auto c_iter = subComponents.begin();
@@ -84,4 +84,4 @@ void CircuitHandler::orderSubcomponents(const ComponentGraphic* parent) {
         xPos += columnWidths[c.first] + COMPONENT_COLUMN_MARGIN;
     }
 }
-}
+}  // namespace vsrtl

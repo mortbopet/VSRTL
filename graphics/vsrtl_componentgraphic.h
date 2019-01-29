@@ -11,7 +11,7 @@ namespace vsrtl {
 
 class ComponentGraphic : public QGraphicsItem {
 public:
-    ComponentGraphic(Component* c);
+    ComponentGraphic(Component& c);
 
     QRectF boundingRect() const override;
     QRectF baseRect() const { return m_baseRect; }
@@ -24,7 +24,7 @@ public:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void initialize();
 
-    const Component* getComponent() const { return m_component; }
+    const Component& getComponent() const { return m_component; }
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
@@ -70,7 +70,7 @@ private:
     QPointF m_textPos;
     QPointF m_expandButtonPos;
 
-    Component* m_component;
+    Component& m_component;
 
     QToolButton* m_expandButton;
     QGraphicsProxyWidget* m_expandButtonProxy;

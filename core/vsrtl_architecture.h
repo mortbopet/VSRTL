@@ -86,6 +86,9 @@ public:
      * propagates the circuit to set the initial state.
      */
     void verifyAndInitialize() {
+        if (isVerifiedAndInitialized)
+            return;
+
         createComponentGraph();
 
         // Verify that all components has no undefined input signals

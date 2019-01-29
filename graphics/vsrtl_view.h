@@ -23,6 +23,6 @@ private slots:
 private:
     qreal m_zoom;
 };
-}
+}  // namespace vsrtl
 
 #endif  // VSRTL_VSRTLVIEW_H
