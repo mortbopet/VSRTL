@@ -24,13 +24,13 @@ class Constant : public Component {
     NON_REGISTER_COMPONENT
 public:
     Constant() : Component("Constant") {
-        out->setPropagationFunction([] {
+        value->setPropagationFunction([] {
             const static auto cArr = buildUnsignedArr<width>(constantValue);
             return cArr;
         });
     }
 
-    OUTPUTSIGNAL(out, width);
+    OUTPUTSIGNAL(value, width);
 
     static_assert(valueFitsInBitWidth(width, constantValue), "Value does not fit inside provided bit-width");
 };
