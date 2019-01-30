@@ -1,5 +1,5 @@
-#ifndef VSRTL_ARCHITECTURE_H
-#define VSRTL_ARCHITECTURE_H
+#ifndef VSRTL_DESIGN_H
+#define VSRTL_DESIGN_H
 
 #include "vsrtl_component.h"
 #include "vsrtl_defines.h"
@@ -14,14 +14,14 @@
 namespace vsrtl {
 
 /**
- * @brief The Architecture class
- * superclass for all architecture descriptions
+ * @brief The Design class
+ * superclass for all Design descriptions
  */
 
-class Architecture : public Component {
+class Design : public Component {
     NON_REGISTER_COMPONENT
 public:
-    Architecture() : Component("Top") {}
+    Design() : Component("Top") {}
 
     /*
     template <typename T, typename... Args>
@@ -173,4 +173,4 @@ private:
 };
 }  // namespace vsrtl
 
-#endif  // ARCHITECTURE_H
+#endif  // VSRTL_DESIGN_H

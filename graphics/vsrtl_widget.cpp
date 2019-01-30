@@ -1,6 +1,6 @@
 #include "vsrtl_widget.h"
 #include "ui_vsrtl_widget.h"
-#include "vsrtl_architecture.h"
+#include "vsrtl_design.h"
 
 #include <memory>
 
@@ -8,7 +8,7 @@
 
 namespace vsrtl {
 
-VSRTLWidget::VSRTLWidget(Architecture& arch, QWidget* parent) : m_arch(arch), QWidget(parent), ui(new Ui::VSRTLWidget) {
+VSRTLWidget::VSRTLWidget(Design& arch, QWidget* parent) : m_arch(arch), QWidget(parent), ui(new Ui::VSRTLWidget) {
     ui->setupUi(this);
 
     m_view = new VSRTLView(this);
@@ -25,7 +25,7 @@ VSRTLWidget::~VSRTLWidget() {
     delete ui;
 }
 
-void VSRTLWidget::initializeDesign(Architecture& arch) {
+void VSRTLWidget::initializeDesign(Design& arch) {
     // Verify the design in case user forgot to
     arch.verifyAndInitialize();
 

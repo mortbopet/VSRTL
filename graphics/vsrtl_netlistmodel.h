@@ -58,7 +58,7 @@
 namespace vsrtl {
 
 class TreeItem;
-class Architecture;
+class Design;
 class Component;
 
 //! [0]
@@ -66,7 +66,7 @@ class NetlistModel : public QAbstractItemModel {
     Q_OBJECT
 
 public:
-    NetlistModel(const Architecture& arch, QObject* parent = nullptr);
+    NetlistModel(const Design& arch, QObject* parent = nullptr);
     ~NetlistModel() override;
     //! [0] //! [1]
 
@@ -99,7 +99,7 @@ private:
 
     TreeItem* rootItem;
 
-    const Architecture& m_arch;
+    const Design& m_arch;
 
     // Since we transmit changes to the processInterface in the setData method, we need to
     // distinguish between when setData is called when model is loading, and when setData is called

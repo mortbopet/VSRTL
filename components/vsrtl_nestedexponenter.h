@@ -2,7 +2,7 @@
 #define VSRTL_NESTEDEXPONENTER_H
 
 #include "vsrtl_alu.h"
-#include "vsrtl_architecture.h"
+#include "vsrtl_design.h"
 #include "vsrtl_component.h"
 #include "vsrtl_constant.h"
 #include "vsrtl_register.h"
@@ -32,7 +32,7 @@ public:
     SUBCOMPONENT(aluOp, Constant, ALUctrlWidth(), ALU_OPCODE::MUL);
 };
 
-class NestedExponenter : public Architecture {
+class NestedExponenter : public Design {
 public:
     NestedExponenter() {
         exp->out >> adder->op1;

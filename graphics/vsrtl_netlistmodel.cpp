@@ -54,7 +54,7 @@
 #include "vsrtl_netlistmodel.h"
 #include "vsrtl_treeitem.h"
 
-#include "vsrtl_architecture.h"
+#include "vsrtl_design.h"
 
 namespace vsrtl {
 
@@ -79,7 +79,7 @@ int getRootSelectedIndex(QItemSelectionModel* model) {
 }
 
 //! [0]
-NetlistModel::NetlistModel(const Architecture& arch, QObject* parent) : QAbstractItemModel(parent), m_arch(arch) {
+NetlistModel::NetlistModel(const Design& arch, QObject* parent) : QAbstractItemModel(parent), m_arch(arch) {
     QStringList headers{"Component", "Value"};
     QVector<QVariant> rootData;
     for (QString header : headers)

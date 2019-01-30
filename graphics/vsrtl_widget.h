@@ -14,13 +14,13 @@ namespace Ui {
 class VSRTLWidget;
 }
 
-class Architecture;
+class Design;
 
 class VSRTLWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit VSRTLWidget(Architecture& arch, QWidget* parent = nullptr);
+    explicit VSRTLWidget(Design& arch, QWidget* parent = nullptr);
     ~VSRTLWidget();
 
     void addComponent(ComponentGraphic* g);
@@ -30,7 +30,7 @@ public slots:
     void reset();
 
 private:
-    void initializeDesign(Architecture& arch);
+    void initializeDesign(Design& arch);
 
     Ui::VSRTLWidget* ui;
 
@@ -38,7 +38,7 @@ private:
     QGraphicsScene* m_scene;
 
     CircuitHandler* m_ch;
-    Architecture& m_arch;
+    Design& m_arch;
 };
 
 }  // namespace vsrtl

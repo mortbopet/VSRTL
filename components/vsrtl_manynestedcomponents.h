@@ -22,10 +22,10 @@ private:
     SUBCOMPONENT_NT(exp2, Exponenter);
 };
 
-class ManyNestedComponents : public Architecture {
+class ManyNestedComponents : public Design {
 public:
     static constexpr int m_cVal = 4;
-    ManyNestedComponents() : Architecture() {
+    ManyNestedComponents() : Design() {
         // Connect objects
         exp1->out >> exp2->in;
         exp2->out >> exp1->in;

@@ -1,5 +1,5 @@
 #include "vsrtl_alu.h"
-#include "vsrtl_architecture.h"
+#include "vsrtl_design.h"
 #include "vsrtl_constant.h"
 #include "vsrtl_register.h"
 
@@ -13,7 +13,7 @@ namespace vsrtl {
  * @brief tst_adderAndReg
  * Small test connecting an ALU, a constant and a register to test clocking of simple circuits
  */
-class addOp : public Architecture {
+class addOp : public Design {
 public:
     addOp() {
         // Connect objects

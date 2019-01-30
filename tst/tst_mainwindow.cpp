@@ -1,5 +1,5 @@
 #include "vsrtl_alu.h"
-#include "vsrtl_architecture.h"
+#include "vsrtl_design.h"
 #include "vsrtl_constant.h"
 #include "vsrtl_register.h"
 

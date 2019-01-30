@@ -1,6 +1,6 @@
 #include "vsrtl_mainwindow.h"
 #include "ui_vsrtl_mainwindow.h"
-#include "vsrtl_architecture.h"
+#include "vsrtl_design.h"
 #include "vsrtl_netlistmodel.h"
 #include "vsrtl_widget.h"
 
@@ -15,7 +15,7 @@
 
 namespace vsrtl {
 
-MainWindow::MainWindow(Architecture& arch, QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
+MainWindow::MainWindow(Design& arch, QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     m_vsrtlWidget = new VSRTLWidget(arch, this);
 

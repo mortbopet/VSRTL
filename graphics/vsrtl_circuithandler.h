@@ -1,7 +1,7 @@
 #ifndef VSRTL_CIRCUITHANDLER_H
 #define VSRTL_CIRCUITHANDLER_H
 
-#include "vsrtl_architecture.h"
+#include "vsrtl_design.h"
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_view.h"
 

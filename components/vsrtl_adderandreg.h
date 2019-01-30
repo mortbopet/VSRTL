@@ -2,15 +2,15 @@
 #define VSRTL_ADDERANDREG_H
 
 #include "vsrtl_alu.h"
-#include "vsrtl_architecture.h"
 #include "vsrtl_constant.h"
+#include "vsrtl_design.h"
 #include "vsrtl_register.h"
 
 namespace vsrtl {
 
-class AdderAndReg : public Architecture {
+class AdderAndReg : public Design {
 public:
-    AdderAndReg() : Architecture() {
+    AdderAndReg() : Design() {
         // Connect objects
         c4->value >> alu->op1;
         reg->out >> alu->op2;

@@ -9,7 +9,7 @@ QT_FORWARD_DECLARE_CLASS(QTreeView)
 namespace vsrtl {
 
 class VSRTLWidget;
-class Architecture;
+class Design;
 class NetlistModel;
 
 namespace Ui {
@@ -20,7 +20,7 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(Architecture& arch, QWidget* parent = nullptr);
+    explicit MainWindow(Design& arch, QWidget* parent = nullptr);
     ~MainWindow();
 
 private:
