@@ -56,6 +56,8 @@ void MainWindow::createToolbar() {
     cycleCount->setReadOnly(true);
     simulatorToolBar->addWidget(cycleCount);
 
+    simulatorToolBar->addSeparator();
+
     QAction* showNetlist = new QAction("Show Netlist", this);
     connect(showNetlist, &QAction::triggered, [this] {
         if (m_netlistView->isVisible()) {
@@ -65,6 +67,14 @@ void MainWindow::createToolbar() {
         }
     });
     simulatorToolBar->addAction(showNetlist);
+
+    QAction* expandAct = new QAction("Expand All", this);
+    connect(expandAct, &QAction::triggered, m_netlistView, &QTreeView::expandAll);
+    simulatorToolBar->addAction(expandAct);
+
+    QAction* collapseAll = new QAction("Collapse All", this);
+    connect(collapseAll, &QAction::triggered, m_netlistView, &QTreeView::collapseAll);
+    simulatorToolBar->addAction(collapseAll);
 }
 
 }  // namespace vsrtl
