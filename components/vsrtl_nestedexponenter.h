@@ -18,8 +18,6 @@ public:
     Exponenter(const char* name) : Component(name) {
         mul->out >> reg->in;
 
-        out >> in;
-
         in >> mul->op1;
         in >> mul->op2;
         aluOp->value >> mul->ctrl;

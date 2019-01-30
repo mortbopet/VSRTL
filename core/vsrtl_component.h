@@ -139,7 +139,7 @@ public:
     }
 
     const Component* getParent() const { return m_parent; }
-    const char* getDisplayName() const { return m_displayName; }
+    const char* getName() const { return m_displayName; }
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
     const std::vector<std::unique_ptr<OutputSignalBase>>& getOutputs() const { return m_outputsignals; }
     const std::vector<std::unique_ptr<InputSignalBase>>& getInputs() const { return m_inputsignals; }

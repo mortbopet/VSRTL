@@ -20,7 +20,7 @@ void ComponentGraphic::initialize() {
     setFlags(ItemIsSelectable | ItemIsMovable | ItemSendsScenePositionChanges);
     setAcceptHoverEvents(true);
 
-    m_displayText = QString::fromStdString(m_component.getDisplayName());
+    m_displayText = QString::fromStdString(m_component.getName());
     m_font = QFont("Times", 10);
 
     // Get IO of Component

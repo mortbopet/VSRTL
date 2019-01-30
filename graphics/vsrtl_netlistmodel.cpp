@@ -279,7 +279,7 @@ void NetlistModel::loadDesign(TreeItem* parent, const Component& component) {
 
         // Set component data (component name and signal value)
         TreeItem* child = parent->child(parent->childCount() - 1);
-        child->setData(0, QString::fromStdString(subcomponent->getDisplayName()));
+        child->setData(0, QString::fromStdString(subcomponent->getName()));
 
         // Recurse into the child
         loadDesign(child, *subcomponent);

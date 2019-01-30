@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <functional>
 #include <initializer_list>
+#include <iostream>
 #include <memory>
 #include <type_traits>
 #include <variant>
@@ -170,11 +171,56 @@ public:
         return connectedParent;
     }
 
-    void connect(InputSignal<bitwidth>& otherInput) { m_signal = &otherInput; }
+    void connect(InputSignal<bitwidth>& otherInput) {
+        verifyIsNotConnected();
+        m_signal = &otherInput;
+    }
 
-    void connect(OutputSignal<bitwidth>& output) { m_signal = &output; }
+    void connect(OutputSignal<bitwidth>& output) {
+        verifyIsNotConnected();
+        m_signal = &output;
+    }
 
 private:
+    void verifyIsNotConnected() {
+        bool isConnected;
+        std::visit(
+            overloadVisitor{
+                // Default variant value is OutputSignal. Not connected if this is a nullptr
+                [&isConnected](OutputSignal<bitwidth>* arg) { isConnected = arg != nullptr; },
+                // If the signal is to an InputSignal, we are sure that this input has been previously connected
+                [&isConnected](InputSignal<bitwidth>*) { isConnected = true; },
+            },
+            m_signal);
+
+        if (isConnected) {
+            std::string err("ERROR! trying to connect an input which has already been connected.\n");
+            err += "Signal: \t\t'";
+            err += this->getName();
+            err += "'\nOf component: \t'";
+            err += getParent()->getName();
+            err += "'\nIs already connected to \nSignal: \t\t'";
+            std::string toThisSignal, toThisComponent;
+            std::visit(
+                overloadVisitor{
+                    [&toThisSignal, &toThisComponent, this](OutputSignal<bitwidth>* arg) {
+                        toThisSignal = arg->getName();
+                        toThisComponent = getConnectedParent()->getName();
+                    },
+                    [&toThisSignal, &toThisComponent, this](InputSignal<bitwidth>* arg) {
+                        toThisSignal = arg->getName();
+                        toThisComponent = getParent()->getName();
+                    },
+                },
+                m_signal);
+            err += toThisSignal;
+            err += "'\nOf component: \t'";
+            err += toThisComponent;
+            err += "'\n";
+            std::cout << err << std::endl;
+            assert(false);
+        }
+    }
     std::variant<OutputSignal<bitwidth>*, InputSignal<bitwidth>*> m_signal;
 };
 

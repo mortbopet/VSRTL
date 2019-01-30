@@ -53,7 +53,7 @@ private:
         uint32_t uop1 = op1.template value<uint32_t>();
         uint32_t uop2 = op2.template value<uint32_t>();
         int32_t _op1 = op1.template value<int32_t>();
-        int32_t _op2 = op1.template value<int32_t>();
+        int32_t _op2 = op2.template value<int32_t>();
         switch (ctrl.value<uint32_t>()) {
             case ALU_OPCODE::ADD:
                 return buildUnsignedArr<width>(uop1 + uop2);
