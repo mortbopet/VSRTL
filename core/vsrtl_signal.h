@@ -76,10 +76,7 @@ public:
      */
     void setValue(std::array<bool, bitwidth> v) { m_value = v; }
 
-    void propagate() override {
-        std::cout << "Propagating " << getParent()->getName() << ":" << getName() << std::endl;
-        m_value = m_propagationFunction();
-    }
+    void propagate() override { m_value = m_propagationFunction(); }
     bool hasPropagationFunction() const override { return m_propagationFunction != nullptr; }
     void setPropagationFunction(std::function<std::array<bool, bitwidth>()> f) { m_propagationFunction = f; }
 

@@ -79,8 +79,6 @@ public:
         for (auto& c : m_componentGraph) {
             c.first->resetPropagation();
         }
-
-        std::cout << std::endl;
     }
 
     /**
