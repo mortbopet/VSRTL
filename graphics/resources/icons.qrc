@@ -2,5 +2,11 @@
     <qresource prefix="/icons">
         <file>minus.svg</file>
         <file>plus.svg</file>
+        <file>collapse.svg</file>
+        <file>expand.svg</file>
+        <file>reset.svg</file>
+        <file>step.svg</file>
+        <file>step-clock.svg</file>
+        <file>list.svg</file>
     </qresource>
 </RCC>

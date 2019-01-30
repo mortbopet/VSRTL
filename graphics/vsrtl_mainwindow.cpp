@@ -25,6 +25,8 @@ MainWindow::MainWindow(Design& arch, QWidget* parent) : QMainWindow(parent), ui(
     m_netlistView->setModel(m_netlistModel);
     m_netlistModel->updateNetlistData();
 
+    m_netlistView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+
     QSplitter* splitter = new QSplitter(this);
 
     splitter->addWidget(m_vsrtlWidget);
@@ -45,19 +47,22 @@ MainWindow::~MainWindow() {
 void MainWindow::createToolbar() {
     QToolBar* simulatorToolBar = addToolBar("Simulator");
 
-    QAction* resetAct = new QAction("Reset", this);
+    const QIcon resetIcon = QIcon(":/icons/reset.svg");
+    QAction* resetAct = new QAction(resetIcon, "Reset", this);
     connect(resetAct, &QAction::triggered, [this] {
         m_vsrtlWidget->reset();
         m_netlistModel->updateNetlistData();
     });
+    resetAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
     simulatorToolBar->addAction(resetAct);
 
-    QAction* clockAct = new QAction("Clock", this);
+    const QIcon clockIcon = QIcon(":/icons/step.svg");
+    QAction* clockAct = new QAction(clockIcon, "Clock", this);
     connect(clockAct, &QAction::triggered, [this] {
         m_vsrtlWidget->clock();
         m_netlistModel->updateNetlistData();
     });
-
+    clockAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_C));
     simulatorToolBar->addAction(clockAct);
 
     QLineEdit* cycleCount = new QLineEdit();
@@ -66,7 +71,8 @@ void MainWindow::createToolbar() {
 
     simulatorToolBar->addSeparator();
 
-    QAction* showNetlist = new QAction("Show Netlist", this);
+    const QIcon showNetlistIcon = QIcon(":/icons/list.svg");
+    QAction* showNetlist = new QAction(showNetlistIcon, "Show Netlist", this);
     connect(showNetlist, &QAction::triggered, [this] {
         if (m_netlistView->isVisible()) {
             m_netlistView->hide();
@@ -76,11 +82,13 @@ void MainWindow::createToolbar() {
     });
     simulatorToolBar->addAction(showNetlist);
 
-    QAction* expandAct = new QAction("Expand All", this);
+    const QIcon expandIcon = QIcon(":/icons/expand.svg");
+    QAction* expandAct = new QAction(expandIcon, "Expand All", this);
     connect(expandAct, &QAction::triggered, m_netlistView, &QTreeView::expandAll);
     simulatorToolBar->addAction(expandAct);
 
-    QAction* collapseAll = new QAction("Collapse All", this);
+    const QIcon collapseIcon = QIcon(":/icons/collapse.svg");
+    QAction* collapseAll = new QAction(collapseIcon, "Collapse All", this);
     connect(collapseAll, &QAction::triggered, m_netlistView, &QTreeView::collapseAll);
     simulatorToolBar->addAction(collapseAll);
 }
