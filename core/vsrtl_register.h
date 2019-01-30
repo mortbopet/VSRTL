@@ -12,7 +12,7 @@ namespace vsrtl {
 class RegisterBase : public Component {
     REGISTER_COMPONENT
 public:
-    RegisterBase() : Component("Register Base") {}
+    RegisterBase(const char* name) : Component(name) {}
     virtual void reset() = 0;
     virtual void clock() = 0;
     virtual void save() = 0;
@@ -21,9 +21,8 @@ public:
 template <uint32_t width>
 class Register : public RegisterBase {
 public:
-    Register() {
+    Register(const char* name) : RegisterBase(name) {
         out.setPropagationFunction([=] { return buildUnsignedArr<width>(m_savedValue); });
-        m_displayName = "Register";
     }
 
     void reset() override final {

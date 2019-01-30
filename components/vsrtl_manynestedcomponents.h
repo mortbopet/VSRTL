@@ -8,7 +8,7 @@ namespace vsrtl {
 class DoubleNestedExponenter : public Component {
     NON_REGISTER_COMPONENT
 public:
-    DoubleNestedExponenter() : Component("Double nested Exponenter") {
+    DoubleNestedExponenter(const char* name) : Component(name) {
         in >> exp1->in;
         exp1->out >> exp2->in;
 

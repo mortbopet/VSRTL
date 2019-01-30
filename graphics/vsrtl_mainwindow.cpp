@@ -23,6 +23,7 @@ MainWindow::MainWindow(Design& arch, QWidget* parent) : QMainWindow(parent), ui(
 
     m_netlistModel = new NetlistModel(arch, this);
     m_netlistView->setModel(m_netlistModel);
+    m_netlistModel->updateNetlistData();
 
     QSplitter* splitter = new QSplitter(this);
 

@@ -36,7 +36,7 @@ class ALU : public Component {
 
 public:
     // clang-format off
-    ALU() : Component("ALU"){
+    ALU(const char* name) : Component(name){
         out.setPropagationFunction([=]{return calculateOutput();});
     }
     void propagate() { calculateOutput(); }

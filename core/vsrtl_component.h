@@ -6,7 +6,6 @@
 #include <map>
 #include <memory>
 #include <set>
-#include <string>
 #include <vector>
 
 #include "vsrtl_binutils.h"
@@ -36,12 +35,12 @@ class Component;
 
 #define SUBCOMPONENT(name, type, ...) \
 private:                              \
-    type<__VA_ARGS__>* name = create_component<type<__VA_ARGS__>>(this)
+    type<__VA_ARGS__>* name = create_component<type<__VA_ARGS__>>(this, #name)
 
 // Non-templated subcomponent construction macro
 #define SUBCOMPONENT_NT(name, type) \
 private:                            \
-    type* name = create_component<type>(this)
+    type* name = create_component<type>(this, #name)
 
 #define INPUTSIGNAL(name, bitwidth) InputSignal<bitwidth>& name = this->createInputSignal<bitwidth>(#name)
 #define OUTPUTSIGNAL(name, bitwidth) OutputSignal<bitwidth>& name = createOutputSignal<bitwidth>(#name)
@@ -50,7 +49,7 @@ private:                            \
 
 class Component {
 public:
-    Component(std::string displayName, Component* parent = nullptr) : m_displayName(displayName), m_parent(parent) {}
+    Component(const char* displayName, Component* parent = nullptr) : m_displayName(displayName), m_parent(parent) {}
     virtual ~Component() {}
 
     virtual bool isRegister() const = 0;
@@ -140,7 +139,7 @@ public:
     }
 
     const Component* getParent() const { return m_parent; }
-    const std::string& getDisplayName() const { return m_displayName; }
+    const char* getDisplayName() const { return m_displayName; }
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
     const std::vector<std::unique_ptr<OutputSignalBase>>& getOutputs() const { return m_outputsignals; }
     const std::vector<std::unique_ptr<InputSignalBase>>& getInputs() const { return m_inputsignals; }
@@ -179,7 +178,7 @@ protected:
 
     void propagateSignals() {}
 
-    std::string m_displayName;
+    const char* m_displayName;
 
     Component* m_parent = nullptr;
     std::vector<std::unique_ptr<OutputSignalBase>> m_outputsignals;
@@ -189,8 +188,8 @@ protected:
 
 // Component object generator that registers objects in parent upon creation
 template <typename T, typename... Args>
-T* create_component(Component* parent, Args&&... args) {
-    auto ptr = new T(std::forward<Args>(args)...);
+T* create_component(Component* parent, const char* name, Args&&... args) {
+    auto ptr = new T(name, std::forward<Args>(args)...);
     if (parent) {
         parent->addSubcomponent(static_cast<Component*>(ptr));
     }

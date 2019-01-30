@@ -23,7 +23,7 @@ template <unsigned int width, int constantValue>
 class Constant : public Component {
     NON_REGISTER_COMPONENT
 public:
-    Constant() : Component("Constant") {
+    Constant(const char* name) : Component(name) {
         value.setPropagationFunction([] {
             const static auto cArr = buildUnsignedArr<width>(constantValue);
             return cArr;

@@ -20,7 +20,7 @@ public:
     static constexpr int m_cVal = 4;
 
     // Create objects
-    SUBCOMPONENT(alu_ctrl, Constant, ALUctrlWidth(), ALU_OPCODE::SUB);
+    SUBCOMPONENT(alu_ctrl, Constant, ALUctrlWidth(), ALU_OPCODE::ADD);
     SUBCOMPONENT(c4, Constant, 32, 4);
     SUBCOMPONENT(alu, ALU, 32);
     SUBCOMPONENT(reg, Register, 32);

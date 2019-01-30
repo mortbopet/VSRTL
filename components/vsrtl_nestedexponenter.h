@@ -2,9 +2,9 @@
 #define VSRTL_NESTEDEXPONENTER_H
 
 #include "vsrtl_alu.h"
-#include "vsrtl_design.h"
 #include "vsrtl_component.h"
 #include "vsrtl_constant.h"
+#include "vsrtl_design.h"
 #include "vsrtl_register.h"
 
 namespace vsrtl {
@@ -15,7 +15,7 @@ public:
     INPUTSIGNAL(in, 32);
     OUTPUTSIGNAL(out, 32);
 
-    Exponenter() : Component("Exponenter") {
+    Exponenter(const char* name) : Component(name) {
         mul->out >> reg->in;
 
         out >> in;
