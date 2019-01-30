@@ -182,10 +182,10 @@ bool TreeItem::setData(int column, const QVariant& value, int role) {
     } else if (role == Qt::ToolTipRole) {
         tooltip = value.toString();
     } else if (role == Qt::UserRole) {
-        userData = value.value<ItemUserData>();
+        userData = value.value<NetlistData>();
     }
     return true;
 }
 //! [11]
 
-}
+}  // namespace vsrtl

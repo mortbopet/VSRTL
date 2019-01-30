@@ -51,6 +51,8 @@
 #include <QItemSelectionModel>
 #include <QWidget>
 
+#include <QDebug>
+
 #include "vsrtl_netlistmodel.h"
 #include "vsrtl_treeitem.h"
 
@@ -87,8 +89,9 @@ NetlistModel::NetlistModel(const Design& arch, QObject* parent) : QAbstractItemM
 
     rootItem = new TreeItem(rootData);
 
-    reloadNetlistData(rootItem, arch);
+    loadDesign(rootItem, m_arch);
 }
+
 //! [0]
 
 //! [1]
@@ -225,23 +228,6 @@ int NetlistModel::rowCount(const QModelIndex& parent) const {
 //! [8]
 
 bool NetlistModel::setData(const QModelIndex& index, const QVariant& value, int role) {
-    if (role == Qt::EditRole) {
-        if (m_modelIsLoading) {
-            // We are loading data from the processInterface into the model
-            TreeItem* item = getItem(index);
-            bool result = item->setData(index.column(), value, role);
-
-            if (result)
-                emit dataChanged(index, index);
-
-            return result;
-        } else {
-            return true;
-        }
-    } else if (role == Qt::ToolTipRole || role == Qt::UserRole) {
-        TreeItem* item = getItem(index);
-        return item->setData(index.column(), value, role);
-    }
     return false;
 }
 
@@ -257,7 +243,34 @@ bool NetlistModel::setHeaderData(int section, Qt::Orientation orientation, const
     return result;
 }
 
-void NetlistModel::reloadNetlistData(TreeItem* parent, const Component& component) {
+void NetlistModel::updateNetlistDataRecursive(TreeItem* index) {
+    const auto itemData = index->data(0, Qt::UserRole).value<NetlistData>();
+    switch (itemData.t) {
+        case NetlistData::type::invalid: {
+            break;
+        }
+        case NetlistData::type::input: {
+            index->setData(1, static_cast<unsigned int>(*(itemData.input)));
+            break;
+        }
+        case NetlistData::type::output: {
+            index->setData(1, static_cast<unsigned int>(*(itemData.output)));
+            break;
+        }
+    }
+
+    for (int i = 0; i < index->childCount(); i++) {
+        updateNetlistDataRecursive(index->child(i));
+    }
+}
+
+void NetlistModel::updateNetlistData() {
+    // For now, just reload the entire model
+    updateNetlistDataRecursive(rootItem);
+    dataChanged(index(0, 0), index(rowCount(), columnCount()));
+}
+
+void NetlistModel::loadDesign(TreeItem* parent, const Component& component) {
     auto& subComponents = component.getSubComponents();
 
     // Subcomponents
@@ -269,7 +282,7 @@ void NetlistModel::reloadNetlistData(TreeItem* parent, const Component& componen
         child->setData(0, QString::fromStdString(subcomponent->getDisplayName()));
 
         // Recurse into the child
-        reloadNetlistData(child, *subcomponent);
+        loadDesign(child, *subcomponent);
     }
 
     // I/O ports of component
@@ -280,7 +293,11 @@ void NetlistModel::reloadNetlistData(TreeItem* parent, const Component& componen
         TreeItem* child = parent->child(parent->childCount() - 1);
 
         child->setData(0, QString::fromStdString(input->getName()));
-        child->setData(1, static_cast<unsigned int>(*input));
+
+        NetlistData data;
+        data.t = NetlistData::type::input;
+        data.input = input.get();
+        child->setData(0, QVariant::fromValue(data), Qt::UserRole);
     }
     for (const auto& output : component.getOutputs()) {
         parent->insertChildren(parent->childCount(), 1, rootItem->columnCount());
@@ -289,7 +306,11 @@ void NetlistModel::reloadNetlistData(TreeItem* parent, const Component& componen
         TreeItem* child = parent->child(parent->childCount() - 1);
 
         child->setData(0, QString::fromStdString((*(output)).getName()));
-        child->setData(1, static_cast<unsigned int>(*(output)));
+
+        NetlistData data;
+        data.t = NetlistData::type::output;
+        data.output = output.get();
+        child->setData(0, QVariant::fromValue(data), Qt::UserRole);
     }
 }
 

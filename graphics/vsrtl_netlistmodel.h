@@ -70,8 +70,6 @@ public:
     ~NetlistModel() override;
     //! [0] //! [1]
 
-    void setModelLoading(bool state) { m_modelIsLoading = state; }
-
     QVariant data(const QModelIndex& index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
@@ -94,18 +92,16 @@ public:
     bool removeRows(int position, int rows, const QModelIndex& parent = QModelIndex()) override;
     TreeItem* getItem(const QModelIndex& index) const;
 
-private:
-    void reloadNetlistData(TreeItem* parent, const Component& component);
+public slots:
+    void updateNetlistData();
 
-    TreeItem* rootItem;
+private:
+    void updateNetlistDataRecursive(TreeItem* index);
+    void loadDesign(TreeItem* parent, const Component& component);
+
+    TreeItem* rootItem = nullptr;
 
     const Design& m_arch;
-
-    // Since we transmit changes to the processInterface in the setData method, we need to
-    // distinguish between when setData is called when model is loading, and when setData is called
-    // when a user has edited through the treeView. This flag disables calls to the processInterface
-    // during setupModelData()
-    bool m_modelIsLoading = false;
 };
 //! [2]
 

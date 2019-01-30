@@ -55,15 +55,19 @@
 #include <QVariant>
 #include <QVector>
 
+#include "vsrtl_signal.h"
+
 namespace vsrtl {
 
-// Used when delegate needs to query an item for its valid range, names, options, etc.
+// TreeItem's are structured as having, in column 0; the NetlistData as userData
+// wherein the value is read and assigned to column 1
+
 typedef struct {
-    QString processtype;
-    double low;
-    double high;
-    std::vector<std::string> options;
-} ItemUserData;
+    enum class type { invalid, input, output };
+    type t = type::invalid;
+    InputSignalBase* input = nullptr;
+    OutputSignalBase* output = nullptr;
+} NetlistData;
 
 //! [0]
 class TreeItem {
@@ -88,13 +92,13 @@ private:
     QVector<QVariant> itemData;
     QString tooltip;
     TreeItem* parentItem;
-    ItemUserData userData;
+    NetlistData userData;
 };
 //! [0]
 
 }  // namespace vsrtl
 
 // Declare as qMetatype to be able to use as a qVariant
-Q_DECLARE_METATYPE(vsrtl::ItemUserData)
+Q_DECLARE_METATYPE(vsrtl::NetlistData)
 
 #endif  // VSRTL_TREEITEM_H

@@ -49,7 +49,11 @@ void MainWindow::createToolbar() {
     simulatorToolBar->addAction(resetAct);
 
     QAction* clockAct = new QAction("Clock", this);
-    connect(clockAct, &QAction::triggered, m_vsrtlWidget, &VSRTLWidget::clock);
+    connect(clockAct, &QAction::triggered, [this] {
+        m_vsrtlWidget->clock();
+        m_netlistModel->updateNetlistData();
+    });
+
     simulatorToolBar->addAction(clockAct);
 
     QLineEdit* cycleCount = new QLineEdit();
