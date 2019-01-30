@@ -67,6 +67,7 @@ public:
         // reset all registers
         // propagate everything combinational
         std::for_each(m_registers.begin(), m_registers.end(), [](auto& reg) { reg->reset(); });
+        propagateDesign();
     }
 
     void propagateDesign() {

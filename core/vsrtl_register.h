@@ -26,7 +26,10 @@ public:
         m_displayName = "Register";
     }
 
-    void reset() override final { out.setValue(buildUnsignedArr<width>(0)); }
+    void reset() override final {
+        out.setValue(buildUnsignedArr<width>(0));
+        m_savedValue = 0;
+    }
     void save() override final { m_savedValue = in.template value<uint32_t>(); }
     void clock() override final { out.propagate(); }
 

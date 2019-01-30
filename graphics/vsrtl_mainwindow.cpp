@@ -45,7 +45,10 @@ void MainWindow::createToolbar() {
     QToolBar* simulatorToolBar = addToolBar("Simulator");
 
     QAction* resetAct = new QAction("Reset", this);
-    connect(resetAct, &QAction::triggered, m_vsrtlWidget, &VSRTLWidget::reset);
+    connect(resetAct, &QAction::triggered, [this] {
+        m_vsrtlWidget->reset();
+        m_netlistModel->updateNetlistData();
+    });
     simulatorToolBar->addAction(resetAct);
 
     QAction* clockAct = new QAction("Clock", this);
