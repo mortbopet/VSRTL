@@ -172,7 +172,7 @@ protected:
 
     void propagateInputs() {
         for (auto& input : m_inputsignals) {
-            input->getParent()->propagateComponent();
+            input->getConnectedParent()->propagateComponent();
         }
     }
 

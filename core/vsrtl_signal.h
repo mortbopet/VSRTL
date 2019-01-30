@@ -95,6 +95,7 @@ class InputSignalBase {
 public:
     InputSignalBase(Component* parent, const char* name) : m_name(name), m_parent(parent) {}
     Component* getParent() { return m_parent; }
+    virtual Component* getConnectedParent() = 0;
     virtual bool isConnected() const = 0;
 
     /*
@@ -112,6 +113,7 @@ public:
 
 private:
     const char* m_name;
+
     Component* m_parent = nullptr;
 };
 
@@ -155,6 +157,17 @@ public:
             },
             m_signal);
         return connected;
+    }
+
+    Component* getConnectedParent() {
+        Component* connectedParent;
+        std::visit(
+            overloadVisitor{
+                [&connectedParent](OutputSignal<bitwidth>* arg) { connectedParent = arg->getParent(); },
+                [&connectedParent](InputSignal<bitwidth>* arg) { connectedParent = arg->getParent(); },
+            },
+            m_signal);
+        return connectedParent;
     }
 
     void connect(InputSignal<bitwidth>& otherInput) { m_signal = &otherInput; }
