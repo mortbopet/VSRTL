@@ -25,7 +25,7 @@ private:
 class ManyNestedComponents : public Design {
 public:
     static constexpr int m_cVal = 4;
-    ManyNestedComponents() : Design() {
+    ManyNestedComponents() : Design("Many Nested Components") {
         // Connect objects
         exp1->out >> exp2->in;
         exp2->out >> exp1->in;

@@ -18,7 +18,7 @@ public:
     virtual void save() = 0;
 };
 
-template <uint32_t width>
+template <unsigned int width>
 class Register : public RegisterBase {
 public:
     Register(const char* name) : RegisterBase(name) {

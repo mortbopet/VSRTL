@@ -62,6 +62,8 @@ public:
         return [=] { return m_value; };
     }
 
+    void connect(OutputSignal<bitwidth>& otherOutput) { setPropagationFunction(otherOutput.getFunctor()); }
+
     // Casting operators
     explicit operator int() const override { return signextend<int32_t, bitwidth>(accBVec<bitwidth>(m_value)); }
     explicit operator unsigned int() const override { return accBVec<bitwidth>(m_value); }
@@ -74,7 +76,10 @@ public:
      */
     void setValue(std::array<bool, bitwidth> v) { m_value = v; }
 
-    void propagate() override { m_value = m_propagationFunction(); }
+    void propagate() override {
+        std::cout << "Propagating " << getParent()->getName() << ":" << getName() << std::endl;
+        m_value = m_propagationFunction();
+    }
     bool hasPropagationFunction() const override { return m_propagationFunction != nullptr; }
     void setPropagationFunction(std::function<std::array<bool, bitwidth>()> f) { m_propagationFunction = f; }
 
@@ -236,14 +241,50 @@ private:
 
 */
 
+/**
+ *  Connects the following pattern:
+ * IN   OUT IN  OUT
+ *  _____    ____
+ * |    |   |    |
+ * |    ->-->    |
+ * |____|   |____|
+ *
+ */
 template <unsigned int bitwidth>
 void operator>>(OutputSignal<bitwidth>& fromThisOutput, InputSignal<bitwidth>& toThisInput) {
     toThisInput.connect(fromThisOutput);
 }
 
+/**
+ *  Connects the following pattern:
+ * IN   IN   OUT  OUT
+ *   _____________
+ *  |    _____   |
+ *  |   |    |   |
+ *  ->-->    |   |
+ *  |   |____|   |
+ *  |____________|
+ *
+ */
 template <unsigned int bitwidth>
 void operator>>(InputSignal<bitwidth>& fromThisInput, InputSignal<bitwidth>& toThisInput) {
     toThisInput.connect(fromThisInput);
+}
+
+/**
+ *  Connects the following pattern:
+ * IN   IN   OUT  OUT
+ *   _____________
+ *  |    _____   |
+ *  |   |    |   |
+ *  |   |   ->--->
+ *  |   |____|   |
+ *  |____________|
+ *
+ */
+template <unsigned int bitwidth>
+void operator>>(OutputSignal<bitwidth>& fromThisOutput, OutputSignal<bitwidth>& toThisOutput) {
+    toThisOutput.connect(fromThisOutput);
 }
 
 }  // namespace vsrtl

@@ -1,6 +1,6 @@
 #include "vsrtl_alu.h"
-#include "vsrtl_design.h"
 #include "vsrtl_constant.h"
+#include "vsrtl_design.h"
 #include "vsrtl_register.h"
 
 #include "RISC-V/riscv_registerfile.h"
@@ -15,7 +15,7 @@ namespace vsrtl {
  */
 class addOp : public Design {
 public:
-    addOp() {
+    addOp() : Design("Adder") {
         // Connect objects
 
         c4->value >> alu->op1;

@@ -16,23 +16,23 @@ public:
     OUTPUTSIGNAL(out, 32);
 
     Exponenter(const char* name) : Component(name) {
-        mul->out >> reg->in;
+        mul->out >> expReg->in;
 
         in >> mul->op1;
         in >> mul->op2;
         aluOp->value >> mul->ctrl;
 
-        out.setPropagationFunction(reg->out.getFunctor());
+        expReg->out >> out;
     }
 
-    SUBCOMPONENT(reg, Register, 32);
+    SUBCOMPONENT(expReg, Register, 32);
     SUBCOMPONENT(mul, ALU, 32);
     SUBCOMPONENT(aluOp, Constant, ALUctrlWidth(), ALU_OPCODE::MUL);
 };
 
 class NestedExponenter : public Design {
 public:
-    NestedExponenter() {
+    NestedExponenter() : Design("Nested Exponenter") {
         exp->out >> adder->op1;
         reg->out >> adder->op2;
         aluOp->value >> adder->ctrl;

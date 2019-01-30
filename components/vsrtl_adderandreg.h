@@ -10,7 +10,7 @@ namespace vsrtl {
 
 class AdderAndReg : public Design {
 public:
-    AdderAndReg() : Design() {
+    AdderAndReg() : Design("Adder and Register") {
         // Connect objects
         c4->value >> alu->op1;
         reg->out >> alu->op2;

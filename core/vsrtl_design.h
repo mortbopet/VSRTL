@@ -21,7 +21,7 @@ namespace vsrtl {
 class Design : public Component {
     NON_REGISTER_COMPONENT
 public:
-    Design() : Component("Top") {}
+    Design(const char* name) : Component(name) {}
 
     /*
     template <typename T, typename... Args>
@@ -79,6 +79,8 @@ public:
         for (auto& c : m_componentGraph) {
             c.first->resetPropagation();
         }
+
+        std::cout << std::endl;
     }
 
     /**
