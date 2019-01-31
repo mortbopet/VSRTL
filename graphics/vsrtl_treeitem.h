@@ -55,7 +55,7 @@
 #include <QVariant>
 #include <QVector>
 
-#include "vsrtl_signal.h"
+#include "vsrtl_port.h"
 
 namespace vsrtl {
 

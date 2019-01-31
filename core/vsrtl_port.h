@@ -8,7 +8,6 @@
 #include <iostream>
 #include <memory>
 #include <type_traits>
-#include <variant>
 
 #include "vsrtl_binutils.h"
 #include "vsrtl_defines.h"

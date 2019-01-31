@@ -2,7 +2,7 @@
 #define REGISTER_H
 
 #include "vsrtl_component.h"
-#include "vsrtl_signal.h"
+#include "vsrtl_port.h"
 
 #include <algorithm>
 #include <vector>

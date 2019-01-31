@@ -4,7 +4,7 @@
 #include "vsrtl_binutils.h"
 #include "vsrtl_component.h"
 #include "vsrtl_defines.h"
-#include "vsrtl_signal.h"
+#include "vsrtl_port.h"
 
 namespace vsrtl {
 
