@@ -12,8 +12,8 @@ namespace vsrtl {
 class Exponenter : public Component {
     NON_REGISTER_COMPONENT
 public:
-    INPUTSIGNAL(in, 32);
-    OUTPUTSIGNAL(out, 32);
+    INPUTPORT(in, 32);
+    OUTPUTPORT(out, 32);
 
     Exponenter(const char* name) : Component(name) {
         mul->out >> expReg->in;

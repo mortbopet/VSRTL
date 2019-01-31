@@ -21,18 +21,14 @@ constexpr bool valueFitsInBitWidth(uint32_t width, int value) {
  */
 template <unsigned int width, int constantValue>
 class Constant : public Component {
+    static_assert(valueFitsInBitWidth(width, constantValue), "Value does not fit inside provided bit-width");
     NON_REGISTER_COMPONENT
 public:
     Constant(const char* name) : Component(name) {
-        value.setPropagationFunction([] {
-            const static auto cArr = buildUnsignedArr<width>(constantValue);
-            return cArr;
-        });
+        value << ([] { return constantValue; });
     }
 
-    OUTPUTSIGNAL(value, width);
-
-    static_assert(valueFitsInBitWidth(width, constantValue), "Value does not fit inside provided bit-width");
+    OUTPUTPORT(value, width);
 };
 
 }  // namespace vsrtl

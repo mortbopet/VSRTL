@@ -65,8 +65,8 @@ namespace vsrtl {
 typedef struct {
     enum class type { invalid, input, output };
     type t = type::invalid;
-    InputSignalBase* input = nullptr;
-    OutputSignalBase* output = nullptr;
+    PortBase* input = nullptr;
+    PortBase* output = nullptr;
 } NetlistData;
 
 //! [0]

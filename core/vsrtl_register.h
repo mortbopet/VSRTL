@@ -22,21 +22,21 @@ template <unsigned int width>
 class Register : public RegisterBase {
 public:
     Register(const char* name) : RegisterBase(name) {
-        out.setPropagationFunction([=] { return buildUnsignedArr<width>(m_savedValue); });
+        out << ([=] { return m_savedValue; });
     }
 
     void reset() override final {
-        out.setValue(buildUnsignedArr<width>(0));
         m_savedValue = 0;
+        out.propagate();
     }
     void save() override final { m_savedValue = in.template value<uint32_t>(); }
     void clock() override final { out.propagate(); }
 
-    INPUTSIGNAL(in, width);
-    OUTPUTSIGNAL(out, width);
+    INPUTPORT(in, width);
+    OUTPUTPORT(out, width);
 
 private:
-    uint32_t m_savedValue = 0;
+    VSRTL_VT_U m_savedValue = 0;
 };
 
 }  // namespace vsrtl

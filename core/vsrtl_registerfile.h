@@ -29,15 +29,15 @@ public:
 
     RegisterFile(const char* name) : Component(name) {
         for (int i = 0; i < nOperands; i++) {
-            auto& op = createOutputSignal<REGISTERWIDTH>("Operand");
+            auto& op = createOutputPort<REGISTERWIDTH>("Operand");
             operands.push_back(&op);
         }
     }
 
-    INPUTSIGNAL(instruction, REGISTERWIDTH);
-    INPUTSIGNAL(writeRegister, REGISTERWIDTH);
-    INPUTSIGNAL(writeEnable, REGISTERWIDTH);
-    INPUTSIGNAL(writeData, REGISTERWIDTH);
+    INPUTPORT(instruction, REGISTERWIDTH);
+    INPUTPORT(writeRegister, REGISTERWIDTH);
+    INPUTPORT(writeEnable, REGISTERWIDTH);
+    INPUTPORT(writeData, REGISTERWIDTH);
 
     void reset() {
         for (auto& reg : m_reg) {
@@ -54,11 +54,11 @@ public:
     }
 
     template <int operand>
-    OutputSignal<REGISTERWIDTH>* getOperand() {
+    Port<REGISTERWIDTH>& getOperand() {
         static_assert(operand >= 0 && operand < nOperands, "Operand not available");
-        return operands[operand];
+        return *operands[operand];
     }
-    std::vector<OutputSignal<REGISTERWIDTH>*> operands;
+    std::vector<Port<REGISTERWIDTH>*> operands;
 
 protected:
     // Registers

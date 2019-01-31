@@ -25,7 +25,7 @@ public:
         };
 
         // For illustration, each step in setting the propagation function for each operand is described here:
-        getOperand<0>()->setPropagationFunction([=] {
+        getOperand<0>() << ([=] {
             rfWriter();
             // Get instruction
             const auto instr = SIGNAL_VALUE(instruction, uint32_t);
@@ -35,12 +35,12 @@ public:
             const auto registerNumber = instructionFields[3];
             // Read the register value
             const auto registerValue = m_reg[registerNumber];
-            return buildUnsignedArr<REGISTERWIDTH>(registerValue);
+            return registerValue;
         });
 
-        getOperand<1>()->setPropagationFunction([=] {
+        getOperand<1>() << ([=] {
             rfWriter();
-            return buildUnsignedArr<REGISTERWIDTH>(m_reg[instructionDecoder(SIGNAL_VALUE(instruction, uint32_t))[4]]);
+            return m_reg[instructionDecoder(SIGNAL_VALUE(instruction, uint32_t))[4]];
         });
     }
 

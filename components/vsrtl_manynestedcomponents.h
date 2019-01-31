@@ -12,10 +12,10 @@ public:
         in >> exp1->in;
         exp1->out >> exp2->in;
 
-        out.setPropagationFunction(exp2->out.getFunctor());
+        exp2->out >> out;
     }
-    INPUTSIGNAL(in, 32);
-    OUTPUTSIGNAL(out, 32);
+    INPUTPORT(in, 32);
+    OUTPUTPORT(out, 32);
 
 private:
     SUBCOMPONENT_NT(exp1, Exponenter);
@@ -25,7 +25,7 @@ private:
 class ManyNestedComponents : public Design {
 public:
     static constexpr int m_cVal = 4;
-    ManyNestedComponents() : Design("Many Nested Components") {
+    ManyNestedComponents() : Design("Many nested components") {
         // Connect objects
         exp1->out >> exp2->in;
         exp2->out >> exp1->in;

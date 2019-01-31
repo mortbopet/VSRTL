@@ -42,8 +42,8 @@ private:                              \
 private:                            \
     type* name = create_component<type>(this, #name)
 
-#define INPUTSIGNAL(name, bitwidth) InputSignal<bitwidth>& name = this->createInputSignal<bitwidth>(#name)
-#define OUTPUTSIGNAL(name, bitwidth) OutputSignal<bitwidth>& name = createOutputSignal<bitwidth>(#name)
+#define INPUTPORT(name, bitwidth) Port<bitwidth>& name = this->createInputPort<bitwidth>(#name)
+#define OUTPUTPORT(name, bitwidth) Port<bitwidth>& name = createOutputPort<bitwidth>(#name)
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
 
@@ -53,7 +53,18 @@ public:
     virtual ~Component() {}
 
     virtual bool isRegister() const = 0;
-    virtual void resetPropagation() { m_propagationState = PropagationState::unpropagated; }
+    virtual void resetPropagation() {
+        if (m_propagationState == PropagationState::unpropagated) {
+            // Constants (components with no inputs) are always propagated
+        } else {
+            m_propagationState = PropagationState::unpropagated;
+            for (auto& i : m_inputports)
+                i->resetPropagation();
+            for (auto& o : m_outputports)
+                o->resetPropagation();
+        }
+    }
+    bool isPropagated() const { return m_propagationState == PropagationState::propagated; }
 
     mutable bool m_isVerifiedAndInitialized = false;
 
@@ -68,91 +79,104 @@ public:
     }
 
     template <uint32_t bitwidth>
-    OutputSignal<bitwidth>& createOutputSignal(const char* name) {
-        auto signal = new OutputSignal<bitwidth>(this, name);
-        m_outputsignals.push_back(std::unique_ptr<OutputSignal<bitwidth>>(signal));
-        return *signal;
+    Port<bitwidth>& createOutputPort(const char* name) {
+        auto port = new Port<bitwidth>(name, this);
+        m_outputports.push_back(std::unique_ptr<Port<bitwidth>>(port));
+        return *port;
     }
 
     template <uint32_t bitwidth>
-    InputSignal<bitwidth>& createInputSignal(const char* name) {
-        InputSignal<bitwidth>* signal = new InputSignal<bitwidth>(this, name);
-        m_inputsignals.push_back(std::unique_ptr<InputSignal<bitwidth>>(signal));
-        return *signal;
+    Port<bitwidth>& createInputPort(const char* name) {
+        Port<bitwidth>* port = new Port<bitwidth>(name, this);
+        m_inputports.push_back(std::unique_ptr<Port<bitwidth>>(port));
+        return *port;
     }
 
     void propagateComponent() {
-        if (m_propagationState == PropagationState::unpropagated) {
-            // if subcomponents are connected together, propapagation can look like a combinational loop
-            // Below flag ensures that propagation is only started once for a component.
-            // Checking for combinational loop? hmm..
-            m_propagationState = PropagationState::propagating;
-            /** @note Registers do NOT require propagated inputs (these have been implicitely propagated during the
-             * last cycle) This is the logic which helps simulate digital electronics
-             *
-             */
-            if (!isRegister()) {
-                propagateInputs();
-            }
+        // Component has already been propagated
+        if (m_propagationState == PropagationState::propagated)
+            return;
 
-            // propagate all subcomponents of the component
-            for (auto& component : m_subcomponents) {
-                component->propagateComponent();
-            }
-
-            // Propagate outputs of the component
-            for (auto& s : m_outputsignals) {
-                s->propagate();
-            }
-
+        if (isRegister()) {
+            // Registers have been propagated in the clocking action
             m_propagationState = PropagationState::propagated;
         } else {
-            // throw std::runtime_error("Combinational loop detected");
+            // All sequential logic must have their inputs propagated before they themselves can propagate. If this is
+            // not the case, the function will return. Iff the circuit is correctly connected, this component will at a
+            // later point be visited, given that the input port which is currently not yet propagated, will become
+            // propagated at some point, signalling its connected components to propagate.
+            for (const auto& input : m_inputports) {
+                if (!input->isPropagated())
+                    return;
+            }
+
+            for (auto& sc : m_subcomponents)
+                sc->propagateComponent();
+
+            // At this point, all input ports are assured to be propagated. In this case, it is safe to propagate
+            // the outputs of the component.
+            for (auto& s : m_outputports) {
+                s->propagate();
+            }
+            m_propagationState = PropagationState::propagated;
+        }
+
+        // Signal all connected components of the current component to propagate
+        for (auto& out : m_outputports) {
+            for (auto& in : out->getConnectsFromThis()) {
+                // With the input port of the connected component propagated, the parent component may be propagated.
+                // This will succeed if all input components to the parent component has been propagated.
+                in->getParent()->propagateComponent();
+
+                // To facilitate output -> output connections, we need to trigger propagation in the output's parent
+                // aswell
+                /**
+                 * IN   IN   OUT  OUT
+                 *   _____________
+                 *  |    _____   |
+                 *  |   |    |   |
+                 *  |   |   ->--->
+                 *  |   |____|   |
+                 *  |____________|
+                 *
+                 */
+                for (auto& inout : in->getConnectsFromThis())
+                    inout->getParent()->propagateComponent();
+            }
         }
     }
 
-    /**
-     * @brief verifyInputs
-     * Checks whether all inputs have been fully specified (connected)
-     * @return
-     */
-    bool verifyInputs() {
-        for (const auto& i : m_inputsignals) {
-            if (!i->isConnected()) {
-                return false;
+    void verifyComponent() const {
+        for (const auto& ip : m_inputports) {
+            if (!ip->isConnected()) {
+                throw std::runtime_error("A component has unconnected inputs");
             }
         }
-        return true;
     }
-    /**
-     * @brief verifyOutputs
-     * Verifies that all outputs of this component has a propagation function
-     * @return
-     */
-    bool verifyOutputs() {
-        for (const auto& i : m_outputsignals) {
-            if (!i->hasPropagationFunction()) {
-                return false;
-            }
+    void initialize() {
+        if (m_inputports.size() == 0) {
+            // Component has no input ports - ie. component is a constant. propagate all output ports and set component
+            // as propagated.
+            for (auto& p : m_outputports)
+                p->propagateConstant();
+            m_propagationState = PropagationState::propagated;
         }
-        return true;
     }
 
     const Component* getParent() const { return m_parent; }
     const char* getName() const { return m_displayName; }
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
-    const std::vector<std::unique_ptr<OutputSignalBase>>& getOutputs() const { return m_outputsignals; }
-    const std::vector<std::unique_ptr<InputSignalBase>>& getInputs() const { return m_inputsignals; }
+    const std::vector<std::unique_ptr<PortBase>>& getOutputs() const { return m_outputports; }
+    const std::vector<std::unique_ptr<PortBase>>& getInputs() const { return m_inputports; }
     std::vector<Component*> getInputComponents() const {
         std::vector<Component*> v;
-        for (auto& s : m_inputsignals) {
+        for (auto& s : m_inputports) {
             v.push_back(s->getParent());
         }
         return v;
     }
 
 protected:
-    enum class PropagationState { unpropagated, propagating, propagated };
     PropagationState m_propagationState = PropagationState::unpropagated;
 
     void getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
@@ -164,27 +188,13 @@ protected:
         }
     }
 
-protected:
-    /**
-     * @brief propagateInputs
-     * For all registered input signals of this component, propagate the parent component of the input signal
-     */
-
-    void propagateInputs() {
-        for (auto& input : m_inputsignals) {
-            input->getConnectedParent()->propagateComponent();
-        }
-    }
-
-    void propagateSignals() {}
-
     const char* m_displayName;
 
     Component* m_parent = nullptr;
-    std::vector<std::unique_ptr<OutputSignalBase>> m_outputsignals;
-    std::vector<std::unique_ptr<InputSignalBase>> m_inputsignals;
+    std::vector<std::unique_ptr<PortBase>> m_outputports;
+    std::vector<std::unique_ptr<PortBase>> m_inputports;
     std::vector<std::unique_ptr<Component>> m_subcomponents;
-};
+};  // namespace vsrtl
 
 // Component object generator that registers objects in parent upon creation
 template <typename T, typename... Args>

@@ -74,7 +74,9 @@ public:
     void propagateDesign() {
         // Propagate circuit values - we propagate >this<, the top level component, which contains all subcomponents of
         // the design
-        propagateComponent();
+
+        for (auto& reg : m_registers)
+            reg->propagateComponent();
 
         // Reset propagation state of all components (uncolor graph)
         for (auto& c : m_componentGraph) {
@@ -93,22 +95,20 @@ public:
 
         createComponentGraph();
 
-        // Verify that all components has no undefined input signals
         for (const auto& c : m_componentGraph) {
-            if (c.first->verifyInputs() == false) {
-                throw std::runtime_error("A component has undefined inputs");
-            }
-            if (c.first->verifyOutputs() == false) {
-                throw std::runtime_error("A component has undefined propagation functions");
-            }
+            // Verify that all components has no undefined input signals
+            c.first->verifyComponent();
+            // Initialize the component
+            c.first->initialize();
         }
 
         if (detectCombinationalLoop()) {
             throw std::runtime_error("Combinational loop detected in circuit");
         }
 
-        // Propagate initial state of circuit elements through circuit (For the sake of constants being propagated)
-        propagateDesign();
+        // Reset the circuit to propagate initial state
+        // @todo this should be changed, such that ports initially have a value of "X" until they are assigned
+        reset();
 
         m_isVerifiedAndInitialized = true;
     }
