@@ -18,32 +18,46 @@ namespace vsrtl {
 
 class Component;
 
-class OutputSignalBase {
-    friend class Component;
-
+class SignalBase {
 public:
-    OutputSignalBase(Component* parent, const char* name) : m_name(name), m_parent(parent) {}
-    virtual ~OutputSignalBase() {}
-
-    // Checks whether a propagation function has been set for the signal - required for the signal to generate its
-    // next-state value
-    virtual bool hasPropagationFunction() const = 0;
-    virtual void propagate() = 0;
-    Component* getParent() { return m_parent; }
-    virtual unsigned int width() const = 0;
+    SignalBase(Component* parent, const char* name) : m_name(name), m_parent(parent) {}
 
     // Value access operators
     virtual explicit operator int() const = 0;
     virtual explicit operator unsigned int() const = 0;
     virtual explicit operator bool() const = 0;
 
+    virtual bool isConnected() const = 0;
+
     const char* getName() const { return m_name; }
 
-protected:
-    const char* m_name;
+    Component* getParent() const { return m_parent; }
+    const std::vector<Component*>& getConnectedComponents() const { return m_connectedComponents; }
+    virtual unsigned int width() const = 0;
+    void connectsTo(SignalBase* signal) {
+        m_connectedSignals.push_back(signal);
+        m_connectedComponents.push_back(signal->getParent());
+    }
 
 private:
+    const char* m_name;
     Component* m_parent = nullptr;
+    std::vector<SignalBase*> m_connectedSignals;
+    std::vector<Component*> m_connectedComponents;
+};
+
+class OutputSignalBase : public SignalBase {
+    friend class Component;
+
+public:
+    OutputSignalBase(Component* parent, const char* name) : SignalBase(parent, name) {}
+    virtual ~OutputSignalBase() {}
+
+    // Checks whether a propagation function has been set for the signal - required for the signal to generate its
+    // next-state value
+    bool isConnected() const override { return hasPropagationFunction(); }
+    virtual bool hasPropagationFunction() const = 0;
+    virtual void propagate() = 0;
 };
 
 template <unsigned int bitwidth>
@@ -94,30 +108,13 @@ using OutputSignalRawPtr = OutputSignalBase*;
  * of other components. To represent this, we use std::variant
  */
 
-class InputSignalBase {
+class InputSignalBase : public SignalBase {
 public:
-    InputSignalBase(Component* parent, const char* name) : m_name(name), m_parent(parent) {}
-    Component* getParent() { return m_parent; }
-    virtual Component* getConnectedParent() = 0;
-    virtual bool isConnected() const = 0;
-
-    /*
-    Wish i could do something like
-
-    template<typename T>
-    virtual T getValue() const = 0;
-    */
-
+    InputSignalBase(Component* parent, const char* name) : SignalBase(parent, name) {}
     virtual explicit operator int() const = 0;
     virtual explicit operator unsigned int() const = 0;
     virtual explicit operator bool() const = 0;
-
-    const char* getName() const { return m_name; }
-
-private:
-    const char* m_name;
-
-    Component* m_parent = nullptr;
+    virtual Component* getConnectedParent() = 0;
 };
 
 template <class... Ts>
@@ -138,6 +135,7 @@ public:
     explicit operator int() const override { return value<int>(); }
     explicit operator unsigned int() const override { return value<unsigned int>(); }
     explicit operator bool() const override { return value<bool>(); }
+    unsigned int width() const override { return bitwidth; }
 
     template <typename T>
     T value() const {
@@ -176,11 +174,13 @@ public:
     void connect(InputSignal<bitwidth>& otherInput) {
         verifyIsNotConnected();
         m_signal = &otherInput;
+        otherInput.connectsTo(this);
     }
 
     void connect(OutputSignal<bitwidth>& output) {
         verifyIsNotConnected();
         m_signal = &output;
+        output.connectsTo(this);
     }
 
 private:
