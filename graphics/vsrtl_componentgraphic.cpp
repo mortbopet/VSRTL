@@ -4,6 +4,8 @@
 #include "vsrtl_graphics_util.h"
 
 #include <qmath.h>
+#include <deque>
+
 #include <QGraphicsProxyWidget>
 #include <QGraphicsScene>
 #include <QGraphicsSceneHoverEvent>
@@ -45,9 +47,11 @@ void ComponentGraphic::initialize() {
         m_expandButtonProxy->setPos(QPointF(BUTTON_INDENT, BUTTON_INDENT));
 
         createSubcomponents();
+        orderSubcomponents();
+        setExpanded(false);
+    } else {
+        calculateGeometry(Collapse);
     }
-
-    calculateGeometry(Collapse);
 }
 
 /**
@@ -60,11 +64,108 @@ void ComponentGraphic::createSubcomponents() {
         scene()->addItem(nc);
         nc->initialize();
         nc->setParentItem(this);
-        m_subcomponents.push_back(nc);
+        m_subcomponents[nc] = c.get();
         if (!m_isExpanded) {
             nc->hide();
         }
     }
+}
+
+/**
+ * @brief orderSubcomponents
+ * Subcomponent ordering is based on a topological sort algorithm.
+ * This algorithm is applicable for DAG's (Directed Acyclical Graph's). Naturally, digital circuits does not fulfull the
+ * requirement for being a DAG. However, if Registers are seen as having either their input or output disregarded as an
+ * edge in a DAG, a DAG can be created from a digital circuit, if only outputs are considered.
+ * Having a topological sorting of the components, rows- and columns can
+ * be generated for each depth in the topological sort, wherein the components are finally layed out.
+ * @param parent
+ */
+
+namespace {
+void orderSubcomponentsUtil(Component* c, std::map<Component*, bool>& visited, std::deque<Component*>& stack) {
+    visited[c] = true;
+
+    for (const auto& cc : c->getOutputComponents()) {
+        // The find call ensures that the output components are inside this subcomponent. OutputComponents are "parent"
+        // agnostic, and has no notion of enclosing components.
+        if (visited.find(cc) != visited.end() && !visited[cc]) {
+            orderSubcomponentsUtil(cc, visited, stack);
+        }
+    }
+    stack.push_front(c);
+}
+
+}  // namespace
+
+template <typename K, typename V>
+K reverseLookup(const std::map<K, V>& m, const V& v) {
+    for (const auto& i : m) {
+        if (i.second == v)
+            return i.first;
+    }
+    return K();
+}
+
+void ComponentGraphic::orderSubcomponents() {
+    std::map<Component*, bool> visited;
+    std::deque<Component*> stack;
+
+    for (const auto& cpt : m_subcomponents)
+        visited[cpt.second] = false;
+
+    for (const auto& c : visited) {
+        if (!c.second) {
+            orderSubcomponentsUtil(c.first, visited, stack);
+        }
+    }
+
+    for (const auto& c : stack)
+        std::cout << c->getName() << std::endl;
+
+    /*
+    std::set<Component*> processedComponents;
+
+    ComponentMatrix matrix;
+    // Start matrix ordering the component graph with a component that has an input
+    auto c_iter = subComponents.begin();
+    while (c_iter != subComponents.end() && (*c_iter++)->getInputComponents().size() == 0) {
+    }
+    if (c_iter == subComponents.end()) {
+        assert(false);
+    }
+    const std::pair<int, int> initialPos(0, 0);
+    setMatrixPos(matrix, c_iter->get(), initialPos);
+
+    // Calculate row widths
+    std::map<int, int> columnWidths;
+    for (const auto& c : matrix) {
+        int width = -1;
+        for (const auto& r : c.second) {
+            ComponentGraphic* g = m_view->lookupGraphicForComponent(matrix[c.first][r.first]);
+            if (g) {
+                width = width > g->boundingRect().width() ? width : g->boundingRect().width();
+            }
+        }
+        columnWidths[c.first] = width;
+    }
+
+    // calculate middelposition
+    */
+
+    // Position components
+    int xPos = 0;
+    for (const auto& c : stack) {
+        ComponentGraphic* g = reverseLookup(m_subcomponents, c);
+        Q_ASSERT(g != nullptr);
+
+        int yPos = 0;
+        // Center component in column
+        // g->setPos(xPos + (columnWidths[c.first] - g->boundingRect().width()) / 2, yPos);
+        xPos += g->boundingRect().width();
+        g->setPos(xPos, yPos);
+    }
+    // xPos += columnWidths[c.first] + COMPONENT_COLUMN_MARGIN;
 }
 
 void ComponentGraphic::setExpanded(bool expanded) {
@@ -77,13 +178,13 @@ void ComponentGraphic::setExpanded(bool expanded) {
         m_savedBaseRect = m_baseRect;
         m_expandButton->setIcon(QIcon(":/icons/plus.svg"));
         for (const auto& c : m_subcomponents) {
-            c->hide();
+            c.first->hide();
         }
     } else {
         changeReason = Expand;
         m_expandButton->setIcon(QIcon(":/icons/minus.svg"));
         for (const auto& c : m_subcomponents) {
-            c->show();
+            c.first->show();
         }
     }
 
@@ -116,8 +217,8 @@ void ComponentGraphic::calculateSubcomponentRect() {
         for (const auto& c : m_subcomponents) {
             // Bounding rects of subcomponents can have negative coordinates, but we want m_subcomponentRect to start in
             // (0,0). Normalize to ensure.
-            m_subcomponentRect =
-                boundingRectOfRects<QRectF>(m_subcomponentRect, mapFromItem(c, c->boundingRect()).boundingRect());
+            m_subcomponentRect = boundingRectOfRects<QRectF>(
+                m_subcomponentRect, mapFromItem(c.first, c.first->boundingRect()).boundingRect());
         }
         m_subcomponentRect = normalizeRect(m_subcomponentRect);
     } else {
@@ -203,7 +304,7 @@ void ComponentGraphic::calculateBaseRect(GeometryChangeFlag flag) {
     m_baseRect.adjust(0, 0, m_textRect.width(), m_textRect.height());
 
     // Include expand button in baserect sizing
-    if (m_hasSubcomponents) {
+    if (hasSubcomponents()) {
         m_baseRect.adjust(0, 0, m_expandButtonProxy->boundingRect().width(),
                           m_expandButtonProxy->boundingRect().height());
     }
@@ -232,7 +333,7 @@ void ComponentGraphic::calculateBoundingRect() {
 }
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
-    QColor color = m_hasSubcomponents ? QColor("#ecf0f1") : QColor(Qt::white);
+    QColor color = hasSubcomponents() ? QColor("#ecf0f1") : QColor(Qt::white);
     QColor fillColor = (option->state & QStyle::State_Selected) ? color.dark(150) : color;
     if (option->state & QStyle::State_MouseOver)
         fillColor = fillColor.light(125);
@@ -300,7 +401,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         painter->drawRect(boundingRect());
         painter->setPen(oldPen);
     */
-    if (m_hasSubcomponents) {
+    if (hasSubcomponents()) {
         // Determine whether expand button should be shown
         if (lod >= 0.35) {
             m_expandButtonProxy->show();
@@ -313,7 +414,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 bool ComponentGraphic::rectContainsAllSubcomponents(const QRectF& r) const {
     bool allInside = true;
     for (const auto& rect : m_subcomponents) {
-        auto r2 = mapFromItem(rect, rect->boundingRect()).boundingRect();
+        auto r2 = mapFromItem(rect.first, rect.first->boundingRect()).boundingRect();
         allInside &= r.contains(r2);
     }
     return allInside;
@@ -378,7 +479,7 @@ void ComponentGraphic::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 
 void ComponentGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
     if (baseRect().width() - event->pos().x() <= RESIZE_CURSOR_MARGIN &&
-        baseRect().height() - event->pos().y() <= RESIZE_CURSOR_MARGIN && m_hasSubcomponents && m_isExpanded) {
+        baseRect().height() - event->pos().y() <= RESIZE_CURSOR_MARGIN && hasSubcomponents() && m_isExpanded) {
         this->setCursor(Qt::SizeFDiagCursor);
         m_inDragZone = true;
     } else {

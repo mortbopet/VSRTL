@@ -16,8 +16,6 @@ VSRTLWidget::VSRTLWidget(Design& arch, QWidget* parent) : m_arch(arch), QWidget(
     m_view->setScene(m_scene);
     ui->viewLayout->addWidget(m_view);
 
-    m_ch = new CircuitHandler(m_view);
-
     initializeDesign(arch);
 }
 
@@ -35,9 +33,6 @@ void VSRTLWidget::initializeDesign(Design& arch) {
 
     // Expand top widget
     i->setExpanded(true);
-
-    // Order initial component view
-    m_ch->orderSubcomponents(i);
 }
 
 void VSRTLWidget::clock() {

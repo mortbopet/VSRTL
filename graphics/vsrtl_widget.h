@@ -2,7 +2,6 @@
 #define VSRTL_WIDGET_H
 
 #include <QMainWindow>
-#include "vsrtl_circuithandler.h"
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_view.h"
 
@@ -37,7 +36,6 @@ private:
     VSRTLView* m_view;
     QGraphicsScene* m_scene;
 
-    CircuitHandler* m_ch;
     Design& m_arch;
 };
 

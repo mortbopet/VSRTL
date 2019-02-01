@@ -48,13 +48,13 @@ private:
     void getSubGraphicsItems(QGraphicsItemGroup& g);
     bool rectContainsAllSubcomponents(const QRectF& r) const;
     bool snapToSubcomponentRect(QRectF& r) const;
+    void orderSubcomponents();
 
     bool m_isExpanded = false;
-    bool m_hasSubcomponents = false;
     bool m_inDragZone = false;
     bool m_dragging = false;
 
-    std::vector<ComponentGraphic*> m_subcomponents;
+    std::map<ComponentGraphic*, Component*> m_subcomponents;
 
     QMap<PortBase*, QPointF> m_inputPositionMap;
     QMap<PortBase*, QPointF> m_outputPositionMap;
