@@ -1,6 +1,7 @@
 #include "vsrtl_mainwindow.h"
 #include "ui_vsrtl_mainwindow.h"
 #include "vsrtl_design.h"
+#include "vsrtl_netlist.h"
 #include "vsrtl_netlistmodel.h"
 #include "vsrtl_widget.h"
 
@@ -21,17 +22,11 @@ MainWindow::MainWindow(Design& arch, QWidget* parent) : QMainWindow(parent), ui(
     ui->setupUi(this);
     m_vsrtlWidget = new VSRTLWidget(arch, this);
 
-    m_netlistView = new QTreeView(this);
-
-    m_netlistModel = new NetlistModel(arch, this);
-    m_netlistView->setModel(m_netlistModel);
-    m_netlistModel->updateNetlistData();
-
-    m_netlistView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    m_netlist = new Netlist(arch, this);
 
     QSplitter* splitter = new QSplitter(this);
 
-    splitter->addWidget(m_netlistView);
+    splitter->addWidget(m_netlist);
     splitter->addWidget(m_vsrtlWidget);
 
     setCentralWidget(splitter);
@@ -53,7 +48,7 @@ void MainWindow::createToolbar() {
     QAction* resetAct = new QAction(resetIcon, "Reset", this);
     connect(resetAct, &QAction::triggered, [this] {
         m_vsrtlWidget->reset();
-        m_netlistModel->updateNetlistData();
+        m_netlist->reloadNetlist();
     });
     resetAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
     simulatorToolBar->addAction(resetAct);
@@ -62,7 +57,7 @@ void MainWindow::createToolbar() {
     QAction* clockAct = new QAction(clockIcon, "Clock", this);
     connect(clockAct, &QAction::triggered, [this] {
         m_vsrtlWidget->clock();
-        m_netlistModel->updateNetlistData();
+        m_netlist->reloadNetlist();
     });
     clockAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_C));
     simulatorToolBar->addAction(clockAct);
@@ -90,6 +85,7 @@ void MainWindow::createToolbar() {
     QSpinBox* stepSpinBox = new QSpinBox();
     stepSpinBox->setRange(1, 10000);
     stepSpinBox->setSuffix(" ms");
+    stepSpinBox->setToolTip("Auto clock interval");
     connect(stepSpinBox, qOverload<int>(&QSpinBox::valueChanged), [timer](int msec) { timer->setInterval(msec); });
     stepSpinBox->setValue(100);
 
@@ -100,23 +96,13 @@ void MainWindow::createToolbar() {
     const QIcon showNetlistIcon = QIcon(":/icons/list.svg");
     QAction* showNetlist = new QAction(showNetlistIcon, "Show Netlist", this);
     connect(showNetlist, &QAction::triggered, [this] {
-        if (m_netlistView->isVisible()) {
-            m_netlistView->hide();
+        if (m_netlist->isVisible()) {
+            m_netlist->hide();
         } else {
-            m_netlistView->show();
+            m_netlist->show();
         }
     });
     simulatorToolBar->addAction(showNetlist);
-
-    const QIcon expandIcon = QIcon(":/icons/expand.svg");
-    QAction* expandAct = new QAction(expandIcon, "Expand All", this);
-    connect(expandAct, &QAction::triggered, m_netlistView, &QTreeView::expandAll);
-    simulatorToolBar->addAction(expandAct);
-
-    const QIcon collapseIcon = QIcon(":/icons/collapse.svg");
-    QAction* collapseAll = new QAction(collapseIcon, "Collapse All", this);
-    connect(collapseAll, &QAction::triggered, m_netlistView, &QTreeView::collapseAll);
-    simulatorToolBar->addAction(collapseAll);
 }  // namespace vsrtl
 
 }  // namespace vsrtl

@@ -11,6 +11,7 @@ namespace vsrtl {
 class VSRTLWidget;
 class Design;
 class NetlistModel;
+class Netlist;
 
 namespace Ui {
 class MainWindow;
@@ -27,8 +28,7 @@ private:
     Ui::MainWindow* ui;
 
     VSRTLWidget* m_vsrtlWidget;
-    QTreeView* m_netlistView;
-    NetlistModel* m_netlistModel;
+    Netlist* m_netlist;
 
     void createToolbar();
 };
