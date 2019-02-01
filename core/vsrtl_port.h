@@ -44,6 +44,7 @@ public:
     virtual unsigned int getWidth() const = 0;
 
     const std::vector<PortBase*>& getConnectsFromThis() const { return m_connectsFromThis; }
+    PortBase* getConnectsToThis() const { return m_connectsToThis; }
 
     // Port connections are doubly linked
     void operator>>(PortBase& toThis) {

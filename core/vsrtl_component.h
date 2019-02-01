@@ -176,6 +176,15 @@ public:
         return v;
     }
 
+    std::vector<Component*> getOutputComponents() const {
+        std::vector<Component*> v;
+        for (auto& p : m_outputports) {
+            for (auto& pc : p->getConnectsFromThis())
+                v.push_back(pc->getParent());
+        }
+        return v;
+    }
+
 protected:
     PropagationState m_propagationState = PropagationState::unpropagated;
 

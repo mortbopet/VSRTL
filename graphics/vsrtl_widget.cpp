@@ -33,6 +33,9 @@ void VSRTLWidget::initializeDesign(Design& arch) {
     addComponent(i);
     i->initialize();
 
+    // Expand top widget
+    i->setExpanded(true);
+
     // Order initial component view
     m_ch->orderSubcomponents(i);
 }

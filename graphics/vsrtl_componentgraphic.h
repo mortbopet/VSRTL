@@ -25,6 +25,9 @@ public:
     void initialize();
 
     const Component& getComponent() const { return m_component; }
+    void setExpanded(bool isExpanded);
+
+    bool hasSubcomponents() const;
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
@@ -32,9 +35,6 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
-
-private slots:
-    void setExpandState(bool state);
 
 private:
     enum GeometryChangeFlag { Resize = 1 << 0, Expand = 1 << 1, Collapse = 1 << 2, ChildJustExpanded = 1 << 3 };

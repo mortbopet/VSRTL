@@ -14,6 +14,10 @@ namespace vsrtl {
 
 ComponentGraphic::ComponentGraphic(Component& c) : m_component(c) {}
 
+bool ComponentGraphic::hasSubcomponents() const {
+    return m_component.getSubComponents().size() != 0;
+}
+
 void ComponentGraphic::initialize() {
     Q_ASSERT(scene() != nullptr);
 
@@ -31,20 +35,17 @@ void ComponentGraphic::initialize() {
         m_outputPositionMap[c.get()] = QPointF();
     }
 
-    m_hasSubcomponents = m_component.getSubComponents().size() > 0;
-    if (m_hasSubcomponents) {
+    if (hasSubcomponents()) {
         // Setup expand button
         m_expandButton = new QToolButton();
         m_expandButton->setCheckable(true);
-        QObject::connect(m_expandButton, &QToolButton::toggled, [=](bool state) { setExpandState(state); });
+        QObject::connect(m_expandButton, &QToolButton::toggled, [this](bool expanded) { setExpanded(expanded); });
         m_expandButtonProxy = scene()->addWidget(m_expandButton);
         m_expandButtonProxy->setParentItem(this);
         m_expandButtonProxy->setPos(QPointF(BUTTON_INDENT, BUTTON_INDENT));
 
-        setExpandState(false);
+        createSubcomponents();
     }
-
-    createSubcomponents();
 
     calculateGeometry(Collapse);
 }
@@ -66,7 +67,7 @@ void ComponentGraphic::createSubcomponents() {
     }
 }
 
-void ComponentGraphic::setExpandState(bool expanded) {
+void ComponentGraphic::setExpanded(bool expanded) {
     m_isExpanded = expanded;
 
     GeometryChangeFlag changeReason;
