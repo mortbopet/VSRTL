@@ -204,8 +204,9 @@ void ComponentGraphic::calculateGeometry(GeometryChangeFlag flag) {
     calculateIOPositions();
 
     // If we have a parent, they should now recalculate its geometry based on new size of this
-    if (parentItem() && flag & Expand) {
-        static_cast<ComponentGraphic*>(parentItem())->calculateGeometry(ChildJustExpanded);
+    if (parentItem()) {
+        static_cast<ComponentGraphic*>(parentItem())
+            ->calculateGeometry(flag & Expand ? ChildJustExpanded : ChildJustCollapsed);
     }
 
     update();

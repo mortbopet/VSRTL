@@ -37,7 +37,13 @@ protected:
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
 private:
-    enum GeometryChangeFlag { Resize = 1 << 0, Expand = 1 << 1, Collapse = 1 << 2, ChildJustExpanded = 1 << 3 };
+    enum GeometryChangeFlag {
+        Resize = 1 << 0,
+        Expand = 1 << 1,
+        Collapse = 1 << 2,
+        ChildJustExpanded = 1 << 3,
+        ChildJustCollapsed = 1 << 4
+    };
     void calculateBaseRect(GeometryChangeFlag flag);
     void calculateTextPosition();
     void createSubcomponents();
