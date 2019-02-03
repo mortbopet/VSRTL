@@ -2,6 +2,7 @@
 
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
+#include "vsrtl_portgraphic.h"
 
 #include <qmath.h>
 #include <deque>
@@ -29,12 +30,12 @@ void ComponentGraphic::initialize() {
     m_displayText = QString::fromStdString(m_component.getName());
     m_font = QFont("Times", 10);
 
-    // Get IO of Component
+    // Create IO ports of Component
     for (const auto& c : m_component.getInputs()) {
-        m_inputPositionMap[c.get()] = QPointF();
+        m_inputPorts[c.get()] = new PortGraphic(c.get(), PortType::in, this);
     }
     for (const auto& c : m_component.getOutputs()) {
-        m_outputPositionMap[c.get()] = QPointF();
+        m_outputPorts[c.get()] = new PortGraphic(c.get(), PortType::out, this);
     }
 
     if (hasSubcomponents()) {
@@ -240,13 +241,13 @@ void ComponentGraphic::calculateIOPositions() {
     } else {
         // Component is unexpanded - IO should be positionen in even positions
         int i = 0;
-        for (auto& c : m_inputPositionMap) {
-            c = QPointF(m_baseRect.left(), (m_baseRect.height() / (m_inputPositionMap.size() + 1)) * (1 + i));
+        for (auto& c : m_inputPorts) {
+            c->setPos(QPointF(m_baseRect.left(), (m_baseRect.height() / (m_inputPorts.size() + 1)) * (1 + i)));
             i++;
         }
         i = 0;
-        for (auto& c : m_outputPositionMap) {
-            c = QPointF(m_baseRect.right(), (m_baseRect.height() / (m_outputPositionMap.size() + 1)) * (1 + i));
+        for (auto& c : m_outputPorts) {
+            c->setPos(QPointF(m_baseRect.right(), (m_baseRect.height() / (m_outputPorts.size() + 1)) * (1 + i)));
             i++;
         }
     }
@@ -361,15 +362,17 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     }
 
     // Draw IO markers
+    /*
     if (lod >= 0.5) {
         painter->setPen(QPen(Qt::black, 1));
-        for (const auto& p : m_inputPositionMap) {
+        for (const auto& p : m_inputPorts) {
             painter->drawLine(p, p - QPointF(IO_PIN_LEN, 0));
         }
-        for (const auto& p : m_outputPositionMap) {
+        for (const auto& p : m_outputPorts) {
             painter->drawLine(p, p + QPointF(IO_PIN_LEN, 0));
         }
     }
+    */
 
     // DEBUG: draw bounding rect and base rect
     painter->setPen(QPen(Qt::red, 1));

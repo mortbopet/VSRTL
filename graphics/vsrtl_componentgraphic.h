@@ -9,6 +9,8 @@
 
 namespace vsrtl {
 
+class PortGraphic;
+
 class ComponentGraphic : public QGraphicsItem {
 public:
     ComponentGraphic(Component& c);
@@ -62,8 +64,8 @@ private:
 
     std::map<ComponentGraphic*, Component*> m_subcomponents;
 
-    QMap<PortBase*, QPointF> m_inputPositionMap;
-    QMap<PortBase*, QPointF> m_outputPositionMap;
+    QMap<PortBase*, PortGraphic*> m_inputPorts;
+    QMap<PortBase*, PortGraphic*> m_outputPorts;
 
     QRectF m_savedBaseRect = QRectF();
     QRectF m_baseRect;

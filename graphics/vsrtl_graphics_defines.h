@@ -3,6 +3,8 @@
 
 namespace vsrtl {
 
+enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99 };
+
 #define TOP_MARGIN 10
 #define BOT_MARGIN TOP_MARGIN
 #define SIDE_MARGIN TOP_MARGIN
@@ -18,5 +20,5 @@ namespace vsrtl {
 
 #define COMPONENT_COLUMN_MARGIN 40
 #define COMPONENT_ROW_MARGIN COMPONENT_COLUMN_MARGIN / 2
-}
+}  // namespace vsrtl
 #endif  // VSRTL_GRAPHICS_DEFINES_H
