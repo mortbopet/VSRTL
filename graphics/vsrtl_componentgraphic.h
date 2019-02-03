@@ -26,7 +26,6 @@ public:
 
     const Component& getComponent() const { return m_component; }
     void setExpanded(bool isExpanded);
-
     bool hasSubcomponents() const;
 
 protected:
@@ -55,10 +54,11 @@ private:
     bool rectContainsAllSubcomponents(const QRectF& r) const;
     bool snapToSubcomponentRect(QRectF& r) const;
     void orderSubcomponents();
+    ComponentGraphic* getParent() const;
 
     bool m_isExpanded = false;
-    bool m_inDragZone = false;
-    bool m_dragging = false;
+    bool m_inResizeDragZone = false;
+    bool m_resizeDragging = false;
 
     std::map<ComponentGraphic*, Component*> m_subcomponents;
 

@@ -123,47 +123,16 @@ void ComponentGraphic::orderSubcomponents() {
     for (const auto& c : stack)
         std::cout << c->getName() << std::endl;
 
-    /*
-    std::set<Component*> processedComponents;
-
-    ComponentMatrix matrix;
-    // Start matrix ordering the component graph with a component that has an input
-    auto c_iter = subComponents.begin();
-    while (c_iter != subComponents.end() && (*c_iter++)->getInputComponents().size() == 0) {
-    }
-    if (c_iter == subComponents.end()) {
-        assert(false);
-    }
-    const std::pair<int, int> initialPos(0, 0);
-    setMatrixPos(matrix, c_iter->get(), initialPos);
-
-    // Calculate row widths
-    std::map<int, int> columnWidths;
-    for (const auto& c : matrix) {
-        int width = -1;
-        for (const auto& r : c.second) {
-            ComponentGraphic* g = m_view->lookupGraphicForComponent(matrix[c.first][r.first]);
-            if (g) {
-                width = width > g->boundingRect().width() ? width : g->boundingRect().width();
-            }
-        }
-        columnWidths[c.first] = width;
-    }
-
-    // calculate middelposition
-    */
-
     // Position components
-    int xPos = 0;
+    QPointF pos = m_expandButtonProxy->boundingRect().bottomRight();
     for (const auto& c : stack) {
         ComponentGraphic* g = reverseLookup(m_subcomponents, c);
         Q_ASSERT(g != nullptr);
 
-        int yPos = 0;
         // Center component in column
         // g->setPos(xPos + (columnWidths[c.first] - g->boundingRect().width()) / 2, yPos);
-        xPos += g->boundingRect().width();
-        g->setPos(xPos, yPos);
+        g->setPos(pos);
+        pos.rx() += g->boundingRect().width() + COMPONENT_COLUMN_MARGIN;
     }
     // xPos += columnWidths[c.first] + COMPONENT_COLUMN_MARGIN;
 }
@@ -192,6 +161,11 @@ void ComponentGraphic::setExpanded(bool expanded) {
     calculateGeometry(changeReason);
 }
 
+ComponentGraphic* ComponentGraphic::getParent() const {
+    Q_ASSERT(parentItem() != nullptr);
+    return static_cast<ComponentGraphic*>(parentItem());
+}
+
 void ComponentGraphic::calculateGeometry(GeometryChangeFlag flag) {
     // Rect will change when expanding, so notify canvas that the rect of the current component will be dirty
     prepareGeometryChange();
@@ -205,8 +179,7 @@ void ComponentGraphic::calculateGeometry(GeometryChangeFlag flag) {
 
     // If we have a parent, they should now recalculate its geometry based on new size of this
     if (parentItem()) {
-        static_cast<ComponentGraphic*>(parentItem())
-            ->calculateGeometry(flag & Expand ? ChildJustExpanded : ChildJustCollapsed);
+        getParent()->calculateGeometry(flag & Expand ? ChildJustExpanded : ChildJustCollapsed);
     }
 
     update();
@@ -232,11 +205,12 @@ QRectF ComponentGraphic::sceneBaseRect() const {
 }
 
 QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
+    // @todo implement snapping inside parent component
     if (change == ItemPositionChange && scene() && parentItem() && false) {
         // Restrict position changes to inside parent item
-        const QRectF parentRect = static_cast<ComponentGraphic*>(parentItem())->baseRect();
-        const QRectF thisRect = boundingRect();
-        const QPointF offset = thisRect.topLeft();
+        const auto& parentRect = getParent()->baseRect();
+        const auto& thisRect = boundingRect();
+        const auto& offset = thisRect.topLeft();
         QPointF newPos = value.toPointF();
         if (!parentRect.contains(thisRect.translated(newPos))) {
             // Keep the item inside the scene rect.
@@ -396,12 +370,12 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             painter->drawLine(p, p + QPointF(IO_PIN_LEN, 0));
         }
     }
-    /*
-        // DEBUG: draw bounding rect and base rect
-        painter->setPen(QPen(Qt::red, 1));
-        painter->drawRect(boundingRect());
-        painter->setPen(oldPen);
-    */
+
+    // DEBUG: draw bounding rect and base rect
+    painter->setPen(QPen(Qt::red, 1));
+    painter->drawRect(boundingRect());
+    painter->setPen(oldPen);
+
     if (hasSubcomponents()) {
         // Determine whether expand button should be shown
         if (lod >= 0.35) {
@@ -448,17 +422,17 @@ QRectF ComponentGraphic::boundingRect() const {
 }
 
 void ComponentGraphic::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    if (event->button() == Qt::LeftButton && m_inDragZone) {
+    if (event->button() == Qt::LeftButton && m_inResizeDragZone) {
         // start resize drag
         setFlags(flags() & ~ItemIsMovable);
-        m_dragging = true;
+        m_resizeDragging = true;
     }
 
     QGraphicsItem::mousePressEvent(event);
 }
 
 void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
-    if (m_dragging) {
+    if (m_resizeDragging) {
         QPointF pos = event->pos();
         auto newRect = m_baseRect;
         newRect.setBottomRight(pos);
@@ -473,7 +447,7 @@ void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 
 void ComponentGraphic::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     setFlags(flags() | ItemIsMovable);
-    m_dragging = false;
+    m_resizeDragging = false;
 
     QGraphicsItem::mouseReleaseEvent(event);
 }
@@ -482,10 +456,10 @@ void ComponentGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
     if (baseRect().width() - event->pos().x() <= RESIZE_CURSOR_MARGIN &&
         baseRect().height() - event->pos().y() <= RESIZE_CURSOR_MARGIN && hasSubcomponents() && m_isExpanded) {
         this->setCursor(Qt::SizeFDiagCursor);
-        m_inDragZone = true;
+        m_inResizeDragZone = true;
     } else {
         this->setCursor(Qt::ArrowCursor);
-        m_inDragZone = false;
+        m_inResizeDragZone = false;
     }
 }
 }  // namespace vsrtl
