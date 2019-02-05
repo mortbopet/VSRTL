@@ -140,6 +140,7 @@ void ComponentGraphic::orderSubcomponents() {
 
 void ComponentGraphic::setExpanded(bool expanded) {
     m_isExpanded = expanded;
+    m_expandButton->setChecked(m_isExpanded);
 
     GeometryChangeFlag changeReason;
 
