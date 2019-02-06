@@ -48,7 +48,7 @@ private:
     void calculateBaseRect(GeometryChangeFlag flag);
     void calculateTextPosition();
     void createSubcomponents();
-    void calculateIOPositions();
+    void setIOPortPositions();
     void calculateGeometry(GeometryChangeFlag flag);
     void calculateSubcomponentRect();
     void calculateBoundingRect();

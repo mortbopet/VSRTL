@@ -177,7 +177,7 @@ void ComponentGraphic::calculateGeometry(GeometryChangeFlag flag) {
     calculateBaseRect(flag);
     calculateBoundingRect();
     calculateTextPosition();
-    calculateIOPositions();
+    setIOPortPositions();
 
     // If we have a parent, they should now recalculate its geometry based on new size of this
     if (parentItem()) {
@@ -235,7 +235,7 @@ void ComponentGraphic::calculateTextPosition() {
     m_textPos = basePos;
 }
 
-void ComponentGraphic::calculateIOPositions() {
+void ComponentGraphic::setIOPortPositions() {
     if (/*m_isExpanded*/ false) {
         // Some fancy logic for positioning IO positions in the best way to facilitate nice signal lines between
         // components
@@ -243,12 +243,15 @@ void ComponentGraphic::calculateIOPositions() {
         // Component is unexpanded - IO should be positionen in even positions
         int i = 0;
         for (auto& c : m_inputPorts) {
-            c->setPos(QPointF(m_baseRect.left(), (m_baseRect.height() / (m_inputPorts.size() + 1)) * (1 + i)));
+            c->setPos(
+                QPointF(m_baseRect.left() - c->boundingRect().width(),
+                        (m_baseRect.height() / (m_inputPorts.size() + 1)) * (1 + i) - c->boundingRect().height() / 2));
             i++;
         }
         i = 0;
         for (auto& c : m_outputPorts) {
-            c->setPos(QPointF(m_baseRect.right(), (m_baseRect.height() / (m_outputPorts.size() + 1)) * (1 + i)));
+            c->setPos(QPointF(m_baseRect.right(), (m_baseRect.height() / (m_outputPorts.size() + 1)) * (1 + i) -
+                                                      c->boundingRect().height() / 2));
             i++;
         }
     }
@@ -273,7 +276,7 @@ void ComponentGraphic::calculateBaseRect(GeometryChangeFlag flag) {
         return;
     }
 
-    m_baseRect = QRectF(0, 0, TOP_MARGIN + BOT_MARGIN, SIDE_MARGIN * 2);
+    m_baseRect = QRectF(0, 0, SIDE_MARGIN * 2, 0);
 
     // Calculate text width
     QFontMetrics fm(m_font);
@@ -296,17 +299,39 @@ void ComponentGraphic::calculateBaseRect(GeometryChangeFlag flag) {
         m_baseRect.adjust(0, 0, dx < 0 ? -dx : 0, dy < 0 ? -dy : 0);
     }
 
+    // Adjust for Ports
+    const auto& largestPortVector = m_inputPorts.size() > m_outputPorts.size() ? m_inputPorts : m_outputPorts;
+    for (const auto& port : largestPortVector) {
+        m_baseRect.adjust(0, 0, 0, port->boundingRect().height());
+    }
+
+    // Add spacing between ports if a component has multiple ports
+    if (largestPortVector.size() > 1) {
+        m_baseRect.adjust(0, 0, 0,
+                          (largestPortVector.first()->boundingRect().height() / 2) * (largestPortVector.size() - 1));
+    }
+
     // ------------------ Post Base rect ------------------------
     m_expandButtonPos = QPointF(BUTTON_INDENT, BUTTON_INDENT);
 }
+
+namespace {
+qreal largestPortWidth(const QMap<PortBase*, PortGraphic*>& ports) {
+    qreal width = 0;
+    for (const auto& port : ports) {
+        width = port->boundingRect().width() > width ? port->boundingRect().width() : width;
+    }
+    return width;
+}
+}  // namespace
 
 void ComponentGraphic::calculateBoundingRect() {
     m_boundingRect = m_baseRect;
     // Adjust for a potential shadow
     m_boundingRect.adjust(0, 0, SHADOW_OFFSET + SHADOW_WIDTH, SHADOW_OFFSET + SHADOW_WIDTH);
 
-    // Adjust for IO pins
-    m_boundingRect.adjust(-IO_PIN_LEN, 0, IO_PIN_LEN, 0);
+    // Adjust for IO pins. IO pins may vary in size, so find the largest
+    m_boundingRect.adjust(-largestPortWidth(m_inputPorts), 0, largestPortWidth(m_outputPorts), 0);
 }
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
