@@ -30,13 +30,7 @@ void ComponentGraphic::initialize() {
     m_displayText = QString::fromStdString(m_component.getName());
     m_font = QFont("Times", 10);
 
-    // Create IO ports of Component
-    for (const auto& c : m_component.getInputs()) {
-        m_inputPorts[c.get()] = new PortGraphic(c.get(), PortType::in, this);
-    }
-    for (const auto& c : m_component.getOutputs()) {
-        m_outputPorts[c.get()] = new PortGraphic(c.get(), PortType::out, this);
-    }
+    initializePorts();
 
     if (hasSubcomponents()) {
         // Setup expand button
@@ -52,6 +46,16 @@ void ComponentGraphic::initialize() {
         setExpanded(false);
     } else {
         calculateGeometry(Collapse);
+    }
+}
+
+void ComponentGraphic::initializePorts() {
+    // Create IO ports of Component
+    for (const auto& c : m_component.getInputs()) {
+        m_inputPorts[c.get()] = new PortGraphic(c.get(), PortType::in, this);
+    }
+    for (const auto& c : m_component.getOutputs()) {
+        m_outputPorts[c.get()] = new PortGraphic(c.get(), PortType::out, this);
     }
 }
 

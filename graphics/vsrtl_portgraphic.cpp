@@ -1,5 +1,6 @@
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_port.h"
+#include "vsrtl_wiregraphic.h"
 
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
@@ -11,17 +12,31 @@ namespace {
 static constexpr int c_portHeight = 20;
 static constexpr int c_portWidth = 40;
 static constexpr int c_portInnerMargin = 5;
-
 }  // namespace
 
 PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
     setParentItem(parent);
-
     updateGeometry();
+
+    initializeSignals();
+}
+
+void PortGraphic::initializeSignals() {
+    if (m_type == PortType::out) {
+        new WireGraphic(this, m_port->getConnectsFromThis(), this);
+    }
 }
 
 QRectF PortGraphic::boundingRect() const {
     return m_boundingRect;
+}
+
+QPointF PortGraphic::getConnectionPoint() const {
+    if (m_type == PortType::in) {
+        return QPointF(m_boundingRect.left(), m_boundingRect.center().y());
+    } else {
+        return QPointF(m_boundingRect.right(), m_boundingRect.center().y());
+    }
 }
 
 void PortGraphic::updateGeometry() {

@@ -2,16 +2,16 @@
 #define VSRTL_COMPONENTGRAPHIC_H
 
 #include <QFont>
-#include <QGraphicsItem>
 #include <QToolButton>
 
 #include "vsrtl_component.h"
+#include "vsrtl_graphicsbase.h"
 
 namespace vsrtl {
 
 class PortGraphic;
 
-class ComponentGraphic : public QGraphicsItem {
+class ComponentGraphic : public GraphicsBase {
 public:
     ComponentGraphic(Component& c);
 
@@ -56,6 +56,7 @@ private:
     bool rectContainsAllSubcomponents(const QRectF& r) const;
     bool snapToSubcomponentRect(QRectF& r) const;
     void orderSubcomponents();
+    void initializePorts();
     ComponentGraphic* getParent() const;
 
     bool m_isExpanded = false;
