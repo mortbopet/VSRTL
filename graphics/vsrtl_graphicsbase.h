@@ -15,6 +15,9 @@ public:
      * as wires). When overriding, overriding function must call GraphicsBase::postSceneConstructionInitialize()
      */
     virtual void postSceneConstructionInitialize();
+
+protected:
+    bool m_initialized = false;
 };
 }  // namespace vsrtl
 

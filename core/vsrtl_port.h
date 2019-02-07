@@ -30,7 +30,7 @@ enum class PropagationState { unpropagated, propagated, constant };
 class PortBase {
 public:
     PortBase(const char* name, Component* parent) : m_parent(parent), m_name(name) {}
-    bool isConnected() const { return m_connectsToThis != nullptr || m_propagationFunction != nullptr; }
+    bool isConnected() const { return m_portConnectsTo != nullptr || m_propagationFunction != nullptr; }
     virtual void propagate() = 0;
     virtual void propagateConstant() = 0;
     const char* getName() const { return m_name; }
@@ -44,13 +44,13 @@ public:
     virtual unsigned int getWidth() const = 0;
 
     const std::vector<PortBase*>& getConnectsFromThis() const { return m_connectsFromThis; }
-    PortBase* getConnectsToThis() const { return m_connectsToThis; }
+    PortBase* getConnectsToThis() const { return m_portConnectsTo; }
 
     // Port connections are doubly linked
     void operator>>(PortBase& toThis) {
         m_connectsFromThis.push_back(&toThis);
-        assert(toThis.m_connectsToThis == nullptr && "Port input already connected");
-        toThis.m_connectsToThis = this;
+        assert(toThis.m_portConnectsTo == nullptr && "Port input already connected");
+        toThis.m_portConnectsTo = this;
     }
 
     // Value access operators
@@ -65,7 +65,7 @@ protected:
     VSRTL_VT_U m_value = 0xdeadbeef;
 
     // A port may only have a single input  ->[port]
-    PortBase* m_connectsToThis = nullptr;
+    PortBase* m_portConnectsTo = nullptr;
     // A port may have multiple outputs     [port]->...->
     std::vector<PortBase*> m_connectsFromThis;
 
@@ -73,7 +73,7 @@ protected:
         if (m_propagationFunction != nullptr) {
             m_value = m_propagationFunction();
         } else {
-            m_value = static_cast<VSRTL_VT_U>(*m_connectsToThis);
+            m_value = static_cast<VSRTL_VT_U>(*m_portConnectsTo);
         }
     }
 

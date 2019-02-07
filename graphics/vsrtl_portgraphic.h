@@ -7,6 +7,7 @@
 namespace vsrtl {
 
 class PortBase;
+class WireGraphic;
 
 enum class PortType { in, out };
 
@@ -18,6 +19,8 @@ public:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void updateGeometry();
     PortBase* getPort() const { return m_port; }
+    void setInputWire(WireGraphic* wire);
+    void updateInputWire();
 
     QPointF getConnectionPoint() const;
 
@@ -32,6 +35,9 @@ private:
 
     PortType m_type;
     PortBase* m_port;
+
+    WireGraphic* m_outputWire = nullptr;
+    WireGraphic* m_inputWire = nullptr;
 };
 }  // namespace vsrtl
 

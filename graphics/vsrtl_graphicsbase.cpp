@@ -11,5 +11,7 @@ void GraphicsBase::postSceneConstructionInitialize() {
             g_child->postSceneConstructionInitialize();
         }
     }
+
+    m_initialized = true;
 }
 }  // namespace vsrtl

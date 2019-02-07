@@ -12,14 +12,14 @@ namespace vsrtl {
 class Exponenter : public Component {
     NON_REGISTER_COMPONENT
 public:
-    INPUTPORT(in, 32);
+    INPUTPORT(expIn, 32);
     OUTPUTPORT(out, 32);
 
     Exponenter(const char* name) : Component(name) {
         mul->out >> expReg->in;
 
-        in >> mul->op1;
-        in >> mul->op2;
+        expIn >> mul->op1;
+        expIn >> mul->op2;
         aluOp->value >> mul->ctrl;
 
         expReg->out >> out;
@@ -38,7 +38,7 @@ public:
         aluOp->value >> adder->ctrl;
 
         add2->out >> reg->in;
-        adder->out >> exp->in;
+        adder->out >> exp->expIn;
 
         adder->out >> add2->op1;
         c2->value >> add2->op2;

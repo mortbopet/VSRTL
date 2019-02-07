@@ -45,7 +45,7 @@ void ComponentGraphic::initialize() {
         orderSubcomponents();
         setExpanded(false);
     } else {
-        calculateGeometry(Collapse);
+        updateGeometry(Collapse);
     }
 }
 
@@ -164,7 +164,7 @@ void ComponentGraphic::setExpanded(bool expanded) {
     }
 
     // Recalculate geometry based on now showing child components
-    calculateGeometry(changeReason);
+    updateGeometry(changeReason);
 }
 
 ComponentGraphic* ComponentGraphic::getParent() const {
@@ -172,7 +172,7 @@ ComponentGraphic* ComponentGraphic::getParent() const {
     return static_cast<ComponentGraphic*>(parentItem());
 }
 
-void ComponentGraphic::calculateGeometry(GeometryChangeFlag flag) {
+void ComponentGraphic::updateGeometry(GeometryChangeFlag flag) {
     // Rect will change when expanding, so notify canvas that the rect of the current component will be dirty
     prepareGeometryChange();
 
@@ -183,11 +183,12 @@ void ComponentGraphic::calculateGeometry(GeometryChangeFlag flag) {
     calculateTextPosition();
     setIOPortPositions();
 
-    // If we have a parent, they should now recalculate its geometry based on new size of this
+    // If we have a parent, it should now update its geometry based on new size of this
     if (parentItem()) {
-        getParent()->calculateGeometry(flag & Expand ? ChildJustExpanded : ChildJustCollapsed);
+        getParent()->updateGeometry(flag & Expand ? ChildJustExpanded : ChildJustCollapsed);
     }
 
+    // Schedule a redraw after updating the component geometry
     update();
 }
 
@@ -225,6 +226,15 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
             return newPos - offset;
         }
     }
+
+    // Output port wires are implicitely redrawn given that the wire is a child of $this. We need to manually signal the
+    // wires going to the input ports of this component, to redraw
+    if (m_initialized) {
+        for (const auto& inputPort : m_inputPorts) {
+            inputPort->updateInputWire();
+        }
+    }
+
     return QGraphicsItem::itemChange(change, value);
 }
 
@@ -471,7 +481,7 @@ void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
         newRect.setBottomRight(pos);
         if (snapToSubcomponentRect(newRect)) {
             m_baseRect = newRect;
-            calculateGeometry(Resize);
+            updateGeometry(Resize);
         }
     }
 

@@ -9,8 +9,8 @@ class DoubleNestedExponenter : public Component {
     NON_REGISTER_COMPONENT
 public:
     DoubleNestedExponenter(const char* name) : Component(name) {
-        in >> exp1->in;
-        exp1->out >> exp2->in;
+        in >> exp1->expIn;
+        exp1->out >> exp2->expIn;
 
         exp2->out >> out;
     }

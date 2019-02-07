@@ -22,9 +22,19 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) :
 }
 
 void PortGraphic::initializeSignals() {
-    if (m_type == PortType::out) {
-        new WireGraphic(this, m_port->getConnectsFromThis(), this);
-    }
+    m_outputWire = new WireGraphic(this, m_port->getConnectsFromThis(), this);
+}
+
+void PortGraphic::updateInputWire() {
+    Q_ASSERT(m_inputWire != nullptr);
+    m_inputWire->update();
+}
+
+void PortGraphic::setInputWire(WireGraphic* wire) {
+    // Set wire is called during post scene construction initialization, wherein WireGraphic's will register with its
+    // destination ports (inputs)
+    Q_ASSERT(m_inputWire == nullptr);
+    m_inputWire = wire;
 }
 
 QRectF PortGraphic::boundingRect() const {

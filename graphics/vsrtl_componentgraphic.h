@@ -49,7 +49,7 @@ private:
     void calculateTextPosition();
     void createSubcomponents();
     void setIOPortPositions();
-    void calculateGeometry(GeometryChangeFlag flag);
+    void updateGeometry(GeometryChangeFlag flag);
     void calculateSubcomponentRect();
     void calculateBoundingRect();
     void getSubGraphicsItems(QGraphicsItemGroup& g);

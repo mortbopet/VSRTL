@@ -4,6 +4,7 @@
 
 #include <QGraphicsScene>
 #include <QPainter>
+#include <QPolygon>
 
 namespace vsrtl {
 
@@ -13,7 +14,12 @@ WireGraphic::WireGraphic(PortGraphic* from, const std::vector<PortBase*>& to, QG
 }
 
 QRectF WireGraphic::boundingRect() const {
-    return QRectF();
+    QPolygonF p;
+    p.append(mapFromItem(m_fromPort, m_fromPort->getConnectionPoint()));
+    for (const auto& to : m_toGraphicPorts) {
+        p.append(mapFromItem(to, to->getConnectionPoint()));
+    }
+    return p.boundingRect();
 }
 
 void WireGraphic::postSceneConstructionInitialize() {
@@ -32,6 +38,11 @@ void WireGraphic::postSceneConstructionInitialize() {
     // Assert that all ports were found in the scene
     Q_ASSERT(m_toGraphicPorts.size() == m_toPorts.size());
 
+    // Make the wire destination ports aware of this wire
+    for (const auto& port : m_toGraphicPorts) {
+        port->setInputWire(this);
+    }
+
     GraphicsBase::postSceneConstructionInitialize();
 }
 void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
@@ -39,5 +50,14 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
         painter->drawLine(mapFromItem(m_fromPort, m_fromPort->getConnectionPoint()),
                           mapFromItem(toPort, toPort->getConnectionPoint()));
     }
+
+    /*
+    // draw bounding rect
+    painter->save();
+    painter->setPen(Qt::green);
+    const auto br = boundingRect();
+    painter->drawRect(br);
+    painter->restore();
+    */
 }
 }  // namespace vsrtl
