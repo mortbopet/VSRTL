@@ -4,6 +4,8 @@
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphicsbase.h"
 
+#include <QFont>
+
 namespace vsrtl {
 
 class PortBase;
@@ -39,6 +41,9 @@ private:
 
     WireGraphic* m_outputWire = nullptr;
     WireGraphic* m_inputWire = nullptr;
+
+    QString m_widthText;
+    QFont m_font;
 };
 }  // namespace vsrtl
 

@@ -9,13 +9,16 @@ namespace vsrtl {
 
 namespace {
 
-static constexpr int c_portHeight = 20;
-static constexpr int c_portWidth = 40;
+// static constexpr int c_portHeight = 20;
+// static constexpr int c_portWidth = 40;
 static constexpr int c_portInnerMargin = 5;
 }  // namespace
 
 PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
     setParentItem(parent);
+    m_widthText = QString::number(port->getWidth() - 1) + ":0";
+    m_font = QFont("Monospace", 10);
+
     updateGeometry();
 
     initializeSignals();
@@ -42,26 +45,32 @@ QRectF PortGraphic::boundingRect() const {
 }
 
 QPointF PortGraphic::getInputPoint() const {
-    return QPointF(m_boundingRect.left(), m_boundingRect.center().y());
+    return QPointF(m_boundingRect.left(), 0);
 }
 
 QPointF PortGraphic::getOutputPoint() const {
-    return QPointF(m_boundingRect.right(), m_boundingRect.center().y());
+    return QPointF(m_boundingRect.right(), 0);
 }
 
 void PortGraphic::updateGeometry() {
     if (m_showValue) {
     }
 
-    m_boundingRect = QRectF(0, 0, c_portWidth, c_portHeight);
-    m_innerRect = m_boundingRect;
-    m_innerRect.setTopRight(m_innerRect.topRight() + QPointF(-c_portInnerMargin, c_portInnerMargin));
-    m_innerRect.setBottomLeft(m_innerRect.bottomLeft() - QPointF(-c_portInnerMargin, c_portInnerMargin));
+    QFontMetrics fm(m_font);
+    const auto textRect = fm.boundingRect(m_widthText);
+
+    m_boundingRect = QRectF(0, 0, textRect.width() + c_portInnerMargin, textRect.height() + c_portInnerMargin);
 }
 
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
 
+    painter->drawLine(QPointF(0, 0), QPointF(m_boundingRect.width(), 0));
+    painter->setFont(m_font);
+    const int offset = m_type == PortType::out ? c_portInnerMargin : 0;
+    painter->drawText(QPointF(offset, m_boundingRect.height() / 2 + c_portInnerMargin), m_widthText);
+
+    /*
     // Draw bounding rect
     if (lod > 0.2) {
         painter->save();
@@ -100,6 +109,7 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* optio
             painter->restore();
         }
     }
+    */
 }
 
 }  // namespace vsrtl

@@ -61,7 +61,7 @@ private:
     void initializePorts();
     ComponentGraphic* getParent() const;
 
-    bool m_isExpanded = true;
+    bool m_isExpanded = false;
     bool m_inResizeDragZone = false;
     bool m_resizeDragging = false;
 

@@ -28,7 +28,7 @@ void ComponentGraphic::initialize() {
     setAcceptHoverEvents(true);
 
     m_displayText = QString::fromStdString(m_component.getName());
-    m_font = QFont("Times", 10);
+    m_font = QFont("Monospace", 12);
 
     initializePorts();
 
@@ -257,15 +257,13 @@ void ComponentGraphic::setIOPortPositions() {
         // Component is unexpanded - IO should be positionen in even positions
         int i = 0;
         for (auto& c : m_inputPorts) {
-            c->setPos(
-                QPointF(m_baseRect.left() - c->boundingRect().width(),
-                        (m_baseRect.height() / (m_inputPorts.size() + 1)) * (1 + i) - c->boundingRect().height() / 2));
+            c->setPos(QPointF(m_baseRect.left() - c->boundingRect().width(),
+                              (m_baseRect.height() / (m_inputPorts.size() + 1)) * (1 + i)));
             i++;
         }
         i = 0;
         for (auto& c : m_outputPorts) {
-            c->setPos(QPointF(m_baseRect.right(), (m_baseRect.height() / (m_outputPorts.size() + 1)) * (1 + i) -
-                                                      c->boundingRect().height() / 2));
+            c->setPos(QPointF(m_baseRect.right(), (m_baseRect.height() / (m_outputPorts.size() + 1)) * (1 + i)));
             i++;
         }
     }
@@ -414,10 +412,12 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     }
     */
 
+    /*
     // DEBUG: draw bounding rect and base rect
     painter->setPen(QPen(Qt::red, 1));
     painter->drawRect(boundingRect());
     painter->setPen(oldPen);
+    */
 
     if (hasSubcomponents()) {
         // Determine whether expand button should be shown
