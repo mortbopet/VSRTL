@@ -41,12 +41,12 @@ QRectF PortGraphic::boundingRect() const {
     return m_boundingRect;
 }
 
-QPointF PortGraphic::getConnectionPoint() const {
-    if (m_type == PortType::in) {
-        return QPointF(m_boundingRect.left(), m_boundingRect.center().y());
-    } else {
-        return QPointF(m_boundingRect.right(), m_boundingRect.center().y());
-    }
+QPointF PortGraphic::getInputPoint() const {
+    return QPointF(m_boundingRect.left(), m_boundingRect.center().y());
+}
+
+QPointF PortGraphic::getOutputPoint() const {
+    return QPointF(m_boundingRect.right(), m_boundingRect.center().y());
 }
 
 void PortGraphic::updateGeometry() {

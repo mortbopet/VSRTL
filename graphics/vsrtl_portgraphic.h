@@ -22,7 +22,8 @@ public:
     void setInputWire(WireGraphic* wire);
     void updateInputWire();
 
-    QPointF getConnectionPoint() const;
+    QPointF getInputPoint() const;
+    QPointF getOutputPoint() const;
 
 private:
     void initializeSignals();

@@ -16,9 +16,9 @@ WireGraphic::WireGraphic(PortGraphic* from, const std::vector<PortBase*>& to, QG
 
 QRectF WireGraphic::boundingRect() const {
     QPolygonF p;
-    p.append(mapFromItem(m_fromPort, m_fromPort->getConnectionPoint()));
+    p.append(mapFromItem(m_fromPort, m_fromPort->getInputPoint()));
     for (const auto& to : m_toGraphicPorts) {
-        p.append(mapFromItem(to, to->getConnectionPoint()));
+        p.append(mapFromItem(to, to->getInputPoint()));
     }
     return p.boundingRect();
 }
@@ -50,8 +50,8 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
     for (const auto& toPort : m_toGraphicPorts) {
         const auto* portParent = dynamic_cast<ComponentGraphic*>(toPort->parentItem());
         if (portParent->isVisible()) {
-            painter->drawLine(mapFromItem(m_fromPort, m_fromPort->getConnectionPoint()),
-                              mapFromItem(toPort, toPort->getConnectionPoint()));
+            painter->drawLine(mapFromItem(m_fromPort, m_fromPort->getOutputPoint()),
+                              mapFromItem(toPort, toPort->getInputPoint()));
         }
     }
 
