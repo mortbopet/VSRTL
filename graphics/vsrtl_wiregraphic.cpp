@@ -1,4 +1,5 @@
 #include "vsrtl_wiregraphic.h"
+#include "vsrtl_componentgraphic.h"
 #include "vsrtl_port.h"
 #include "vsrtl_portgraphic.h"
 
@@ -47,8 +48,11 @@ void WireGraphic::postSceneConstructionInitialize() {
 }
 void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
     for (const auto& toPort : m_toGraphicPorts) {
-        painter->drawLine(mapFromItem(m_fromPort, m_fromPort->getConnectionPoint()),
-                          mapFromItem(toPort, toPort->getConnectionPoint()));
+        const auto* portParent = dynamic_cast<ComponentGraphic*>(toPort->parentItem());
+        if (portParent->isVisible()) {
+            painter->drawLine(mapFromItem(m_fromPort, m_fromPort->getConnectionPoint()),
+                              mapFromItem(toPort, toPort->getConnectionPoint()));
+        }
     }
 
     /*

@@ -26,6 +26,8 @@ public:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void initialize();
 
+    bool isExpanded() const { return m_isExpanded; }
+
     const Component& getComponent() const { return m_component; }
     void setExpanded(bool isExpanded);
     bool hasSubcomponents() const;
@@ -59,7 +61,7 @@ private:
     void initializePorts();
     ComponentGraphic* getParent() const;
 
-    bool m_isExpanded = false;
+    bool m_isExpanded = true;
     bool m_inResizeDragZone = false;
     bool m_resizeDragging = false;
 
