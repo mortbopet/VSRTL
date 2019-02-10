@@ -3,6 +3,7 @@
 #include "vsrtl_mainwindow.h"
 #include "vsrtl_manynestedcomponents.h"
 #include "vsrtl_nestedexponenter.h"
+#include "vsrtl_rannumgen.h"
 
 #include <chrono>
 
@@ -14,7 +15,7 @@ int main(int argc, char** argv) {
 
     Q_INIT_RESOURCE(icons);
 
-    vsrtl::NestedExponenter design;
+    vsrtl::RanNumGen design;
     vsrtl::MainWindow w(design);
 
     w.show();
