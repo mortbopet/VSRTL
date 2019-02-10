@@ -73,7 +73,18 @@ void VSRTLWidget::registerShapes() const {
         shape.cubicTo(t.map(QPointF(0.1, 1)), t.map(QPointF(0.5, 0.5)), t.map(QPointF(0.1, 0)));
         shape.moveTo(0, 0);
         shape.cubicTo(QPointF(0, 0), t.map(QPointF(0.4, 0.5)), t.map(QPointF(0, 1)));
+        shape.cubicTo(t.map(QPointF(0, 1)), t.map(QPointF(0.4, 0.5)), QPointF(0, 0));
         shape.setFillRule(Qt::WindingFill);
+        return shape;
+    });
+
+    ComponentGraphic::setComponentShape("Or", [](QTransform t) {
+        QPainterPath shape;
+        shape.lineTo(t.map(QPointF(0.4, 0)));
+        shape.cubicTo(t.map(QPointF(0.4, 0)), t.map(QPointF(0.95, 0.05)), t.map(QPointF(1, 0.5)));
+        shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(0.95, 0.95)), t.map(QPointF(0.4, 1)));
+        shape.lineTo(t.map(QPointF(0, 1)));
+        shape.cubicTo(t.map(QPointF(0, 1)), t.map(QPointF(0.4, 0.5)), t.map(QPointF(0, 0)));
         return shape;
     });
 

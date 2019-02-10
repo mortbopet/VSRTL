@@ -28,23 +28,18 @@ public:
         xOr2->out >> sh3->in;
         sh3->out >> *xOr3->in[1];
 
-        xOr3->out >> *mux->in[0];
+        xOr3->out >> *mux->in[1];
 
         mux->out >> rngResReg->in;
 
-        // Counter circuit
-        add1->out >> c_reg->in;
+        // Initialization selection. The RNG must be supplied with a seed value - in this case, select 'init'
+        // constant as the input of the rng register in the first clock cycle, and the RNG circuit for all others.
+        init->value >> *mux->in[0];
+        orr->out >> selReg->in;
+        selReg->out >> *orr->in[0];
+        c1->value >> *orr->in[1];
+        selReg->out >> mux->select;
 
-        c_reg->out >> add1->op1;
-        c1->value >> add1->op2;
-        addctrl->value >> add1->ctrl;
-
-        init->value >> *mux->in[1];
-
-        // Comparator
-        eq->out >> mux->select;
-        c0->value >> eq->op1;
-        c_reg->out >> eq->op2;
     }
     static constexpr int m_cVal = 4;
 
@@ -57,14 +52,12 @@ public:
     SUBCOMPONENT(xOr3, Xor, 32, 2);
     SUBCOMPONENT(rngResReg, Register, 32);
 
+    // Initialization objects for first clock cycle
     SUBCOMPONENT(mux, Multiplexer, 2, 32);
     SUBCOMPONENT(init, Constant, 32, 0x13fb27a3);
     SUBCOMPONENT(c1, Constant, 32, 1);
-    SUBCOMPONENT(c0, Constant, 32, 0);
-    SUBCOMPONENT(addctrl, Constant, 32, 0);
-    SUBCOMPONENT(add1, ALU, 32);
-    SUBCOMPONENT(c_reg, Register, 32);
-    SUBCOMPONENT(eq, Eq, 32);
+    SUBCOMPONENT(orr, Or, 32,2);
+    SUBCOMPONENT(selReg, Register, 32);
 
 };
 }  // namespace vsrtl

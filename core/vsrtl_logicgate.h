@@ -19,6 +19,7 @@ public:
 template <unsigned int inputCount, unsigned int width>
 class And : public LogicGate<inputCount, width> {
 public:
+    const char* getBaseType() const override { return "And"; }
     And(std::string name = "&") : LogicGate<inputCount, width>(name) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
@@ -33,6 +34,7 @@ public:
 template <unsigned int inputCount, unsigned int width>
 class Or : public LogicGate<inputCount, width> {
 public:
+    const char* getBaseType() const override { return "Or"; }
     Or(std::string name = "|") : LogicGate<inputCount, width>(name) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
@@ -62,6 +64,7 @@ public:
 template <unsigned int width>
 class Not : public LogicGate<1, width> {
 public:
+    const char* getBaseType() const override { return "Not"; }
     Not(std::string name = "&") : LogicGate<1, width>(name) {
         this->out << [=] { return ~this->in[0]->template value<VSRTL_VT_U>(); };
     }
