@@ -1,7 +1,8 @@
 #ifndef MULTIPLEXER_H
 #define MULTIPLEXER_H
 
-#include "vsrtl_primitive.h"
+#include <array>
+#include "vsrtl_component.h"
 
 namespace vsrtl {
 
@@ -10,17 +11,18 @@ namespace vsrtl {
  * Control signal for the multiplexer is always ins[0].
  */
 
-template <uint32_t inputCount, uint32_t width>
-class Multiplexer : public Component<width> {
+template <unsigned int inputCount, unsigned int width>
+class Multiplexer : public Component {
 public:
-    Multiplexer() : Component("MUX") { this->m_additionalInputs.insert(0, m_control); }
+    const char* getBaseType() const override { return "Multiplexer"; }
+    Multiplexer(const char* name) : Component(name) {}
 
-    void propagate() override {
-        propagateComponent([=] { return this->ins[m_control->getValue()]; });
-    }
+    OUTPUTPORT(out, width);
+    INPUTPORT(select, ceillog2(inputCount));
+
+    std::array<Port<width>, inputCount> inputs;
 
 private:
-    Component<ceillog2(inputCount)>* m_control;
 };
 }  // namespace vsrtl
 

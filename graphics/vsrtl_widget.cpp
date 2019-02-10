@@ -2,6 +2,10 @@
 #include "ui_vsrtl_widget.h"
 #include "vsrtl_design.h"
 
+#include "vsrtl_shape.h"
+
+#include "vsrtl_core.h"
+
 #include <memory>
 
 #include <QGraphicsScene>
@@ -10,6 +14,9 @@ namespace vsrtl {
 
 VSRTLWidget::VSRTLWidget(Design& arch, QWidget* parent) : m_arch(arch), QWidget(parent), ui(new Ui::VSRTLWidget) {
     ui->setupUi(this);
+
+    // Register shapes for vsrtl-core provided components;
+    registerShapes();
 
     m_view = new VSRTLView(this);
     m_scene = new QGraphicsScene(this);
@@ -21,6 +28,43 @@ VSRTLWidget::VSRTLWidget(Design& arch, QWidget* parent) : m_arch(arch), QWidget(
 
 VSRTLWidget::~VSRTLWidget() {
     delete ui;
+}
+
+void VSRTLWidget::registerShapes() const {
+    // Base component
+
+    ComponentGraphic::setComponentShape("Component", [](QTransform t) {
+        QPainterPath shape;
+        shape.addRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))));
+        return shape;
+    });
+
+    // Register
+    ComponentGraphic::setComponentShape("Register", [](QTransform t) {
+        QPainterPath shape;
+        shape.addPolygon(t.map(QPolygonF({QPointF(0.3, 1), QPointF(0.5, 0.8), QPointF(0.7, 1), QPointF(0.3, 1)})));
+        shape.addRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))));
+        shape.setFillRule(Qt::WindingFill);
+        return shape;
+    });
+
+    // Constant
+    ComponentGraphic::setComponentShape("Constant", [](QTransform t) {
+        QPainterPath shape;
+        shape.addRoundRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))), 35);
+        return shape;
+    });
+    // Logic gate
+
+    // Multiplexer
+
+    // ALU
+    ComponentGraphic::setComponentShape("ALU", [](QTransform t) {
+        QPainterPath shape;
+        shape.addPolygon(
+            t.map(QPolygonF({QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1), QPointF(0, 0)})));
+        return shape;
+    });
 }
 
 void VSRTLWidget::initializeDesign(Design& arch) {

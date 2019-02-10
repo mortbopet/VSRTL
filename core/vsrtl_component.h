@@ -52,6 +52,15 @@ public:
     Component(const char* displayName, Component* parent = nullptr) : m_displayName(displayName), m_parent(parent) {}
     virtual ~Component() {}
 
+    /**
+     * @brief getBaseType
+     * Used to identify the component type, which is used when determining how to draw a component. Introduced to avoid
+     * intermediate base classes for many (All) components, which is a template class. For instance, it is desireable to
+     * identify all instances of "Constant<...>" objects, but without introducing a "BaseConstant" class.
+     * @return String identifier for the component type
+     */
+    virtual const char* getBaseType() const { return "Component"; }
+
     virtual bool isRegister() const = 0;
     virtual void resetPropagation() {
         if (m_propagationState == PropagationState::unpropagated) {

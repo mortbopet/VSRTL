@@ -4,6 +4,8 @@
 #include <QFont>
 #include <QToolButton>
 
+#include <map>
+
 #include "vsrtl_component.h"
 #include "vsrtl_graphicsbase.h"
 
@@ -25,6 +27,7 @@ public:
     // QPainterPath shape() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void initialize();
+    void setShape(const QPainterPath& shape);
 
     bool isExpanded() const { return m_isExpanded; }
 
@@ -59,6 +62,7 @@ private:
     bool snapToSubcomponentRect(QRectF& r) const;
     void orderSubcomponents();
     void initializePorts();
+    void updateDrawShape();
     ComponentGraphic* getParent() const;
 
     bool m_isExpanded = false;
@@ -73,6 +77,7 @@ private:
     QRectF m_savedBaseRect = QRectF();
     QRectF m_baseRect;
     QRectF m_boundingRect;
+    QPainterPath m_shape;
     QRectF m_textRect;
     QRectF m_subcomponentRect;
     QFont m_font;
@@ -85,6 +90,32 @@ private:
 
     QToolButton* m_expandButton;
     QGraphicsProxyWidget* m_expandButtonProxy;
+
+public:
+    /**
+     * @brief The Shape struct
+     * Component shapes should be scalable in x- and y direction, but may contain complex shapes such as circles.
+     * The Shape struct, and shape generation, thus provides an interface for generating (scaling) a QPainterPath,
+     * without using QPainte's scale functionality.
+     * We avoid using QPainter::scale, given that this also scales the pen, yielding invalid drawings.
+     */
+
+    using Shape = std::function<QPainterPath(QTransform)>;
+
+    static void setComponentShape(const char* component, const Shape& shape) {
+        Q_ASSERT(!s_componentShapes.contains(component));
+        s_componentShapes[component] = shape;
+    }
+
+    QPainterPath getComponentShape(const char* component, QTransform transform) {
+        // If no shape has been registered for the base component type, revert to displaying as a "Component"
+        if (!s_componentShapes.contains(component)) {
+            return s_componentShapes["Component"](transform);
+        }
+        return s_componentShapes[component](transform);
+    }
+
+    static QMap<const char*, Shape> s_componentShapes;
 };
 }  // namespace vsrtl
 

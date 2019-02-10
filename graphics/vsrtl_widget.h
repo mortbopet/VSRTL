@@ -29,8 +29,9 @@ public slots:
     void reset();
 
 private:
-    void initializeDesign(Design& arch);
+    void registerShapes() const;
 
+    void initializeDesign(Design& arch);
     Ui::VSRTLWidget* ui;
 
     VSRTLView* m_view;

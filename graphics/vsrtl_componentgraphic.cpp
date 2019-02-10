@@ -13,7 +13,11 @@
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 
+#include <QDebug>
+
 namespace vsrtl {
+
+QMap<const char*, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
 
 ComponentGraphic::ComponentGraphic(Component& c) : m_component(c) {}
 
@@ -172,6 +176,12 @@ ComponentGraphic* ComponentGraphic::getParent() const {
     return static_cast<ComponentGraphic*>(parentItem());
 }
 
+void ComponentGraphic::updateDrawShape() {
+    QTransform t;
+    t.scale(m_baseRect.width(), m_baseRect.height());
+    m_shape = ComponentGraphic::getComponentShape(m_component.getBaseType(), t);
+}
+
 void ComponentGraphic::updateGeometry(GeometryChangeFlag flag) {
     // Rect will change when expanding, so notify canvas that the rect of the current component will be dirty
     prepareGeometryChange();
@@ -182,6 +192,8 @@ void ComponentGraphic::updateGeometry(GeometryChangeFlag flag) {
     calculateBoundingRect();
     calculateTextPosition();
     setIOPortPositions();
+
+    updateDrawShape();
 
     // If we have a parent, it should now update its geometry based on new size of this
     if (parentItem()) {
@@ -327,6 +339,10 @@ void ComponentGraphic::calculateBaseRect(GeometryChangeFlag flag) {
     m_expandButtonPos = QPointF(BUTTON_INDENT, BUTTON_INDENT);
 }
 
+void ComponentGraphic::setShape(const QPainterPath& shape) {
+    m_shape = shape;
+}
+
 namespace {
 qreal largestPortWidth(const QMap<PortBase*, PortGraphic*>& ports) {
     qreal width = 0;
@@ -353,42 +369,20 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         fillColor = fillColor.light(125);
 
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
-    if (lod < 0.2) {
-        if (lod < 0.125) {
-            painter->fillRect(m_baseRect, fillColor);
-            return;
-        }
 
-        QBrush b = painter->brush();
-        painter->setBrush(fillColor);
-        painter->drawRect(m_baseRect);
-        painter->setBrush(b);
-        return;
-    }
-
+    // Draw component outline
     QPen oldPen = painter->pen();
     QPen pen = oldPen;
-    int width = 0;
+    int width = 1;
     if (option->state & QStyle::State_Selected)
-        width += 2;
+        width += 1;
 
     pen.setWidth(width);
-    QBrush b = painter->brush();
     painter->setBrush(QBrush(fillColor.dark(option->state & QStyle::State_Sunken ? 120 : 100)));
+    painter->setPen(pen);
+    painter->drawPath(m_shape);
 
-    painter->drawRect(m_baseRect);
-    painter->drawRect(m_baseRect);
-    painter->setBrush(b);
-
-    // Draw shadow
-    if (lod >= 0.5) {
-        painter->setPen(QPen(Qt::gray, SHADOW_WIDTH));
-        painter->drawLine(m_baseRect.topRight() + QPointF(SHADOW_OFFSET, 0),
-                          m_baseRect.bottomRight() + QPointF(SHADOW_OFFSET, SHADOW_OFFSET));
-        painter->drawLine(m_baseRect.bottomLeft() + QPointF(0, SHADOW_OFFSET),
-                          m_baseRect.bottomRight() + QPointF(SHADOW_OFFSET, SHADOW_OFFSET));
-        painter->setPen(QPen(Qt::black, 1));
-    }
+    painter->setPen(oldPen);
 
     // Draw text
     if (lod >= 0.35) {
@@ -398,19 +392,6 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         painter->drawText(m_textPos, m_displayText);
         painter->restore();
     }
-
-    // Draw IO markers
-    /*
-    if (lod >= 0.5) {
-        painter->setPen(QPen(Qt::black, 1));
-        for (const auto& p : m_inputPorts) {
-            painter->drawLine(p, p - QPointF(IO_PIN_LEN, 0));
-        }
-        for (const auto& p : m_outputPorts) {
-            painter->drawLine(p, p + QPointF(IO_PIN_LEN, 0));
-        }
-    }
-    */
 
     /*
     // DEBUG: draw bounding rect and base rect
