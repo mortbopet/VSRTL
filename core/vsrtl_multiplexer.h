@@ -1,5 +1,5 @@
-#ifndef MULTIPLEXER_H
-#define MULTIPLEXER_H
+#ifndef VSRTL_MULTIPLEXER_H
+#define VSRTL_MULTIPLEXER_H
 
 #include <array>
 #include "vsrtl_component.h"
@@ -13,17 +13,19 @@ namespace vsrtl {
 
 template <unsigned int inputCount, unsigned int width>
 class Multiplexer : public Component {
+    NON_REGISTER_COMPONENT
 public:
     const char* getBaseType() const override { return "Multiplexer"; }
-    Multiplexer(std::string name) : Component(name) {}
+    Multiplexer(std::string name) : Component(name) {
+        out << [=] { return in[select.template value<VSRTL_VT_U>()]->template value<VSRTL_VT_U>(); };
+    }
 
     OUTPUTPORT(out, width);
     INPUTPORT(select, ceillog2(inputCount));
-
-    std::array<Port<width>, inputCount> inputs;
+    INPUTPORTS(in, width, inputCount);
 
 private:
 };
 }  // namespace vsrtl
 
-#endif  // MULTIPLEXER_H
+#endif  // VSRTL_MULTIPLEXER_H

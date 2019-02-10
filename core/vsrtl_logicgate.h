@@ -5,7 +5,7 @@
 
 namespace vsrtl {
 
-template <uint32_t inputCount, uint32_t width>
+template <uint32_t width, uint32_t inputCount>
 class LogicGate : public Component {
     NON_REGISTER_COMPONENT
     static_assert(inputCount > 0, "Input count must be greater than 0");
