@@ -78,6 +78,12 @@ void VSRTLWidget::registerShapes() const {
     });
 
     // Multiplexer
+    ComponentGraphic::setComponentShape("Multiplexer", [](QTransform t) {
+        QPainterPath shape;
+        shape.addPolygon(
+            t.map(QPolygonF({QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1), QPointF(0, 0)})));
+        return shape;
+    });
 
     // ALU
     ComponentGraphic::setComponentShape("ALU", [](QTransform t) {
