@@ -60,7 +60,7 @@ public:
      * identify all instances of "Constant<...>" objects, but without introducing a "BaseConstant" class.
      * @return String identifier for the component type
      */
-    virtual std::string getBaseType() const { return "Component"; }
+    virtual const char* getBaseType() const { return "Component"; }
 
     virtual bool isRegister() const = 0;
     virtual void resetPropagation() {

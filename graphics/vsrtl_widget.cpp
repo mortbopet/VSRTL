@@ -54,7 +54,28 @@ void VSRTLWidget::registerShapes() const {
         shape.addRoundRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))), 35);
         return shape;
     });
-    // Logic gate
+
+    // Logic gates
+    ComponentGraphic::setComponentShape("And", [](QTransform t) {
+        QPainterPath shape;
+        shape.cubicTo(QPointF(0, 0), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
+        shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1, 1)), t.map(QPointF(0, 1)));
+        shape.lineTo(QPointF(0, 0));
+        return shape;
+    });
+
+    // Logic gates
+    ComponentGraphic::setComponentShape("Xor", [](QTransform t) {
+        QPainterPath shape;
+        shape.moveTo(t.map(QPointF(0.1, 0)));
+        shape.cubicTo(QPointF(0.1, 0), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
+        shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1, 1)), t.map(QPointF(0.1, 1)));
+        shape.cubicTo(t.map(QPointF(0.1, 1)), t.map(QPointF(0.5, 0.5)), t.map(QPointF(0.1, 0)));
+        shape.moveTo(0, 0);
+        shape.cubicTo(QPointF(0, 0), t.map(QPointF(0.4, 0.5)), t.map(QPointF(0, 1)));
+        shape.setFillRule(Qt::WindingFill);
+        return shape;
+    });
 
     // Multiplexer
 

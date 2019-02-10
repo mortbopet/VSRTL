@@ -21,7 +21,7 @@ public:
 template <unsigned int width>
 class Register : public RegisterBase {
 public:
-    std::string getBaseType() const override { return "Register"; }
+    const char* getBaseType() const override { return "Register"; }
     Register(std::string name) : RegisterBase(name) {
         out << ([=] { return m_savedValue; });
     }
