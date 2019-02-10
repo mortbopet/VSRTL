@@ -50,7 +50,7 @@ private:                            \
 
 class Component {
 public:
-    Component(const char* displayName, Component* parent = nullptr) : m_displayName(displayName), m_parent(parent) {}
+    Component(std::string displayName, Component* parent = nullptr) : m_displayName(displayName), m_parent(parent) {}
     virtual ~Component() {}
 
     /**
@@ -60,7 +60,7 @@ public:
      * identify all instances of "Constant<...>" objects, but without introducing a "BaseConstant" class.
      * @return String identifier for the component type
      */
-    virtual const char* getBaseType() const { return "Component"; }
+    virtual std::string getBaseType() const { return "Component"; }
 
     virtual bool isRegister() const = 0;
     virtual void resetPropagation() {
@@ -89,25 +89,24 @@ public:
     }
 
     template <uint32_t bitwidth>
-    Port<bitwidth>& createOutputPort(const char* name) {
+    Port<bitwidth>& createOutputPort(std::string name) {
         auto port = new Port<bitwidth>(name, this);
         m_outputports.push_back(std::unique_ptr<Port<bitwidth>>(port));
         return *port;
     }
 
     template <uint32_t bitwidth>
-    Port<bitwidth>& createInputPort(const char* name) {
+    Port<bitwidth>& createInputPort(std::string name) {
         Port<bitwidth>* port = new Port<bitwidth>(name, this);
         m_inputports.push_back(std::unique_ptr<Port<bitwidth>>(port));
         return *port;
     }
 
     template <uint32_t bitwidth>
-    std::vector<Port<bitwidth>*> createInputPorts(const char* name, unsigned int n) {
+    std::vector<Port<bitwidth>*> createInputPorts(std::string name, unsigned int n) {
         std::vector<Port<bitwidth>*> ports;
         for (int i = 0; i < n; i++) {
-            std::string i_name(name);
-            i_name += "_" + std::to_string(i);
+            std::string i_name = name + "_" + std::to_string(i);
             Port<bitwidth>* port = new Port<bitwidth>(i_name.c_str(), this);
             m_inputports.push_back(std::unique_ptr<Port<bitwidth>>(port));
             ports.push_back(port);
@@ -187,7 +186,7 @@ public:
     }
 
     const Component* getParent() const { return m_parent; }
-    const char* getName() const { return m_displayName; }
+    std::string getName() const { return m_displayName; }
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
     const std::vector<std::unique_ptr<PortBase>>& getOutputs() const { return m_outputports; }
     const std::vector<std::unique_ptr<PortBase>>& getInputs() const { return m_inputports; }
@@ -220,7 +219,7 @@ protected:
         }
     }
 
-    const char* m_displayName;
+    std::string m_displayName;
 
     Component* m_parent = nullptr;
     std::vector<std::unique_ptr<PortBase>> m_outputports;
@@ -230,7 +229,7 @@ protected:
 
 // Component object generator that registers objects in parent upon creation
 template <typename T, typename... Args>
-T* create_component(Component* parent, const char* name, Args&&... args) {
+T* create_component(Component* parent, std::string name, Args&&... args) {
     auto ptr = new T(name, std::forward<Args>(args)...);
     if (parent) {
         parent->addSubcomponent(static_cast<Component*>(ptr));

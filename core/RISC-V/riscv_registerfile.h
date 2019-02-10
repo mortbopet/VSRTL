@@ -9,7 +9,7 @@ namespace vsrtl {
 
 class RISCV_RegisterFile : public RegisterFile<2> {
 public:
-    RISCV_RegisterFile(const char* name) : RegisterFile<2>(name) {
+    RISCV_RegisterFile(std::string name) : RegisterFile<2>(name) {
         // the instruction decoder should be specified as per the instruction set that you use. In case of RISC-V,
         // register numbers 1 and 2 are always in the same place, and thus we can use generateBitfieldDecoder to create
         // a simple function for extracting the bitfields. For more complex instruction sets, a custom lambda for

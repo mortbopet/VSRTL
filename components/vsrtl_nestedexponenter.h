@@ -15,7 +15,7 @@ public:
     INPUTPORT(expIn, 32);
     OUTPUTPORT(out, 32);
 
-    Exponenter(const char* name) : Component(name) {
+    Exponenter(std::string name) : Component(name) {
         mul->out >> expReg->in;
 
         expIn >> mul->op1;

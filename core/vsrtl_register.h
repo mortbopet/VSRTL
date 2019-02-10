@@ -12,7 +12,7 @@ namespace vsrtl {
 class RegisterBase : public Component {
     REGISTER_COMPONENT
 public:
-    RegisterBase(const char* name) : Component(name) {}
+    RegisterBase(std::string name) : Component(name) {}
     virtual void reset() = 0;
     virtual void clock() = 0;
     virtual void save() = 0;
@@ -21,8 +21,8 @@ public:
 template <unsigned int width>
 class Register : public RegisterBase {
 public:
-    const char* getBaseType() const override { return "Register"; }
-    Register(const char* name) : RegisterBase(name) {
+    std::string getBaseType() const override { return "Register"; }
+    Register(std::string name) : RegisterBase(name) {
         out << ([=] { return m_savedValue; });
     }
 

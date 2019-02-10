@@ -1,70 +1,35 @@
-#ifndef LOGICGATE_H
-#define LOGICGATE_H
+#ifndef VSRTL_LOGICGATE_H
+#define VSRTL_LOGICGATE_H
 
-#include "vsrtl_primitive.h"
+#include "vsrtl_component.h"
 
 namespace vsrtl {
 
-enum class LogicGateType { AND, OR, XOR, NOT, NAND, NOR, XNOR };
-
 template <uint32_t inputCount, uint32_t width>
-class LogicGate : public Component<width> {
+class LogicGate : public Component {
+    NON_REGISTER_COMPONENT
+    static_assert(inputCount > 0, "Input count must be greater than 0");
+
 public:
-    LogicGate(LogicGateType t) {
-        static_assert(inputCount > 0, "Input count must be greater than 0");
-
-        switch (t) {
-            case LogicGateType::AND: {
-                m_f = [=] {
-                    auto out = this->ins[0];
-                    for (int i = 1; i < this->ins.size(); i++) {
-                        out &= this->ins[i];
-                    }
-                    return out;
-                };
-                break;
-            }
-            case LogicGateType::OR: {
-                m_f = [=] {
-                    auto out = this->ins[0];
-                    for (int i = 1; i < this->ins.size(); i++) {
-                        out |= this->ins[i];
-                    }
-                    return out;
-                };
-                break;
-            }
-            case LogicGateType::XOR: {
-                throw std::runtime_error("implement me!");
-                break;
-            }
-            case LogicGateType::NOT: {
-                m_f = [=] { return ~this->ins[0]; };
-                break;
-            }
-            case LogicGateType::NAND: {
-                throw std::runtime_error("implement me!");
-                break;
-            }
-            case LogicGateType::NOR: {
-                throw std::runtime_error("implement me!");
-                break;
-            }
-            case LogicGateType::XNOR: {
-                throw std::runtime_error("implement me!");
-                break;
-            }
-        }
-    }
-
-    void propagate() override { propagateComponent(m_f); }
-
-    void verifySubtype() const override {
-        // Nothing to verify
-    }
-
-    std::function<std::array<bool, width>()> m_f;
+    LogicGate(std::string name) : Component(name) {}
+    OUTPUTPORT(out, width);
+    INPUTPORTS(in, width, inputCount);
 };
+
+template <unsigned int inputCount, unsigned int width>
+class And : public LogicGate<inputCount, width> {
+public:
+    And(std::string name = "&") : LogicGate<inputCount, width>(name) {
+        this->out << [=] {
+            auto v = this->in[0]->template value<VSRTL_VT_U>();
+            for (int i = 1; i < this->in.size(); i++) {
+                v = v & this->in[i]->template value<VSRTL_VT_U>();
+            }
+            return v;
+        };
+    }
+};
+
 }  // namespace vsrtl
 
-#endif  // LOGICGATE_H
+#endif  // VSRTL_LOGICGATE_H

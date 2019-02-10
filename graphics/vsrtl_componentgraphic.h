@@ -102,12 +102,12 @@ public:
 
     using Shape = std::function<QPainterPath(QTransform)>;
 
-    static void setComponentShape(const char* component, const Shape& shape) {
+    static void setComponentShape(std::string component, const Shape& shape) {
         Q_ASSERT(!s_componentShapes.contains(component));
         s_componentShapes[component] = shape;
     }
 
-    QPainterPath getComponentShape(const char* component, QTransform transform) {
+    QPainterPath getComponentShape(std::string component, QTransform transform) {
         // If no shape has been registered for the base component type, revert to displaying as a "Component"
         if (!s_componentShapes.contains(component)) {
             return s_componentShapes["Component"](transform);
@@ -115,7 +115,7 @@ public:
         return s_componentShapes[component](transform);
     }
 
-    static QMap<const char*, Shape> s_componentShapes;
+    static QMap<std::string, Shape> s_componentShapes;
 };
 }  // namespace vsrtl
 

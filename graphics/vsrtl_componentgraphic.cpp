@@ -17,7 +17,7 @@
 
 namespace vsrtl {
 
-QMap<const char*, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
+QMap<std::string, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
 
 ComponentGraphic::ComponentGraphic(Component& c) : m_component(c) {}
 

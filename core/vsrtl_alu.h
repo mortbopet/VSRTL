@@ -35,9 +35,9 @@ class ALU : public Component {
     NON_REGISTER_COMPONENT
 
 public:
-    const char* getBaseType() const override { return "ALU"; }
+    std::string getBaseType() const override { return "ALU"; }
     // clang-format off
-    ALU(const char* name) : Component(name){
+    ALU(std::string name) : Component(name){
         out << ([=] { return calculateOutput(); });
     }
     void propagate() { calculateOutput(); }

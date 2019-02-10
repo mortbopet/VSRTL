@@ -27,7 +27,7 @@ class RegisterFile : public Component {
 public:
     static_assert(nOperands > 0 && nOperands <= REGISTERCOUNT, "Register file invariant");
 
-    RegisterFile(const char* name) : Component(name) {
+    RegisterFile(std::string name) : Component(name) {
         for (int i = 0; i < nOperands; i++) {
             auto& op = createOutputPort<REGISTERWIDTH>("Operand");
             operands.push_back(&op);

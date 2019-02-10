@@ -14,8 +14,8 @@ namespace vsrtl {
 template <unsigned int inputCount, unsigned int width>
 class Multiplexer : public Component {
 public:
-    const char* getBaseType() const override { return "Multiplexer"; }
-    Multiplexer(const char* name) : Component(name) {}
+    std::string getBaseType() const override { return "Multiplexer"; }
+    Multiplexer(std::string name) : Component(name) {}
 
     OUTPUTPORT(out, width);
     INPUTPORT(select, ceillog2(inputCount));

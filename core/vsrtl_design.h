@@ -21,7 +21,7 @@ namespace vsrtl {
 class Design : public Component {
     NON_REGISTER_COMPONENT
 public:
-    Design(const char* name) : Component(name) {}
+    Design(std::string name) : Component(name) {}
 
     /*
     template <typename T, typename... Args>

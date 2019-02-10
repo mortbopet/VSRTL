@@ -29,11 +29,11 @@ enum class PropagationState { unpropagated, propagated, constant };
 
 class PortBase {
 public:
-    PortBase(const char* name, Component* parent) : m_parent(parent), m_name(name) {}
+    PortBase(std::string name, Component* parent) : m_parent(parent), m_name(name) {}
     bool isConnected() const { return m_portConnectsTo != nullptr || m_propagationFunction != nullptr; }
     virtual void propagate() = 0;
     virtual void propagateConstant() = 0;
-    const char* getName() const { return m_name; }
+    std::string getName() const { return m_name; }
     Component* getParent() const { return m_parent; }
     bool isPropagated() const { return m_propagationState != PropagationState::unpropagated; }
     void resetPropagation() {
@@ -82,7 +82,7 @@ protected:
     Component* m_parent;
 
 private:
-    const char* m_name;
+    std::string m_name;
 };
 
 template <unsigned int W>
@@ -91,7 +91,7 @@ class Port : public PortBase {
                   "Port size cannot be represented using the current internal datatype for ports.");
 
 public:
-    Port(const char* name, Component* parent) : PortBase(name, parent) {}
+    Port(std::string name, Component* parent) : PortBase(name, parent) {}
     unsigned int getWidth() const override { return W; }
 
     template <typename T>

@@ -24,8 +24,8 @@ class Constant : public Component {
     static_assert(valueFitsInBitWidth(width, constantValue), "Value does not fit inside provided bit-width");
     NON_REGISTER_COMPONENT
 public:
-    const char* getBaseType() const override { return "Constant"; }
-    Constant(const char* name) : Component(name) {
+    std::string getBaseType() const override { return "Constant"; }
+    Constant(std::string name) : Component(name) {
         value << ([] { return constantValue; });
     }
 
