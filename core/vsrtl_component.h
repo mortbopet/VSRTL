@@ -43,6 +43,7 @@ private:                            \
     type* name = create_component<type>(this, #name)
 
 #define INPUTPORT(name, bitwidth) Port<bitwidth>& name = this->createInputPort<bitwidth>(#name)
+#define INPUTPORTS(name, bitwidth, n) std::vector<Port<bitwidth>*> name = this->createInputPorts<bitwidth>(#name, n)
 #define OUTPUTPORT(name, bitwidth) Port<bitwidth>& name = createOutputPort<bitwidth>(#name)
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
@@ -99,6 +100,19 @@ public:
         Port<bitwidth>* port = new Port<bitwidth>(name, this);
         m_inputports.push_back(std::unique_ptr<Port<bitwidth>>(port));
         return *port;
+    }
+
+    template <uint32_t bitwidth>
+    std::vector<Port<bitwidth>*> createInputPorts(const char* name, unsigned int n) {
+        std::vector<Port<bitwidth>*> ports;
+        for (int i = 0; i < n; i++) {
+            std::string i_name(name);
+            i_name += "_" + std::to_string(i);
+            Port<bitwidth>* port = new Port<bitwidth>(i_name.c_str(), this);
+            m_inputports.push_back(std::unique_ptr<Port<bitwidth>>(port));
+            ports.push_back(port);
+        }
+        return ports;
     }
 
     void propagateComponent() {
