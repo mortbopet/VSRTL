@@ -475,7 +475,7 @@ void ComponentGraphic::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 
 void ComponentGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
     if (baseRect().width() - event->pos().x() <= RESIZE_CURSOR_MARGIN &&
-        baseRect().height() - event->pos().y() <= RESIZE_CURSOR_MARGIN && hasSubcomponents() && m_isExpanded) {
+        baseRect().height() - event->pos().y() <= RESIZE_CURSOR_MARGIN) {
         this->setCursor(Qt::SizeFDiagCursor);
         m_inResizeDragZone = true;
     } else {
