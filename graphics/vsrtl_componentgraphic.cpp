@@ -268,14 +268,17 @@ void ComponentGraphic::setIOPortPositions() {
     } else {
         // Component is unexpanded - IO should be positionen in even positions
         int i = 0;
+        const qreal in_seg_y = m_baseRect.height() / m_inputPorts.size();
         for (auto& c : m_inputPorts) {
-            c->setPos(QPointF(m_baseRect.left() - c->boundingRect().width(),
-                              (m_baseRect.height() / (m_inputPorts.size() + 1)) * (1 + i)));
+            const qreal y = i * in_seg_y + in_seg_y / 2;
+            c->setPos(QPointF(m_baseRect.left() - c->boundingRect().width(), y));
             i++;
         }
         i = 0;
+        const qreal out_seg_y = m_baseRect.height() / m_outputPorts.size();
         for (auto& c : m_outputPorts) {
-            c->setPos(QPointF(m_baseRect.right(), (m_baseRect.height() / (m_outputPorts.size() + 1)) * (1 + i)));
+            const qreal y = i * out_seg_y + out_seg_y / 2;
+            c->setPos(QPointF(m_baseRect.right(), y));
             i++;
         }
     }
@@ -327,12 +330,6 @@ void ComponentGraphic::calculateBaseRect(GeometryChangeFlag flag) {
     const auto& largestPortVector = m_inputPorts.size() > m_outputPorts.size() ? m_inputPorts : m_outputPorts;
     for (const auto& port : largestPortVector) {
         m_baseRect.adjust(0, 0, 0, port->boundingRect().height());
-    }
-
-    // Add spacing between ports if a component has multiple ports
-    if (largestPortVector.size() > 1) {
-        m_baseRect.adjust(0, 0, 0,
-                          (largestPortVector.first()->boundingRect().height() / 2) * (largestPortVector.size() - 1));
     }
 
     // ------------------ Post Base rect ------------------------
