@@ -19,6 +19,7 @@
 namespace vsrtl {
 
 static constexpr qreal c_resizeMargin = 6;
+static constexpr qreal c_collapsedSideMargin = 15;
 
 QMap<std::string, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
 
@@ -46,7 +47,6 @@ void ComponentGraphic::initialize() {
         QObject::connect(m_expandButton, &QToolButton::toggled, [this](bool expanded) { setExpanded(expanded); });
         m_expandButtonProxy = scene()->addWidget(m_expandButton);
         m_expandButtonProxy->setParentItem(this);
-        m_expandButtonProxy->setPos(QPointF(BUTTON_INDENT, BUTTON_INDENT));
 
         createSubcomponents();
         orderSubcomponents();
@@ -203,6 +203,17 @@ void ComponentGraphic::updateGeometry(GeometryChangeFlag flag) {
 
     updateDrawShape();
 
+    if (hasSubcomponents()) {
+        if (m_isExpanded) {
+            m_expandButtonProxy->setPos(QPointF(0, 0));
+        } else {
+            // Center
+            const qreal x = m_baseRect.width() / 2 - m_expandButton->width() / 2;
+            const qreal y = m_baseRect.height() / 2 - m_expandButton->height() / 2;
+            m_expandButtonProxy->setPos(QPointF(x, y));
+        }
+    }
+
     // If we have a parent, it should now update its geometry based on new size of this
     if (parentItem()) {
         getParent()->updateGeometry(flag & Expand ? ChildJustExpanded : ChildJustCollapsed);
@@ -328,6 +339,9 @@ void ComponentGraphic::calculateBaseRect(GeometryChangeFlag flag) {
 
         // expand baseRect to fix subcomponent rect - this is the smallest possible base rect size, used for
         m_baseRect.adjust(0, 0, dx < 0 ? -dx : 0, dy < 0 ? -dy : 0);
+    } else if (hasSubcomponents()) {
+        // Expand rect to have padding between expand button and edges
+        m_baseRect.adjust(0, 0, c_collapsedSideMargin, c_collapsedSideMargin);
     }
 
     // Adjust for Ports
