@@ -29,16 +29,11 @@ class Component;
 
 #define SUBCOMPONENT(name, type, ...) \
 private:                              \
-    type<__VA_ARGS__>* name = create_component<type<__VA_ARGS__>>(this, #name)
+    type* name = create_component<type>(this, #name, ##__VA_ARGS__)
 
-// Non-templated subcomponent construction macro
-#define SUBCOMPONENT_NT(name, type) \
-private:                            \
-    type* name = create_component<type>(this, #name)
-
-#define INPUTPORT(name, bitwidth) Port<bitwidth>& name = this->createInputPort<bitwidth>(#name)
-#define INPUTPORTS(name, bitwidth, n) std::vector<Port<bitwidth>*> name = this->createInputPorts<bitwidth>(#name, n)
-#define OUTPUTPORT(name, bitwidth) Port<bitwidth>& name = createOutputPort<bitwidth>(#name)
+#define INPUTPORT(name) Port& name = this->createInputPort(#name)
+#define INPUTPORTS(name) std::vector<Port*> name
+#define OUTPUTPORT(name) Port& name = createOutputPort(#name)
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
 
@@ -82,27 +77,24 @@ public:
         m_subcomponents.push_back(std::unique_ptr<Component>(subcomponent));
     }
 
-    template <uint32_t bitwidth>
-    Port<bitwidth>& createOutputPort(std::string name) {
-        auto port = new Port<bitwidth>(name, this);
-        m_outputports.push_back(std::unique_ptr<Port<bitwidth>>(port));
+    Port& createOutputPort(std::string name) {
+        auto port = new Port(name, this);
+        m_outputports.push_back(std::unique_ptr<Port>(port));
         return *port;
     }
 
-    template <uint32_t bitwidth>
-    Port<bitwidth>& createInputPort(std::string name) {
-        Port<bitwidth>* port = new Port<bitwidth>(name, this);
-        m_inputports.push_back(std::unique_ptr<Port<bitwidth>>(port));
+    Port& createInputPort(std::string name) {
+        Port* port = new Port(name, this);
+        m_inputports.push_back(std::unique_ptr<Port>(port));
         return *port;
     }
 
-    template <uint32_t bitwidth>
-    std::vector<Port<bitwidth>*> createInputPorts(std::string name, unsigned int n) {
-        std::vector<Port<bitwidth>*> ports;
+    std::vector<Port*> createInputPorts(std::string name, unsigned int n) {
+        std::vector<Port*> ports;
         for (int i = 0; i < n; i++) {
             std::string i_name = name + "_" + std::to_string(i);
-            Port<bitwidth>* port = new Port<bitwidth>(i_name.c_str(), this);
-            m_inputports.push_back(std::unique_ptr<Port<bitwidth>>(port));
+            Port* port = new Port(i_name.c_str(), this);
+            m_inputports.push_back(std::unique_ptr<Port>(port));
             ports.push_back(port);
         }
         return ports;
@@ -167,6 +159,19 @@ public:
             if (!ip->isConnected()) {
                 throw std::runtime_error("A component has unconnected inputs");
             }
+            if (ip->getWidth() == 0) {
+                throw std::runtime_error(
+                    "A port did not have its width set. Parent component of port should set port width in its "
+                    "constructor");
+            }
+        }
+
+        for (const auto& op : m_outputports) {
+            if (op->getWidth() == 0) {
+                throw std::runtime_error(
+                    "A port did not have its width set. Parent component of port should set port width in its "
+                    "constructor");
+            }
         }
     }
     void initialize() {
@@ -223,8 +228,8 @@ protected:
 
 // Component object generator that registers objects in parent upon creation
 template <typename T, typename... Args>
-T* create_component(Component* parent, std::string name, Args&&... args) {
-    auto ptr = new T(name, std::forward<Args>(args)...);
+T* create_component(Component* parent, std::string name, Args... args) {
+    T* ptr = new T(name, args...);
     if (parent) {
         parent->addSubcomponent(static_cast<Component*>(ptr));
     }

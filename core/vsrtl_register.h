@@ -19,12 +19,14 @@ public:
     bool isRegister() const override { return true; }
 };
 
-template <unsigned int width>
 class Register : public RegisterBase {
 public:
     const char* getBaseType() const override { return "Register"; }
-    Register(std::string name) : RegisterBase(name) {
+    Register(std::string name, unsigned int width) : RegisterBase(name), m_width(width) {
         out << ([=] { return m_savedValue; });
+
+        in.setWidth(width);
+        out.setWidth(width);
     }
 
     void reset() override final {
@@ -34,11 +36,13 @@ public:
     void save() override final { m_savedValue = in.template value<uint32_t>(); }
     void clock() override final { out.propagate(); }
 
-    INPUTPORT(in, width);
-    OUTPUTPORT(out, width);
+    INPUTPORT(in);
+    OUTPUTPORT(out);
 
 private:
     VSRTL_VT_U m_savedValue = 0;
+
+    unsigned int m_width;
 };
 
 }  // namespace vsrtl

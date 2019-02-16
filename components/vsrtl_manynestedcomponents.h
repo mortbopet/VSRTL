@@ -6,20 +6,22 @@
 namespace vsrtl {
 
 class DoubleNestedExponenter : public Component {
-    
 public:
     DoubleNestedExponenter(std::string name) : Component(name) {
+        in.setWidth(32);
+        out.setWidth(32);
+
         in >> exp1->expIn;
         exp1->out >> exp2->expIn;
 
         exp2->out >> out;
     }
-    INPUTPORT(in, 32);
-    OUTPUTPORT(out, 32);
+    INPUTPORT(in);
+    OUTPUTPORT(out);
 
 private:
-    SUBCOMPONENT_NT(exp1, Exponenter);
-    SUBCOMPONENT_NT(exp2, Exponenter);
+    SUBCOMPONENT(exp1, Exponenter);
+    SUBCOMPONENT(exp2, Exponenter);
 };
 
 class ManyNestedComponents : public Design {
@@ -32,8 +34,8 @@ public:
     }
 
     // Create objects
-    SUBCOMPONENT_NT(exp1, DoubleNestedExponenter);
-    SUBCOMPONENT_NT(exp2, DoubleNestedExponenter);
+    SUBCOMPONENT(exp1, DoubleNestedExponenter);
+    SUBCOMPONENT(exp2, DoubleNestedExponenter);
 };
 }  // namespace vsrtl
 

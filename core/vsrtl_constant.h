@@ -19,17 +19,22 @@ constexpr bool valueFitsInBitWidth(uint32_t width, int value) {
  * @param width Must be able to contain the signed bitfield of value
  *
  */
-template <unsigned int width, int constantValue>
 class Constant : public Component {
-    static_assert(valueFitsInBitWidth(width, constantValue), "Value does not fit inside provided bit-width");
-
 public:
     const char* getBaseType() const override { return "Constant"; }
-    Constant(std::string name) : Component(name) {
-        value << ([] { return constantValue; });
+    Constant(std::string name, VSRTL_VT_U value, unsigned int width) : Component(name) {
+        if (!valueFitsInBitWidth(width, value)) {
+            throw std::runtime_error("Value does not fit inside provided bit-width");
+        }
+
+        out << ([value] { return value; });
+        out.setWidth(width);
     }
 
-    OUTPUTPORT(value, width);
+    OUTPUTPORT(out);
+
+private:
+    unsigned int m_width;
 };
 
 }  // namespace vsrtl

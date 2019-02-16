@@ -7,24 +7,26 @@ namespace vsrtl {
 
 enum class ShiftType { sl, sra, srl };
 
-template <unsigned int width, unsigned int n, ShiftType t>
 class Shift : public Component {
-    
 public:
-    Shift(std::string name = "") : Component(name) {
+    Shift(std::string name, ShiftType t, unsigned int shamt, unsigned int width) : Component(name) {
+        out.setWidth(width);
+        in.setWidth(width);
         out << [=] {
-            if constexpr (t == ShiftType::sl) {
-                return in.template value<VSRTL_VT_U>() << n;
-            } else if constexpr (t == ShiftType::sra) {
-                return in.template value<VSRTL_VT_S>() >> n;
-            } else if constexpr (t == ShiftType::srl) {
-                return in.template value<VSRTL_VT_U>() >> n;
+            if (t == ShiftType::sl) {
+                return in.template value<VSRTL_VT_U>() << shamt;
+            } else if (t == ShiftType::sra) {
+                return static_cast<VSRTL_VT_U>(in.template value<VSRTL_VT_S>() >> shamt);
+            } else if (t == ShiftType::srl) {
+                return in.template value<VSRTL_VT_U>() >> shamt;
+            } else {
+                throw std::runtime_error("Unknown shift type");
             }
         };
     }
 
-    OUTPUTPORT(out, width);
-    INPUTPORT(in, width);
+    OUTPUTPORT(out);
+    INPUTPORT(in);
 };
 
 }  // namespace vsrtl

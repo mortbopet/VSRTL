@@ -6,16 +6,17 @@
 namespace vsrtl {
 
 #define CMP_COMPONENT(classname, cmptype, op)                                                      \
-    template <unsigned int width>                                                                  \
     class classname : public Component {                                                           \
-                                                                             \
     public:                                                                                        \
-        classname(std::string name = "") : Component(name) {                                       \
+        classname(std::string name, unsigned int width) : Component(name) {                        \
+            out.setWidth(1);                                                                       \
+            op1.setWidth(width);                                                                   \
+            op2.setWidth(width);                                                                   \
             out << [=] { return op1.template value<cmptype>() op op2.template value<cmptype>(); }; \
         }                                                                                          \
-        OUTPUTPORT(out, 1);                                                                        \
-        INPUTPORT(op1, width);                                                                     \
-        INPUTPORT(op2, width);                                                                     \
+        OUTPUTPORT(out);                                                                           \
+        INPUTPORT(op1);                                                                            \
+        INPUTPORT(op2);                                                                            \
     };
 
 CMP_COMPONENT(Sge, VSRTL_VT_S, >=)

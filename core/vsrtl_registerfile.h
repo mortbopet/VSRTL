@@ -33,10 +33,10 @@ public:
         }
     }
 
-    INPUTPORT(instruction, REGISTERWIDTH);
-    INPUTPORT(writeRegister, REGISTERWIDTH);
-    INPUTPORT(writeEnable, REGISTERWIDTH);
-    INPUTPORT(writeData, REGISTERWIDTH);
+    INPUTPORT(instruction);
+    INPUTPORT(writeRegister);
+    INPUTPORT(writeEnable);
+    INPUTPORT(writeData);
 
     void reset() {
         for (auto& reg : m_reg) {

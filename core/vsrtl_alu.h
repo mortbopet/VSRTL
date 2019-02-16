@@ -30,21 +30,25 @@ static constexpr unsigned int ALUctrlWidth() {
     return ceillog2(ALU_OPCODE::COUNT);
 }
 
-template <uint32_t width>
 class ALU : public Component {
 public:
     const char* getBaseType() const override { return "ALU"; }
     // clang-format off
-    ALU(std::string name) : Component(name){
+    ALU(std::string name, unsigned int width) : Component(name), m_width(width){
         out << ([=] { return calculateOutput(); });
+
+        op1.setWidth(m_width);
+        op2.setWidth(m_width);
+        ctrl.setWidth(ALUctrlWidth());
+        out.setWidth(m_width);
     }
     void propagate() { calculateOutput(); }
 
-    INPUTPORT(op1, width);
-    INPUTPORT(op2, width);
-    INPUTPORT(ctrl, ALUctrlWidth());
+    INPUTPORT(op1);
+    INPUTPORT(op2);
+    INPUTPORT(ctrl);
 
-    OUTPUTPORT(out, width);
+    OUTPUTPORT(out);
 
 private:
     VSRTL_VT_U calculateOutput() {
@@ -84,5 +88,7 @@ private:
 
         }
     }
+
+    unsigned int m_width;
 };
 }  // namespace vsrtl

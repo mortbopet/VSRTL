@@ -5,22 +5,26 @@
 
 namespace vsrtl {
 
-template <uint32_t width, uint32_t inputCount>
 class LogicGate : public Component {
-    
-    static_assert(inputCount > 0, "Input count must be greater than 0");
-
 public:
-    LogicGate(std::string name) : Component(name) {}
-    OUTPUTPORT(out, width);
-    INPUTPORTS(in, width, inputCount);
+    LogicGate(std::string name, unsigned int nInputs, unsigned int width) : Component(name), m_width(width) {
+        in = this->createInputPorts("in", nInputs);
+        for (const auto& ip : in) {
+            ip->setWidth(width);
+        }
+        out.setWidth(1);
+    }
+    OUTPUTPORT(out);
+    INPUTPORTS(in);
+
+protected:
+    unsigned int m_width;
 };
 
-template <unsigned int inputCount, unsigned int width>
-class And : public LogicGate<inputCount, width> {
+class And : public LogicGate {
 public:
     const char* getBaseType() const override { return "And"; }
-    And(std::string name = "&") : LogicGate<inputCount, width>(name) {
+    And(std::string name, unsigned int nInputs, unsigned int width) : LogicGate(name, nInputs, width) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
             for (int i = 1; i < this->in.size(); i++) {
@@ -31,11 +35,10 @@ public:
     }
 };
 
-template <unsigned int inputCount, unsigned int width>
-class Or : public LogicGate<inputCount, width> {
+class Or : public LogicGate {
 public:
     const char* getBaseType() const override { return "Or"; }
-    Or(std::string name = "|") : LogicGate<inputCount, width>(name) {
+    Or(std::string name, unsigned int nInputs, unsigned int width) : LogicGate(name, nInputs, width) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
             for (int i = 1; i < this->in.size(); i++) {
@@ -46,11 +49,10 @@ public:
     }
 };
 
-template <unsigned int inputCount, unsigned int width>
-class Xor : public LogicGate<inputCount, width> {
+class Xor : public LogicGate {
 public:
     const char* getBaseType() const override { return "Xor"; }
-    Xor(std::string name = "^") : LogicGate<inputCount, width>(name) {
+    Xor(std::string name, unsigned int nInputs, unsigned int width) : LogicGate(name, nInputs, width) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
             for (int i = 1; i < this->in.size(); i++) {
@@ -61,11 +63,10 @@ public:
     }
 };
 
-template <unsigned int width>
-class Not : public LogicGate<1, width> {
+class Not : public LogicGate {
 public:
     const char* getBaseType() const override { return "Not"; }
-    Not(std::string name = "&") : LogicGate<1, width>(name) {
+    Not(std::string name, unsigned int width) : LogicGate(name, 1, width) {
         this->out << [=] { return ~this->in[0]->template value<VSRTL_VT_U>(); };
     }
 };

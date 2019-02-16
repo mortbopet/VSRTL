@@ -41,7 +41,12 @@ public:
             m_propagationState == PropagationState::constant ? m_propagationState : PropagationState::unpropagated;
     }
 
-    virtual unsigned int getWidth() const = 0;
+    unsigned int getWidth() const { return m_width; }
+    void setWidth(unsigned int width) {
+        assert(width <= sizeof(VSRTL_VT_U) * CHAR_BIT &&
+               "Port value can not be represented by the current VSRTL base value type");
+        m_width = width;
+    }
 
     const std::vector<PortBase*>& getConnectsFromThis() const { return m_connectsFromThis; }
     PortBase* getConnectsToThis() const { return m_portConnectsTo; }
@@ -50,6 +55,9 @@ public:
     void operator>>(PortBase& toThis) {
         m_connectsFromThis.push_back(&toThis);
         assert(toThis.m_portConnectsTo == nullptr && "Port input already connected");
+        if (!(m_width != toThis.getWidth())) {
+            std::runtime_error("Port width mismatch");
+        }
         toThis.m_portConnectsTo = this;
     }
 
@@ -80,25 +88,21 @@ protected:
     std::function<VSRTL_VT_U()> m_propagationFunction;
     PropagationState m_propagationState = PropagationState::unpropagated;
     Component* m_parent;
+    unsigned int m_width = 0;
 
 private:
     std::string m_name;
 };
 
-template <unsigned int W>
 class Port : public PortBase {
-    static_assert(W <= sizeof(VSRTL_VT_U) * CHAR_BIT,
-                  "Port size cannot be represented using the current internal datatype for ports.");
-
 public:
     Port(std::string name, Component* parent) : PortBase(name, parent) {}
-    unsigned int getWidth() const override { return W; }
 
     template <typename T>
     T value() {
-        return static_cast<T>(signextend<T, W>(m_value));
+        return static_cast<T>(signextend<T>(m_value, m_width));
     }
-    explicit operator VSRTL_VT_S() const override { return signextend<int, W>(m_value); }
+    explicit operator VSRTL_VT_S() const override { return signextend<int>(m_value, m_width); }
 
     void operator<<(std::function<VSRTL_VT_U()>&& propagationFunction) { m_propagationFunction = propagationFunction; }
     void propagate() override {

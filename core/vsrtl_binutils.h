@@ -8,6 +8,7 @@
 #include <functional>
 #include <stdexcept>
 #include <vector>
+#include "limits.h"
 
 namespace vsrtl {
 
@@ -21,6 +22,12 @@ inline T signextend(const T x) {
         T x : B;
     } s;
     return s.x = x;
+}
+
+template <typename T>
+inline T signextend(const T x, unsigned B) {
+    int const m = CHAR_BIT * sizeof(T) - B;
+    return (x << m) >> m;
 }
 
 constexpr uint32_t generateBitmask(int n) {
