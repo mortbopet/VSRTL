@@ -10,7 +10,7 @@
 namespace vsrtl {
 
 class Exponenter : public Component {
-    NON_REGISTER_COMPONENT
+    
 public:
     INPUTPORT(expIn, 32);
     OUTPUTPORT(out, 32);

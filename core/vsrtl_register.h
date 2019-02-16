@@ -10,12 +10,13 @@
 namespace vsrtl {
 
 class RegisterBase : public Component {
-    REGISTER_COMPONENT
 public:
     RegisterBase(std::string name) : Component(name) {}
     virtual void reset() = 0;
     virtual void clock() = 0;
     virtual void save() = 0;
+
+    bool isRegister() const override { return true; }
 };
 
 template <unsigned int width>

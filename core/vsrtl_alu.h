@@ -32,8 +32,6 @@ static constexpr unsigned int ALUctrlWidth() {
 
 template <uint32_t width>
 class ALU : public Component {
-    NON_REGISTER_COMPONENT
-
 public:
     const char* getBaseType() const override { return "ALU"; }
     // clang-format off

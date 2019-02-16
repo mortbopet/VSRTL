@@ -8,7 +8,7 @@ namespace vsrtl {
 #define CMP_COMPONENT(classname, cmptype, op)                                                      \
     template <unsigned int width>                                                                  \
     class classname : public Component {                                                           \
-        NON_REGISTER_COMPONENT                                                                     \
+                                                                             \
     public:                                                                                        \
         classname(std::string name = "") : Component(name) {                                       \
             out << [=] { return op1.template value<cmptype>() op op2.template value<cmptype>(); }; \

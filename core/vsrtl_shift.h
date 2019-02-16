@@ -9,7 +9,7 @@ enum class ShiftType { sl, sra, srl };
 
 template <unsigned int width, unsigned int n, ShiftType t>
 class Shift : public Component {
-    NON_REGISTER_COMPONENT
+    
 public:
     Shift(std::string name = "") : Component(name) {
         out << [=] {

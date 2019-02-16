@@ -19,12 +19,6 @@
 
 namespace vsrtl {
 
-#define NON_REGISTER_COMPONENT \
-    bool isRegister() const override { return false; }
-
-#define REGISTER_COMPONENT \
-    bool isRegister() const override { return true; }
-
 /** @class Component
  *
  *  @note: Signals:
@@ -62,7 +56,7 @@ public:
      */
     virtual const char* getBaseType() const { return "Component"; }
 
-    virtual bool isRegister() const = 0;
+    virtual bool isRegister() const { return false; }
     virtual void resetPropagation() {
         if (m_propagationState == PropagationState::unpropagated) {
             // Constants (components with no inputs) are always propagated

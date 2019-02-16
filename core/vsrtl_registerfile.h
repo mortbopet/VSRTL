@@ -23,7 +23,6 @@ namespace vsrtl {
  */
 template <int nOperands>
 class RegisterFile : public Component {
-    REGISTER_COMPONENT
 public:
     static_assert(nOperands > 0 && nOperands <= REGISTERCOUNT, "Register file invariant");
 

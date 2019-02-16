@@ -13,7 +13,6 @@ namespace vsrtl {
 
 template <unsigned int inputCount, unsigned int width>
 class Multiplexer : public Component {
-    NON_REGISTER_COMPONENT
 public:
     const char* getBaseType() const override { return "Multiplexer"; }
     Multiplexer(std::string name) : Component(name) {

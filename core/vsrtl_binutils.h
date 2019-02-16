@@ -107,4 +107,4 @@ bitFieldDecoder generateBitFieldDecoder(std::array<R_UINT, size> bitFields) {
 
     return wordParser;
 }
-}
+}  // namespace vsrtl

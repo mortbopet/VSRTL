@@ -19,7 +19,6 @@ namespace vsrtl {
  */
 
 class Design : public Component {
-    NON_REGISTER_COMPONENT
 public:
     Design(std::string name) : Component(name) {}
 
