@@ -1,4 +1,0 @@
-#ifndef RISCV_DEFINES_H
-#define RISCV_DEFINES_H
-
-#endif // RISCV_DEFINES_H
