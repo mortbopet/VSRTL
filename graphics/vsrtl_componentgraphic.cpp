@@ -2,6 +2,7 @@
 
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
+#include "vsrtl_label.h"
 #include "vsrtl_portgraphic.h"
 
 #include <qmath.h>
@@ -17,9 +18,12 @@
 
 namespace vsrtl {
 
+static constexpr qreal c_resizeMargin = 6;
+
 QMap<std::string, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
 
-ComponentGraphic::ComponentGraphic(Component& c) : m_component(c) {}
+ComponentGraphic::ComponentGraphic(Component& c)
+    : m_component(c), m_minRect(ComponentGraphic::getComponentMinRect(c.getBaseType())) {}
 
 bool ComponentGraphic::hasSubcomponents() const {
     return m_component.getSubComponents().size() != 0;
@@ -31,8 +35,7 @@ void ComponentGraphic::initialize() {
     setFlags(ItemIsSelectable | ItemIsMovable | ItemSendsScenePositionChanges);
     setAcceptHoverEvents(true);
 
-    m_displayText = QString::fromStdString(m_component.getName());
-    m_font = QFont("Monospace", 12);
+    m_label = new Label(QString::fromStdString(m_component.getName()), this);
 
     initializePorts();
 
@@ -182,6 +185,10 @@ void ComponentGraphic::updateDrawShape() {
     m_shape = ComponentGraphic::getComponentShape(m_component.getBaseType(), t);
 }
 
+void ComponentGraphic::setLabelPosition() {
+    m_label->setPos(m_baseRect.width() / 2, 5);
+}
+
 void ComponentGraphic::updateGeometry(GeometryChangeFlag flag) {
     // Rect will change when expanding, so notify canvas that the rect of the current component will be dirty
     prepareGeometryChange();
@@ -192,6 +199,7 @@ void ComponentGraphic::updateGeometry(GeometryChangeFlag flag) {
     calculateBoundingRect();
     calculateTextPosition();
     setIOPortPositions();
+    setLabelPosition();
 
     updateDrawShape();
 
@@ -303,12 +311,8 @@ void ComponentGraphic::calculateBaseRect(GeometryChangeFlag flag) {
         return;
     }
 
-    m_baseRect = QRectF(0, 0, SIDE_MARGIN * 2, 0);
-
-    // Calculate text width
-    QFontMetrics fm(m_font);
-    m_textRect = fm.boundingRect(m_displayText);
-    m_baseRect.adjust(0, 0, m_textRect.width(), m_textRect.height());
+    // Recalculate base rect
+    m_baseRect = QRectF();
 
     // Include expand button in baserect sizing
     if (hasSubcomponents()) {
@@ -330,6 +334,14 @@ void ComponentGraphic::calculateBaseRect(GeometryChangeFlag flag) {
     const auto& largestPortVector = m_inputPorts.size() > m_outputPorts.size() ? m_inputPorts : m_outputPorts;
     for (const auto& port : largestPortVector) {
         m_baseRect.adjust(0, 0, 0, port->boundingRect().height());
+    }
+
+    // Snap to minimum size of rect
+    if (m_baseRect.height() < m_minRect.height()) {
+        m_baseRect.setHeight(m_minRect.height());
+    }
+    if (m_baseRect.width() < m_minRect.width()) {
+        m_baseRect.setWidth(m_minRect.width());
     }
 
     // ------------------ Post Base rect ------------------------
@@ -426,12 +438,14 @@ bool ComponentGraphic::snapToSubcomponentRect(QRectF& r) const {
     snap_r = false;
     snap_b = false;
 
-    if (r.right() < m_subcomponentRect.right()) {
-        r.setRight(m_subcomponentRect.right());
+    const auto& cmpRect = hasSubcomponents() ? m_subcomponentRect : m_minRect;
+
+    if (r.right() < cmpRect.right()) {
+        r.setRight(cmpRect.right());
         snap_r = true;
     }
-    if (r.bottom() < m_subcomponentRect.bottom()) {
-        r.setBottom(m_subcomponentRect.bottom());
+    if (r.bottom() < cmpRect.bottom()) {
+        r.setBottom(cmpRect.bottom());
         snap_b = true;
     }
 
@@ -474,8 +488,8 @@ void ComponentGraphic::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 void ComponentGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
-    if (baseRect().width() - event->pos().x() <= RESIZE_CURSOR_MARGIN &&
-        baseRect().height() - event->pos().y() <= RESIZE_CURSOR_MARGIN) {
+    if (baseRect().width() - event->pos().x() <= c_resizeMargin &&
+        baseRect().height() - event->pos().y() <= c_resizeMargin) {
         this->setCursor(Qt::SizeFDiagCursor);
         m_inResizeDragZone = true;
     } else {

@@ -12,6 +12,7 @@
 namespace vsrtl {
 
 class PortGraphic;
+class Label;
 
 class ComponentGraphic : public GraphicsBase {
 public:
@@ -54,6 +55,7 @@ private:
     void calculateTextPosition();
     void createSubcomponents();
     void setIOPortPositions();
+    void setLabelPosition();
     void updateGeometry(GeometryChangeFlag flag);
     void calculateSubcomponentRect();
     void calculateBoundingRect();
@@ -74,7 +76,10 @@ private:
     QMap<PortBase*, PortGraphic*> m_inputPorts;
     QMap<PortBase*, PortGraphic*> m_outputPorts;
 
+    Label* m_label;
+
     QRectF m_savedBaseRect = QRectF();
+    const QRectF m_minRect;
     QRectF m_baseRect;
     QRectF m_boundingRect;
     QPainterPath m_shape;
@@ -100,19 +105,31 @@ public:
      * We avoid using QPainter::scale, given that this also scales the pen, yielding invalid drawings.
      */
 
-    using Shape = std::function<QPainterPath(QTransform)>;
+    struct Shape {
+        std::function<QPainterPath(QTransform)> shapeFunc;
+        QRectF min_rect;
+    };
 
     static void setComponentShape(std::string component, const Shape& shape) {
         Q_ASSERT(!s_componentShapes.contains(component));
+        Q_ASSERT(shape.min_rect.topLeft() == QPointF(0, 0));
         s_componentShapes[component] = shape;
     }
 
-    QPainterPath getComponentShape(std::string component, QTransform transform) {
+    static QPainterPath getComponentShape(std::string component, QTransform transform) {
         // If no shape has been registered for the base component type, revert to displaying as a "Component"
         if (!s_componentShapes.contains(component)) {
-            return s_componentShapes["Component"](transform);
+            return s_componentShapes["Component"].shapeFunc(transform);
         }
-        return s_componentShapes[component](transform);
+        return s_componentShapes[component].shapeFunc(transform);
+    }
+
+    static QRectF getComponentMinRect(std::string component) {
+        // If no shape has been registered for the base component type, revert to displaying as a "Component"
+        if (!s_componentShapes.contains(component)) {
+            return s_componentShapes["Component"].min_rect;
+        }
+        return s_componentShapes[component].min_rect;
     }
 
     static QMap<std::string, Shape> s_componentShapes;
