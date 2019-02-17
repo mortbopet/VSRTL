@@ -5,6 +5,34 @@
 
 namespace vsrtl {
 
+// Round up v to nearest multiple of m
+inline int roundUp(int v, int m) {
+    int remainder = v % m;
+    if (remainder == 0)
+        return v;
+    return v + m - remainder;
+}
+
+inline void roundUp(QPointF& p, int m) {
+    p.setX(roundUp(p.x(), m));
+    p.setY(roundUp(p.y(), m));
+}
+
+inline void roundUp(QRectF& r, int m) {
+    r.setWidth(roundUp(r.width(), m));
+    r.setHeight(roundUp(r.height(), m));
+}
+
+// Round v to nearest multiple of m (tie: round up)
+inline int roundNear(int v, int m) {
+    return ((v + m / 2) / m) * m;
+}
+
+inline void roundNear(QPointF& p, int m) {
+    p.setX(roundNear(p.x(), m));
+    p.setY(roundNear(p.y(), m));
+}
+
 template <typename RectType>
 RectType boundingRectOfRects(const RectType& r1, const RectType& r2) {
     qreal top, bottom, right, left;
@@ -22,6 +50,6 @@ RectType normalizeRect(const RectType& r1) {
     r.setTopLeft(QPointF(0, 0));
     return r;
 }
-}
+}  // namespace vsrtl
 
 #endif  // VSRTL_GRAPHICS_UTIL_H

@@ -11,14 +11,12 @@ namespace vsrtl {
  * Control signal for the multiplexer is always ins[0].
  */
 
-#define MUX_SELECT select
-
 class Multiplexer : public Component {
 public:
     std::type_index getTypeId() const override { return std::type_index(typeid(Multiplexer)); }
     Multiplexer(std::string name, unsigned int nInputs, unsigned int width)
         : Component(name), m_nInputs(nInputs), m_width(width) {
-        MUX_SELECT.setWidth(ceillog2(m_nInputs));
+        select.setWidth(ceillog2(m_nInputs));
         out.setWidth(width);
         in = createInputPorts("in", m_nInputs);
         for (const auto& i : in) {
@@ -33,7 +31,7 @@ public:
     }
 
     OUTPUTPORT(out);
-    INPUTPORT(MUX_SELECT);
+    INPUTPORT(select);
     INPUTPORTS(in);
 
 private:

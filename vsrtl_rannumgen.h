@@ -43,7 +43,7 @@ public:
     static constexpr int m_cVal = 4;
 
     // Create objects
-    SUBCOMPONENT(sh1, Shift, ShiftType::sl, 13, 32);
+    SUBCOMPONENT(sh1, Shift, ShiftType::sl, 13, 31);
     SUBCOMPONENT(sh2, Shift, ShiftType::srl, 17, 32);
     SUBCOMPONENT(sh3, Shift, ShiftType::sl, 5, 32);
     SUBCOMPONENT(xOr1, Xor, 2, 32);

@@ -5,6 +5,8 @@ namespace vsrtl {
 
 enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99 };
 
+#define GRID_SIZE 15
+
 #define TOP_MARGIN 10
 #define BOT_MARGIN TOP_MARGIN
 #define SIDE_MARGIN TOP_MARGIN

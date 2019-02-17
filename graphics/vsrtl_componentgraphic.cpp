@@ -244,7 +244,13 @@ QRectF ComponentGraphic::sceneBaseRect() const {
 
 QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
     // @todo implement snapping inside parent component
-    if (change == ItemPositionChange && scene() && parentItem() && false) {
+    if (change == ItemPositionChange && scene()) {
+        // Snap to grid
+        QPointF newPos = value.toPointF();
+        qreal x = round(newPos.x() / GRID_SIZE) * GRID_SIZE;
+        qreal y = round(newPos.y() / GRID_SIZE) * GRID_SIZE;
+        return QPointF(x, y);
+        /*
         // Restrict position changes to inside parent item
         const auto& parentRect = getParent()->baseRect();
         const auto& thisRect = boundingRect();
@@ -256,6 +262,7 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
             newPos.setY(qMin(parentRect.bottom() - thisRect.height(), qMax(newPos.y(), parentRect.top())));
             return newPos - offset;
         }
+        */
     }
 
     // Output port wires are implicitely redrawn given that the wire is a child of $this. We need to manually signal the
@@ -357,6 +364,10 @@ void ComponentGraphic::calculateBaseRect(GeometryChangeFlag flag) {
     if (m_baseRect.width() < m_minRect.width()) {
         m_baseRect.setWidth(m_minRect.width());
     }
+
+    // Round up to grid size
+    m_baseRect.setHeight(roundUp(m_baseRect.height(), GRID_SIZE));
+    m_baseRect.setWidth(roundUp(m_baseRect.width(), GRID_SIZE));
 
     // ------------------ Post Base rect ------------------------
     m_expandButtonPos = QPointF(BUTTON_INDENT, BUTTON_INDENT);
@@ -483,6 +494,7 @@ void ComponentGraphic::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     if (m_resizeDragging) {
         QPointF pos = event->pos();
+        roundNear(pos, GRID_SIZE);  // snap to grid
         auto newRect = m_baseRect;
         newRect.setBottomRight(pos);
         if (snapToSubcomponentRect(newRect)) {

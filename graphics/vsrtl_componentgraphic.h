@@ -7,6 +7,8 @@
 #include <map>
 
 #include "vsrtl_component.h"
+#include "vsrtl_graphics_defines.h"
+#include "vsrtl_graphics_util.h"
 #include "vsrtl_graphicsbase.h"
 
 namespace vsrtl {
@@ -110,9 +112,12 @@ public:
         QRectF min_rect;
     };
 
-    static void setComponentShape(std::type_index component, const Shape& shape) {
+    static void setComponentShape(std::type_index component, Shape shape) {
         Q_ASSERT(!s_componentShapes.contains(component));
         Q_ASSERT(shape.min_rect.topLeft() == QPointF(0, 0));
+
+        // Ensure that minimum rectangle is snapping to the grid
+        roundUp(shape.min_rect, GRID_SIZE);
         s_componentShapes[component] = shape;
     }
 
