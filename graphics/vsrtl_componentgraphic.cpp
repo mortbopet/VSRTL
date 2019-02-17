@@ -3,6 +3,7 @@
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_label.h"
+#include "vsrtl_multiplexergraphic.h"
 #include "vsrtl_portgraphic.h"
 
 #include <qmath.h>
@@ -74,7 +75,12 @@ void ComponentGraphic::initializePorts() {
  */
 void ComponentGraphic::createSubcomponents() {
     for (auto& c : m_component.getSubComponents()) {
-        auto nc = new ComponentGraphic(*c);
+        ComponentGraphic* nc;
+        if (dynamic_cast<Multiplexer*>(c.get())) {
+            nc = new MultiplexerGraphic(*static_cast<Multiplexer*>(c.get()));
+        } else {
+            nc = new ComponentGraphic(*c);
+        }
         scene()->addItem(nc);
         nc->initialize();
         nc->setParentItem(this);
@@ -196,9 +202,9 @@ void ComponentGraphic::updateGeometry(GeometryChangeFlag flag) {
     prepareGeometryChange();
 
     // Order matters!
-    calculateSubcomponentRect();
+    updateSubcomponentRect();
     updateBaseRect(flag);
-    calculateBoundingRect();
+    updateBoundingRect();
     updateTextPosition();
     setIOPortPositions();
     setLabelPosition();
@@ -225,7 +231,7 @@ void ComponentGraphic::updateGeometry(GeometryChangeFlag flag) {
     update();
 }
 
-void ComponentGraphic::calculateSubcomponentRect() {
+void ComponentGraphic::updateSubcomponentRect() {
     if (m_isExpanded) {
         m_subcomponentRect = QRectF();
         for (const auto& c : m_subcomponents) {
@@ -325,7 +331,7 @@ void ComponentGraphic::updateBaseRect(GeometryChangeFlag flag) {
 
     if (flag == ChildJustExpanded) {
         if (!rectContainsAllSubcomponents(m_baseRect)) {
-            calculateSubcomponentRect();
+            updateSubcomponentRect();
             m_baseRect.setBottomRight(m_subcomponentRect.bottomRight());
         }
         return;
@@ -389,7 +395,7 @@ qreal largestPortWidth(const QMap<PortBase*, PortGraphic*>& ports) {
 }
 }  // namespace
 
-void ComponentGraphic::calculateBoundingRect() {
+void ComponentGraphic::updateBoundingRect() {
     m_boundingRect = m_baseRect;
     // Adjust for a potential shadow
     m_boundingRect.adjust(0, 0, SHADOW_OFFSET + SHADOW_WIDTH, SHADOW_OFFSET + SHADOW_WIDTH);
@@ -398,7 +404,7 @@ void ComponentGraphic::calculateBoundingRect() {
     m_boundingRect.adjust(-largestPortWidth(m_inputPorts), 0, largestPortWidth(m_outputPorts), 0);
 }
 
-void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
+void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
     QColor color = hasSubcomponents() ? QColor("#ecf0f1") : QColor(Qt::white);
     QColor fillColor = (option->state & QStyle::State_Selected) ? color.dark(150) : color;
     if (option->state & QStyle::State_MouseOver)
@@ -444,6 +450,8 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             m_expandButtonProxy->hide();
         }
     }
+
+    paintOverlay(painter, option, w);
 }
 
 bool ComponentGraphic::rectContainsAllSubcomponents(const QRectF& r) const {

@@ -27,8 +27,16 @@ public:
      * We do not want our bounding rectangle to be the shape of the object, since the IO pins of an object shouldnt be
      * factored into collisions - wherease shape() should be ONLY the object
      */
-    // QPainterPath shape() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
+
+    /**
+     * @brief paintOverlay
+     * May be implemented by derived classes.
+     * Called after ComponentGraphic::paint (painting of the basic shape/outline of the component), wherein derived
+     * class specific painting is painted on top
+     */
+    virtual void paintOverlay(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {}
+
     void initialize();
     void setShape(const QPainterPath& shape);
 
@@ -45,7 +53,6 @@ protected:
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
-private:
     enum GeometryChangeFlag {
         Resize = 1 << 0,
         Expand = 1 << 1,
