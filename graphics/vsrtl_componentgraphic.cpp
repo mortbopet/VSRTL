@@ -197,9 +197,9 @@ void ComponentGraphic::updateGeometry(GeometryChangeFlag flag) {
 
     // Order matters!
     calculateSubcomponentRect();
-    calculateBaseRect(flag);
+    updateBaseRect(flag);
     calculateBoundingRect();
-    calculateTextPosition();
+    updateTextPosition();
     setIOPortPositions();
     setLabelPosition();
 
@@ -278,7 +278,7 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
     return QGraphicsItem::itemChange(change, value);
 }
 
-void ComponentGraphic::calculateTextPosition() {
+void ComponentGraphic::updateTextPosition() {
     QPointF basePos(m_baseRect.width() / 2 - m_textRect.width() / 2, 0);
     if (m_isExpanded) {
         // Move text to top of component to make space for subcomponents
@@ -312,7 +312,7 @@ void ComponentGraphic::setIOPortPositions() {
     }
 }
 
-void ComponentGraphic::calculateBaseRect(GeometryChangeFlag flag) {
+void ComponentGraphic::updateBaseRect(GeometryChangeFlag flag) {
     if (flag == Resize) {
         // move operation has already resized base rect to a valid size
         return;

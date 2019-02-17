@@ -53,14 +53,14 @@ private:
         ChildJustExpanded = 1 << 3,
         ChildJustCollapsed = 1 << 4
     };
-    void calculateBaseRect(GeometryChangeFlag flag);
-    void calculateTextPosition();
+    void updateBaseRect(GeometryChangeFlag flag);
+    void updateTextPosition();
     void createSubcomponents();
     void setIOPortPositions();
     void setLabelPosition();
     void updateGeometry(GeometryChangeFlag flag);
-    void calculateSubcomponentRect();
-    void calculateBoundingRect();
+    void updateSubcomponentRect();
+    void updateBoundingRect();
     void getSubGraphicsItems(QGraphicsItemGroup& g);
     bool rectContainsAllSubcomponents(const QRectF& r) const;
     bool snapToSubcomponentRect(QRectF& r) const;
