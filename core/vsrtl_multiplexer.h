@@ -24,10 +24,6 @@ public:
         }
 
         out << [=] { return in[select.template value<VSRTL_VT_U>()]->template value<VSRTL_VT_U>(); };
-
-        for (const auto& p : m_inputports) {
-            p->setWidth(width);
-        }
     }
 
     OUTPUTPORT(out);
