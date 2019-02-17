@@ -69,6 +69,9 @@ private:
     void updateDrawShape();
     ComponentGraphic* getParent() const;
 
+    // Called by vsrtl_core component linked via signal/slot mechanism
+    void updateSlot() { update(); }
+
     bool m_isExpanded = false;
     bool m_inResizeDragZone = false;
     bool m_resizeDragging = false;

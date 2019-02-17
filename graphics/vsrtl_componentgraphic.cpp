@@ -24,7 +24,9 @@ static constexpr qreal c_collapsedSideMargin = 15;
 QMap<std::type_index, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
 
 ComponentGraphic::ComponentGraphic(Component& c)
-    : m_component(c), m_minRect(ComponentGraphic::getComponentMinRect(c.getTypeId())) {}
+    : m_component(c), m_minRect(ComponentGraphic::getComponentMinRect(c.getTypeId())) {
+    c.changed.Connect(this, &ComponentGraphic::updateSlot);
+}
 
 bool ComponentGraphic::hasSubcomponents() const {
     return m_component.getSubComponents().size() != 0;

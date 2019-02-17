@@ -14,6 +14,8 @@
 #include "vsrtl_defines.h"
 #include "vsrtl_port.h"
 
+#include "Signals/Signal.h"
+
 /**
  * @brief The Primitive class
  * A primitive for all hardware components - describes the node structure in the datapath graph.
@@ -52,6 +54,8 @@ public:
      * @return String identifier for the component type
      */
     virtual std::type_index getTypeId() const { return std::type_index(typeid(Component)); }
+
+    Gallant::Signal0<> changed;
 
     virtual bool isRegister() const { return false; }
     virtual void resetPropagation() {
@@ -129,6 +133,10 @@ public:
                 s->propagate();
             }
             m_propagationState = PropagationState::propagated;
+
+            // if any internal values have changed...
+            // @todo: implement granular change signal emission
+            changed.Emit();
         }
 
         // Signal all connected components of the current component to propagate
