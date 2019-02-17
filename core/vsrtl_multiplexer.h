@@ -15,7 +15,7 @@ namespace vsrtl {
 
 class Multiplexer : public Component {
 public:
-    const char* getBaseType() const override { return "Multiplexer"; }
+    std::type_index getTypeId() const override { return std::type_index(typeid(Multiplexer)); }
     Multiplexer(std::string name, unsigned int nInputs, unsigned int width)
         : Component(name), m_nInputs(nInputs), m_width(width) {
         MUX_SELECT.setWidth(ceillog2(m_nInputs));

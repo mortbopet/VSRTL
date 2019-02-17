@@ -110,29 +110,29 @@ public:
         QRectF min_rect;
     };
 
-    static void setComponentShape(std::string component, const Shape& shape) {
+    static void setComponentShape(std::type_index component, const Shape& shape) {
         Q_ASSERT(!s_componentShapes.contains(component));
         Q_ASSERT(shape.min_rect.topLeft() == QPointF(0, 0));
         s_componentShapes[component] = shape;
     }
 
-    static QPainterPath getComponentShape(std::string component, QTransform transform) {
+    static QPainterPath getComponentShape(std::type_index component, QTransform transform) {
         // If no shape has been registered for the base component type, revert to displaying as a "Component"
         if (!s_componentShapes.contains(component)) {
-            return s_componentShapes["Component"].shapeFunc(transform);
+            return s_componentShapes[typeid(Component)].shapeFunc(transform);
         }
         return s_componentShapes[component].shapeFunc(transform);
     }
 
-    static QRectF getComponentMinRect(std::string component) {
+    static QRectF getComponentMinRect(std::type_index component) {
         // If no shape has been registered for the base component type, revert to displaying as a "Component"
         if (!s_componentShapes.contains(component)) {
-            return s_componentShapes["Component"].min_rect;
+            return s_componentShapes[typeid(Component)].min_rect;
         }
         return s_componentShapes[component].min_rect;
     }
 
-    static QMap<std::string, Shape> s_componentShapes;
+    static QMap<std::type_index, Shape> s_componentShapes;
 };
 }  // namespace vsrtl
 

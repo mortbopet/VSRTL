@@ -3,6 +3,7 @@
 
 #include "vsrtl_alu.h"
 #include "vsrtl_constant.h"
+#include "vsrtl_logicgate.h"
 #include "vsrtl_memory.h"
 #include "vsrtl_multiplexer.h"
 #include "vsrtl_register.h"

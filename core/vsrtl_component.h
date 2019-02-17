@@ -6,6 +6,8 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <typeindex>
+#include <typeinfo>
 #include <vector>
 
 #include "vsrtl_binutils.h"
@@ -49,7 +51,7 @@ public:
      * identify all instances of "Constant<...>" objects, but without introducing a "BaseConstant" class.
      * @return String identifier for the component type
      */
-    virtual const char* getBaseType() const { return "Component"; }
+    virtual std::type_index getTypeId() const { return std::type_index(typeid(Component)); }
 
     virtual bool isRegister() const { return false; }
     virtual void resetPropagation() {

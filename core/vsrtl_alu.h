@@ -32,7 +32,7 @@ static constexpr unsigned int ALUctrlWidth() {
 
 class ALU : public Component {
 public:
-    const char* getBaseType() const override { return "ALU"; }
+    std::type_index getTypeId() const override { return std::type_index(typeid(ALU)); }
     // clang-format off
     ALU(std::string name, unsigned int width) : Component(name), m_width(width){
         out << ([=] { return calculateOutput(); });

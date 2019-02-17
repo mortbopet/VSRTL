@@ -23,7 +23,7 @@ protected:
 
 class And : public LogicGate {
 public:
-    const char* getBaseType() const override { return "And"; }
+    std::type_index getTypeId() const override { return std::type_index(typeid(And)); }
     And(std::string name, unsigned int nInputs, unsigned int width) : LogicGate(name, nInputs, width) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
@@ -37,7 +37,7 @@ public:
 
 class Or : public LogicGate {
 public:
-    const char* getBaseType() const override { return "Or"; }
+    std::type_index getTypeId() const override { return std::type_index(typeid(Or)); }
     Or(std::string name, unsigned int nInputs, unsigned int width) : LogicGate(name, nInputs, width) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
@@ -51,7 +51,7 @@ public:
 
 class Xor : public LogicGate {
 public:
-    const char* getBaseType() const override { return "Xor"; }
+    std::type_index getTypeId() const override { return std::type_index(typeid(Xor)); }
     Xor(std::string name, unsigned int nInputs, unsigned int width) : LogicGate(name, nInputs, width) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
@@ -65,7 +65,7 @@ public:
 
 class Not : public LogicGate {
 public:
-    const char* getBaseType() const override { return "Not"; }
+    std::type_index getTypeId() const override { return std::type_index(typeid(Not)); }
     Not(std::string name, unsigned int width) : LogicGate(name, 1, width) {
         this->out << [=] { return ~this->in[0]->template value<VSRTL_VT_U>(); };
     }

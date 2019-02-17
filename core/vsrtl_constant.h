@@ -21,7 +21,7 @@ constexpr bool valueFitsInBitWidth(uint32_t width, int value) {
  */
 class Constant : public Component {
 public:
-    const char* getBaseType() const override { return "Constant"; }
+    std::type_index getTypeId() const override { return std::type_index(typeid(Constant)); }
     Constant(std::string name, VSRTL_VT_U value, unsigned int width) : Component(name) {
         if (!valueFitsInBitWidth(width, value)) {
             throw std::runtime_error("Value does not fit inside provided bit-width");

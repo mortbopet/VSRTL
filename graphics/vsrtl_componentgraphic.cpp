@@ -21,10 +21,10 @@ namespace vsrtl {
 static constexpr qreal c_resizeMargin = 6;
 static constexpr qreal c_collapsedSideMargin = 15;
 
-QMap<std::string, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
+QMap<std::type_index, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
 
 ComponentGraphic::ComponentGraphic(Component& c)
-    : m_component(c), m_minRect(ComponentGraphic::getComponentMinRect(c.getBaseType())) {}
+    : m_component(c), m_minRect(ComponentGraphic::getComponentMinRect(c.getTypeId())) {}
 
 bool ComponentGraphic::hasSubcomponents() const {
     return m_component.getSubComponents().size() != 0;
@@ -182,7 +182,7 @@ ComponentGraphic* ComponentGraphic::getParent() const {
 void ComponentGraphic::updateDrawShape() {
     QTransform t;
     t.scale(m_baseRect.width(), m_baseRect.height());
-    m_shape = ComponentGraphic::getComponentShape(m_component.getBaseType(), t);
+    m_shape = ComponentGraphic::getComponentShape(m_component.getTypeId(), t);
 }
 
 void ComponentGraphic::setLabelPosition() {

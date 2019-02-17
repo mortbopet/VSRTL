@@ -21,7 +21,7 @@ public:
 
 class Register : public RegisterBase {
 public:
-    const char* getBaseType() const override { return "Register"; }
+    std::type_index getTypeId() const override { return std::type_index(typeid(Register)); }
     Register(std::string name, unsigned int width) : RegisterBase(name), m_width(width) {
         out << ([=] { return m_savedValue; });
 
