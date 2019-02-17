@@ -43,7 +43,7 @@ public:
     static constexpr int m_cVal = 4;
 
     // Create objects
-    SUBCOMPONENT(sh1, Shift, ShiftType::sl, 13, 31);
+    SUBCOMPONENT(sh1, Shift, ShiftType::sl, 13, 32);
     SUBCOMPONENT(sh2, Shift, ShiftType::srl, 17, 32);
     SUBCOMPONENT(sh3, Shift, ShiftType::sl, 5, 32);
     SUBCOMPONENT(xOr1, Xor, 2, 32);
@@ -54,9 +54,9 @@ public:
     // Initialization objects for first clock cycle
     SUBCOMPONENT(mux, Multiplexer, 2, 32);
     SUBCOMPONENT(init, Constant, 0x13fb27a3, 32);
-    SUBCOMPONENT(c1, Constant, 1, 32);
-    SUBCOMPONENT(orr, Or, 2, 32);
-    SUBCOMPONENT(selReg, Register, 32);
+    SUBCOMPONENT(c1, Constant, 1, 1);
+    SUBCOMPONENT(orr, Or, 2, 1);
+    SUBCOMPONENT(selReg, Register, 1);
 };
 }  // namespace vsrtl
 

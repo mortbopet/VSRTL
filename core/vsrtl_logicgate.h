@@ -12,7 +12,7 @@ public:
         for (const auto& ip : in) {
             ip->setWidth(width);
         }
-        out.setWidth(1);
+        out.setWidth(width);
     }
     OUTPUTPORT(out);
     INPUTPORTS(in);
