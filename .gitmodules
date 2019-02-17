@@ -1,0 +1,3 @@
+[submodule "external/Signals"]
+	path = external/Signals
+	url = https://github.com/pbhogan/Signals

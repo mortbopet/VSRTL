@@ -19,6 +19,7 @@ find_package(Qt5Widgets CONFIG REQUIRED)
 # Finding Qt includes
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
 include_directories(${Qt5Core_INCLUDE_DIRS})
+include_directories(external)
 
 ######################################################################
 
@@ -30,6 +31,7 @@ set(TEST_LIB ${PROJECT_NAME}_tst_lib)
 add_subdirectory(tst)
 set(COMPONENTS_LIB ${PROJECT_NAME}_cmp_lib)
 add_subdirectory(components)
+
 
 set(APP_NAME app)
 
