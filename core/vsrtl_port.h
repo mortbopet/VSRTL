@@ -54,9 +54,11 @@ public:
     // Port connections are doubly linked
     void operator>>(PortBase& toThis) {
         m_connectsFromThis.push_back(&toThis);
-        assert(toThis.m_portConnectsTo == nullptr && "Port input already connected");
-        if (!(m_width != toThis.getWidth())) {
-            std::runtime_error("Port width mismatch");
+        if (toThis.m_portConnectsTo != nullptr) {
+            throw std::runtime_error("Port input already connected");
+        }
+        if (m_width != toThis.getWidth()) {
+            throw std::runtime_error("Port width mismatch");
         }
         toThis.m_portConnectsTo = this;
     }
