@@ -5,6 +5,7 @@
 #include "vsrtl_label.h"
 #include "vsrtl_multiplexergraphic.h"
 #include "vsrtl_portgraphic.h"
+#include "vsrtl_registergraphic.h"
 
 #include <qmath.h>
 #include <deque>
@@ -78,6 +79,8 @@ void ComponentGraphic::createSubcomponents() {
         ComponentGraphic* nc;
         if (dynamic_cast<Multiplexer*>(c.get())) {
             nc = new MultiplexerGraphic(*static_cast<Multiplexer*>(c.get()));
+        } else if (dynamic_cast<Register*>(c.get())) {
+            nc = new RegisterGraphic(*static_cast<Register*>(c.get()));
         } else {
             nc = new ComponentGraphic(*c);
         }
