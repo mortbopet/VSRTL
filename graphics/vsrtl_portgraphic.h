@@ -24,6 +24,7 @@ public:
     PortBase* getPort() const { return m_port; }
     void setInputWire(WireGraphic* wire);
     void updateInputWire();
+    void updateWires();
 
     QPointF getInputPoint() const;
     QPointF getOutputPoint() const;

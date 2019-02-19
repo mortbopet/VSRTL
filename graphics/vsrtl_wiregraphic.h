@@ -9,6 +9,8 @@ class PortGraphic;
 class PortBase;
 
 class WireGraphic : public GraphicsBase {
+    friend class PortGraphic;
+
 public:
     WireGraphic(PortGraphic* from, const std::vector<PortBase*>& to, QGraphicsItem* parent);
 
@@ -16,6 +18,8 @@ public:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
 
     void postSceneConstructionInitialize() override;
+
+    PortGraphic* getFromPort() const { return m_fromPort; }
 
 private:
     PortGraphic* m_fromPort;

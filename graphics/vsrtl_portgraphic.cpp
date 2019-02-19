@@ -29,9 +29,18 @@ void PortGraphic::initializeSignals() {
     m_outputWire = new WireGraphic(this, m_port->getConnectsFromThis(), this);
 }
 
+void PortGraphic::updateWires() {
+    for (const auto& c : childItems()) {
+        WireGraphic* wg = dynamic_cast<WireGraphic*>(c);
+        if (wg)
+            wg->prepareGeometryChange();
+    }
+}
+
 void PortGraphic::updateInputWire() {
     Q_ASSERT(m_inputWire != nullptr);
-    m_inputWire->update();
+    // Signal parent port of input wire to update - this will update all outgoing wires from the port
+    m_inputWire->getFromPort()->updateWires();
 }
 
 void PortGraphic::setInputWire(WireGraphic* wire) {

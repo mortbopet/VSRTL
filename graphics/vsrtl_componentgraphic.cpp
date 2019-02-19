@@ -256,6 +256,14 @@ QRectF ComponentGraphic::sceneBaseRect() const {
 QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
     // @todo implement snapping inside parent component
     if (change == ItemPositionChange && scene()) {
+        // Output port wires are implicitely redrawn given that the wire is a child of $this. We need to manually signal
+        // the wires going to the input ports of this component, to redraw
+        if (m_initialized) {
+            for (const auto& inputPort : m_inputPorts) {
+                inputPort->updateInputWire();
+            }
+        }
+
         // Snap to grid
         QPointF newPos = value.toPointF();
         qreal x = round(newPos.x() / GRID_SIZE) * GRID_SIZE;
@@ -274,14 +282,6 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
             return newPos - offset;
         }
         */
-    }
-
-    // Output port wires are implicitely redrawn given that the wire is a child of $this. We need to manually signal the
-    // wires going to the input ports of this component, to redraw
-    if (m_initialized) {
-        for (const auto& inputPort : m_inputPorts) {
-            inputPort->updateInputWire();
-        }
     }
 
     return QGraphicsItem::itemChange(change, value);
