@@ -3,6 +3,8 @@
 #include "vsrtl_port.h"
 #include "vsrtl_portgraphic.h"
 
+#include "vsrtl_graphics_defines.h"
+
 #include <QGraphicsScene>
 #include <QPainter>
 #include <QPolygon>
@@ -46,7 +48,10 @@ void WireGraphic::postSceneConstructionInitialize() {
 
     GraphicsBase::postSceneConstructionInitialize();
 }
+
 void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
+    painter->save();
+    painter->setPen(m_fromPort->getPen());
     for (const auto& toPort : m_toGraphicPorts) {
         const auto* portParent = dynamic_cast<ComponentGraphic*>(toPort->parentItem());
         if (portParent->isVisible()) {
@@ -54,6 +59,8 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
                               mapFromItem(toPort, toPort->getInputPoint()));
         }
     }
+
+    painter->restore();
 
     /*
     // draw bounding rect

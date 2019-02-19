@@ -418,7 +418,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     // Draw component outline
     QPen oldPen = painter->pen();
     QPen pen = oldPen;
-    int width = 1;
+    int width = COMPONENT_BORDER_WIDTH;
     if (option->state & QStyle::State_Selected)
         width += 1;
 

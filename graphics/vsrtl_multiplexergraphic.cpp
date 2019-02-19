@@ -21,10 +21,12 @@ void MultiplexerGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraph
                 painter->setBrush(Qt::white);
             }
 
-            constexpr qreal dotSize = 9.5;
+            constexpr qreal dotSize = 14;
             QRectF chordRect(-dotSize / 2, -dotSize / 2, dotSize, dotSize);
             chordRect.translate(mapFromItem(ip, ip->getOutputPoint()));
-
+            QPen pen = painter->pen();
+            pen.setWidth(WIRE_WIDTH / 2);
+            painter->setPen(pen);
             painter->drawChord(chordRect, -90 * 16, 180 * 16);
         }
     }
