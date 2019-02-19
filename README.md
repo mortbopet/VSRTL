@@ -23,3 +23,13 @@ Collection of predefined components. These are simple building blocks which may 
 - Constants
 - ALU
 - Logic gates
+
+# Building
+## Dependencies:
+
+### Core:
+* C++14 toolchain
+* CMake
+
+### Graphics:
+* Qt 5.10+: https://www.qt.io/download
