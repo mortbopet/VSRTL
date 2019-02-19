@@ -12,7 +12,7 @@
 #include "vsrtl_binutils.h"
 #include "vsrtl_defines.h"
 
-// Signals cannot exist outside of components!
+#include "Signals/Signal.h"
 
 namespace vsrtl {
 
@@ -63,6 +63,8 @@ public:
         toThis.m_portConnectsTo = this;
     }
 
+    Gallant::Signal0<> changed;
+
     // Value access operators
     virtual explicit operator VSRTL_VT_S() const = 0;
     explicit operator VSRTL_VT_U() const { return m_value; }
@@ -108,12 +110,18 @@ public:
 
     void operator<<(std::function<VSRTL_VT_U()>&& propagationFunction) { m_propagationFunction = propagationFunction; }
     void propagate() override {
+        auto prePropagateValue = m_value;
         if (m_propagationState == PropagationState::unpropagated) {
             setPortValue();
             // Propagate the value to the ports which connect to this
             for (auto& port : m_connectsFromThis)
                 port->propagate();
             m_propagationState = PropagationState::propagated;
+
+            // Signal all watcher of this port that the port value changed
+            if (m_value != prePropagateValue) {
+                changed.Emit();
+            }
         }
     }
 
