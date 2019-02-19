@@ -22,7 +22,9 @@ QRectF WireGraphic::boundingRect() const {
     for (const auto& to : m_toGraphicPorts) {
         p.append(mapFromItem(to, to->getInputPoint()));
     }
-    return p.boundingRect();
+    QRectF br = p.boundingRect();
+    br.adjust(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
+    return br;
 }
 
 void WireGraphic::postSceneConstructionInitialize() {
@@ -65,7 +67,8 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
     /*
     // draw bounding rect
     painter->save();
-    painter->setPen(Qt::green);
+    painter->setPen(QRandomGenerator::global()->generate());
+    painter->setBrush(Qt::transparent);
     const auto br = boundingRect();
     painter->drawRect(br);
     painter->restore();
