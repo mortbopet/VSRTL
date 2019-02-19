@@ -12,6 +12,7 @@ namespace {
 // static constexpr int c_portHeight = 20;
 // static constexpr int c_portWidth = 40;
 static constexpr int c_portInnerMargin = 5;
+static QColor s_defaultWireColor("#636363");
 }  // namespace
 
 PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
@@ -19,28 +20,32 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) :
     m_widthText = QString::number(port->getWidth() - 1) + ":0";
     m_font = QFont("Monospace", 8);
     m_pen.setWidth(WIRE_WIDTH);
+    m_pen.setColor(s_defaultWireColor);
+
+    port->changed.Connect(this, &PortGraphic::updateSlot);
 
     updateGeometry();
 
     initializeSignals();
 }
 
+void PortGraphic::updateSlot() {
+    update();
+    m_outputWire->update();
+}
+
 void PortGraphic::initializeSignals() {
     m_outputWire = new WireGraphic(this, m_port->getConnectsFromThis(), this);
 }
 
-void PortGraphic::updateWires() {
-    for (const auto& c : childItems()) {
-        WireGraphic* wg = dynamic_cast<WireGraphic*>(c);
-        if (wg)
-            wg->prepareGeometryChange();
-    }
+void PortGraphic::updateWireGeometry() {
+    m_outputWire->prepareGeometryChange();
 }
 
 void PortGraphic::updateInputWire() {
     Q_ASSERT(m_inputWire != nullptr);
     // Signal parent port of input wire to update - this will update all outgoing wires from the port
-    m_inputWire->getFromPort()->updateWires();
+    m_inputWire->getFromPort()->updateWireGeometry();
 }
 
 void PortGraphic::setInputWire(WireGraphic* wire) {
@@ -74,19 +79,21 @@ void PortGraphic::updateGeometry() {
 
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
     painter->save();
+    painter->setFont(m_font);
+    const int offset = m_type == PortType::out ? c_portInnerMargin : 0;
+    painter->drawText(QPointF(offset, m_boundingRect.height() / 2 + c_portInnerMargin), m_widthText);
 
     // Update pen based on port state
     QColor c("#636363");
     if (m_port->getWidth() == 1) {
         c = static_cast<bool>(*m_port) ? QColor("#6EEB83") : c;
+    } else {
+        c = s_defaultWireColor;
     }
     m_pen.setColor(c);
     painter->setPen(m_pen);
 
     painter->drawLine(QPointF(0, 0), QPointF(m_boundingRect.width(), 0));
-    painter->setFont(m_font);
-    const int offset = m_type == PortType::out ? c_portInnerMargin : 0;
-    painter->drawText(QPointF(offset, m_boundingRect.height() / 2 + c_portInnerMargin), m_widthText);
     painter->restore();
     /*
     // Draw bounding rect

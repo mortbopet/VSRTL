@@ -24,7 +24,7 @@ public:
     PortBase* getPort() const { return m_port; }
     void setInputWire(WireGraphic* wire);
     void updateInputWire();
-    void updateWires();
+    void updateWireGeometry();
 
     QPointF getInputPoint() const;
     QPointF getOutputPoint() const;
@@ -32,6 +32,7 @@ public:
     const QPen& getPen() const { return m_pen; }
 
 private:
+    void updateSlot();
     void initializeSignals();
 
     bool m_showValue = false;
