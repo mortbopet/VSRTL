@@ -5,6 +5,7 @@
 #include "vsrtl_graphicsbase.h"
 
 #include <QFont>
+#include <QPen>
 
 namespace vsrtl {
 
@@ -27,6 +28,8 @@ public:
     QPointF getInputPoint() const;
     QPointF getOutputPoint() const;
 
+    const QPen& getPen() const { return m_pen; }
+
 private:
     void initializeSignals();
 
@@ -44,6 +47,7 @@ private:
 
     QString m_widthText;
     QFont m_font;
+    QPen m_pen;
 };
 }  // namespace vsrtl
 

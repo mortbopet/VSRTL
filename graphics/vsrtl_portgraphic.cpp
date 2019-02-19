@@ -18,6 +18,7 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) :
     setParentItem(parent);
     m_widthText = QString::number(port->getWidth() - 1) + ":0";
     m_font = QFont("Monospace", 8);
+    m_pen.setWidth(WIRE_WIDTH);
 
     updateGeometry();
 
@@ -63,13 +64,21 @@ void PortGraphic::updateGeometry() {
 }
 
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
-    const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
+    painter->save();
+
+    // Update pen based on port state
+    QColor c("#636363");
+    if (m_port->getWidth() == 1) {
+        c = static_cast<bool>(*m_port) ? QColor("#6EEB83") : c;
+    }
+    m_pen.setColor(c);
+    painter->setPen(m_pen);
 
     painter->drawLine(QPointF(0, 0), QPointF(m_boundingRect.width(), 0));
     painter->setFont(m_font);
     const int offset = m_type == PortType::out ? c_portInnerMargin : 0;
     painter->drawText(QPointF(offset, m_boundingRect.height() / 2 + c_portInnerMargin), m_widthText);
-
+    painter->restore();
     /*
     // Draw bounding rect
     if (lod > 0.2) {
