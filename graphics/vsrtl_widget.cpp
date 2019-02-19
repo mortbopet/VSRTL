@@ -19,6 +19,7 @@ VSRTLWidget::VSRTLWidget(Design& arch, QWidget* parent) : m_arch(arch), QWidget(
     registerShapes();
 
     m_view = new VSRTLView(this);
+    m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
     m_scene = new QGraphicsScene(this);
     m_view->setScene(m_scene);
     ui->viewLayout->addWidget(m_view);
