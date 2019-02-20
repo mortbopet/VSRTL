@@ -35,9 +35,13 @@ class Component;
 private:                              \
     type* name = create_component<type>(this, #name, ##__VA_ARGS__)
 
+#define SUBCOMPONENTS(name, type) std::vector<type*> name;
+
 #define INPUTPORT(name) Port& name = this->createInputPort(#name)
+#define INPUTPORT_W(name, width) Port& name = this->createInputPort(#name, width)
 #define INPUTPORTS(name) std::vector<Port*> name
 #define OUTPUTPORT(name) Port& name = createOutputPort(#name)
+#define OUTPUTPORT_W(name, width) Port& name = createOutputPort(#name, width)
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
 
@@ -83,23 +87,23 @@ public:
         m_subcomponents.push_back(std::unique_ptr<Component>(subcomponent));
     }
 
-    Port& createOutputPort(std::string name) {
-        auto port = new Port(name, this);
+    Port& createOutputPort(std::string name, unsigned int width = 0) {
+        auto port = new Port(name, this, width);
         m_outputports.push_back(std::unique_ptr<Port>(port));
         return *port;
     }
 
-    Port& createInputPort(std::string name) {
-        Port* port = new Port(name, this);
+    Port& createInputPort(std::string name, unsigned int width = 0) {
+        Port* port = new Port(name, this, width);
         m_inputports.push_back(std::unique_ptr<Port>(port));
         return *port;
     }
 
-    std::vector<Port*> createInputPorts(std::string name, unsigned int n) {
+    std::vector<Port*> createInputPorts(std::string name, unsigned int n, unsigned int width = 0) {
         std::vector<Port*> ports;
         for (int i = 0; i < n; i++) {
             std::string i_name = name + "_" + std::to_string(i);
-            Port* port = new Port(i_name.c_str(), this);
+            Port* port = new Port(i_name.c_str(), this, width);
             m_inputports.push_back(std::unique_ptr<Port>(port));
             ports.push_back(port);
         }

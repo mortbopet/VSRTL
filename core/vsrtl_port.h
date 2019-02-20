@@ -57,6 +57,9 @@ public:
         if (toThis.m_portConnectsTo != nullptr) {
             throw std::runtime_error("Port input already connected");
         }
+        if (m_width == 0) {
+            throw std::runtime_error("Port width not initialized");
+        }
         if (m_width != toThis.getWidth()) {
             throw std::runtime_error("Port width mismatch");
         }
@@ -100,7 +103,7 @@ private:
 
 class Port : public PortBase {
 public:
-    Port(std::string name, Component* parent) : PortBase(name, parent) {}
+    Port(std::string name, Component* parent, unsigned int width = 0) : PortBase(name, parent) { setWidth(width); }
 
     template <typename T>
     T value() {
