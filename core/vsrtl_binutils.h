@@ -24,21 +24,15 @@ inline T signextend(const T x) {
     return s.x = x;
 }
 
+// Runtime signextension
 template <typename T>
 inline T signextend(const T x, unsigned B) {
     int const m = CHAR_BIT * sizeof(T) - B;
     return (x << m) >> m;
 }
 
-constexpr uint32_t generateBitmask(int n) {
-    // Generate bitmask. There might be a smarter way to do this
-    uint32_t mask = 0;
-    for (int i = 0; i < n - 1; i++) {
-        mask |= 0b1;
-        mask <<= 1;
-    }
-    mask |= 0b1;
-    return mask;
+constexpr unsigned int generateBitmask(int n) {
+    return (1 << n) - 1;
 }
 
 constexpr uint32_t bitcount(int n) {
