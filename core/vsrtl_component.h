@@ -203,6 +203,11 @@ public:
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
     const std::vector<std::unique_ptr<PortBase>>& getOutputs() const { return m_outputports; }
     const std::vector<std::unique_ptr<PortBase>>& getInputs() const { return m_inputports; }
+
+    /**
+     * getInput&OutputComponents does not return a set, although it naturally should. In partitioning the circuit graph,
+     * it is beneficial to know whether two components have multiple edges between each other.
+     */
     std::vector<Component*> getInputComponents() const {
         std::vector<Component*> v;
         for (auto& s : m_inputports) {
