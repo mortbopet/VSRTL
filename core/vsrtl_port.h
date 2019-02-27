@@ -63,7 +63,7 @@ public:
         return static_cast<T>(signextend<T>(m_value, m_width));
     }
 
-    explicit operator VSRTL_VT_S() const { return signextend<int>(m_value, m_width); }
+    explicit operator VSRTL_VT_S() const { return signextend<VSRTL_VT_S>(m_value, m_width); }
 
     void operator<<(std::function<VSRTL_VT_U()>&& propagationFunction) { m_propagationFunction = propagationFunction; }
     void propagate() {
