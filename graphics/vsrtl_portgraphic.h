@@ -9,19 +9,19 @@
 
 namespace vsrtl {
 
-class PortBase;
+class Port;
 class WireGraphic;
 
 enum class PortType { in, out };
 
 class PortGraphic : public GraphicsBase {
 public:
-    PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent = nullptr);
+    PortGraphic(Port* port, PortType type, QGraphicsItem* parent = nullptr);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void updateGeometry();
-    PortBase* getPort() const { return m_port; }
+    Port* getPort() const { return m_port; }
     void setInputWire(WireGraphic* wire);
     void updateInputWire();
     void updateWireGeometry();
@@ -42,7 +42,7 @@ private:
     QRectF m_innerRect;
 
     PortType m_type;
-    PortBase* m_port;
+    Port* m_port;
 
     WireGraphic* m_outputWire = nullptr;
     WireGraphic* m_inputWire = nullptr;

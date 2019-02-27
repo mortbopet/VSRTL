@@ -18,21 +18,13 @@ namespace vsrtl {
 
 class Component;
 
-// Interval value type of ports. Should be set according to the maximally representable number. If the
-// static_asserts of Port<#> trigger, this indicates that VSRTL_BASE_VT should be set to a larger data type.
-/** @note should be an unsigned data type */
-using VSRTL_VT_U = unsigned int;
-using VSRTL_VT_S = int;
-static_assert(sizeof(VSRTL_VT_S) == sizeof(VSRTL_VT_U), "Base value types must be equal in size");
-
 enum class PropagationState { unpropagated, propagated, constant };
 
-class PortBase {
+class Port {
 public:
-    PortBase(std::string name, Component* parent) : m_parent(parent), m_name(name) {}
+    Port(std::string name, Component* parent, unsigned int width = 0)
+        : m_parent(parent), m_name(name), m_width(width) {}
     bool isConnected() const { return m_portConnectsTo != nullptr || m_propagationFunction != nullptr; }
-    virtual void propagate() = 0;
-    virtual void propagateConstant() = 0;
     std::string getName() const { return m_name; }
     Component* getParent() const { return m_parent; }
     bool isPropagated() const { return m_propagationState != PropagationState::unpropagated; }
@@ -48,11 +40,11 @@ public:
         m_width = width;
     }
 
-    const std::vector<PortBase*>& getConnectsFromThis() const { return m_connectsFromThis; }
-    PortBase* getConnectsToThis() const { return m_portConnectsTo; }
+    const std::vector<Port*>& getConnectsFromThis() const { return m_connectsFromThis; }
+    Port* getConnectsToThis() const { return m_portConnectsTo; }
 
     // Port connections are doubly linked
-    void operator>>(PortBase& toThis) {
+    void operator>>(Port& toThis) {
         m_connectsFromThis.push_back(&toThis);
         if (toThis.m_portConnectsTo != nullptr) {
             throw std::runtime_error("Port input already connected");
@@ -66,10 +58,40 @@ public:
         toThis.m_portConnectsTo = this;
     }
 
+    template <typename T>
+    T value() {
+        return static_cast<T>(signextend<T>(m_value, m_width));
+    }
+
+    explicit operator VSRTL_VT_S() const { return signextend<int>(m_value, m_width); }
+
+    void operator<<(std::function<VSRTL_VT_U()>&& propagationFunction) { m_propagationFunction = propagationFunction; }
+    void propagate() {
+        auto prePropagateValue = m_value;
+        if (m_propagationState == PropagationState::unpropagated) {
+            setPortValue();
+            // Propagate the value to the ports which connect to this
+            for (auto& port : m_connectsFromThis)
+                port->propagate();
+            m_propagationState = PropagationState::propagated;
+
+            // Signal all watcher of this port that the port value changed
+            if (m_value != prePropagateValue) {
+                changed.Emit();
+            }
+        }
+    }
+
+    void propagateConstant() {
+        m_propagationState = PropagationState::constant;
+        setPortValue();
+        for (auto& port : m_connectsFromThis)
+            port->propagateConstant();
+    }
+
     Gallant::Signal0<> changed;
 
     // Value access operators
-    virtual explicit operator VSRTL_VT_S() const = 0;
     explicit operator VSRTL_VT_U() const { return m_value; }
     explicit operator bool() const { return m_value & 0b1; }
 
@@ -80,9 +102,9 @@ protected:
     VSRTL_VT_U m_value = 0xdeadbeef;
 
     // A port may only have a single input  ->[port]
-    PortBase* m_portConnectsTo = nullptr;
+    Port* m_portConnectsTo = nullptr;
     // A port may have multiple outputs     [port]->...->
-    std::vector<PortBase*> m_connectsFromThis;
+    std::vector<Port*> m_connectsFromThis;
 
     void setPortValue() {
         if (m_propagationFunction != nullptr) {
@@ -99,41 +121,6 @@ protected:
 
 private:
     std::string m_name;
-};
-
-class Port : public PortBase {
-public:
-    Port(std::string name, Component* parent, unsigned int width = 0) : PortBase(name, parent) { setWidth(width); }
-
-    template <typename T>
-    T value() {
-        return static_cast<T>(signextend<T>(m_value, m_width));
-    }
-    explicit operator VSRTL_VT_S() const override { return signextend<int>(m_value, m_width); }
-
-    void operator<<(std::function<VSRTL_VT_U()>&& propagationFunction) { m_propagationFunction = propagationFunction; }
-    void propagate() override {
-        auto prePropagateValue = m_value;
-        if (m_propagationState == PropagationState::unpropagated) {
-            setPortValue();
-            // Propagate the value to the ports which connect to this
-            for (auto& port : m_connectsFromThis)
-                port->propagate();
-            m_propagationState = PropagationState::propagated;
-
-            // Signal all watcher of this port that the port value changed
-            if (m_value != prePropagateValue) {
-                changed.Emit();
-            }
-        }
-    }
-
-    void propagateConstant() override {
-        m_propagationState = PropagationState::constant;
-        setPortValue();
-        for (auto& port : m_connectsFromThis)
-            port->propagateConstant();
-    }
 };
 
 }  // namespace vsrtl

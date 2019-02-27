@@ -15,7 +15,7 @@ static constexpr int c_portInnerMargin = 5;
 static QColor s_defaultWireColor("#636363");
 }  // namespace
 
-PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
+PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
     setParentItem(parent);
     m_widthText = QString::number(port->getWidth() - 1) + ":0";
     m_font = QFont("Monospace", 8);

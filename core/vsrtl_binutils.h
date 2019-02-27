@@ -12,8 +12,6 @@
 
 namespace vsrtl {
 
-typedef std::function<std::vector<R_UINT>(R_UINT)> bitFieldDecoder;
-
 // Sign extension of arbitrary bitfield size.
 // Courtesy of http://graphics.stanford.edu/~seander/bithacks.html#FixedSignExtend
 template <typename T, unsigned B>
@@ -78,34 +76,5 @@ inline constexpr auto sum(const std::array<T, S> arr) {
         t += v;
     }
     return t;
-}
-
-template <size_t size>
-bitFieldDecoder generateBitFieldDecoder(std::array<R_UINT, size> bitFields) {
-    // Generates functors that can decode a binary number based on the input
-    // vector which is supplied upon generation
-
-    // Assert that total bitField size is REGISTERWIDTH sized
-    assert(sum(bitFields) == REGISTERWIDTH);
-
-    // Generate vector of <fieldsize,bitmask>
-    std::vector<std::pair<uint32_t, uint32_t>> parseVector;
-
-    // Generate bit masks and fill parse vector
-    for (const auto& field : bitFields) {
-        parseVector.push_back(std::pair<uint32_t, uint32_t>(field, generateBitmask(field)));
-    }
-
-    // Create parse functor
-    bitFieldDecoder wordParser = [=](uint32_t word) {
-        std::vector<uint32_t> parsedWord;
-        for (const auto& field : parseVector) {
-            parsedWord.insert(parsedWord.begin(), word & field.second);
-            word = word >> field.first;
-        }
-        return parsedWord;
-    };
-
-    return wordParser;
 }
 }  // namespace vsrtl

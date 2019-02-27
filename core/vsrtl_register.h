@@ -9,35 +9,27 @@
 
 namespace vsrtl {
 
-class RegisterBase : public Component {
-public:
-    RegisterBase(std::string name) : Component(name) {}
-    virtual void reset() = 0;
-    virtual void clock() = 0;
-    virtual void save() = 0;
-
-    bool isRegister() const override { return true; }
-};
-
-class Register : public RegisterBase {
+class Register : public Component {
 public:
     std::type_index getTypeId() const override { return std::type_index(typeid(Register)); }
-    Register(std::string name, unsigned int width) : RegisterBase(name), m_width(width) {
+    Register(std::string name, unsigned int width) : m_width(width), Component(name) {
         out << ([=] { return m_savedValue; });
 
         in.setWidth(width);
         out.setWidth(width);
     }
 
-    void reset() override final {
+    void reset() {
         m_savedValue = 0;
         out.propagate();
     }
-    void save() override final { m_savedValue = in.template value<uint32_t>(); }
-    void clock() override final { out.propagate(); }
+    void save() { m_savedValue = in.template value<uint32_t>(); }
+    void clock() { out.propagate(); }
 
     INPUTPORT(in);
     OUTPUTPORT(out);
+
+    bool isRegister() const override { return true; }
 
 private:
     VSRTL_VT_U m_savedValue = 0;

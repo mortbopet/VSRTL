@@ -389,7 +389,7 @@ void ComponentGraphic::setShape(const QPainterPath& shape) {
 }
 
 namespace {
-qreal largestPortWidth(const QMap<PortBase*, PortGraphic*>& ports) {
+qreal largestPortWidth(const QMap<Port*, PortGraphic*>& ports) {
     qreal width = 0;
     for (const auto& port : ports) {
         width = port->boundingRect().width() > width ? port->boundingRect().width() : width;

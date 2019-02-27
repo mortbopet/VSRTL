@@ -3,15 +3,10 @@
 
 namespace vsrtl {
 
-#ifdef VSRTL64
-#define REGISTERWIDTH 64
-#define R_INT int64_t
-#define R_UINT uint64_t
-#else
-#define REGISTERWIDTH 32
-#define R_INT int32_t
-#define R_UINT uint32_t
-#endif
-#define REGISTERCOUNT 32
-}
+// Base value type of ports. Should be set according to the maximally representable number.
+using VSRTL_VT_U = unsigned int;
+using VSRTL_VT_S = int;
+static_assert(sizeof(VSRTL_VT_S) == sizeof(VSRTL_VT_U), "Base value types must be equal in size");
+
+}  // namespace vsrtl
 #endif  // VSRTLDEFINES_H

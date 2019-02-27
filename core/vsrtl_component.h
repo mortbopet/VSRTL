@@ -57,10 +57,10 @@ public:
      * identify all instances of "Constant<...>" objects, but without introducing a "BaseConstant" class.
      * @return String identifier for the component type
      */
-    virtual std::type_index getTypeId() const { return std::type_index(typeid(Component)); }
 
     Gallant::Signal0<> changed;
 
+    virtual std::type_index getTypeId() const { return std::type_index(typeid(Component)); }
     virtual bool isRegister() const { return false; }
     virtual void resetPropagation() {
         if (m_propagationState == PropagationState::unpropagated) {
@@ -201,8 +201,8 @@ public:
     const Component* getParent() const { return m_parent; }
     std::string getName() const { return m_displayName; }
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
-    const std::vector<std::unique_ptr<PortBase>>& getOutputs() const { return m_outputports; }
-    const std::vector<std::unique_ptr<PortBase>>& getInputs() const { return m_inputports; }
+    const std::vector<std::unique_ptr<Port>>& getOutputs() const { return m_outputports; }
+    const std::vector<std::unique_ptr<Port>>& getInputs() const { return m_inputports; }
 
     /**
      * getInput&OutputComponents does not return a set, although it naturally should. In partitioning the circuit graph,
@@ -240,8 +240,8 @@ protected:
     std::string m_displayName;
 
     Component* m_parent = nullptr;
-    std::vector<std::unique_ptr<PortBase>> m_outputports;
-    std::vector<std::unique_ptr<PortBase>> m_inputports;
+    std::vector<std::unique_ptr<Port>> m_outputports;
+    std::vector<std::unique_ptr<Port>> m_inputports;
     std::vector<std::unique_ptr<Component>> m_subcomponents;
 };  // namespace vsrtl
 

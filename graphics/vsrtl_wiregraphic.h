@@ -6,13 +6,13 @@
 namespace vsrtl {
 
 class PortGraphic;
-class PortBase;
+class Port;
 
 class WireGraphic : public GraphicsBase {
     friend class PortGraphic;
 
 public:
-    WireGraphic(PortGraphic* from, const std::vector<PortBase*>& to, QGraphicsItem* parent);
+    WireGraphic(PortGraphic* from, const std::vector<Port*>& to, QGraphicsItem* parent);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
@@ -23,7 +23,7 @@ public:
 
 private:
     PortGraphic* m_fromPort;
-    const std::vector<PortBase*>& m_toPorts;
+    const std::vector<Port*>& m_toPorts;
     std::vector<PortGraphic*> m_toGraphicPorts;
 };
 }  // namespace vsrtl

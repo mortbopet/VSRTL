@@ -85,8 +85,8 @@ protected:
 
     std::map<ComponentGraphic*, Component*> m_subcomponents;
 
-    QMap<PortBase*, PortGraphic*> m_inputPorts;
-    QMap<PortBase*, PortGraphic*> m_outputPorts;
+    QMap<Port*, PortGraphic*> m_inputPorts;
+    QMap<Port*, PortGraphic*> m_outputPorts;
 
     Label* m_label;
 

@@ -27,8 +27,8 @@ public:
     std::shared_ptr<T> create(Args&&... args) {
         auto ptr = std::make_shared<T>(std::forward<Args>(args)...);
         this->m_components.push_back(ptr);
-        if (std::is_base_of<RegisterBase, T>()) {
-            m_registers.push_back(std::dynamic_pointer_cast<RegisterBase>(ptr));
+        if (std::is_base_of<Register, T>()) {
+            m_registers.push_back(std::dynamic_pointer_cast<Register>(ptr));
         }
         return ptr;
     }
@@ -115,7 +115,7 @@ public:
     bool cycleUtil(Component* c, std::map<Component*, bool>& visited, std::map<Component*, bool>& recurseStack) {
         visited[c] = true;
         recurseStack[c] = true;
-        if (!dynamic_cast<RegisterBase*>(c))  // Graph is cut at registers
+        if (!dynamic_cast<Register*>(c))  // Graph is cut at registers
             return false;
 
         for (auto& neighbour : m_componentGraph[c]) {
@@ -161,8 +161,8 @@ private:
 
         // Gather all registers in the design
         for (auto& c : m_componentGraph) {
-            if (dynamic_cast<RegisterBase*>(c.first)) {
-                m_registers.insert(dynamic_cast<RegisterBase*>(c.first));
+            if (dynamic_cast<Register*>(c.first)) {
+                m_registers.insert(dynamic_cast<Register*>(c.first));
             }
         }
     }
@@ -170,7 +170,7 @@ private:
     std::shared_ptr<Memory> m_memory;
 
     std::map<Component*, std::vector<Component*>> m_componentGraph;
-    std::set<RegisterBase*> m_registers;
+    std::set<Register*> m_registers;
 };
 }  // namespace vsrtl
 
