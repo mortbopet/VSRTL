@@ -1,6 +1,13 @@
 #ifndef VSRTL_GRAPHICS_DEFINES_H
 #define VSRTL_GRAPHICS_DEFINES_H
 
+#include <QMetaType>
+#include "vsrtl_defines.h"
+
+// Allow vsrtl base value types to be used as a QVariant
+Q_DECLARE_METATYPE(vsrtl::VSRTL_VT_S)
+Q_DECLARE_METATYPE(vsrtl::VSRTL_VT_U)
+
 namespace vsrtl {
 
 enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99 };
