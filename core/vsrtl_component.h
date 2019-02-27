@@ -67,9 +67,9 @@ public:
             // Constants (components with no inputs) are always propagated
         } else {
             m_propagationState = PropagationState::unpropagated;
-            for (auto& i : m_inputports)
+            for (const auto& i : m_inputports)
                 i->resetPropagation();
-            for (auto& o : m_outputports)
+            for (const auto& o : m_outputports)
                 o->resetPropagation();
         }
     }
@@ -128,12 +128,12 @@ public:
                     return;
             }
 
-            for (auto& sc : m_subcomponents)
+            for (const auto& sc : m_subcomponents)
                 sc->propagateComponent();
 
             // At this point, all input ports are assured to be propagated. In this case, it is safe to propagate
             // the outputs of the component.
-            for (auto& s : m_outputports) {
+            for (const auto& s : m_outputports) {
                 s->propagate();
             }
             m_propagationState = PropagationState::propagated;
@@ -144,8 +144,8 @@ public:
         }
 
         // Signal all connected components of the current component to propagate
-        for (auto& out : m_outputports) {
-            for (auto& in : out->getConnectsFromThis()) {
+        for (const auto& out : m_outputports) {
+            for (const auto& in : out->getConnectsFromThis()) {
                 // With the input port of the connected component propagated, the parent component may be propagated.
                 // This will succeed if all input components to the parent component has been propagated.
                 in->getParent()->propagateComponent();
@@ -162,7 +162,7 @@ public:
                  *  |____________|
                  *
                  */
-                for (auto& inout : in->getConnectsFromThis())
+                for (const auto& inout : in->getConnectsFromThis())
                     inout->getParent()->propagateComponent();
             }
         }
@@ -192,7 +192,7 @@ public:
         if (m_inputports.size() == 0) {
             // Component has no input ports - ie. component is a constant. propagate all output ports and set component
             // as propagated.
-            for (auto& p : m_outputports)
+            for (const auto& p : m_outputports)
                 p->propagateConstant();
             m_propagationState = PropagationState::propagated;
         }
@@ -210,7 +210,7 @@ public:
      */
     std::vector<Component*> getInputComponents() const {
         std::vector<Component*> v;
-        for (auto& s : m_inputports) {
+        for (const auto& s : m_inputports) {
             v.push_back(s->getParent());
         }
         return v;
@@ -218,8 +218,8 @@ public:
 
     std::vector<Component*> getOutputComponents() const {
         std::vector<Component*> v;
-        for (auto& p : m_outputports) {
-            for (auto& pc : p->getConnectsFromThis())
+        for (const auto& p : m_outputports) {
+            for (const auto& pc : p->getConnectsFromThis())
                 v.push_back(pc->getParent());
         }
         return v;
@@ -231,7 +231,7 @@ protected:
     void getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
         // Register adjacent components (child components) in the graph, and add subcomponents to graph
         componentGraph[this];
-        for (auto& c : m_subcomponents) {
+        for (const auto& c : m_subcomponents) {
             componentGraph[this].push_back(c.get());
             c->getComponentGraph(componentGraph);
         }

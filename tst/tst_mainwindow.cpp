@@ -27,7 +27,7 @@ void tst_MainWindow::testSimpleArchitecture() {
     auto& components = design.getTopLevelComponents();
 
     int x = 0;
-    for (auto& c : components) {
+    for (const auto& c : components) {
         ComponentGraphic* i = new ComponentGraphic(*c);
         w.addComponent(i);
         i->initialize();

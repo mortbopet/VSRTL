@@ -75,7 +75,7 @@ void ComponentGraphic::initializePorts() {
  * In charge of hide()ing subcomponents if the parent component (this) is not expanded
  */
 void ComponentGraphic::createSubcomponents() {
-    for (auto& c : m_component.getSubComponents()) {
+    for (const auto& c : m_component.getSubComponents()) {
         ComponentGraphic* nc;
         if (dynamic_cast<Multiplexer*>(c.get())) {
             nc = new MultiplexerGraphic(*static_cast<Multiplexer*>(c.get()));
@@ -306,14 +306,14 @@ void ComponentGraphic::setIOPortPositions() {
         // Component is unexpanded - IO should be positionen in even positions
         int i = 0;
         const qreal in_seg_y = m_baseRect.height() / m_inputPorts.size();
-        for (auto& c : m_inputPorts) {
+        for (const auto& c : m_inputPorts) {
             const qreal y = i * in_seg_y + in_seg_y / 2;
             c->setPos(QPointF(m_baseRect.left() - c->boundingRect().width(), y));
             i++;
         }
         i = 0;
         const qreal out_seg_y = m_baseRect.height() / m_outputPorts.size();
-        for (auto& c : m_outputPorts) {
+        for (const auto& c : m_outputPorts) {
             const qreal y = i * out_seg_y + out_seg_y / 2;
             c->setPos(QPointF(m_baseRect.right(), y));
             i++;

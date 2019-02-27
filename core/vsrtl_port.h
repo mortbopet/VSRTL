@@ -71,7 +71,7 @@ public:
         if (m_propagationState == PropagationState::unpropagated) {
             setPortValue();
             // Propagate the value to the ports which connect to this
-            for (auto& port : m_connectsFromThis)
+            for (const auto& port : m_connectsFromThis)
                 port->propagate();
             m_propagationState = PropagationState::propagated;
 
@@ -85,7 +85,7 @@ public:
     void propagateConstant() {
         m_propagationState = PropagationState::constant;
         setPortValue();
-        for (auto& port : m_connectsFromThis)
+        for (const auto& port : m_connectsFromThis)
             port->propagateConstant();
     }
 

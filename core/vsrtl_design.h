@@ -45,12 +45,12 @@ public:
         }
 
         // Save register values (to correctly clock register -> register connections)
-        for (auto& reg : m_registers) {
+        for (const auto& reg : m_registers) {
             reg->save();
         }
 
         // Clock registers
-        for (auto& reg : m_registers) {
+        for (const auto& reg : m_registers) {
             reg->clock();
         }
 
@@ -65,7 +65,7 @@ public:
     void reset() {
         // reset all registers
         // propagate everything combinational
-        for (auto& reg : m_registers)
+        for (const auto& reg : m_registers)
             reg->reset();
         propagateDesign();
     }
@@ -74,11 +74,11 @@ public:
         // Propagate circuit values - we propagate >this<, the top level component, which contains all subcomponents of
         // the design
 
-        for (auto& reg : m_registers)
+        for (const auto& reg : m_registers)
             reg->propagateComponent();
 
         // Reset propagation state of all components (uncolor graph)
-        for (auto& c : m_componentGraph) {
+        for (const auto& c : m_componentGraph) {
             c.first->resetPropagation();
         }
     }
@@ -118,7 +118,7 @@ public:
         if (!dynamic_cast<Register*>(c))  // Graph is cut at registers
             return false;
 
-        for (auto& neighbour : m_componentGraph[c]) {
+        for (const auto& neighbour : m_componentGraph[c]) {
             if (!visited[neighbour] && cycleUtil(neighbour, visited, recurseStack)) {
                 return true;
             } else if (recurseStack[neighbour]) {
@@ -132,12 +132,12 @@ public:
 
     bool detectCombinationalLoop() {
         std::map<Component*, bool> visited;
-        for (auto& cptr : m_componentGraph) {
+        for (const auto& cptr : m_componentGraph) {
             visited[cptr.first] = false;
         }
         std::map<Component*, bool> recurseStack;
 
-        for (auto& c : m_componentGraph) {
+        for (const auto& c : m_componentGraph) {
             if (visited[c.first] == false) {
                 return cycleUtil(c.first, visited, recurseStack);
             } else {
@@ -160,7 +160,7 @@ private:
         getComponentGraph(m_componentGraph);
 
         // Gather all registers in the design
-        for (auto& c : m_componentGraph) {
+        for (const auto& c : m_componentGraph) {
             if (dynamic_cast<Register*>(c.first)) {
                 m_registers.insert(dynamic_cast<Register*>(c.first));
             }

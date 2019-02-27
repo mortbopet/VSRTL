@@ -39,7 +39,7 @@ public:
     INPUTPORT(writeData);
 
     void reset() {
-        for (auto& reg : m_reg) {
+        for (const auto& reg : m_reg) {
             reg = 0;
         }
     }
