@@ -7,8 +7,8 @@ vsrtl is intended to be an intuitive HDL simulator which may be used when teachi
 
 <p align="center">
   <img src="https://github.com/mortbopet/vsrtl/blob/master/resources/gif1.gif?raw=true" width=75%/>
-  <figcaption>A simulation of a 3-bit counter utilizing 3 full adders. Note that placement and routing have not yet been implemented, and as such component placement in this image is manual, and signals are drawn as straight lines from source to sinks.</figcaption>
 </p>
+Figure: A simulation of a 3-bit counter utilizing 3 full adders. **Note**; placement and routing have not yet been implemented, and as such component placement in this image is manual, and signals are drawn as straight lines from source to sinks.
 
 # Libraries
 vsrtl is split into three libraries *core*, *graphics* and *components*.
