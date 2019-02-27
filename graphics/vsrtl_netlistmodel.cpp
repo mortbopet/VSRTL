@@ -250,11 +250,11 @@ void NetlistModel::updateNetlistDataRecursive(TreeItem* index) {
             break;
         }
         case NetlistData::type::input: {
-            index->setData(1, static_cast<unsigned int>(*(itemData.input)));
+            index->setData(1, QVariant::fromValue(static_cast<VSRTL_VT_U>(*(itemData.input))));
             break;
         }
         case NetlistData::type::output: {
-            index->setData(1, static_cast<unsigned int>(*(itemData.output)));
+            index->setData(1, QVariant::fromValue(static_cast<VSRTL_VT_U>(*(itemData.output))));
             break;
         }
     }
