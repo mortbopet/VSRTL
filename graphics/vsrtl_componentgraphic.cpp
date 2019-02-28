@@ -4,6 +4,7 @@
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_label.h"
 #include "vsrtl_multiplexergraphic.h"
+#include "vsrtl_placeroute.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_registergraphic.h"
 
@@ -131,33 +132,10 @@ K reverseLookup(const std::map<K, V>& m, const V& v) {
 }
 
 void ComponentGraphic::orderSubcomponents() {
-    std::map<Component*, bool> visited;
-    std::deque<Component*> stack;
-
-    for (const auto& cpt : m_subcomponents)
-        visited[cpt.second] = false;
-
-    for (const auto& c : visited) {
-        if (!c.second) {
-            orderSubcomponentsUtil(c.first, visited, stack);
-        }
+    const auto& placements = PlaceRoute::get()->placeAndRoute(m_subcomponents);
+    for (const auto& p : placements) {
+        p.first->setPos(p.second);
     }
-
-    for (const auto& c : stack)
-        std::cout << c->getName() << std::endl;
-
-    // Position components
-    QPointF pos = m_expandButtonProxy->boundingRect().bottomRight();
-    for (const auto& c : stack) {
-        ComponentGraphic* g = reverseLookup(m_subcomponents, c);
-        Q_ASSERT(g != nullptr);
-
-        // Center component in column
-        // g->setPos(xPos + (columnWidths[c.first] - g->boundingRect().width()) / 2, yPos);
-        g->setPos(pos);
-        pos.rx() += g->boundingRect().width() + COMPONENT_COLUMN_MARGIN;
-    }
-    // xPos += columnWidths[c.first] + COMPONENT_COLUMN_MARGIN;
 }
 
 void ComponentGraphic::setExpanded(bool expanded) {
