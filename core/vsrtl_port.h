@@ -9,6 +9,7 @@
 #include <memory>
 #include <type_traits>
 
+#include "vsrtl_base.h"
 #include "vsrtl_binutils.h"
 #include "vsrtl_defines.h"
 
@@ -20,7 +21,7 @@ class Component;
 
 enum class PropagationState { unpropagated, propagated, constant };
 
-class Port {
+class Port : public Base {
 public:
     Port(std::string name, Component* parent, unsigned int width = 0)
         : m_parent(parent), m_name(name), m_width(width) {}

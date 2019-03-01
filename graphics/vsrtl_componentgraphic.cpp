@@ -29,6 +29,7 @@ QMap<std::type_index, ComponentGraphic::Shape> ComponentGraphic::s_componentShap
 ComponentGraphic::ComponentGraphic(Component& c)
     : m_component(c), m_minRect(ComponentGraphic::getComponentMinRect(c.getTypeId())) {
     c.changed.Connect(this, &ComponentGraphic::updateSlot);
+    c.registerGraphic(this);
 }
 
 bool ComponentGraphic::hasSubcomponents() const {

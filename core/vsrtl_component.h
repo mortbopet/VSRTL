@@ -45,7 +45,7 @@ private:                              \
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
 
-class Component {
+class Component : public Base {
 public:
     Component(std::string displayName, Component* parent = nullptr) : m_displayName(displayName), m_parent(parent) {}
     virtual ~Component() {}
