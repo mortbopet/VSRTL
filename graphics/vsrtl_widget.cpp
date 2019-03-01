@@ -61,7 +61,7 @@ void VSRTLWidget::registerShapes() const {
                                              shape.addRoundRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))), 35);
                                              return shape;
                                          },
-                                         QRectF(0, 0, 15, 15)});
+                                         QRectF(0, 0, 25, 25)});
 
     // Logic gates
     ComponentGraphic::setComponentShape(std::type_index(typeid(And)),
