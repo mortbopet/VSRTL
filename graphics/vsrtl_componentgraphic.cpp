@@ -89,7 +89,7 @@ void ComponentGraphic::createSubcomponents() {
         scene()->addItem(nc);
         nc->initialize();
         nc->setParentItem(this);
-        m_subcomponents[nc] = c.get();
+        m_subcomponents.push_back(nc);
         if (!m_isExpanded) {
             nc->hide();
         }
@@ -150,13 +150,13 @@ void ComponentGraphic::setExpanded(bool expanded) {
         m_savedBaseRect = m_baseRect;
         m_expandButton->setIcon(QIcon(":/icons/plus.svg"));
         for (const auto& c : m_subcomponents) {
-            c.first->hide();
+            c->hide();
         }
     } else {
         changeReason = Expand;
         m_expandButton->setIcon(QIcon(":/icons/minus.svg"));
         for (const auto& c : m_subcomponents) {
-            c.first->show();
+            c->show();
         }
     }
 
@@ -219,8 +219,8 @@ void ComponentGraphic::updateSubcomponentRect() {
         for (const auto& c : m_subcomponents) {
             // Bounding rects of subcomponents can have negative coordinates, but we want m_subcomponentRect to start in
             // (0,0). Normalize to ensure.
-            m_subcomponentRect = boundingRectOfRects<QRectF>(
-                m_subcomponentRect, mapFromItem(c.first, c.first->boundingRect()).boundingRect());
+            m_subcomponentRect =
+                boundingRectOfRects<QRectF>(m_subcomponentRect, mapFromItem(c, c->boundingRect()).boundingRect());
         }
         m_subcomponentRect = normalizeRect(m_subcomponentRect);
     } else {
@@ -439,7 +439,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 bool ComponentGraphic::rectContainsAllSubcomponents(const QRectF& r) const {
     bool allInside = true;
     for (const auto& rect : m_subcomponents) {
-        auto r2 = mapFromItem(rect.first, rect.first->boundingRect()).boundingRect();
+        auto r2 = mapFromItem(rect, rect->boundingRect()).boundingRect();
         allInside &= r.contains(r2);
     }
     return allInside;

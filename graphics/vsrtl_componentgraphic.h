@@ -4,8 +4,6 @@
 #include <QFont>
 #include <QToolButton>
 
-#include <map>
-
 #include "vsrtl_component.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
@@ -42,7 +40,8 @@ public:
 
     bool isExpanded() const { return m_isExpanded; }
 
-    const Component& getComponent() const { return m_component; }
+    Component* getComponent() const { return &m_component; }
+
     void setExpanded(bool isExpanded);
     bool hasSubcomponents() const;
 
@@ -83,7 +82,7 @@ protected:
     bool m_inResizeDragZone = false;
     bool m_resizeDragging = false;
 
-    std::map<ComponentGraphic*, Component*> m_subcomponents;
+    std::vector<ComponentGraphic*> m_subcomponents;
 
     QMap<Port*, PortGraphic*> m_inputPorts;
     QMap<Port*, PortGraphic*> m_outputPorts;

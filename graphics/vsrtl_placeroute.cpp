@@ -30,14 +30,13 @@ void topologicalSortUtil(Component* c, std::map<Component*, bool>& visited, std:
     stack.push_front(c);
 }
 
-std::map<ComponentGraphic*, QPointF>
-topologicalSortPlacement(const std::map<ComponentGraphic*, Component*>& components) {
+std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) {
     std::map<ComponentGraphic*, QPointF> placements;
     std::map<Component*, bool> visited;
     std::deque<Component*> stack;
 
     for (const auto& cpt : components)
-        visited[cpt.second] = false;
+        visited[cpt->getComponent()] = false;
 
     for (const auto& c : visited) {
         if (!c.second) {
@@ -59,8 +58,7 @@ topologicalSortPlacement(const std::map<ComponentGraphic*, Component*>& componen
     return placements;
 }
 
-std::map<ComponentGraphic*, QPointF>
-PlaceRoute::placeAndRoute(const std::map<ComponentGraphic*, Component*>& components) const {
+std::map<ComponentGraphic*, QPointF> PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components) const {
     switch (m_placementAlgorithm) {
         case PlaceAlg::TopologicalSort: {
             return topologicalSortPlacement(components);
