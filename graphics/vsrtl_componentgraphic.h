@@ -126,7 +126,7 @@ public:
         Q_ASSERT(shape.min_rect.topLeft() == QPointF(0, 0));
 
         // Ensure that minimum rectangle is snapping to the grid
-        roundUp(shape.min_rect, GRID_SIZE);
+        scaleToGrid(shape.min_rect, GRID_SIZE);
         s_componentShapes[component] = shape;
     }
 

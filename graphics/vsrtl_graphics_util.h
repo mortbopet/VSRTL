@@ -13,14 +13,9 @@ inline int roundUp(int v, int m) {
     return v + m - remainder;
 }
 
-inline void roundUp(QPointF& p, int m) {
-    p.setX(roundUp(p.x(), m));
-    p.setY(roundUp(p.y(), m));
-}
-
-inline void roundUp(QRectF& r, int m) {
-    r.setWidth(roundUp(r.width(), m));
-    r.setHeight(roundUp(r.height(), m));
+inline void scaleToGrid(QRectF& r, int gridsize) {
+    r.setWidth(r.width() * gridsize);
+    r.setHeight(r.height() * gridsize);
 }
 
 // Round v to nearest multiple of m (tie: round up)

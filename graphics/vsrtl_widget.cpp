@@ -40,7 +40,7 @@ void VSRTLWidget::registerShapes() const {
                                              shape.addRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))));
                                              return shape;
                                          },
-                                         QRectF(0, 0, 25, 25)});
+                                         QRectF(0, 0, 3, 3)});
 
     // Register
     ComponentGraphic::setComponentShape(
@@ -52,7 +52,7 @@ void VSRTLWidget::registerShapes() const {
              shape.setFillRule(Qt::WindingFill);
              return shape;
          },
-         QRectF(0, 0, 30, 45)});
+         QRectF(0, 0, 3, 4)});
 
     // Constant
     ComponentGraphic::setComponentShape(std::type_index(typeid(Constant)),
@@ -61,7 +61,7 @@ void VSRTLWidget::registerShapes() const {
                                              shape.addRoundRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))), 35);
                                              return shape;
                                          },
-                                         QRectF(0, 0, 25, 25)});
+                                         QRectF(0, 0, 2, 2)});
 
     // Logic gates
     ComponentGraphic::setComponentShape(std::type_index(typeid(And)),
@@ -73,9 +73,8 @@ void VSRTLWidget::registerShapes() const {
                                              shape.lineTo(QPointF(0, 0));
                                              return shape;
                                          },
-                                         QRectF(0, 0, 40, 20)});
+                                         QRectF(0, 0, 3, 3)});
 
-    // Logic gates
     ComponentGraphic::setComponentShape(
         std::type_index(typeid(Xor)),
         {[](QTransform t) {
@@ -90,7 +89,7 @@ void VSRTLWidget::registerShapes() const {
              shape.setFillRule(Qt::WindingFill);
              return shape;
          },
-         QRectF(0, 0, 40, 20)});
+         QRectF(0, 0, 3, 3)});
 
     ComponentGraphic::setComponentShape(
         std::type_index(typeid(Or)),
@@ -103,7 +102,7 @@ void VSRTLWidget::registerShapes() const {
              shape.cubicTo(t.map(QPointF(0, 1)), t.map(QPointF(0.4, 0.5)), t.map(QPointF(0, 0)));
              return shape;
          },
-         QRectF(0, 0, 40, 20)});
+         QRectF(0, 0, 3, 3)});
 
     // Multiplexer
     ComponentGraphic::setComponentShape(
@@ -114,7 +113,7 @@ void VSRTLWidget::registerShapes() const {
                  t.map(QPolygonF({QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1), QPointF(0, 0)})));
              return shape;
          },
-         QRectF(0, 0, 20, 20)});
+         QRectF(0, 0, 2, 5)});
 
     // ALU
     ComponentGraphic::setComponentShape(
@@ -125,7 +124,7 @@ void VSRTLWidget::registerShapes() const {
                  t.map(QPolygonF({QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1), QPointF(0, 0)})));
              return shape;
          },
-         QRectF(0, 0, 30, 20)});
+         QRectF(0, 0, 2, 5)});
 }
 
 void VSRTLWidget::initializeDesign(Design& arch) {
