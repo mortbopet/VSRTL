@@ -30,15 +30,6 @@ void topologicalSortUtil(Component* c, std::map<Component*, bool>& visited, std:
     stack.push_front(c);
 }
 
-template <typename K, typename V>
-K reverseLookup(const std::map<K, V>& m, const V& v) {
-    for (const auto& i : m) {
-        if (i.second == v)
-            return i.first;
-    }
-    return K();
-}
-
 std::map<ComponentGraphic*, QPointF>
 topologicalSortPlacement(const std::map<ComponentGraphic*, Component*>& components) {
     std::map<ComponentGraphic*, QPointF> placements;
@@ -60,7 +51,7 @@ topologicalSortPlacement(const std::map<ComponentGraphic*, Component*>& componen
     // Position components
     QPointF pos = QPointF(25, 25);  // Start a bit offset from the parent borders
     for (const auto& c : stack) {
-        ComponentGraphic* g = reverseLookup(components, c);
+        ComponentGraphic* g = static_cast<ComponentGraphic*>(c->getGraphic());
         placements[g] = pos;
         pos.rx() += g->boundingRect().width() + COMPONENT_COLUMN_MARGIN;
     }
