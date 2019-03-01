@@ -211,7 +211,7 @@ public:
     std::vector<Component*> getInputComponents() const {
         std::vector<Component*> v;
         for (const auto& s : m_inputports) {
-            v.push_back(s->getParent());
+            v.push_back(s->getConnectsToThis()->getParent());
         }
         return v;
     }
