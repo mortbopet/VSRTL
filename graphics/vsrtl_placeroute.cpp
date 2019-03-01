@@ -44,9 +44,6 @@ std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<
         }
     }
 
-    for (const auto& c : stack)
-        std::cout << c->getName() << std::endl;
-
     // Position components
     QPointF pos = QPointF(25, 25);  // Start a bit offset from the parent borders
     for (const auto& c : stack) {
