@@ -23,6 +23,7 @@ public:
     void reset() {
         m_savedValue = 0;
         out.propagate();
+        m_rewindstack.clear();
     }
     void save() {
         m_rewindstack.push_front(m_savedValue);

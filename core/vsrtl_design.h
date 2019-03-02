@@ -87,6 +87,7 @@ public:
         for (const auto& reg : m_registers)
             reg->reset();
         propagateDesign();
+        m_rewindstackCount = 0;
     }
 
     inline bool canrewind() const { return m_rewindstackCount != 0; }
