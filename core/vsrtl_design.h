@@ -54,7 +54,26 @@ public:
             reg->clock();
         }
 
+        // Increment rewind-stack if possible
+        if (m_rewindstackCount < Register::rewindStackSize()) {
+            m_rewindstackCount++;
+        }
+
         propagateDesign();
+    }
+
+    void rewind() {
+        if (canrewind()) {
+            if (!m_isVerifiedAndInitialized) {
+                throw std::runtime_error("Design was not verified and initialized before rewinding.");
+            }
+            // Clock registers
+            for (const auto& reg : m_registers) {
+                reg->rewind();
+            }
+            m_rewindstackCount--;
+            propagateDesign();
+        }
     }
 
     /**
@@ -69,6 +88,8 @@ public:
             reg->reset();
         propagateDesign();
     }
+
+    inline bool canrewind() const { return m_rewindstackCount != 0; }
 
     void propagateDesign() {
         // Propagate circuit values - we propagate >this<, the top level component, which contains all subcomponents of
@@ -168,7 +189,7 @@ private:
     }
 
     std::shared_ptr<Memory> m_memory;
-
+    unsigned int m_rewindstackCount = 0;
     std::map<Component*, std::vector<Component*>> m_componentGraph;
     std::set<Register*> m_registers;
 };
