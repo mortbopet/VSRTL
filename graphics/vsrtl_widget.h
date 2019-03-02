@@ -27,8 +27,15 @@ public:
 public slots:
     void clock();
     void reset();
+    void rewind();
+
+signals:
+    void canrewind(bool);
 
 private:
+    // State variable for reducing the number of emitted canrewind signals
+    bool m_designCanrewind = false;
+
     void registerShapes() const;
 
     void initializeDesign(Design& arch);

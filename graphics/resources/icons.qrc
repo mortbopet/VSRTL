@@ -9,5 +9,6 @@
         <file>step-clock.svg</file>
         <file>list.svg</file>
         <file>stop-clock.svg</file>
+        <file>rewind.svg</file>
     </qresource>
 </RCC>

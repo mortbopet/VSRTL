@@ -148,6 +148,18 @@ void VSRTLWidget::initializeDesign(Design& arch) {
 
 void VSRTLWidget::clock() {
     m_arch.clock();
+    if (!m_designCanrewind) {
+        m_designCanrewind = true;
+        emit canrewind(true);
+    }
+}
+
+void VSRTLWidget::rewind() {
+    m_arch.rewind();
+    if (!m_arch.canrewind()) {
+        m_designCanrewind = false;
+        emit canrewind(false);
+    }
 }
 
 void VSRTLWidget::reset() {
