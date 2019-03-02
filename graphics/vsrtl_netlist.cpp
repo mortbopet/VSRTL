@@ -2,6 +2,8 @@
 #include "ui_vsrtl_netlist.h"
 #include "vsrtl_netlistmodel.h"
 
+#include <QAction>
+
 namespace vsrtl {
 
 Netlist::Netlist(Design& design, QWidget* parent) : QWidget(parent), ui(new Ui::Netlist) {
