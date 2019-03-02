@@ -12,6 +12,8 @@ namespace vsrtl {
 
 template <unsigned int width>
 class Counter : public Design {
+    static_assert((sizeof(VSRTL_VT_U) * CHAR_BIT) >= width, "Counter width greater than VSRTL valuetype width");
+
 public:
     Counter() : Design(std::to_string(width) + " bit counter") {
         for (int i = 0; i < width; i++) {
