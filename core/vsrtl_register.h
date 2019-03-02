@@ -30,7 +30,7 @@ public:
         if (m_rewindstack.size() > rewindStackSize()) {
             m_rewindstack.pop_back();
         }
-        m_savedValue = in.template value<uint32_t>();
+        m_savedValue = in.template value<VSRTL_VT_U>();
     }
     void clock() { out.propagate(); }
     void rewind() {

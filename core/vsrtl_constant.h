@@ -8,7 +8,7 @@
 namespace vsrtl {
 
 namespace {
-constexpr bool valueFitsInBitWidth(uint32_t width, int value) {
+constexpr bool valueFitsInBitWidth(unsigned int width, int value) {
     const int v = value < 0 ? -value : value;
     // -1 to verify that there is space for the sign bit
     return ceillog2(v) <= width;
