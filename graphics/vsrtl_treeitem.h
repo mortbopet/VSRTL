@@ -52,6 +52,7 @@
 #define VSRTL_TREEITEM_H
 
 #include <QList>
+#include <QModelIndex>
 #include <QVariant>
 #include <QVector>
 
@@ -67,11 +68,13 @@ namespace vsrtl {
 #define VALUE_COL 2
 
 typedef struct {
-    enum class type { invalid, input, output };
-    type t = type::invalid;
+    enum class IOType { invalid, input, output };
+    IOType t = IOType::invalid;
     Port* port = nullptr;
     Component* component = nullptr;
 } NetlistData;
+
+enum NetlistRoles { PortPtr = Qt::UserRole + 1, ComponentPtr, PortType };
 
 //! [0]
 class TreeItem {
@@ -91,6 +94,10 @@ public:
     int childNumber() const;
     bool setData(int column, const QVariant& value, int role = Qt::EditRole);
 
+    // Store an index to the QModelIndex corresponding to this item in the tree. This is required for facilitating
+    // selection behaviour via. selections made in the graphics component.
+    QModelIndex index;
+
 private:
     QList<TreeItem*> childItems;
     QVector<QVariant> itemData;
@@ -98,11 +105,14 @@ private:
     TreeItem* parentItem;
     NetlistData userData;
 };
-//! [0]
 
 }  // namespace vsrtl
 
 // Declare as qMetatype to be able to use as a qVariant
 Q_DECLARE_METATYPE(vsrtl::NetlistData)
+Q_DECLARE_METATYPE(vsrtl::NetlistData::IOType)
+Q_DECLARE_METATYPE(vsrtl::Port*)
+Q_DECLARE_OPAQUE_POINTER(vsrtl::Component*)
+Q_DECLARE_METATYPE(vsrtl::Component*)
 
 #endif  // VSRTL_TREEITEM_H

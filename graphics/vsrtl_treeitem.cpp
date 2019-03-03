@@ -110,9 +110,9 @@ QVariant TreeItem::data(int column, int role) const {
     } else if (role == Qt::DecorationRole) {
         if (column == IO_COL) {
             switch (userData.t) {
-                case NetlistData::type::input:
+                case NetlistData::IOType::input:
                     return QIcon(":/icons/input.svg");
-                case NetlistData::type::output:
+                case NetlistData::IOType::output:
                     return QIcon(":/icons/output.svg");
                 default:
                     break;
@@ -120,6 +120,12 @@ QVariant TreeItem::data(int column, int role) const {
         }
     } else if (role == Qt::DisplayRole || role == Qt::EditRole) {
         return itemData.value(column);
+    } else if (role == NetlistRoles::PortPtr) {
+        return QVariant::fromValue(userData.port);
+    } else if (role == NetlistRoles::ComponentPtr) {
+        return QVariant::fromValue(userData.component);
+    } else if (role == NetlistRoles::PortType) {
+        return QVariant::fromValue(userData.t);
     }
     return QVariant();
 }  // namespace vsrtl
@@ -195,9 +201,14 @@ bool TreeItem::setData(int column, const QVariant& value, int role) {
         itemData[column] = value;
     } else if (role == Qt::ToolTipRole) {
         tooltip = value.toString();
-    } else if (role == Qt::UserRole) {
-        userData = value.value<NetlistData>();
+    } else if (role == NetlistRoles::PortPtr) {
+        userData.port = value.value<Port*>();
+    } else if (role == NetlistRoles::ComponentPtr) {
+        userData.component = value.value<Component*>();
+    } else if (role == NetlistRoles::PortType) {
+        userData.t = value.value<NetlistData::IOType>();
     }
+
     return true;
 }
 //! [11]

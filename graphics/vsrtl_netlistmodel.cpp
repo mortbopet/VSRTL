@@ -151,9 +151,11 @@ QModelIndex NetlistModel::index(int row, int column, const QModelIndex& parent) 
     TreeItem* parentItem = getItem(parent);
 
     TreeItem* childItem = parentItem->child(row);
-    if (childItem)
-        return createIndex(row, column, childItem);
-    else
+    if (childItem) {
+        auto i = createIndex(row, column, childItem);
+        childItem->index = i;
+        return i;
+    } else
         return QModelIndex();
 }
 //! [6]
@@ -243,19 +245,23 @@ bool NetlistModel::setHeaderData(int section, Qt::Orientation orientation, const
 }
 
 void NetlistModel::updateNetlistDataRecursive(TreeItem* index) {
-    const auto itemData = index->data(0, Qt::UserRole).value<NetlistData>();
-    switch (itemData.t) {
-        default:
-            index->setData(2, QVariant::fromValue(static_cast<VSRTL_VT_U>(*(itemData.port))));
-            break;
-        case NetlistData::type::invalid: {
-            break;
-        }
+    const auto itemData = index->data(0, NetlistRoles::PortPtr);
+    if (!itemData.isNull()) {
+        index->setData(2, QVariant::fromValue(static_cast<VSRTL_VT_U>(*(itemData.value<Port*>()))));
     }
-
     for (int i = 0; i < index->childCount(); i++) {
         updateNetlistDataRecursive(index->child(i));
     }
+}
+
+QModelIndex NetlistModel::lookupIndexForComponent(Component* c) const {
+    if (m_componentIndicies.find(c) != m_componentIndicies.end()) {
+        TreeItem* item = m_componentIndicies.at(c);
+        if (item->index.isValid()) {
+            return item->index;
+        }
+    }
+    return QModelIndex();
 }
 
 void NetlistModel::updateNetlistData() {
@@ -264,18 +270,15 @@ void NetlistModel::updateNetlistData() {
     dataChanged(index(0, 0), index(rowCount(), columnCount()));
 }
 
-void NetlistModel::addPortsToComponent(Port* port, TreeItem* parent, NetlistData::type dir) {
+void NetlistModel::addPortsToComponent(Port* port, TreeItem* parent, NetlistData::IOType dir) {
     parent->insertChildren(parent->childCount(), 1, rootItem->columnCount());
 
     // Set component data (component name and signal value)S
     TreeItem* child = parent->child(parent->childCount() - 1);
 
     child->setData(0, QString::fromStdString(port->getName()));
-
-    NetlistData data;
-    data.t = dir;
-    data.port = port;
-    child->setData(0, QVariant::fromValue(data), Qt::UserRole);
+    child->setData(0, QVariant::fromValue(dir), NetlistRoles::PortType);
+    child->setData(0, QVariant::fromValue(port), NetlistRoles::PortPtr);
 }
 
 void NetlistModel::loadDesign(TreeItem* parent, const Component& component) {
@@ -287,9 +290,8 @@ void NetlistModel::loadDesign(TreeItem* parent, const Component& component) {
 
         // Set component data (component name and signal value)
         TreeItem* child = parent->child(parent->childCount() - 1);
-        NetlistData data;
-        data.component = subcomponent.get();
-        child->setData(0, QVariant::fromValue(data), Qt::UserRole);
+        m_componentIndicies[subcomponent.get()] = child;
+        child->setData(0, QVariant::fromValue(subcomponent.get()), NetlistRoles::ComponentPtr);
         child->setData(0, QString::fromStdString(subcomponent->getName()));
 
         // Recurse into the child
@@ -298,10 +300,10 @@ void NetlistModel::loadDesign(TreeItem* parent, const Component& component) {
 
     // I/O ports of component
     for (const auto& input : component.getInputs()) {
-        addPortsToComponent(input.get(), parent, NetlistData::type::input);
+        addPortsToComponent(input.get(), parent, NetlistData::IOType::input);
     }
     for (const auto& output : component.getOutputs()) {
-        addPortsToComponent(output.get(), parent, NetlistData::type::output);
+        addPortsToComponent(output.get(), parent, NetlistData::IOType::output);
     }
 }
 

@@ -12,15 +12,13 @@ Netlist::Netlist(Design& design, QWidget* parent) : QWidget(parent), ui(new Ui::
     ui->netlistView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui->netlistView->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    connect(ui->netlistView->selectionModel(), &QItemSelectionModel::selectionChanged, [] { return 0; });
-
     m_netlistModel = new NetlistModel(design, this);
     ui->netlistView->setModel(m_netlistModel);
     m_netlistModel->updateNetlistData();
 
-    auto* selectionModel = new QItemSelectionModel(m_netlistModel);
-    ui->netlistView->setSelectionModel(selectionModel);
-    connect(selectionModel, &QItemSelectionModel::selectionChanged, this, &Netlist::handleViewSelectionChanged);
+    m_selectionModel = new QItemSelectionModel(m_netlistModel);
+    ui->netlistView->setSelectionModel(m_selectionModel);
+    connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, &Netlist::handleViewSelectionChanged);
 
     ui->netlistView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
@@ -37,13 +35,21 @@ Netlist::Netlist(Design& design, QWidget* parent) : QWidget(parent), ui(new Ui::
     connect(ui->collapse, &QPushButton::clicked, collapseAct, &QAction::trigger);
 }
 
+void Netlist::updateSelection(const std::vector<Component*>& selected) {
+    m_selectionModel->clearSelection();
+    for (const auto& c : selected) {
+        m_selectionModel->select(m_netlistModel->lookupIndexForComponent(c),
+                                 QItemSelectionModel::SelectionFlag::Select | QItemSelectionModel::SelectionFlag::Rows);
+    }
+}
+
 namespace {
-void getNetlistDataComponents(const QItemSelection& selected, std::vector<Component*>& c_v) {
+void getIndexComponentPtr(const QItemSelection& selected, std::vector<Component*>& c_v) {
     for (const auto& sel : selected.indexes()) {
         TreeItem* item = static_cast<TreeItem*>(sel.internalPointer());
-        NetlistData data = item->data(0, Qt::UserRole).value<NetlistData>();
-        if (data.component)
-            c_v.push_back(data.component);
+        auto c = item->data(0, NetlistRoles::ComponentPtr).value<Component*>();
+        if (c)
+            c_v.push_back(c);
     }
 }
 }  // namespace
@@ -51,8 +57,8 @@ void getNetlistDataComponents(const QItemSelection& selected, std::vector<Compon
 void Netlist::handleViewSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected) {
     std::vector<Component*> sel_components, desel_components;
 
-    getNetlistDataComponents(selected, sel_components);
-    getNetlistDataComponents(deselected, desel_components);
+    getIndexComponentPtr(selected, sel_components);
+    getIndexComponentPtr(deselected, desel_components);
 
     emit selectionChanged(sel_components, desel_components);
 }

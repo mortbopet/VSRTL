@@ -29,6 +29,7 @@ public slots:
     void reset();
     void rewind();
 
+    // Selections which are imposed on the scene from external objects (ie. selecting items in the netlist)
     void handleSelectionChanged(const std::vector<Component*>& selected, std::vector<Component*>& deselected);
 
 signals:

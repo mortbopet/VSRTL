@@ -36,16 +36,17 @@ VSRTLWidget::~VSRTLWidget() {
 void VSRTLWidget::handleSceneSelectionChanged() {
     std::vector<Component*> selectedItems;
     for (const auto& i : m_scene->selectedItems()) {
-        Component* i_c = dynamic_cast<Component*>(i);
+        ComponentGraphic* i_c = dynamic_cast<ComponentGraphic*>(i);
         if (i_c) {
-            selectedItems.push_back(i_c);
+            selectedItems.push_back(i_c->getComponent());
         }
     }
-    if (!selectedItems.empty())
-        emit selectionChanged(selectedItems);
+    emit selectionChanged(selectedItems);
 }
 
 void VSRTLWidget::handleSelectionChanged(const std::vector<Component*>& selected, std::vector<Component*>& deselected) {
+    // Block signals from scene to disable selectionChange emission.
+    m_scene->blockSignals(true);
     for (const auto& c : selected) {
         auto* c_g = static_cast<ComponentGraphic*>(c->getGraphic());
         c_g->setSelected(true);
@@ -54,6 +55,7 @@ void VSRTLWidget::handleSelectionChanged(const std::vector<Component*>& selected
         auto* c_g = static_cast<ComponentGraphic*>(c->getGraphic());
         c_g->setSelected(false);
     }
+    m_scene->blockSignals(false);
 }
 
 void VSRTLWidget::registerShapes() const {

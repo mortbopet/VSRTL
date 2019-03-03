@@ -25,12 +25,15 @@ signals:
     void selectionChanged(const std::vector<Component*>& selected, std::vector<Component*>& deselected);
 
 public slots:
-    void handleViewSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected);
     void reloadNetlist();
-    void updateSelection(const std::vector<Component*>&) {}
+    void updateSelection(const std::vector<Component*>&);
+
+private slots:
+    void handleViewSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected);
 
 private:
     Ui::Netlist* ui;
+    QItemSelectionModel* m_selectionModel;
     NetlistModel* m_netlistModel;
 };
 }  // namespace vsrtl

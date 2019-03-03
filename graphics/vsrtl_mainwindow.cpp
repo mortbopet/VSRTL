@@ -31,6 +31,7 @@ MainWindow::MainWindow(Design& arch, QWidget* parent) : QMainWindow(parent), ui(
     splitter->addWidget(m_vsrtlWidget);
 
     connect(m_netlist, &Netlist::selectionChanged, m_vsrtlWidget, &VSRTLWidget::handleSelectionChanged);
+    connect(m_vsrtlWidget, &VSRTLWidget::selectionChanged, m_netlist, &Netlist::updateSelection);
 
     setCentralWidget(splitter);
 
