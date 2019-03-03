@@ -55,11 +55,13 @@
 #include <QModelIndex>
 #include <QVariant>
 
+#include "vsrtl_treeitem.h"
+
 namespace vsrtl {
 
-class TreeItem;
 class Design;
 class Component;
+class Port;
 
 //! [0]
 class NetlistModel : public QAbstractItemModel {
@@ -96,6 +98,7 @@ public slots:
     void updateNetlistData();
 
 private:
+    void addPortsToComponent(Port* port, TreeItem* parent, NetlistData::type);
     void updateNetlistDataRecursive(TreeItem* index);
     void loadDesign(TreeItem* parent, const Component& component);
 
