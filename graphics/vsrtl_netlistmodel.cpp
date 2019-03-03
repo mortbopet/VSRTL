@@ -115,8 +115,11 @@ QVariant NetlistModel::data(const QModelIndex& index, int role) const {
 }
 
 //! [3]
-Qt::ItemFlags NetlistModel::flags(const QModelIndex&) const {
-    return Qt::NoItemFlags;
+Qt::ItemFlags NetlistModel::flags(const QModelIndex& index) const {
+    if (!index.isValid())
+        return 0;
+
+    return QAbstractItemModel::flags(index);
 }
 //! [3]
 
