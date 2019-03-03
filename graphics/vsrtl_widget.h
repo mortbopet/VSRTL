@@ -29,8 +29,14 @@ public slots:
     void reset();
     void rewind();
 
+    void handleSelectionChanged(const std::vector<Component*>& selected, std::vector<Component*>& deselected);
+
 signals:
     void canrewind(bool);
+    void selectionChanged(const std::vector<Component*>&);
+
+private slots:
+    void handleSceneSelectionChanged();
 
 private:
     // State variable for reducing the number of emitted canrewind signals

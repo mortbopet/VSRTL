@@ -24,11 +24,36 @@ VSRTLWidget::VSRTLWidget(Design& arch, QWidget* parent) : m_arch(arch), QWidget(
     m_view->setScene(m_scene);
     ui->viewLayout->addWidget(m_view);
 
+    connect(m_scene, &QGraphicsScene::selectionChanged, this, (&VSRTLWidget::handleSceneSelectionChanged));
+
     initializeDesign(arch);
 }
 
 VSRTLWidget::~VSRTLWidget() {
     delete ui;
+}
+
+void VSRTLWidget::handleSceneSelectionChanged() {
+    std::vector<Component*> selectedItems;
+    for (const auto& i : m_scene->selectedItems()) {
+        Component* i_c = dynamic_cast<Component*>(i);
+        if (i_c) {
+            selectedItems.push_back(i_c);
+        }
+    }
+    if (!selectedItems.empty())
+        emit selectionChanged(selectedItems);
+}
+
+void VSRTLWidget::handleSelectionChanged(const std::vector<Component*>& selected, std::vector<Component*>& deselected) {
+    for (const auto& c : selected) {
+        auto* c_g = static_cast<ComponentGraphic*>(c->getGraphic());
+        c_g->setSelected(true);
+    }
+    for (const auto& c : deselected) {
+        auto* c_g = static_cast<ComponentGraphic*>(c->getGraphic());
+        c_g->setSelected(false);
+    }
 }
 
 void VSRTLWidget::registerShapes() const {

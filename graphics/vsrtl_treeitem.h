@@ -70,6 +70,7 @@ typedef struct {
     enum class type { invalid, input, output };
     type t = type::invalid;
     Port* port = nullptr;
+    Component* component = nullptr;
 } NetlistData;
 
 //! [0]

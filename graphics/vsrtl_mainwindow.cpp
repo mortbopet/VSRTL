@@ -30,6 +30,8 @@ MainWindow::MainWindow(Design& arch, QWidget* parent) : QMainWindow(parent), ui(
     splitter->addWidget(m_netlist);
     splitter->addWidget(m_vsrtlWidget);
 
+    connect(m_netlist, &Netlist::selectionChanged, m_vsrtlWidget, &VSRTLWidget::handleSelectionChanged);
+
     setCentralWidget(splitter);
 
     createToolbar();
