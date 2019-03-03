@@ -62,6 +62,10 @@ namespace vsrtl {
 // TreeItem's are structured as having, in column 0; the NetlistData as userData
 // wherein the value is read and assigned to column 1
 
+#define COMPONENT_COL 0
+#define IO_COL 1
+#define VALUE_COL 2
+
 typedef struct {
     enum class type { invalid, input, output };
     type t = type::invalid;

@@ -56,6 +56,7 @@
 
 #include "vsrtl_treeitem.h"
 
+#include <QIcon>
 #include <QStringList>
 
 namespace vsrtl {
@@ -106,9 +107,22 @@ QVariant TreeItem::data(int column, int role) const {
         return tooltip;
     } else if (role == Qt::UserRole) {
         return QVariant::fromValue(userData);
+    } else if (role == Qt::DecorationRole) {
+        if (column == IO_COL) {
+            switch (userData.t) {
+                case NetlistData::type::input:
+                    return QIcon(":/icons/input.svg");
+                case NetlistData::type::output:
+                    return QIcon(":/icons/output.svg");
+                default:
+                    break;
+            }
+        }
+    } else if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        return itemData.value(column);
     }
-    return itemData.value(column);
-}
+    return QVariant();
+}  // namespace vsrtl
 //! [6]
 
 //! [7]

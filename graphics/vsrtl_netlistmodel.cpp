@@ -82,7 +82,7 @@ int getRootSelectedIndex(QItemSelectionModel* model) {
 
 //! [0]
 NetlistModel::NetlistModel(const Design& arch, QObject* parent) : QAbstractItemModel(parent), m_arch(arch) {
-    QStringList headers{"Component", "Value"};
+    QStringList headers{"Component", "I/O", "Value"};
     QVector<QVariant> rootData;
     for (QString header : headers)
         rootData << header;
@@ -109,10 +109,6 @@ int NetlistModel::columnCount(const QModelIndex& /* parent */) const {
 QVariant NetlistModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid())
         return QVariant();
-
-    if (role != Qt::DisplayRole && role != Qt::EditRole && role != Qt::ToolTipRole && role != Qt::UserRole) {
-        return QVariant();
-    }
 
     TreeItem* item = getItem(index);
     return item->data(index.column(), role);
@@ -250,11 +246,11 @@ void NetlistModel::updateNetlistDataRecursive(TreeItem* index) {
             break;
         }
         case NetlistData::type::input: {
-            index->setData(1, QVariant::fromValue(static_cast<VSRTL_VT_U>(*(itemData.input))));
+            index->setData(2, QVariant::fromValue(static_cast<VSRTL_VT_U>(*(itemData.input))));
             break;
         }
         case NetlistData::type::output: {
-            index->setData(1, QVariant::fromValue(static_cast<VSRTL_VT_U>(*(itemData.output))));
+            index->setData(2, QVariant::fromValue(static_cast<VSRTL_VT_U>(*(itemData.output))));
             break;
         }
     }
