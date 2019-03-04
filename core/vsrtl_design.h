@@ -87,7 +87,7 @@ public:
 
     inline bool canrewind() const { return m_rewindstackCount != 0; }
 
-    void propagateDesign() {
+    void propagateDesign() const {
         // Propagate circuit values - we propagate >this<, the top level component, which contains all subcomponents of
         // the design
 

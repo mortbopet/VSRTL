@@ -86,6 +86,7 @@ public:
     int childCount() const;
     int columnCount() const;
     QVariant data(int column, int role = Qt::EditRole) const;
+    const NetlistData& getUserData() { return userData; }
     bool insertChildren(int position, int count, int columns);
     bool insertColumns(int position, int columns);
     TreeItem* parent();

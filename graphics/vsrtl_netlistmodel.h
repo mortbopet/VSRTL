@@ -94,14 +94,19 @@ public:
     bool removeColumns(int position, int columns, const QModelIndex& parent = QModelIndex()) override;
     bool insertRows(int position, int rows, const QModelIndex& parent = QModelIndex()) override;
     bool removeRows(int position, int rows, const QModelIndex& parent = QModelIndex()) override;
-    TreeItem* getItem(const QModelIndex& index) const;
 
 public slots:
     void updateNetlistData();
 
 private:
+    bool indexIsRegisterOutputPortValue(const QModelIndex& index) const;
+    Port* getPort(const QModelIndex& index) const;
+    Component* getComponent(const QModelIndex& index) const;
+    Component* getParentComponent(const QModelIndex& index) const;
+    TreeItem* getItem(const QModelIndex&) const;
     void addPortsToComponent(Port* port, TreeItem* parent, NetlistData::IOType);
     void updateNetlistDataRecursive(TreeItem* index);
+    void updateTreeItem(TreeItem* index);
     void loadDesign(TreeItem* parent, const Component& component);
 
     TreeItem* rootItem = nullptr;

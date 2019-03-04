@@ -60,6 +60,15 @@
 
 namespace vsrtl {
 
+TreeItem* NetlistModel::getItem(const QModelIndex& index) const {
+    if (index.isValid()) {
+        TreeItem* item = static_cast<TreeItem*>(index.internalPointer());
+        if (item)
+            return item;
+    }
+    return rootItem;
+}
+
 int getRootIndex(QModelIndex index) {
     if (index.isValid()) {
         while (index.parent().isValid()) {
@@ -80,7 +89,51 @@ int getRootSelectedIndex(QItemSelectionModel* model) {
     }
 }
 
-//! [0]
+bool NetlistModel::indexIsRegisterOutputPortValue(const QModelIndex& index) const {
+    if (index.column() == VALUE_COL) {
+        TreeItem* item = getItem(index);
+        TreeItem* parentItem = item->parent();
+        if (parentItem && parentItem->getUserData().component) {
+            if (dynamic_cast<Register*>(parentItem->getUserData().component)) {
+                // Parent is register...
+                if (item->getUserData().port && item->getUserData().t == NetlistData::IOType::output) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+Port* NetlistModel::getPort(const QModelIndex& index) const {
+    TreeItem* item = getItem(index);
+    if (item->getUserData().port) {
+        return item->getUserData().port;
+    }
+    return nullptr;
+}
+
+Component* NetlistModel::getComponent(const QModelIndex& index) const {
+    TreeItem* item = getItem(index);
+    if (item->getUserData().component) {
+        return item->getUserData().component;
+    }
+    return nullptr;
+}
+
+Component* NetlistModel::getParentComponent(const QModelIndex& index) const {
+    TreeItem* item = getItem(index);
+    if (item) {
+        item = item->parent();
+        if (item) {
+            if (item->getUserData().component) {
+                return item->getUserData().component;
+            }
+        }
+    }
+    return nullptr;
+}
+
 NetlistModel::NetlistModel(const Design& arch, QObject* parent) : QAbstractItemModel(parent), m_arch(arch) {
     QStringList headers{"Component", "I/O", "Value"};
     QVector<QVariant> rootData;
@@ -118,21 +171,19 @@ QVariant NetlistModel::data(const QModelIndex& index, int role) const {
 Qt::ItemFlags NetlistModel::flags(const QModelIndex& index) const {
     if (!index.isValid())
         return 0;
+    Qt::ItemFlags flags = QAbstractItemModel::flags(index);
 
-    return QAbstractItemModel::flags(index);
-}
-//! [3]
-
-//! [4]
-TreeItem* NetlistModel::getItem(const QModelIndex& index) const {
-    if (index.isValid()) {
-        TreeItem* item = static_cast<TreeItem*>(index.internalPointer());
-        if (item)
-            return item;
+    // Output ports of register components are editable.
+    // Check if parent component is a Register, and if the current port is an output port. If so, the port is editable
+    if (indexIsRegisterOutputPortValue(index)) {
+        flags |= Qt::ItemIsEditable;
     }
-    return rootItem;
+
+    QVariant component = data(index, NetlistRoles::ComponentPtr);
+    if (component.isValid()) {
+    }
+    return flags;
 }
-//! [4]
 
 QVariant NetlistModel::headerData(int section, Qt::Orientation orientation, int role) const {
     if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
@@ -149,6 +200,8 @@ QModelIndex NetlistModel::index(int row, int column, const QModelIndex& parent) 
 
     //! [6]
     TreeItem* parentItem = getItem(parent);
+    if (!parentItem)
+        parentItem = rootItem;
 
     TreeItem* childItem = parentItem->child(row);
     if (childItem) {
@@ -223,12 +276,20 @@ bool NetlistModel::removeRows(int position, int rows, const QModelIndex& parent)
 //! [8]
 int NetlistModel::rowCount(const QModelIndex& parent) const {
     TreeItem* parentItem = getItem(parent);
-
     return parentItem->childCount();
 }
 //! [8]
 
 bool NetlistModel::setData(const QModelIndex& index, const QVariant& value, int role) {
+    if (indexIsRegisterOutputPortValue(index)) {
+        Register* reg = dynamic_cast<Register*>(getParentComponent(index));
+        if (reg) {
+            reg->forceValue(value.toInt());
+            m_arch.propagateDesign();
+            updateNetlistData();
+            return true;
+        }
+    }
     return false;
 }
 
@@ -244,11 +305,15 @@ bool NetlistModel::setHeaderData(int section, Qt::Orientation orientation, const
     return result;
 }
 
-void NetlistModel::updateNetlistDataRecursive(TreeItem* index) {
+void NetlistModel::updateTreeItem(TreeItem* index) {
     const auto itemData = index->data(0, NetlistRoles::PortPtr);
     if (!itemData.isNull()) {
         index->setData(2, QVariant::fromValue(static_cast<VSRTL_VT_U>(*(itemData.value<Port*>()))));
     }
+}
+
+void NetlistModel::updateNetlistDataRecursive(TreeItem* index) {
+    updateTreeItem(index);
     for (int i = 0; i < index->childCount(); i++) {
         updateNetlistDataRecursive(index->child(i));
     }
