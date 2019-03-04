@@ -49,11 +49,6 @@ public:
             reg->save();
         }
 
-        // Clock registers
-        for (const auto& reg : m_registers) {
-            reg->clock();
-        }
-
         // Increment rewind-stack if possible
         if (m_rewindstackCount < Register::rewindStackSize()) {
             m_rewindstackCount++;

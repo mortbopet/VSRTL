@@ -1,6 +1,7 @@
 #ifndef REGISTER_H
 #define REGISTER_H
 
+#include "vsrtl_binutils.h"
 #include "vsrtl_component.h"
 #include "vsrtl_port.h"
 
@@ -14,6 +15,7 @@ class Register : public Component {
 public:
     std::type_index getTypeId() const override { return std::type_index(typeid(Register)); }
     Register(std::string name, unsigned int width) : m_width(width), Component(name) {
+        // Calling out.propagate() will clock the register the register
         out << ([=] { return m_savedValue; });
 
         in.setWidth(width);
@@ -22,22 +24,23 @@ public:
 
     void reset() {
         m_savedValue = 0;
-        out.propagate();
         m_rewindstack.clear();
     }
     void save() {
-        m_rewindstack.push_front(m_savedValue);
-        if (m_rewindstack.size() > rewindStackSize()) {
-            m_rewindstack.pop_back();
-        }
+        saveToStack();
         m_savedValue = in.template value<VSRTL_VT_U>();
     }
-    void clock() { out.propagate(); }
+
+    void forceValue(VSRTL_VT_U value) {
+        // Sign-extension with unsigned type forces width truncation to m_width bits
+        m_savedValue = signextend(value, m_width);
+        // Forced values are a modification of the current state and thus not pushed onto the rewind stack
+    }
+
     void rewind() {
         if (m_rewindstack.size() > 0) {
             m_savedValue = m_rewindstack.front();
             m_rewindstack.pop_front();
-            out.propagate();
         }
     }
 
@@ -52,6 +55,13 @@ public:
     }
 
 private:
+    void saveToStack() {
+        m_rewindstack.push_front(m_savedValue);
+        if (m_rewindstack.size() > rewindStackSize()) {
+            m_rewindstack.pop_back();
+        }
+    }
+
     VSRTL_VT_U m_savedValue = 0;
 
     std::deque<VSRTL_VT_U> m_rewindstack;

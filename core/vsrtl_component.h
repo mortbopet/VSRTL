@@ -116,8 +116,12 @@ public:
             return;
 
         if (isRegister()) {
-            // Registers have been propagated in the clocking action
+            // Registers are implicitely clocked by calling propagate() on its output ports.
+            /** @remark register <must> be saved before propagateComponent reaches the register ! */
             m_propagationState = PropagationState::propagated;
+            for (const auto& s : m_outputports) {
+                s->propagate();
+            }
         } else {
             // All sequential logic must have their inputs propagated before they themselves can propagate. If this is
             // not the case, the function will return. Iff the circuit is correctly connected, this component will at a
