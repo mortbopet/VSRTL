@@ -173,24 +173,27 @@ void VSRTLWidget::initializeDesign(Design& arch) {
     i->setExpanded(true);
 }
 
+void VSRTLWidget::checkCanRewind() {
+    if (m_designCanrewind != m_arch.canrewind()) {
+        // Rewind state change, notify listeners
+        m_designCanrewind = m_arch.canrewind();
+        emit canrewind(m_designCanrewind);
+    }
+}
+
 void VSRTLWidget::clock() {
     m_arch.clock();
-    if (!m_designCanrewind) {
-        m_designCanrewind = true;
-        emit canrewind(true);
-    }
+    checkCanRewind();
 }
 
 void VSRTLWidget::rewind() {
     m_arch.rewind();
-    if (!m_arch.canrewind()) {
-        m_designCanrewind = false;
-        emit canrewind(false);
-    }
+    checkCanRewind();
 }
 
 void VSRTLWidget::reset() {
     m_arch.reset();
+    checkCanRewind();
 }
 
 void VSRTLWidget::addComponent(ComponentGraphic* g) {

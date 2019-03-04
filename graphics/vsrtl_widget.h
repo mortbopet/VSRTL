@@ -40,6 +40,8 @@ private slots:
     void handleSceneSelectionChanged();
 
 private:
+    void checkCanRewind();
+
     // State variable for reducing the number of emitted canrewind signals
     bool m_designCanrewind = false;
 
