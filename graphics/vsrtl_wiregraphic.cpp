@@ -24,6 +24,13 @@ QRectF WireGraphic::boundingRect() const {
     }
     QRectF br = p.boundingRect();
     br.adjust(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
+
+    // HACK HACK HACK
+    // To ensure that input ports are redrawn when this wire changes (ie. gets selected), we overlap the bounding rect
+    // of this item onto both of its ports, ensuring redraws
+    br.adjust(-parentItem()->boundingRect().width(), 0, parentItem()->boundingRect().width(), 0);
+    // HACK HACK HACK
+
     return br;
 }
 
@@ -53,7 +60,8 @@ void WireGraphic::postSceneConstructionInitialize() {
 
 void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
     painter->save();
-    painter->setPen(m_fromPort->getPen());
+    m_pen = m_fromPort->getPen();
+    painter->setPen(m_pen);
     for (const auto& toPort : m_toGraphicPorts) {
         const auto* portParent = dynamic_cast<ComponentGraphic*>(toPort->parentItem());
         if (portParent->isVisible()) {

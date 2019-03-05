@@ -20,6 +20,9 @@ public:
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     void updateGeometry();
     Port* getPort() const { return m_port; }
     void setInputWire(WireGraphic* wire);
@@ -35,6 +38,7 @@ private:
     void updateSlot();
     void initializeSignals();
 
+    bool m_selecting = false;
     bool m_showValue = false;
     ValueDisplayFormat m_valueBase = ValueDisplayFormat::baseTen;
 
