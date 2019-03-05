@@ -175,7 +175,7 @@ void VSRTLWidget::initializeDesign(Design& arch) {
 
 void VSRTLWidget::checkCanRewind() {
     if (m_designCanrewind != m_arch.canrewind()) {
-        // Rewind state change, notify listeners
+        // Rewind state just changed, notify listeners
         m_designCanrewind = m_arch.canrewind();
         emit canrewind(m_designCanrewind);
     }
