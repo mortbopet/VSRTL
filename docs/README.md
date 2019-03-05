@@ -6,32 +6,19 @@ This repository provides a default application, [app.cpp](https://github.com/mor
     <img src="https://raw.githubusercontent.com/mortbopet/VSRTL/master/resources/UI.png"/> 
 </p>
 
-Different circuits may be simulated by instatiating one of the various designs available in the VSRTL Components library, such as:
-```c++
-// app.cpp
-int main(int argc, char** argv) {
-    QApplication app(argc, argv);
-
-    ${D} design; // ${D} =  vsrtl::RanNumGen or vsrtl::Counter<n> or others
-    vsrtl::MainWindow w(design);
-
-    w.show();
-
-    app.exec();
-}
-```
-
-It is the intention that VSRTL will evolve to be able to parse a HDL file (Verilog, VHDL, ...), and create a visual representation of this. However, currently, a "HDL-Like" syntax has been created for describing digital circuits which may be simulated using VSRTL.
-
+Different circuits may be simulated by instatiating one of the various designs available in the VSRTL Components library, such as: `vsrtl::RanNumGen`,`vsrtl::Counter<n>`.  
 Refer to [Docs:Core:Counter](https://github.com/mortbopet/VSRTL/blob/master/docs/core.md#example-counter) for an example implementation of a circuit in VSRTL syntax.
+
+**Note**: It is the intention that VSRTL will evolve to be able to parse a HDL file (Verilog, VHDL, ...), and create a visual representation of this. However, currently, a "HDL-Like" syntax has been created for describing digital circuits which may be simulated using VSRTL.
 
 The VSRTL user-interface provides the following operations for controlling a simulation:
 
 | <img src="https://raw.githubusercontent.com/mortbopet/VSRTL/master/graphics/resources/step.svg?sanitize=true" width="100pt"/> | <img src="https://raw.githubusercontent.com/mortbopet/VSRTL/master/graphics/resources/step-clock.svg?sanitize=true" width="100pt"/> | <img src="https://raw.githubusercontent.com/mortbopet/VSRTL/master/graphics/resources/rewind.svg?sanitize=true" width="100pt"/> | <img src="https://raw.githubusercontent.com/mortbopet/VSRTL/master/graphics/resources/reset.svg?sanitize=true" width="100pt"/>|
 |:-:|:-:|:-:|:-:|
 |Clock|Auto-clock|Rewind|Reset|
-|Clock the circuit, storing all input values to registers as outputs, and propagate the remainder of the circuit| Issue the Clock action in regular intervals | Undo a clock cycle, rewinding the state of the circuit | Reset the circuit, setting all register output values to 0|
+|Clock the circuit| Clock the circuit in regular intervals | Undo a clock cycle, rewinding the state of the circuit | Reset the circuit, zeroing all registers|
 
+Register values may be modified through the netlist, at any point in time. This modified register value will upon modification propagate through the circuit.
 
 ## Libraries
 vsrtl is splsit into three libraries *core*, *graphics* and *components*.
