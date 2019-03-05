@@ -58,10 +58,14 @@ void WireGraphic::postSceneConstructionInitialize() {
     GraphicsBase::postSceneConstructionInitialize();
 }
 
+const QPen& WireGraphic::getPen() {
+    // propagate the source port pen to callers
+    return m_fromPort->getPen();
+}
+
 void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
     painter->save();
-    m_pen = m_fromPort->getPen();
-    painter->setPen(m_pen);
+    painter->setPen(getPen());
     for (const auto& toPort : m_toGraphicPorts) {
         const auto* portParent = dynamic_cast<ComponentGraphic*>(toPort->parentItem());
         if (portParent->isVisible()) {

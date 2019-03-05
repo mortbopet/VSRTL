@@ -3,6 +3,7 @@
 #include "vsrtl_port.h"
 #include "vsrtl_wiregraphic.h"
 
+#include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 
@@ -26,6 +27,7 @@ PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_p
     m_pen.setCapStyle(Qt::RoundCap);
 
     port->changed.Connect(this, &PortGraphic::updateSlot);
+    updatePen();
 
     setFlag(ItemIsSelectable);
 
@@ -35,8 +37,8 @@ PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_p
 }
 
 void PortGraphic::updateSlot() {
+    updatePen();
     update();
-    m_outputWire->update();
 }
 
 void PortGraphic::initializeSignals() {
@@ -51,6 +53,16 @@ void PortGraphic::updateInputWire() {
     Q_ASSERT(m_inputWire != nullptr);
     // Signal parent port of input wire to update - this will update all outgoing wires from the port
     m_inputWire->getFromPort()->updateWireGeometry();
+}
+
+void PortGraphic::propagateRedraw() {
+    update();
+    if (m_outputWire) {
+        m_outputWire->update();
+        for (const auto& p : m_outputWire->getToPorts()) {
+            p->propagateRedraw();
+        }
+    }
 }
 
 void PortGraphic::setInputWire(WireGraphic* wire) {
@@ -72,30 +84,41 @@ QPointF PortGraphic::getOutputPoint() const {
     return QPointF(m_boundingRect.right(), 0);
 }
 
-QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
-    /* Port selection
-     * When selecting any port, all ports connected together with this port should also be selected. This triggers port
-     * selection in the netlist, as well as redrawing of all ports as being currently selected
-     * m_selecting acts as a lock for preventing infinite recursion when a port tries to select its connected ports
-     * before its own itemChange call has returned.
-     */
-    if (m_selecting)
-        return QVariant();
+void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
+    if (m_updatingPen)
+        return;
 
-    m_selecting = true;
-    if (change == QGraphicsItem::ItemSelectedChange) {
-        // Notify joined ports to also be selected
-        if (m_inputWire) {
-            m_inputWire->getFromPort()->setSelected(value.toBool());
+    m_updatingPen = true;
+    if (m_inputWire) {
+        // This is a sink port. Propagate source port pen to this port
+        m_inputWire->getFromPort()->updatePen(aboutToBeSelected, aboutToBeDeselected);
+    } else {
+        if (aboutToBeDeselected || aboutToBeSelected) {
+            m_selected = aboutToBeSelected;
         }
-        if (m_outputWire) {
-            for (const auto& p : m_outputWire->getToPorts()) {
-                p->setSelected(value.toBool());
-            }
+
+        // This is a source port. Update pen based on current state
+        QColor c("#636363");
+        // Selection check is based on whether item is currently selected or about to be selected (via itemChange())
+        if (m_selected) {
+            c = QColor("#fef160");
+        } else if (m_port->getWidth() == 1) {
+            c = static_cast<bool>(*m_port) ? QColor("#6EEB83") : c;
+        } else {
+            c = s_defaultWireColor;
         }
+        m_pen.setColor(c);
+
+        // Make output port cascade an update call to all ports and wires which originate from this source
+        propagateRedraw();
     }
-    m_selecting = false;
+    m_updatingPen = false;
+}
 
+QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
+    if (change == QGraphicsItem::ItemSelectedChange) {
+        updatePen(value.toBool(), !value.toBool());
+    }
     return QGraphicsItem::itemChange(change, value);
 }
 
@@ -109,54 +132,43 @@ void PortGraphic::updateGeometry() {
     m_boundingRect = QRectF(0, 0, textRect.width() + c_portInnerMargin, textRect.height() + c_portInnerMargin);
 }
 
-void PortGraphic::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    if (isSelected()) {
-        setSelected(false);
-    } else {
-        QGraphicsItem::mousePressEvent(event);
-    }
+void PortGraphic::mousePressEvent(QGraphicsSceneMouseEvent* e) {
+    // Multiple port selection is unsupported. Only óne graphical port may be selected at any point, but in view of the
+    // netlist, all <connected> ports/wires are selected, when a single port in the string is selected.
+    if (e->modifiers() & Qt::ControlModifier)
+        return;
+
+    QGraphicsItem::mousePressEvent(e);
 }
-void PortGraphic::mouseReleaseEvent(QGraphicsSceneMouseEvent*) {
-    // We override QGraphicsItem::mouseReleaseEvent(event) to do nothing, to avoid trigerring deselection upon mouse
-    // button release, which does not mix with the mechanism which selects all connected ports on port mouse press.
+
+void PortGraphic::mouseReleaseEvent(QGraphicsSceneMouseEvent* e) {
+    if (e->modifiers() & Qt::ControlModifier)
+        return;
+
+    QGraphicsItem::mouseReleaseEvent(e);
+}
+
+const QPen& PortGraphic::getPen() {
+    // Only source ports (ports with no input wires) can provide a pen.
+    // Sink ports request their pens from their endpoint source port. This call might go through multiple port in/out
+    // combinations and component boundaries before reaching the pen.
+    if (m_inputWire) {
+        return m_inputWire->getFromPort()->getPen();
+    } else {
+        return m_pen;
+    }
 }
 
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
-    bool redrawOutputWire = false;
-
     painter->save();
     painter->setFont(m_font);
     const int offset = m_type == PortType::out ? c_portInnerMargin : 0;
     painter->drawText(QPointF(offset, m_boundingRect.height() / 2 + c_portInnerMargin), m_widthText);
 
-    QPen newPen = m_pen;
-    newPen.setStyle(Qt::SolidLine);
-    // Update pen based on port state
-    if (m_inputWire && m_inputWire->getFromPort()->isVisible()) {
-        newPen = m_inputWire->getPen();
-    } else {
-        QColor c("#636363");
-        if (option->state & QStyle::State_Selected) {
-            c = QColor("#fef160");
-        } else if (m_port->getWidth() == 1) {
-            c = static_cast<bool>(*m_port) ? QColor("#6EEB83") : c;
-        } else {
-            c = s_defaultWireColor;
-        }
-        newPen.setColor(c);
-    }
-    if (newPen.color() != m_pen.color())
-        redrawOutputWire = true;
-
-    m_pen = newPen;
-    painter->setPen(m_pen);
-
+    painter->setPen(getPen());
     painter->drawLine(QPointF(0, 0), QPointF(m_boundingRect.width(), 0));
-    painter->restore();
 
-    if (redrawOutputWire) {
-        m_outputWire->update();
-    }
+    painter->restore();
 
     /*
     // Draw bounding rect

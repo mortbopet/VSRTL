@@ -18,14 +18,13 @@ public:
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
-    const QPen& getPen() { return m_pen; }
+    const QPen& getPen();
     void postSceneConstructionInitialize() override;
 
     PortGraphic* getFromPort() const { return m_fromPort; }
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }
 
 private:
-    QPen m_pen;
     PortGraphic* m_fromPort;
     const std::vector<Port*>& m_toPorts;
     std::vector<PortGraphic*> m_toGraphicPorts;
