@@ -23,6 +23,7 @@ PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_p
     m_font = QFont("Monospace", 8);
     m_pen.setWidth(WIRE_WIDTH);
     m_pen.setColor(s_defaultWireColor);
+    m_pen.setCapStyle(Qt::RoundCap);
 
     port->changed.Connect(this, &PortGraphic::updateSlot);
 
