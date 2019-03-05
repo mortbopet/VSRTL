@@ -22,9 +22,6 @@ enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99
 #define IO_MIN_SPACING TOP_MARGIN / 2
 #define IO_PIN_LEN SIDE_MARGIN / 2
 
-#define SHADOW_OFFSET SIDE_MARGIN / 8
-#define SHADOW_WIDTH 1
-
 #define BUTTON_INDENT 2
 
 #define COMPONENT_COLUMN_MARGIN 40

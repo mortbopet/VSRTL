@@ -379,8 +379,8 @@ qreal largestPortWidth(const QMap<Port*, PortGraphic*>& ports) {
 
 void ComponentGraphic::updateBoundingRect() {
     m_boundingRect = m_baseRect;
-    // Adjust for a potential shadow
-    m_boundingRect.adjust(0, 0, SHADOW_OFFSET + SHADOW_WIDTH, SHADOW_OFFSET + SHADOW_WIDTH);
+    // Adjust slightly for stuff such as shadows, pen sizes etc.
+    m_boundingRect.adjust(-SIDE_MARGIN, -SIDE_MARGIN, SIDE_MARGIN, SIDE_MARGIN);
 
     // Adjust for IO pins. IO pins may vary in size, so find the largest
     m_boundingRect.adjust(-largestPortWidth(m_inputPorts), 0, largestPortWidth(m_outputPorts), 0);
