@@ -182,7 +182,7 @@ public:
         }
     }
     void initialize() {
-        if (m_inputports.size() == 0) {
+        if (m_inputports.size() == 0 && !hasSubcomponents()) {
             // Component has no input ports - ie. component is a constant. propagate all output ports and set component
             // as propagated.
             for (const auto& p : m_outputports)
@@ -190,6 +190,8 @@ public:
             m_propagationState = PropagationState::propagated;
         }
     }
+
+    bool hasSubcomponents() const { return m_subcomponents.size() != 0; }
 
     const Component* getParent() const { return m_parent; }
     std::string getName() const { return m_displayName; }
