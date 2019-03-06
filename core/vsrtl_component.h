@@ -41,6 +41,7 @@ private:                              \
 #define INPUTPORT_W(name, width) Port& name = this->createInputPort(#name, width)
 #define INPUTPORTS(name) std::vector<Port*> name
 #define OUTPUTPORT(name) Port& name = createOutputPort(#name)
+#define OUTPUTPORTS(name) std::vector<Port*> name
 #define OUTPUTPORT_W(name, width) Port& name = createOutputPort(#name, width)
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
@@ -87,27 +88,15 @@ public:
         m_subcomponents.push_back(std::unique_ptr<Component>(subcomponent));
     }
 
-    Port& createOutputPort(std::string name, unsigned int width = 0) {
-        auto port = new Port(name, this, width);
-        m_outputports.push_back(std::unique_ptr<Port>(port));
-        return *port;
-    }
-
-    Port& createInputPort(std::string name, unsigned int width = 0) {
-        Port* port = new Port(name, this, width);
-        m_inputports.push_back(std::unique_ptr<Port>(port));
-        return *port;
-    }
+    Port& createInputPort(std::string name, unsigned int width = 0) { return createPort(name, m_inputports, width); }
+    Port& createOutputPort(std::string name, unsigned int width = 0) { return createPort(name, m_outputports, width); }
 
     std::vector<Port*> createInputPorts(std::string name, unsigned int n, unsigned int width = 0) {
-        std::vector<Port*> ports;
-        for (int i = 0; i < n; i++) {
-            std::string i_name = name + "_" + std::to_string(i);
-            Port* port = new Port(i_name.c_str(), this, width);
-            m_inputports.push_back(std::unique_ptr<Port>(port));
-            ports.push_back(port);
-        }
-        return ports;
+        return createPorts(name, m_inputports, n, width);
+    }
+
+    std::vector<Port*> createOutputPorts(std::string name, unsigned int n, unsigned int width = 0) {
+        return createPorts(name, m_outputports, n, width);
     }
 
     void propagateComponent() {
@@ -230,6 +219,24 @@ public:
     }
 
 protected:
+    Port& createPort(std::string name, std::vector<std::unique_ptr<Port>>& container, unsigned int width) {
+        Port* port = new Port(name, this, width);
+        container.push_back(std::unique_ptr<Port>(port));
+        return *port;
+    }
+
+    std::vector<Port*> createPorts(std::string name, std::vector<std::unique_ptr<Port>>& container, unsigned int n,
+                                   unsigned int width) {
+        std::vector<Port*> ports;
+        for (int i = 0; i < n; i++) {
+            std::string i_name = name + "_" + std::to_string(i);
+            Port* port = new Port(i_name.c_str(), this, width);
+            container.push_back(std::unique_ptr<Port>(port));
+            ports.push_back(port);
+        }
+        return ports;
+    }
+
     PropagationState m_propagationState = PropagationState::unpropagated;
 
     void getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
