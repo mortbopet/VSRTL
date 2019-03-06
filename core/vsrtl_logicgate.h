@@ -67,7 +67,7 @@ class Not : public LogicGate {
 public:
     std::type_index getTypeId() const override { return std::type_index(typeid(Not)); }
     Not(std::string name, unsigned int width) : LogicGate(name, 1, width) {
-        this->out << [=] { return ~this->in[0]->template value<VSRTL_VT_U>(); };
+        this->out << [=] { return signextend(~this->in[0]->template value<VSRTL_VT_U>(), width); };
     }
 };
 
