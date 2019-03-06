@@ -131,6 +131,18 @@ void VSRTLWidget::registerShapes() const {
          },
          QRectF(0, 0, 3, 3)});
 
+    ComponentGraphic::setComponentShape(
+        std::type_index(typeid(Not)),
+        {[](QTransform t) {
+             QPainterPath shape;
+             QRectF circle = t.mapRect(QRectF(QPointF(0, 0), QPointF(0.05, 0.05)));
+             shape.addEllipse(t.map(QPointF(0.9, 0.5)), circle.width(), circle.height());
+             shape.addPolygon(t.map(QPolygonF({QPointF(0, 0), QPointF(0.8, 0.5), QPointF(0, 1), QPointF(0, 0)})));
+             shape.setFillRule(Qt::WindingFill);
+             return shape;
+         },
+         QRectF(0, 0, 3, 3)});
+
     // Multiplexer
     ComponentGraphic::setComponentShape(
         std::type_index(typeid(Multiplexer)),
