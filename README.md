@@ -1,4 +1,5 @@
 # VSRTL
+[![Build Status](https://travis-ci.org/mortbopet/VSRTL.svg?branch=master)](https://travis-ci.org/mortbopet/VSRTL)  
 ***V**isual **S**imulation of **R**egister **T**ransfer **L**ogic*
 
 VSRTL is a collection of libraries and applications for visualizing simulations of digital circuits.
@@ -21,4 +22,4 @@ With the dependencies installed, open `vsrtl/CMakeLists.txt` as a CMake project 
   * C++14 toolchain
   * CMake
 * **Graphics**
-  * Qt 5.10+: https://www.qt.io/download
+  * Qt 5.9.3+: https://www.qt.io/download

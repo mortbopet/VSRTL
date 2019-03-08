@@ -69,12 +69,4 @@ constexpr unsigned ceillog2(unsigned x) {
     return x == 1 || x == 0 ? 1 : floorlog2(x - 1) + 1;
 }
 
-template <typename T, size_t S>
-inline constexpr auto sum(const std::array<T, S> arr) {
-    std::remove_cv_t<std::remove_reference_t<T>> t = 0;
-    for (const auto v : arr) {
-        t += v;
-    }
-    return t;
-}
 }  // namespace vsrtl
