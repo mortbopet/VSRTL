@@ -17,7 +17,6 @@ INCLUDE_DIRECTORIES("../components/")
 
 
 create_qtest(tst_adderandreg)
-create_qtest(tst_mainwindow)
 create_qtest(tst_nestedcomponent)
 
 

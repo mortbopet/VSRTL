@@ -23,5 +23,5 @@ void tst_adderAndReg::functionalTest() {
     // QVERIFY(a.reg->out->value<uint32_t>() == expectedValue);
 }
 
-QTEST_MAIN(tst_adderAndReg)
+QTEST_APPLESS_MAIN(tst_adderAndReg)
 #include "tst_adderandreg.moc"

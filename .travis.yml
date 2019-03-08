@@ -35,6 +35,8 @@ before_install:
 script:
     - source ${TRAVIS_BUILD_DIR}/ci_scripts/${VSRTL_PLATFORM}/travisbuild.sh
 
+after_success:
+    - source ${TRAVIS_BUILD_DIR}/ci_scripts/run_qtests.sh
 branches:
  except:
    - # Do not build tags that we create when we upload to GitHub Releases

@@ -20,5 +20,5 @@ void tst_NestedComponents::functionalTest() {
     // We expect that m_cVal has been added to the register value n times
     // REQUIRE(a.regs->value(5) == 40);
 }
-QTEST_MAIN(tst_NestedComponents)
+QTEST_APPLESS_MAIN(tst_NestedComponents)
 #include "tst_nestedcomponent.moc"
