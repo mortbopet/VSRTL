@@ -1,6 +1,7 @@
 #include "vsrtl_widget.h"
 #include "ui_vsrtl_widget.h"
 #include "vsrtl_design.h"
+#include "vsrtl_portgraphic.h"
 
 #include "vsrtl_shape.h"
 
@@ -34,15 +35,26 @@ VSRTLWidget::~VSRTLWidget() {
 }
 
 void VSRTLWidget::handleSceneSelectionChanged() {
-    std::vector<Component*> selectedItems;
+    std::vector<Component*> selectedComponents;
+    std::vector<Port*> selectedPorts;
     for (const auto& i : m_scene->selectedItems()) {
         ComponentGraphic* i_c = dynamic_cast<ComponentGraphic*>(i);
         if (i_c) {
-            selectedItems.push_back(i_c->getComponent());
+            selectedComponents.push_back(i_c->getComponent());
+            continue;
+        }
+        PortGraphic* i_p = dynamic_cast<PortGraphic*>(i);
+        if (i_p) {
+            // Only a single port may be selected in view of the QGraphicsScene - Assert that this is not the case.
+            Q_ASSERT(selectedPorts.empty());
+            selectedPorts = i_p->getPort()->getPortsInConnection();
+            continue;
         }
     }
-    emit selectionChanged(selectedItems);
-}
+
+    emit componentSelectionChanged(selectedComponents);
+    emit portSelectionChanged(selectedPorts);
+}  // namespace vsrtl
 
 void VSRTLWidget::handleSelectionChanged(const std::vector<Component*>& selected, std::vector<Component*>& deselected) {
     // Block signals from scene to disable selectionChange emission.
@@ -179,7 +191,8 @@ void VSRTLWidget::initializeDesign(Design& arch) {
     // At this point, all graphic items have been created, and the post scene construction initialization may take
     // place. Similar to the initialize call, postSceneConstructionInitialization will recurse through the entire tree
     // which is the graphics items in the scene.
-    i->postSceneConstructionInitialize();
+    i->postSceneConstructionInitialize1();
+    i->postSceneConstructionInitialize2();
 
     // Expand top widget
     i->setExpanded(true);

@@ -34,7 +34,8 @@ public slots:
 
 signals:
     void canrewind(bool);
-    void selectionChanged(const std::vector<Component*>&);
+    void componentSelectionChanged(const std::vector<Component*>&);
+    void portSelectionChanged(const std::vector<Port*>&);
 
 private slots:
     void handleSceneSelectionChanged();
