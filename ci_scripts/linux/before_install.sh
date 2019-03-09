@@ -5,6 +5,6 @@ git fetch --unshallow
 git pull --tags
 git describe
 
-# sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
+pip install --user cpp-coveralls
 
 source /opt/qt*/bin/qt*-env.sh

@@ -28,6 +28,7 @@ matrix:
             - g++-6
             - qt59-meta-minimal
             - qt59svg
+            - lcov # CodeCov
 
 before_install:
     - source ${TRAVIS_BUILD_DIR}/ci_scripts/${VSRTL_PLATFORM}/before_install.sh
@@ -36,7 +37,8 @@ script:
     - source ${TRAVIS_BUILD_DIR}/ci_scripts/${VSRTL_PLATFORM}/travisbuild.sh
 
 after_success:
-    - source ${TRAVIS_BUILD_DIR}/ci_scripts/run_qtests.sh
+    - source ${TRAVIS_BUILD_DIR}/ci_scripts/${VSRTL_PLATFORM}/after_success.sh
+    
 branches:
  except:
    - # Do not build tags that we create when we upload to GitHub Releases

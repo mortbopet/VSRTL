@@ -22,7 +22,29 @@ include_directories(${Qt5Core_INCLUDE_DIRS})
 include_directories(external)
 
 ######################################################################
+## Code Coverage Configuration
+######################################################################
 
+option(COVERAGE "Enable coverage reporting" OFF)
+if(COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  add_library(coverage_config INTERFACE)
+  # Add required flags (GCC & LLVM/Clang)
+  set(COVERAGE_LIB coverage_config)
+  target_compile_options(${COVERAGE_LIB} INTERFACE
+    -O0        # no optimization
+    -g         # generate debug info
+    --coverage # sets all required flags
+  )
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.13)
+    target_link_options(coverage_config INTERFACE --coverage)
+  else()
+    target_link_libraries(coverage_config INTERFACE --coverage)
+  endif()
+endif(COVERAGE)
+
+######################################################################
+## Library setup
+######################################################################
 set(CORE_LIB ${PROJECT_NAME}_core_lib)
 add_subdirectory(core)
 set(GRAPHICS_LIB ${PROJECT_NAME}_gfx_lib)

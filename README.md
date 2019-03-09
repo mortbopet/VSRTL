@@ -1,5 +1,5 @@
 # VSRTL
-[![Build Status](https://travis-ci.org/mortbopet/VSRTL.svg?branch=master)](https://travis-ci.org/mortbopet/VSRTL)  
+[![Build Status](https://travis-ci.org/mortbopet/VSRTL.svg?branch=master)](https://travis-ci.org/mortbopet/VSRTL) [![codecov](https://codecov.io/gh/mortbopet/VSRTL/branch/master/graph/badge.svg)](https://codecov.io/gh/mortbopet/VSRTL)  
 ***V**isual **S**imulation of **R**egister **T**ransfer **L**ogic*
 
 VSRTL is a collection of libraries and applications for visualizing simulations of digital circuits.

@@ -26,4 +26,7 @@ set_target_properties(${GRAPHICS_LIB} PROPERTIES LINKER_LANGUAGE CXX)
 
 target_link_libraries(${GRAPHICS_LIB} ${VSRTL_CORE})
 
+if(COVERAGE)
+    target_link_libraries(${GRAPHICS_LIB} ${COVERAGE_LIB})
+endif(COVERAGE)
 

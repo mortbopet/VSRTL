@@ -1,4 +1,4 @@
 #!/bin/bash 
 ls
-cmake .
-make -j$(nproc)
+cmake -DCOVERAGE=ON -DCMAKE_BUILD_TYPE=Debug .
+cmake --build . --config Debug -- -j $(nproc)

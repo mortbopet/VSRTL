@@ -9,11 +9,15 @@ macro(create_qtest name)
     add_test(${name} ${name})
     target_link_libraries(${name} Qt5::Core Qt5::Widgets Qt5::Test)
     target_link_libraries(${name} ${CORE_LIB} ${GRAPHICS_LIB} ${COMPONENTS_LIB})
+    if (COVERAGE)
+        target_link_libraries(${name} ${COVERAGE_LIB})
+    endif()
 endmacro()
 
 INCLUDE_DIRECTORIES("../core/")
 INCLUDE_DIRECTORIES("../graphics/")
 INCLUDE_DIRECTORIES("../components/")
+
 
 
 create_qtest(tst_adderandreg)
