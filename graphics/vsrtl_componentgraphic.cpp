@@ -7,6 +7,7 @@
 #include "vsrtl_placeroute.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_registergraphic.h"
+#include "vsrtl_traversal_util.h"
 
 #include <qmath.h>
 #include <deque>
@@ -239,7 +240,7 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
         // the wires going to the input ports of this component, to redraw
         if (m_initialized) {
             for (const auto& inputPort : m_inputPorts) {
-                inputPort->updateInputWire();
+                getInputPortGraphic<PortGraphic*>(inputPort->getPort())->updateWireGeometry();
             }
         }
 

@@ -2,6 +2,7 @@
 #include "ui_vsrtl_widget.h"
 #include "vsrtl_design.h"
 #include "vsrtl_portgraphic.h"
+#include "vsrtl_traversal_util.h"
 
 #include "vsrtl_shape.h"
 
@@ -58,11 +59,11 @@ void VSRTLWidget::handleSelectionChanged(const std::vector<Component*>& selected
     // Block signals from scene to disable selectionChange emission.
     m_scene->blockSignals(true);
     for (const auto& c : selected) {
-        auto* c_g = static_cast<ComponentGraphic*>(c->getGraphic());
+        auto* c_g = getGraphic<ComponentGraphic*>(c);
         c_g->setSelected(true);
     }
     for (const auto& c : deselected) {
-        auto* c_g = static_cast<ComponentGraphic*>(c->getGraphic());
+        auto* c_g = getGraphic<ComponentGraphic*>(c);
         c_g->setSelected(false);
     }
     m_scene->blockSignals(false);

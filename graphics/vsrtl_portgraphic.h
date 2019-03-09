@@ -34,10 +34,10 @@ public:
     const QPen& getPen();
 
 private:
+    void redraw();
     void propagateRedraw();
     void updatePen(bool aboutToBeSelected = false, bool aboutToBeDeselected = false);
     void updateSlot();
-    void initializeSignals();
 
     // m_selected: does not indicate visual selection (ie. isSelected()), but rather whether any port in the port/wire
     // connection of this port has been selected.

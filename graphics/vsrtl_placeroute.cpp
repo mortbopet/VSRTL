@@ -2,6 +2,7 @@
 #include "vsrtl_component.h"
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_graphics_defines.h"
+#include "vsrtl_traversal_util.h"
 
 #include <deque>
 
@@ -47,7 +48,7 @@ std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<
     // Position components
     QPointF pos = QPointF(25, 25);  // Start a bit offset from the parent borders
     for (const auto& c : stack) {
-        ComponentGraphic* g = static_cast<ComponentGraphic*>(c->getGraphic());
+        auto* g = getGraphic<ComponentGraphic*>(c);
         placements[g] = pos;
         pos.rx() += g->boundingRect().width() + COMPONENT_COLUMN_MARGIN;
     }

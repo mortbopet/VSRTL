@@ -1,6 +1,7 @@
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_port.h"
+#include "vsrtl_traversal_util.h"
 #include "vsrtl_wiregraphic.h"
 
 #include <QGraphicsSceneMouseEvent>
@@ -32,7 +33,7 @@ PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_p
 
     updateGeometry();
 
-    initializeSignals();
+    m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), this);
 }
 
 void PortGraphic::updateSlot() {
@@ -40,27 +41,22 @@ void PortGraphic::updateSlot() {
     update();
 }
 
-void PortGraphic::initializeSignals() {
-    m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), this);
-}
-
 void PortGraphic::updateWireGeometry() {
     m_outputWire->prepareGeometryChange();
 }
 
-void PortGraphic::updateInputWire() {
-    Q_ASSERT(m_inputWire != nullptr);
-    // Signal parent port of input wire to update - this will update all outgoing wires from the port
-    m_inputWire->getFromPort()->updateWireGeometry();
+void PortGraphic::redraw() {
+    // Schedules redrawing of the current port and its output wire
+    update();
+    if (m_outputWire) {
+        m_outputWire->update();
+    }
 }
 
 void PortGraphic::propagateRedraw() {
-    m_port->traverseToSinks([=](Port& port) {
-        auto* portGraphic = static_cast<PortGraphic*>(port.getGraphic());
-        portGraphic->update();
-        if (portGraphic->m_outputWire) {
-            portGraphic->m_outputWire->update();
-        }
+    m_port->traverseToSinks([=](Port* port) {
+        auto* portGraphic = getGraphic<PortGraphic*>(port);
+        portGraphic->redraw();
     });
 }
 
@@ -94,10 +90,10 @@ QPointF PortGraphic::getOutputPoint() const {
 }
 
 void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
-    m_port->traverseToRoot([=](Port& node) {
+    m_port->traverseToRoot([=](Port* node) {
         // Traverse to root, and only execute when no input wire is present. This signifies that the root source port
         // has been reached
-        auto* portGraphic = static_cast<PortGraphic*>(node.getGraphic());
+        auto* portGraphic = getGraphic<PortGraphic*>(node);
         if (!portGraphic->m_inputWire) {
             if (aboutToBeDeselected || aboutToBeSelected) {
                 portGraphic->m_selected = aboutToBeSelected;
