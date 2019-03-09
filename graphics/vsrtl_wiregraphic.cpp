@@ -80,15 +80,5 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
     }
 
     painter->restore();
-
-    /*
-    // draw bounding rect
-    painter->save();
-    painter->setPen(QRandomGenerator::global()->generate());
-    painter->setBrush(Qt::transparent);
-    const auto br = boundingRect();
-    painter->drawRect(br);
-    painter->restore();
-    */
 }
 }  // namespace vsrtl
