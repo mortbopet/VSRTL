@@ -62,8 +62,8 @@ void PortGraphic::propagateRedraw() {
 
 /**
  * @brief PortGraphic::postSceneConstructionInitialize2
- * With all wires having registered themselves with their connected ports, the inital state of the pen for a source port
- * may now be set
+ * With all wires created, the port may now issue an updatePen() call. This must be executed after wires have
+ * initialized, given that updatePen() will trigger a redraw of wires
  */
 void PortGraphic::postSceneConstructionInitialize2() {
     if (!m_inputWire)
