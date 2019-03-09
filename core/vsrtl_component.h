@@ -138,7 +138,7 @@ public:
 
         // Signal all connected components of the current component to propagate
         for (const auto& out : m_outputports) {
-            for (const auto& in : out->getConnectsFromThis()) {
+            for (const auto& in : out->getOutputPorts()) {
                 // With the input port of the connected component propagated, the parent component may be propagated.
                 // This will succeed if all input components to the parent component has been propagated.
                 in->getParent()->propagateComponent();
@@ -155,7 +155,7 @@ public:
                  *  |____________|
                  *
                  */
-                for (const auto& inout : in->getConnectsFromThis())
+                for (const auto& inout : in->getOutputPorts())
                     inout->getParent()->propagateComponent();
             }
         }
@@ -206,7 +206,7 @@ public:
     std::vector<Component*> getInputComponents() const {
         std::vector<Component*> v;
         for (const auto& s : m_inputports) {
-            v.push_back(s->getConnectsToThis()->getParent());
+            v.push_back(s->getInputPort()->getParent());
         }
         return v;
     }
@@ -214,7 +214,7 @@ public:
     std::vector<Component*> getOutputComponents() const {
         std::vector<Component*> v;
         for (const auto& p : m_outputports) {
-            for (const auto& pc : p->getConnectsFromThis())
+            for (const auto& pc : p->getOutputPorts())
                 v.push_back(pc->getParent());
         }
         return v;

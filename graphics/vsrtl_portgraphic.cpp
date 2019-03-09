@@ -27,7 +27,6 @@ PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_p
     m_pen.setCapStyle(Qt::RoundCap);
 
     port->changed.Connect(this, &PortGraphic::updateSlot);
-    updatePen();
 
     setFlag(ItemIsSelectable);
 
@@ -42,7 +41,7 @@ void PortGraphic::updateSlot() {
 }
 
 void PortGraphic::initializeSignals() {
-    m_outputWire = new WireGraphic(this, m_port->getConnectsFromThis(), this);
+    m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), this);
 }
 
 void PortGraphic::updateWireGeometry() {
@@ -56,13 +55,13 @@ void PortGraphic::updateInputWire() {
 }
 
 void PortGraphic::propagateRedraw() {
-    update();
-    if (m_outputWire) {
-        m_outputWire->update();
-        for (const auto& p : m_outputWire->getToPorts()) {
-            p->propagateRedraw();
+    m_port->traverseToSinks([=](Port& port) {
+        auto* portGraphic = static_cast<PortGraphic*>(port.getGraphic());
+        portGraphic->update();
+        if (portGraphic->m_outputWire) {
+            portGraphic->m_outputWire->update();
         }
-    }
+    });
 }
 
 void PortGraphic::setInputWire(WireGraphic* wire) {
@@ -85,34 +84,31 @@ QPointF PortGraphic::getOutputPoint() const {
 }
 
 void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
-    if (m_updatingPen)
-        return;
+    m_port->traverseToRoot([=](Port& node) {
+        // Traverse to root, and only execute when no input wire is present. This signifies that the root source port
+        // has been reached
+        auto* portGraphic = static_cast<PortGraphic*>(node.getGraphic());
+        if (!portGraphic->m_inputWire) {
+            if (aboutToBeDeselected || aboutToBeSelected) {
+                portGraphic->m_selected = aboutToBeSelected;
+            }
 
-    m_updatingPen = true;
-    if (m_inputWire) {
-        // This is a sink port. Propagate source port pen to this port
-        m_inputWire->getFromPort()->updatePen(aboutToBeSelected, aboutToBeDeselected);
-    } else {
-        if (aboutToBeDeselected || aboutToBeSelected) {
-            m_selected = aboutToBeSelected;
+            // This is a source port. Update pen based on current state
+            QColor c("#636363");
+            // Selection check is based on whether item is currently selected or about to be selected (via itemChange())
+            if (portGraphic->m_selected) {
+                c = QColor("#fef160");
+            } else if (m_port->getWidth() == 1) {
+                c = static_cast<bool>(*m_port) ? QColor("#6EEB83") : c;
+            } else {
+                c = s_defaultWireColor;
+            }
+            portGraphic->m_pen.setColor(c);
+
+            // Make output port cascade an update call to all ports and wires which originate from this source
+            portGraphic->propagateRedraw();
         }
-
-        // This is a source port. Update pen based on current state
-        QColor c("#636363");
-        // Selection check is based on whether item is currently selected or about to be selected (via itemChange())
-        if (m_selected) {
-            c = QColor("#fef160");
-        } else if (m_port->getWidth() == 1) {
-            c = static_cast<bool>(*m_port) ? QColor("#6EEB83") : c;
-        } else {
-            c = s_defaultWireColor;
-        }
-        m_pen.setColor(c);
-
-        // Make output port cascade an update call to all ports and wires which originate from this source
-        propagateRedraw();
-    }
-    m_updatingPen = false;
+    });
 }
 
 QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {

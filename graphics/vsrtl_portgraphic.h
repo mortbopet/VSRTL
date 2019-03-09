@@ -3,6 +3,7 @@
 
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphicsbase.h"
+#include "vsrtl_wiregraphic.h"
 
 #include <QFont>
 #include <QPen>
@@ -10,7 +11,6 @@
 namespace vsrtl {
 
 class Port;
-class WireGraphic;
 
 enum class PortType { in, out };
 
@@ -43,7 +43,6 @@ private:
     // m_selected: does not indicate visual selection (ie. isSelected()), but rather whether any port in the port/wire
     // connection of this port has been selected.
     bool m_selected = false;
-    bool m_updatingPen = false;
     bool m_showValue = false;
     ValueDisplayFormat m_valueBase = ValueDisplayFormat::baseTen;
 
@@ -62,6 +61,7 @@ private:
     QPen m_oldPen;  // Pen which was previously used for paint(). If a change between m_oldPen and m_pen is seen, this
                     // triggers redrawing of the connected wires
 };
+
 }  // namespace vsrtl
 
 #endif  // VSRTL_PORTGRAPHIC_H
