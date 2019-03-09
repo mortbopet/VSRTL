@@ -34,7 +34,12 @@ QRectF WireGraphic::boundingRect() const {
     return br;
 }
 
-void WireGraphic::postSceneConstructionInitialize() {
+/**
+ * @brief WireGraphic::postSceneConstructionInitialize1
+ * With all ports and components created during circuit construction, wires may now register themselves with their
+ * attached input- and output ports
+ */
+void WireGraphic::postSceneConstructionInitialize1() {
     for (const auto& item : scene()->items()) {
         PortGraphic* portItem = dynamic_cast<PortGraphic*>(item);
         if (portItem) {
@@ -55,7 +60,7 @@ void WireGraphic::postSceneConstructionInitialize() {
         port->setInputWire(this);
     }
 
-    GraphicsBase::postSceneConstructionInitialize();
+    GraphicsBase::postSceneConstructionInitialize1();
 }
 
 const QPen& WireGraphic::getPen() {

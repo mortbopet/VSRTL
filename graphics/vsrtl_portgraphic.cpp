@@ -64,6 +64,16 @@ void PortGraphic::propagateRedraw() {
     });
 }
 
+/**
+ * @brief PortGraphic::postSceneConstructionInitialize2
+ * With all wires having registered themselves with their connected ports, the inital state of the pen for a source port
+ * may now be set
+ */
+void PortGraphic::postSceneConstructionInitialize2() {
+    if (!m_inputWire)
+        updatePen();
+}
+
 void PortGraphic::setInputWire(WireGraphic* wire) {
     // Set wire is called during post scene construction initialization, wherein WireGraphic's will register with its
     // destination ports (inputs)

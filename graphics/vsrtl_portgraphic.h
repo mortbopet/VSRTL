@@ -23,6 +23,7 @@ public:
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
     void mousePressEvent(QGraphicsSceneMouseEvent*) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent*) override;
+    void postSceneConstructionInitialize2() override;
     void updateGeometry();
     Port* getPort() const { return m_port; }
     void setInputWire(WireGraphic* wire);

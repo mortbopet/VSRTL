@@ -19,7 +19,7 @@ public:
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     const QPen& getPen();
-    void postSceneConstructionInitialize() override;
+    void postSceneConstructionInitialize1() override;
 
     PortGraphic* getFromPort() const { return m_fromPort; }
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }

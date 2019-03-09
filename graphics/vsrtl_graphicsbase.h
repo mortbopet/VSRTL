@@ -10,11 +10,14 @@ public:
     GraphicsBase();
 
     /**
-     * @brief postSceneConstructionInitialize
+     * @brief postSceneConstructionInitialize#
      * Some graphic components may need extra initialization steps after all graphics have been added to the scene (such
-     * as wires). When overriding, overriding function must call GraphicsBase::postSceneConstructionInitialize()
+     * as wires). When overriding, overriding function must call GraphicsBase::postSceneConstructionInitialize#()
+     *
+     * Multiple passes may be used, allowing for staged initialization
      */
-    virtual void postSceneConstructionInitialize();
+    virtual void postSceneConstructionInitialize1();
+    virtual void postSceneConstructionInitialize2();
 
 protected:
     bool m_initialized = false;
