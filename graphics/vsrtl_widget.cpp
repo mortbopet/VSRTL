@@ -45,8 +45,6 @@ void VSRTLWidget::handleSceneSelectionChanged() {
         }
         PortGraphic* i_p = dynamic_cast<PortGraphic*>(i);
         if (i_p) {
-            // Only a single port may be selected in view of the QGraphicsScene - Assert that this is not the case.
-            Q_ASSERT(selectedPorts.empty());
             selectedPorts = i_p->getPort()->getPortsInConnection();
             continue;
         }

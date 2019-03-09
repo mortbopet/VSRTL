@@ -138,22 +138,6 @@ void PortGraphic::updateGeometry() {
     m_boundingRect = QRectF(0, 0, textRect.width() + c_portInnerMargin, textRect.height() + c_portInnerMargin);
 }
 
-void PortGraphic::mousePressEvent(QGraphicsSceneMouseEvent* e) {
-    // Multiple port selection is unsupported. Only óne graphical port may be selected at any point, but in view of the
-    // netlist, all <connected> ports/wires are selected, when a single port in the string is selected.
-    if (e->modifiers() & Qt::ControlModifier)
-        return;
-
-    QGraphicsItem::mousePressEvent(e);
-}
-
-void PortGraphic::mouseReleaseEvent(QGraphicsSceneMouseEvent* e) {
-    if (e->modifiers() & Qt::ControlModifier)
-        return;
-
-    QGraphicsItem::mouseReleaseEvent(e);
-}
-
 const QPen& PortGraphic::getPen() {
     // Only source ports (ports with no input wires) can provide a pen.
     // Sink ports request their pens from their endpoint source port. This call might go through multiple port in/out

@@ -21,8 +21,6 @@ public:
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
-    void mousePressEvent(QGraphicsSceneMouseEvent*) override;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent*) override;
     void postSceneConstructionInitialize2() override;
     void updateGeometry();
     Port* getPort() const { return m_port; }
