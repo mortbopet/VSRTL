@@ -45,7 +45,7 @@ public:
     Port* getInputPort() const { return m_inputPort; }
     std::vector<Port*> getPortsInConnection() {
         std::vector<Port*> portsInConnection;
-        traverseConnection([=](Port& port, std::vector<Port*>& ports) { ports.push_back(&port); }, portsInConnection);
+        traverseConnection([=](Port* port, std::vector<Port*>& ports) { ports.push_back(port); }, portsInConnection);
         return portsInConnection;
     }
 
@@ -146,7 +146,7 @@ private:
 
 template <typename F, typename... Args>
 void Port::traverseToRoot(const F& nodeFunc, Args&... args) {
-    nodeFunc(*this, args...);
+    nodeFunc(this, args...);
     if (m_inputPort) {
         m_inputPort->traverseToRoot(nodeFunc, args...);
     }
@@ -154,7 +154,7 @@ void Port::traverseToRoot(const F& nodeFunc, Args&... args) {
 
 template <typename F, typename... Args>
 void Port::traverseToSinks(const F& nodeFunc, Args&... args) {
-    nodeFunc(*this, args...);
+    nodeFunc(this, args...);
     for (const auto& p : m_outputPorts) {
         p->traverseToSinks(nodeFunc, args...);
     }
@@ -166,7 +166,7 @@ void Port::traverseConnection(const F& nodeFunc, Args&... args) {
         return;
     m_traversingConnection = true;
 
-    nodeFunc(*this, args...);
+    nodeFunc(this, args...);
     if (m_inputPort) {
         m_inputPort->traverseConnection(nodeFunc, args...);
     }
