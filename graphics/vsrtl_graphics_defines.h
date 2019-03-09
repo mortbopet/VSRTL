@@ -12,6 +12,10 @@ namespace vsrtl {
 
 enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99 };
 
+#define WIRE_DEFAULT_COLOR QColor("#636363")
+#define WIRE_SELECTED_COLOR QColor("#FEF160")
+#define WIRE_BOOLHIGH_COLOR QColor("#6EEB83")
+
 #define GRID_SIZE 15
 
 #define TOP_MARGIN 10
@@ -29,6 +33,8 @@ enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99
 
 #define WIRE_WIDTH 4
 #define COMPONENT_BORDER_WIDTH 3
+
+#define PORT_INNER_MARGIN 5
 
 }  // namespace vsrtl
 #endif  // VSRTL_GRAPHICS_DEFINES_H

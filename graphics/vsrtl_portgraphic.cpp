@@ -10,19 +10,13 @@
 
 namespace vsrtl {
 
-namespace {
-
-static constexpr int c_portInnerMargin = 5;
-static QColor s_defaultWireColor("#636363");
-}  // namespace
-
 PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
     port->registerGraphic(this);
     setParentItem(parent);
     m_widthText = QString::number(port->getWidth() - 1) + ":0";
     m_font = QFont("Monospace", 8);
     m_pen.setWidth(WIRE_WIDTH);
-    m_pen.setColor(s_defaultWireColor);
+    m_pen.setColor(WIRE_DEFAULT_COLOR);
     m_pen.setCapStyle(Qt::RoundCap);
 
     port->changed.Connect(this, &PortGraphic::updateSlot);
@@ -98,14 +92,14 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
             }
 
             // This is a source port. Update pen based on current state
-            QColor c("#636363");
             // Selection check is based on whether item is currently selected or about to be selected (via itemChange())
+            QColor c = WIRE_DEFAULT_COLOR;
             if (portGraphic->m_selected) {
-                c = QColor("#fef160");
+                c = WIRE_SELECTED_COLOR;
             } else if (m_port->getWidth() == 1) {
-                c = static_cast<bool>(*m_port) ? QColor("#6EEB83") : c;
+                c = static_cast<bool>(*m_port) ? WIRE_BOOLHIGH_COLOR : c;
             } else {
-                c = s_defaultWireColor;
+                c = WIRE_DEFAULT_COLOR;
             }
             portGraphic->m_pen.setColor(c);
 
@@ -129,7 +123,7 @@ void PortGraphic::updateGeometry() {
     QFontMetrics fm(m_font);
     const auto textRect = fm.boundingRect(m_widthText);
 
-    m_boundingRect = QRectF(0, 0, textRect.width() + c_portInnerMargin, textRect.height() + c_portInnerMargin);
+    m_boundingRect = QRectF(0, 0, textRect.width() + PORT_INNER_MARGIN, textRect.height() + PORT_INNER_MARGIN);
 }
 
 const QPen& PortGraphic::getPen() {
@@ -146,8 +140,8 @@ const QPen& PortGraphic::getPen() {
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
     painter->save();
     painter->setFont(m_font);
-    const int offset = m_type == PortType::out ? c_portInnerMargin : 0;
-    painter->drawText(QPointF(offset, m_boundingRect.height() / 2 + c_portInnerMargin), m_widthText);
+    const int offset = m_type == PortType::out ? PORT_INNER_MARGIN : 0;
+    painter->drawText(QPointF(offset, m_boundingRect.height() / 2 + PORT_INNER_MARGIN), m_widthText);
 
     painter->setPen(getPen());
     painter->drawLine(QPointF(0, 0), QPointF(m_boundingRect.width(), 0));
