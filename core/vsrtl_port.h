@@ -25,7 +25,7 @@ class Port : public Base {
 public:
     Port(std::string name, Component* parent, unsigned int width = 0)
         : m_parent(parent), m_name(name), m_width(width) {}
-    bool isConnected() const { return m_portConnectsTo != nullptr || m_propagationFunction != nullptr; }
+    bool isConnected() const { return m_inputPort != nullptr || m_propagationFunction != nullptr; }
     std::string getName() const { return m_name; }
     Component* getParent() const { return m_parent; }
     bool isPropagated() const { return m_propagationState != PropagationState::unpropagated; }
@@ -41,13 +41,32 @@ public:
         m_width = width;
     }
 
-    const std::vector<Port*>& getConnectsFromThis() const { return m_connectsFromThis; }
-    Port* getConnectsToThis() const { return m_portConnectsTo; }
+    const std::vector<Port*>& getOutputPorts() const { return m_outputPorts; }
+    Port* getInputPort() const { return m_inputPort; }
+    std::vector<Port*> getPortsInConnection() {
+        std::vector<Port*> portsInConnection;
+        traverseConnection([=](Port& port, std::vector<Port*>& ports) { ports.push_back(&port); }, portsInConnection);
+        return portsInConnection;
+    }
+
+    /* traverse from any given port towards its root (source) port, while executing nodeFunc(args...) in each port which
+    is visited along the way*/
+    template <typename F, typename... Args>
+    void traverseToRoot(const F& nodeFunc, Args&... args);
+
+    /* From this port, visit all directly and implicitely connected port to this port, and execute nodeFunc(args...) in
+    each visited port */
+    template <typename F, typename... Args>
+    void traverseConnection(const F& nodeFunc, Args&... args);
+
+    /* Traverse from any given port towards its endpoint sinks, executing nodeFunc(args...) in each visited port */
+    template <typename F, typename... Args>
+    void traverseToSinks(const F& nodeFunc, Args&... args);
 
     // Port connections are doubly linked
     void operator>>(Port& toThis) {
-        m_connectsFromThis.push_back(&toThis);
-        if (toThis.m_portConnectsTo != nullptr) {
+        m_outputPorts.push_back(&toThis);
+        if (toThis.m_inputPort != nullptr) {
             throw std::runtime_error("Port input already connected");
         }
         if (m_width == 0) {
@@ -56,7 +75,7 @@ public:
         if (m_width != toThis.getWidth()) {
             throw std::runtime_error("Port width mismatch");
         }
-        toThis.m_portConnectsTo = this;
+        toThis.m_inputPort = this;
     }
 
     template <typename T>
@@ -72,7 +91,7 @@ public:
         if (m_propagationState == PropagationState::unpropagated) {
             setPortValue();
             // Propagate the value to the ports which connect to this
-            for (const auto& port : m_connectsFromThis)
+            for (const auto& port : m_outputPorts)
                 port->propagate();
             m_propagationState = PropagationState::propagated;
 
@@ -86,7 +105,7 @@ public:
     void propagateConstant() {
         m_propagationState = PropagationState::constant;
         setPortValue();
-        for (const auto& port : m_connectsFromThis)
+        for (const auto& port : m_outputPorts)
             port->propagateConstant();
     }
 
@@ -103,15 +122,15 @@ protected:
     VSRTL_VT_U m_value = 0xdeadbeef;
 
     // A port may only have a single input  ->[port]
-    Port* m_portConnectsTo = nullptr;
+    Port* m_inputPort = nullptr;
     // A port may have multiple outputs     [port]->...->
-    std::vector<Port*> m_connectsFromThis;
+    std::vector<Port*> m_outputPorts;
 
     void setPortValue() {
         if (m_propagationFunction != nullptr) {
             m_value = m_propagationFunction();
         } else {
-            m_value = static_cast<VSRTL_VT_U>(*m_portConnectsTo);
+            m_value = static_cast<VSRTL_VT_U>(*m_inputPort);
         }
     }
 
@@ -122,7 +141,41 @@ protected:
 
 private:
     std::string m_name;
+    bool m_traversingConnection = false;
 };
+
+template <typename F, typename... Args>
+void Port::traverseToRoot(const F& nodeFunc, Args&... args) {
+    nodeFunc(*this, args...);
+    if (m_inputPort) {
+        m_inputPort->traverseToRoot(nodeFunc, args...);
+    }
+}
+
+template <typename F, typename... Args>
+void Port::traverseToSinks(const F& nodeFunc, Args&... args) {
+    nodeFunc(*this, args...);
+    for (const auto& p : m_outputPorts) {
+        p->traverseToSinks(nodeFunc, args...);
+    }
+}
+
+template <typename F, typename... Args>
+void Port::traverseConnection(const F& nodeFunc, Args&... args) {
+    if (m_traversingConnection)
+        return;
+    m_traversingConnection = true;
+
+    nodeFunc(*this, args...);
+    if (m_inputPort) {
+        m_inputPort->traverseConnection(nodeFunc, args...);
+    }
+    for (const auto& p : m_outputPorts) {
+        p->traverseConnection(nodeFunc, args...);
+    }
+
+    m_traversingConnection = false;
+}
 
 }  // namespace vsrtl
 
