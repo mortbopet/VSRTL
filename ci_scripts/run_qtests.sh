@@ -1,6 +1,6 @@
 # /bin/sh
 
-cd tst
+cd test
 
 find . -executable -type f -name "tst_*" | while read line; do
     ($line)
