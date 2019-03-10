@@ -18,9 +18,7 @@
 
 namespace vsrtl {
 
-#define SUBCOMPONENT(name, type, ...) \
-private:                              \
-    type* name = create_component<type>(this, #name, ##__VA_ARGS__)
+#define SUBCOMPONENT(name, type, ...) type* name = create_component<type>(this, #name, ##__VA_ARGS__)
 
 #define SUBCOMPONENTS(name, type) std::vector<type*> name;
 

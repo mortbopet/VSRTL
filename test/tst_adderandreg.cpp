@@ -19,8 +19,7 @@ void tst_adderAndReg::functionalTest() {
         a.clock();
 
     // We expect that m_cVal has been added to the register value n times
-    // std::cout << "value " << a.reg->out->value<uint32_t>() << std::endl;
-    // QVERIFY(a.reg->out->value<uint32_t>() == expectedValue);
+    QVERIFY(a.reg->out.template value<uint32_t>() == expectedValue);
 }
 
 QTEST_APPLESS_MAIN(tst_adderAndReg)
