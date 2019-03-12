@@ -28,6 +28,8 @@ public:
         return m_graphicObject;
     }
 
+    virtual ~Base() {}
+
 private:
     void* m_graphicObject = nullptr;
 };
