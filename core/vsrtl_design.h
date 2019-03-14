@@ -159,6 +159,8 @@ public:
         return m_componentGraph;
     }
 
+    const std::set<Register*>& getRegisters() const { return m_registers; }
+
 private:
     void createComponentGraph() {
         m_componentGraph.clear();
