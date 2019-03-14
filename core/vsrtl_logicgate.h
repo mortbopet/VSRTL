@@ -7,7 +7,8 @@ namespace vsrtl {
 
 class LogicGate : public Component {
 public:
-    LogicGate(std::string name, unsigned int nInputs, unsigned int width) : Component(name), m_width(width) {
+    LogicGate(std::string name, unsigned int nInputs, unsigned int width, Component* parent)
+        : Component(name, parent), m_width(width) {
         in = this->createInputPorts("in", nInputs);
         for (const auto& ip : in) {
             ip->setWidth(width);
@@ -24,7 +25,8 @@ protected:
 class And : public LogicGate {
 public:
     std::type_index getTypeId() const override { return std::type_index(typeid(And)); }
-    And(std::string name, unsigned int nInputs, unsigned int width) : LogicGate(name, nInputs, width) {
+    And(std::string name, unsigned int nInputs, unsigned int width, Component* parent)
+        : LogicGate(name, nInputs, width, parent) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
             for (int i = 1; i < this->in.size(); i++) {
@@ -38,7 +40,8 @@ public:
 class Or : public LogicGate {
 public:
     std::type_index getTypeId() const override { return std::type_index(typeid(Or)); }
-    Or(std::string name, unsigned int nInputs, unsigned int width) : LogicGate(name, nInputs, width) {
+    Or(std::string name, unsigned int nInputs, unsigned int width, Component* parent)
+        : LogicGate(name, nInputs, width, parent) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
             for (int i = 1; i < this->in.size(); i++) {
@@ -52,7 +55,8 @@ public:
 class Xor : public LogicGate {
 public:
     std::type_index getTypeId() const override { return std::type_index(typeid(Xor)); }
-    Xor(std::string name, unsigned int nInputs, unsigned int width) : LogicGate(name, nInputs, width) {
+    Xor(std::string name, unsigned int nInputs, unsigned int width, Component* parent)
+        : LogicGate(name, nInputs, width, parent) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
             for (int i = 1; i < this->in.size(); i++) {
@@ -66,7 +70,7 @@ public:
 class Not : public LogicGate {
 public:
     std::type_index getTypeId() const override { return std::type_index(typeid(Not)); }
-    Not(std::string name, unsigned int width) : LogicGate(name, 1, width) {
+    Not(std::string name, unsigned int width, Component* parent) : LogicGate(name, 1, width, parent) {
         this->out << [=] { return signextend(~this->in[0]->template value<VSRTL_VT_U>(), width); };
     }
 };

@@ -14,8 +14,8 @@ namespace vsrtl {
 class Multiplexer : public Component {
 public:
     std::type_index getTypeId() const override { return std::type_index(typeid(Multiplexer)); }
-    Multiplexer(std::string name, unsigned int nInputs, unsigned int width)
-        : Component(name), m_nInputs(nInputs), m_width(width) {
+    Multiplexer(std::string name, unsigned int nInputs, unsigned int width, Component* parent)
+        : Component(name, parent), m_nInputs(nInputs), m_width(width) {
         select.setWidth(ceillog2(m_nInputs));
         out.setWidth(width);
         in = createInputPorts("in", m_nInputs);

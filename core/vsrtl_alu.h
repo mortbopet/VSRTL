@@ -34,7 +34,7 @@ class ALU : public Component {
 public:
     std::type_index getTypeId() const override { return std::type_index(typeid(ALU)); }
     // clang-format off
-    ALU(std::string name, unsigned int width) : Component(name), m_width(width){
+    ALU(std::string name, unsigned int width, Component* parent) : Component(name, parent), m_width(width){
         out << ([=] { return calculateOutput(); });
 
         op1.setWidth(m_width);

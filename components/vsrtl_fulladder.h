@@ -8,7 +8,7 @@ namespace vsrtl {
 
 class FullAdder : public Component {
 public:
-    FullAdder(std::string name) : Component(name) {
+    FullAdder(std::string name, Component* parent) : Component(name, parent) {
         A >> *xor1->in[0];
         B >> *xor1->in[1];
 
@@ -40,8 +40,7 @@ public:
     SUBCOMPONENT(and1, And, 2, 1);
     SUBCOMPONENT(and2, And, 2, 1);
     SUBCOMPONENT(or1, Or, 2, 1);
-
 };
 }  // namespace vsrtl
 
-#endif // VSRTL_FULLADDER_H
+#endif  // VSRTL_FULLADDER_H

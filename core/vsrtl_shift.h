@@ -9,7 +9,8 @@ enum class ShiftType { sl, sra, srl };
 
 class Shift : public Component {
 public:
-    Shift(std::string name, ShiftType t, unsigned int shamt, unsigned int width) : Component(name) {
+    Shift(std::string name, ShiftType t, unsigned int shamt, unsigned int width, Component* parent)
+        : Component(name, parent) {
         out.setWidth(width);
         in.setWidth(width);
         out << [=] {

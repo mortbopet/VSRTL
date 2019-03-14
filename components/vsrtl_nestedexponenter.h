@@ -11,7 +11,7 @@ namespace vsrtl {
 
 class Exponenter : public Component {
 public:
-    Exponenter(std::string name) : Component(name) {
+    Exponenter(std::string name, Component* parent) : Component(name, parent) {
         expIn.setWidth(32);
         out.setWidth(32);
 

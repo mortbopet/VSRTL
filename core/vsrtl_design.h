@@ -20,7 +20,7 @@ namespace vsrtl {
 
 class Design : public Component {
 public:
-    Design(std::string name) : Component(name) {}
+    Design(std::string name) : Component(name, nullptr) {}
 
     /*
     template <typename T, typename... Args>

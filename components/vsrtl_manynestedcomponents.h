@@ -7,7 +7,7 @@ namespace vsrtl {
 
 class DoubleNestedExponenter : public Component {
 public:
-    DoubleNestedExponenter(std::string name) : Component(name) {
+    DoubleNestedExponenter(std::string name, Component* parent) : Component(name, parent) {
         in.setWidth(32);
         out.setWidth(32);
 

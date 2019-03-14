@@ -33,7 +33,7 @@ namespace vsrtl {
 
 class Component : public Base {
 public:
-    Component(std::string displayName, Component* parent = nullptr) : m_displayName(displayName), m_parent(parent) {}
+    Component(std::string displayName, Component* parent) : m_displayName(displayName), m_parent(parent) {}
     virtual ~Component() {}
 
     /**
@@ -100,7 +100,7 @@ protected:
 // Component object generator that registers objects in parent upon creation
 template <typename T, typename... Args>
 T* create_component(Component* parent, std::string name, Args... args) {
-    T* ptr = new T(name, args...);
+    T* ptr = new T(name, args..., parent);
     if (parent) {
         parent->addSubcomponent(static_cast<Component*>(ptr));
     }

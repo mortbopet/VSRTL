@@ -14,7 +14,7 @@ namespace vsrtl {
 class Register : public Component {
 public:
     std::type_index getTypeId() const override { return std::type_index(typeid(Register)); }
-    Register(std::string name, unsigned int width) : m_width(width), Component(name) {
+    Register(std::string name, unsigned int width, Component* parent) : m_width(width), Component(name, parent) {
         // Calling out.propagate() will clock the register the register
         out << ([=] { return m_savedValue; });
 
