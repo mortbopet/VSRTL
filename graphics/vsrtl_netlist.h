@@ -13,6 +13,7 @@ class Netlist;
 }
 
 class NetlistModel;
+class RegisterModel;
 
 class Netlist : public QWidget {
     Q_OBJECT
@@ -32,9 +33,12 @@ private slots:
     void handleViewSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected);
 
 private:
+    void setCurrentViewExpandState(bool state);
+
     Ui::Netlist* ui;
     QItemSelectionModel* m_selectionModel;
     NetlistModel* m_netlistModel;
+    RegisterModel* m_registerModel;
 };
 }  // namespace vsrtl
 

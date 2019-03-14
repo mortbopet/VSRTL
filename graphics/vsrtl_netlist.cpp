@@ -1,6 +1,7 @@
 #include "vsrtl_netlist.h"
 #include "ui_vsrtl_netlist.h"
 #include "vsrtl_netlistmodel.h"
+#include "vsrtl_registermodel.h"
 
 #include <QAction>
 
@@ -16,23 +17,50 @@ Netlist::Netlist(Design& design, QWidget* parent) : QWidget(parent), ui(new Ui::
     ui->netlistView->setModel(m_netlistModel);
     m_netlistModel->updateNetlistData();
 
+    m_registerModel = new RegisterModel(design, this);
+    ui->registerView->setModel(m_registerModel);
+    m_registerModel->updateNetlistData();
+
     m_selectionModel = new QItemSelectionModel(m_netlistModel);
     ui->netlistView->setSelectionModel(m_selectionModel);
     connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, &Netlist::handleViewSelectionChanged);
 
     ui->netlistView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->registerView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
     const QIcon expandIcon = QIcon(":/icons/expand.svg");
     QAction* expandAct = new QAction(expandIcon, "Expand All", this);
-    connect(expandAct, &QAction::triggered, ui->netlistView, &QTreeView::expandAll);
+    connect(expandAct, &QAction::triggered, [=] { this->setCurrentViewExpandState(true); });
     ui->expand->setIcon(expandIcon);
     connect(ui->expand, &QPushButton::clicked, expandAct, &QAction::trigger);
 
     const QIcon collapseIcon = QIcon(":/icons/collapse.svg");
     QAction* collapseAct = new QAction(collapseIcon, "Collapse All", this);
-    connect(collapseAct, &QAction::triggered, ui->netlistView, &QTreeView::collapseAll);
+    connect(collapseAct, &QAction::triggered, [=] { this->setCurrentViewExpandState(false); });
     ui->collapse->setIcon(collapseIcon);
     connect(ui->collapse, &QPushButton::clicked, collapseAct, &QAction::trigger);
+}
+
+void Netlist::setCurrentViewExpandState(bool state) {
+    QTreeView* view;
+    switch (ui->netlistViews->currentIndex()) {
+        case 0: {
+            view = ui->netlistView;
+            break;
+        }
+        case 1: {
+            view = ui->registerView;
+            break;
+        }
+        default:
+            Q_ASSERT(false);
+    }
+
+    if (state) {
+        view->expandAll();
+    } else {
+        view->collapseAll();
+    }
 }
 
 void Netlist::updateSelection(const std::vector<Component*>& selected) {
@@ -69,5 +97,6 @@ Netlist::~Netlist() {
 
 void Netlist::reloadNetlist() {
     m_netlistModel->updateNetlistData();
+    m_registerModel->updateNetlistData();
 }
 }  // namespace vsrtl

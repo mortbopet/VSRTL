@@ -61,7 +61,31 @@
       </layout>
      </item>
      <item>
-      <widget class="QTreeView" name="netlistView"/>
+      <widget class="QTabWidget" name="netlistViews">
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="tab">
+        <attribute name="title">
+         <string>Netlist</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="0" column="0">
+          <widget class="QTreeView" name="netlistView"/>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="tab_2">
+        <attribute name="title">
+         <string>Registers</string>
+        </attribute>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="QTreeView" name="registerView"/>
+         </item>
+        </layout>
+       </widget>
+      </widget>
      </item>
     </layout>
    </item>
