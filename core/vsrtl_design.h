@@ -22,18 +22,6 @@ class Design : public Component {
 public:
     Design(std::string name) : Component(name, nullptr) {}
 
-    /*
-    template <typename T, typename... Args>
-    std::shared_ptr<T> create(Args&&... args) {
-        auto ptr = std::make_shared<T>(std::forward<Args>(args)...);
-        this->m_components.push_back(ptr);
-        if (std::is_base_of<Register, T>()) {
-            m_registers.push_back(std::dynamic_pointer_cast<Register>(ptr));
-        }
-        return ptr;
-    }
-    */
-
     /**
      * @brief clock
      * Simulates clocking the circuit. Registers are clocked and the propagation algorithm is run
