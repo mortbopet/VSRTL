@@ -1,5 +1,6 @@
 #include "vsrtl_netlist.h"
 #include "ui_vsrtl_netlist.h"
+#include "vsrtl_netlistdelegate.h"
 #include "vsrtl_netlistmodel.h"
 #include "vsrtl_registermodel.h"
 
@@ -12,6 +13,7 @@ Netlist::Netlist(Design& design, QWidget* parent) : QWidget(parent), ui(new Ui::
 
     ui->netlistView->setSelectionMode(QAbstractItemView::ExtendedSelection);
     ui->netlistView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->registerView->setSelectionBehavior(QAbstractItemView::SelectItems);
 
     m_netlistModel = new NetlistModel(design, this);
     ui->netlistView->setModel(m_netlistModel);
@@ -27,6 +29,8 @@ Netlist::Netlist(Design& design, QWidget* parent) : QWidget(parent), ui(new Ui::
 
     ui->netlistView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->registerView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+
+    ui->registerView->setItemDelegate(new NetlistDelegate(this));
 
     const QIcon expandIcon = QIcon(":/icons/expand.svg");
     QAction* expandAct = new QAction(expandIcon, "Expand All", this);
