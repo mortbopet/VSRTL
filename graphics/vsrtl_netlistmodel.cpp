@@ -145,19 +145,19 @@ NetlistModel::NetlistModel(const Design& arch, QObject* parent) : QAbstractItemM
     loadDesign(rootItem, m_arch);
 }
 
-//! [0]
 
-//! [1]
+
+
 NetlistModel::~NetlistModel() {
     delete rootItem;
 }
-//! [1]
 
-//! [2]
+
+
 int NetlistModel::columnCount(const QModelIndex& /* parent */) const {
     return rootItem->columnCount();
 }
-//! [2]
+
 
 QVariant NetlistModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid())
@@ -167,7 +167,7 @@ QVariant NetlistModel::data(const QModelIndex& index, int role) const {
     return item->data(index.column(), role);
 }
 
-//! [3]
+
 Qt::ItemFlags NetlistModel::flags(const QModelIndex& index) const {
     if (!index.isValid())
         return 0;
@@ -192,13 +192,13 @@ QVariant NetlistModel::headerData(int section, Qt::Orientation orientation, int 
     return QVariant();
 }
 
-//! [5]
+
 QModelIndex NetlistModel::index(int row, int column, const QModelIndex& parent) const {
     if (parent.isValid() && parent.column() != 0)
         return QModelIndex();
-    //! [5]
+    
 
-    //! [6]
+    
     TreeItem* parentItem = getItem(parent);
     if (!parentItem)
         parentItem = rootItem;
@@ -211,7 +211,7 @@ QModelIndex NetlistModel::index(int row, int column, const QModelIndex& parent) 
     } else
         return QModelIndex();
 }
-//! [6]
+
 
 bool NetlistModel::insertColumns(int position, int columns, const QModelIndex& parent) {
     bool success;
@@ -234,7 +234,7 @@ bool NetlistModel::insertRows(int position, int rows, const QModelIndex& parent)
     return success;
 }
 
-//! [7]
+
 QModelIndex NetlistModel::parent(const QModelIndex& index) const {
     if (!index.isValid())
         return QModelIndex();
@@ -247,7 +247,7 @@ QModelIndex NetlistModel::parent(const QModelIndex& index) const {
 
     return createIndex(parentItem->childNumber(), 0, parentItem);
 }
-//! [7]
+
 
 bool NetlistModel::removeColumns(int position, int columns, const QModelIndex& parent) {
     bool success;
@@ -273,12 +273,12 @@ bool NetlistModel::removeRows(int position, int rows, const QModelIndex& parent)
     return success;
 }
 
-//! [8]
+
 int NetlistModel::rowCount(const QModelIndex& parent) const {
     TreeItem* parentItem = getItem(parent);
     return parentItem->childCount();
 }
-//! [8]
+
 
 bool NetlistModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     if (indexIsRegisterOutputPortValue(index)) {

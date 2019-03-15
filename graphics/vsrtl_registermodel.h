@@ -63,14 +63,12 @@ class Design;
 class Component;
 class Port;
 
-//! [0]
 class RegisterModel : public QAbstractItemModel {
     Q_OBJECT
 
 public:
     RegisterModel(const Design& arch, QObject* parent = nullptr);
     ~RegisterModel() override;
-    //! [0] //! [1]
 
     QVariant data(const QModelIndex& index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
@@ -80,9 +78,7 @@ public:
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-    //! [1]
 
-    //! [2]
     Qt::ItemFlags flags(const QModelIndex& index) const override;
     bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
     bool setHeaderData(int section, Qt::Orientation orientation, const QVariant& value,
@@ -109,7 +105,6 @@ private:
 
     const Design& m_arch;
 };
-//! [2]
 
 }  // namespace vsrtl
 

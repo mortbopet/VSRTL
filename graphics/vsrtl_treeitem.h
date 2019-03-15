@@ -76,7 +76,6 @@ typedef struct {
 
 enum NetlistRoles { PortPtr = Qt::UserRole + 1, ComponentPtr, PortType };
 
-//! [0]
 class TreeItem {
 public:
     explicit TreeItem(const QVector<QVariant>& data, TreeItem* parent = 0);

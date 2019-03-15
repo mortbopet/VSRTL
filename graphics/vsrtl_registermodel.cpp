@@ -93,19 +93,13 @@ RegisterModel::RegisterModel(const Design& arch, QObject* parent) : QAbstractIte
     loadDesign(rootItem, &m_arch);
 }
 
-//! [0]
-
-//! [1]
 RegisterModel::~RegisterModel() {
     delete rootItem;
 }
-//! [1]
 
-//! [2]
 int RegisterModel::columnCount(const QModelIndex& /* parent */) const {
     return rootItem->columnCount();
 }
-//! [2]
 
 QVariant RegisterModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid())
@@ -132,7 +126,6 @@ QVariant RegisterModel::data(const QModelIndex& index, int role) const {
     return item->data(index.column(), role);
 }
 
-//! [3]
 Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
     if (!index.isValid())
         return 0;
@@ -156,13 +149,10 @@ QVariant RegisterModel::headerData(int section, Qt::Orientation orientation, int
     return QVariant();
 }
 
-//! [5]
 QModelIndex RegisterModel::index(int row, int column, const QModelIndex& parent) const {
     if (parent.isValid() && parent.column() != 0)
         return QModelIndex();
-    //! [5]
 
-    //! [6]
     TreeItem* parentItem = getItem(parent);
     if (!parentItem)
         parentItem = rootItem;
@@ -175,8 +165,6 @@ QModelIndex RegisterModel::index(int row, int column, const QModelIndex& parent)
     } else
         return QModelIndex();
 }
-
-//! [6]
 
 bool RegisterModel::insertColumns(int position, int columns, const QModelIndex& parent) {
     bool success;
@@ -199,7 +187,6 @@ bool RegisterModel::insertRows(int position, int rows, const QModelIndex& parent
     return success;
 }
 
-//! [7]
 QModelIndex RegisterModel::parent(const QModelIndex& index) const {
     if (!index.isValid())
         return QModelIndex();
@@ -212,7 +199,6 @@ QModelIndex RegisterModel::parent(const QModelIndex& index) const {
 
     return createIndex(parentItem->childNumber(), 0, parentItem);
 }
-//! [7]
 
 bool RegisterModel::removeColumns(int position, int columns, const QModelIndex& parent) {
     bool success;
@@ -238,12 +224,10 @@ bool RegisterModel::removeRows(int position, int rows, const QModelIndex& parent
     return success;
 }
 
-//! [8]
 int RegisterModel::rowCount(const QModelIndex& parent) const {
     TreeItem* parentItem = getItem(parent);
     return parentItem->childCount();
 }
-//! [8]
 
 bool RegisterModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     if (index.column() == 1) {
