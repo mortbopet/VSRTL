@@ -69,58 +69,15 @@ TreeItem* RegisterModel::getItem(const QModelIndex& index) const {
     return rootItem;
 }
 
-namespace {
-int getRootIndex(QModelIndex index) {
-    if (index.isValid()) {
-        while (index.parent().isValid()) {
-            index = index.parent();
-        }
-        return index.row();
-    } else {
-        return -1;
-    }
-}
-
-int getRootSelectedIndex(QItemSelectionModel* model) {
-    auto indexes = model->selectedIndexes();
-    if (!indexes.isEmpty()) {
-        return getRootIndex(indexes.first());
-    } else {
-        return -1;
-    }
-}
-}  // namespace
-
 bool RegisterModel::indexIsRegisterValue(const QModelIndex& index) const {
     TreeItem* item = getItem(index);
     return dynamic_cast<Register*>(item->data(0, NetlistRoles::ComponentPtr).value<Component*>()) != nullptr;
-}
-
-Port* RegisterModel::getPort(const QModelIndex& index) const {
-    TreeItem* item = getItem(index);
-    if (item->getUserData().port) {
-        return item->getUserData().port;
-    }
-    return nullptr;
 }
 
 Component* RegisterModel::getComponent(const QModelIndex& index) const {
     TreeItem* item = getItem(index);
     if (item->getUserData().component) {
         return item->getUserData().component;
-    }
-    return nullptr;
-}
-
-Component* RegisterModel::getParentComponent(const QModelIndex& index) const {
-    TreeItem* item = getItem(index);
-    if (item) {
-        item = item->parent();
-        if (item) {
-            if (item->getUserData().component) {
-                return item->getUserData().component;
-            }
-        }
     }
     return nullptr;
 }
@@ -326,16 +283,6 @@ void RegisterModel::updateNetlistDataRecursive(TreeItem* index) {
     for (int i = 0; i < index->childCount(); i++) {
         updateNetlistDataRecursive(index->child(i));
     }
-}
-
-QModelIndex RegisterModel::lookupIndexForComponent(Component* c) const {
-    if (m_componentIndicies.find(c) != m_componentIndicies.end()) {
-        TreeItem* item = m_componentIndicies.at(c);
-        if (item->index.isValid()) {
-            return item->index;
-        }
-    }
-    return QModelIndex();
 }
 
 void RegisterModel::updateNetlistData() {

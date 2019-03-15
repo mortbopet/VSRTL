@@ -78,8 +78,6 @@ public:
     QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
     QModelIndex parent(const QModelIndex& index) const override;
 
-    QModelIndex lookupIndexForComponent(Component* c) const;
-
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
     //! [1]
@@ -99,10 +97,7 @@ public slots:
     void updateNetlistData();
 
 private:
-    bool indexIsRegisterOutputPortValue(const QModelIndex& index) const;
-    Port* getPort(const QModelIndex& index) const;
     Component* getComponent(const QModelIndex& index) const;
-    Component* getParentComponent(const QModelIndex& index) const;
     TreeItem* getItem(const QModelIndex&) const;
     void addPortsToComponent(Port* port, TreeItem* parent, NetlistData::IOType);
     void updateNetlistDataRecursive(TreeItem* index);
@@ -111,8 +106,6 @@ private:
     bool indexIsRegisterValue(const QModelIndex& index) const;
 
     TreeItem* rootItem = nullptr;
-
-    std::map<Component*, TreeItem*> m_componentIndicies;
 
     const Design& m_arch;
 };
