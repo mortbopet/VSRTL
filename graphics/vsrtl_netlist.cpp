@@ -30,6 +30,9 @@ Netlist::Netlist(Design& design, QWidget* parent) : QWidget(parent), ui(new Ui::
     ui->netlistView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->registerView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
+    ui->registerView->expandAll();
+    ui->netlistView->expandAll();
+
     ui->registerView->setItemDelegate(new NetlistDelegate(this));
 
     const QIcon expandIcon = QIcon(":/icons/expand.svg");
