@@ -91,20 +91,9 @@ int getRootSelectedIndex(QItemSelectionModel* model) {
 }
 }  // namespace
 
-bool RegisterModel::indexIsRegisterOutputPortValue(const QModelIndex& index) const {
-    if (index.column() == VALUE_COL) {
-        TreeItem* item = getItem(index);
-        TreeItem* parentItem = item->parent();
-        if (parentItem && parentItem->getUserData().component) {
-            if (dynamic_cast<Register*>(parentItem->getUserData().component)) {
-                // Parent is register...
-                if (item->getUserData().port && item->getUserData().t == NetlistData::IOType::output) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
+bool RegisterModel::indexIsRegisterValue(const QModelIndex& index) const {
+    TreeItem* item = getItem(index);
+    return dynamic_cast<Register*>(item->data(0, NetlistRoles::ComponentPtr).value<Component*>()) != nullptr;
 }
 
 Port* RegisterModel::getPort(const QModelIndex& index) const {
@@ -166,6 +155,23 @@ QVariant RegisterModel::data(const QModelIndex& index, int role) const {
         return QVariant();
 
     TreeItem* item = getItem(index);
+
+    // Formatting of "Value" column when a leaf (Register value) is seen
+    if (index.column() == 1 && indexIsRegisterValue(index)) {
+        switch (role) {
+            case Qt::FontRole: {
+                return QFont("monospace");
+            }
+            case Qt::ForegroundRole: {
+                return QBrush(Qt::blue);
+            }
+            case Qt::DisplayRole: {
+                VSRTL_VT_U value = item->data(index.column(), role).value<VSRTL_VT_U>();
+                return "0x" + QString::number(value, 16).rightJustified(8, '0');
+            }
+        }
+    }
+
     return item->data(index.column(), role);
 }
 
@@ -175,9 +181,8 @@ Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
         return 0;
     Qt::ItemFlags flags = QAbstractItemModel::flags(index);
 
-    // Output ports of register components are editable.
-    // Check if parent component is a Register, and if the current port is an output port. If so, the port is editable
-    if (indexIsRegisterOutputPortValue(index)) {
+    // Register values are editable
+    if (index.column() == 1 && indexIsRegisterValue(index)) {
         flags |= Qt::ItemIsEditable;
     }
 
@@ -213,6 +218,7 @@ QModelIndex RegisterModel::index(int row, int column, const QModelIndex& parent)
     } else
         return QModelIndex();
 }
+
 //! [6]
 
 bool RegisterModel::insertColumns(int position, int columns, const QModelIndex& parent) {
@@ -283,8 +289,8 @@ int RegisterModel::rowCount(const QModelIndex& parent) const {
 //! [8]
 
 bool RegisterModel::setData(const QModelIndex& index, const QVariant& value, int role) {
-    if (indexIsRegisterOutputPortValue(index)) {
-        Register* reg = dynamic_cast<Register*>(getParentComponent(index));
+    if (index.column() == 1) {
+        Register* reg = dynamic_cast<Register*>(getComponent(index));
         if (reg) {
             reg->forceValue(value.toInt());
             m_arch.propagateDesign();
@@ -370,8 +376,8 @@ void RegisterModel::loadDesign(TreeItem* parent, const Design* design) {
                 newParentsInTree.insert(newParentsInTree.begin(), regParent);
                 regParent = regParent->getParent();
             }
-            // At this point, the first value in newParentsInTree has its parent present in the tree. Extend the tree
-            // from this index
+            // At this point, the first value in newParentsInTree has its parent present in the tree. Extend the
+            // tree from this index
             regParentTreeItem = parentMap[regParent];
             for (const auto& p : newParentsInTree) {
                 regParentTreeItem->insertChildren(regParentTreeItem->childCount(), 1, rootItem->columnCount());
@@ -380,8 +386,8 @@ void RegisterModel::loadDesign(TreeItem* parent, const Design* design) {
                 Q_ASSERT(parentMap.count(p) == 0);
                 parentMap[p] = regParentTreeItem;
             }
-            // After the newParentsInTree stack has been iterated through, 'regParentTreeItem' will point to the parent
-            // tree item of the current 'reg' in the outer foor loop
+            // After the newParentsInTree stack has been iterated through, 'regParentTreeItem' will point to the
+            // parent tree item of the current 'reg' in the outer foor loop
         } else {
             regParentTreeItem = parentMap[regParent];
         }

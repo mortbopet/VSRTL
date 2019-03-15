@@ -108,6 +108,7 @@ private:
     void updateNetlistDataRecursive(TreeItem* index);
     void updateTreeItem(TreeItem* index);
     void loadDesign(TreeItem* parent, const Design* component);
+    bool indexIsRegisterValue(const QModelIndex& index) const;
 
     TreeItem* rootItem = nullptr;
 
