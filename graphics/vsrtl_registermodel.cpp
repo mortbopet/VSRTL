@@ -55,34 +55,14 @@
 
 #include "vsrtl_netlistitem.h"
 #include "vsrtl_registermodel.h"
+#include "vsrtl_treeitem.h"
 
 #include "vsrtl_design.h"
 
 namespace vsrtl {
 
-bool RegisterModel::indexIsRegisterValue(const QModelIndex& index) const {
-    return dynamic_cast<Register*>(getCorePtr<Component*>(index)) != nullptr;
-}
-
-RegisterModel::RegisterModel(const Design& arch, QObject* parent) : NetlistModelBase(arch, parent) {
-    QStringList headers{"Component", "Value", "Width"};
-    QVector<QVariant> rootData;
-    for (QString header : headers)
-        rootData << header;
-
-    rootItem = new NetlistItem(rootData);
-
-    loadDesign(rootItem, m_arch);
-}
-
-QVariant RegisterModel::data(const QModelIndex& index, int role) const {
-    if (!index.isValid())
-        return QVariant();
-
-    NetlistItem* item = getItem(index);
-
-    // Formatting of "Value" column when a leaf (Register value) is seen
-    if (index.column() == 1 && indexIsRegisterValue(index)) {
+QVariant RegisterTreeItem::data(int column, int role) const {
+    if (column == 1 && m_register != nullptr) {
         switch (role) {
             case Qt::FontRole: {
                 return QFont("monospace");
@@ -91,11 +71,53 @@ QVariant RegisterModel::data(const QModelIndex& index, int role) const {
                 return QBrush(Qt::blue);
             }
             case Qt::DisplayRole: {
-                VSRTL_VT_U value = item->data(index.column(), role).value<VSRTL_VT_U>();
+                VSRTL_VT_U value = m_register->out.template value<VSRTL_VT_U>();
                 return "0x" + QString::number(value, 16).rightJustified(8, '0');
             }
         }
     }
+
+    if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        switch (column) {
+            case RegisterModel::ComponentColumn: {
+                return getName();
+            }
+            case RegisterModel::WidthColumn: {
+                if (m_register) {
+                    return m_register->out.getWidth();
+                }
+                break;
+            }
+        }
+    }
+
+    return QVariant();
+}
+bool RegisterTreeItem::setData(int column, const QVariant& value, int role) {
+    if (index.column() == RegisterModel::ValueColumn) {
+        if (m_register) {
+            m_register->forceValue(value.toInt());
+            return true;
+        }
+    }
+    return false;
+}
+
+bool RegisterModel::indexIsRegisterValue(const QModelIndex& index) const {
+    return getItem<RegisterTreeItem*>(index)->m_register != nullptr;
+}
+
+RegisterModel::RegisterModel(const Design& arch, QObject* parent)
+    : NetlistModelBase({"Component", "Value", "Width"}, arch, parent) {
+    rootItem = new RegisterTreeItem(nullptr);
+    loadDesign(rootItem, m_arch);
+}
+
+QVariant RegisterModel::data(const QModelIndex& index, int role) const {
+    if (!index.isValid())
+        return QVariant();
+
+    auto* item = getItem<RegisterTreeItem*>(index);
 
     return item->data(index.column(), role);
 }
@@ -114,29 +136,22 @@ Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
 }
 
 bool RegisterModel::setData(const QModelIndex& index, const QVariant& value, int role) {
-    if (index.column() == 1) {
-        Register* reg = dynamic_cast<Register*>(getCorePtr<Component*>(index));
-        if (reg) {
-            reg->forceValue(value.toInt());
+    auto* item = getItem<RegisterTreeItem*>(index);
+    if (item) {
+        bool resval = item->setData(index.column(), value, role);
+        if (resval) {
             m_arch.propagateDesign();
-            updateNetlistData();
-            return true;
         }
+        return resval;
     }
+
     return false;
 }
 
-void RegisterModel::updateNetlistItem(NetlistItem* index) {
-    auto reg = dynamic_cast<Register*>(getCorePtr<Component*>(index));
-    if (reg) {
-        index->setData(1, QVariant::fromValue(static_cast<VSRTL_VT_U>(reg->out.value<VSRTL_VT_U>())));
-    }
-}
-
-void RegisterModel::loadDesign(NetlistItem* parent, const Design& design) {
+void RegisterModel::loadDesign(RegisterTreeItem* parent, const Design& design) {
     const auto& registers = design.getRegisters();
 
-    std::map<const Component*, NetlistItem*> parentMap;
+    std::map<const Component*, RegisterTreeItem*> parentMap;
 
     const Component* rootComponent = dynamic_cast<const Component*>(&design);
     parentMap[rootComponent] = parent;
@@ -144,7 +159,7 @@ void RegisterModel::loadDesign(NetlistItem* parent, const Design& design) {
     // Build a tree representing the hierarchy of components and subcomponents containing registers
     for (const auto& reg : registers) {
         const Component* regParent = reg->getParent();
-        NetlistItem* regParentNetlistItem = nullptr;
+        RegisterTreeItem* regParentNetlistItem = nullptr;
 
         if (parentMap.count(regParent) == 0) {
             // Create new parents in the tree until either the root component is detected, or a parent of a parent
@@ -158,9 +173,10 @@ void RegisterModel::loadDesign(NetlistItem* parent, const Design& design) {
             // tree from this index
             regParentNetlistItem = parentMap[regParent];
             for (const auto& p : newParentsInTree) {
-                regParentNetlistItem->insertChildren(regParentNetlistItem->childCount(), 1, rootItem->columnCount());
-                regParentNetlistItem = regParentNetlistItem->child(regParentNetlistItem->childCount() - 1);
-                regParentNetlistItem->setData(0, QString::fromStdString(p->getName()));
+                auto* newParent = new RegisterTreeItem(regParentNetlistItem);
+                regParentNetlistItem->insertChild(regParentNetlistItem->childCount(), newParent);
+                regParentNetlistItem = newParent;
+                regParentNetlistItem->setName(QString::fromStdString(p->getName()));
                 Q_ASSERT(parentMap.count(p) == 0);
                 parentMap[p] = regParentNetlistItem;
             }
@@ -171,13 +187,13 @@ void RegisterModel::loadDesign(NetlistItem* parent, const Design& design) {
         }
 
         // Add register to its parent tree item
-        regParentNetlistItem->insertChildren(regParentNetlistItem->childCount(), 1, rootItem->columnCount());
+
+        auto* child = new RegisterTreeItem(regParentNetlistItem);
+        regParentNetlistItem->insertChild(regParentNetlistItem->childCount(), child);
 
         // Set component data (component name and signal value)
-        NetlistItem* child = regParentNetlistItem->child(regParentNetlistItem->childCount() - 1);
-        child->setData(0, QVariant::fromValue(static_cast<Component*>(reg)), NetlistRoles::CorePtr);
-        child->setData(0, QString::fromStdString(reg->getName()));
-        child->setData(2, QString::number(reg->out.getWidth()));
+        child->m_register = reg;
+        child->setName(QString::fromStdString(reg->getName()));
     }
 }
 

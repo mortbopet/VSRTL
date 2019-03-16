@@ -17,11 +17,11 @@ Netlist::Netlist(Design& design, QWidget* parent) : QWidget(parent), ui(new Ui::
 
     m_netlistModel = new NetlistModel(design, this);
     ui->netlistView->setModel(m_netlistModel);
-    m_netlistModel->updateNetlistData();
+    m_netlistModel->invalidate();
 
     m_registerModel = new RegisterModel(design, this);
     ui->registerView->setModel(m_registerModel);
-    m_registerModel->updateNetlistData();
+    m_registerModel->invalidate();
 
     m_selectionModel = new QItemSelectionModel(m_netlistModel);
     ui->netlistView->setSelectionModel(m_selectionModel);
@@ -103,7 +103,7 @@ Netlist::~Netlist() {
 }
 
 void Netlist::reloadNetlist() {
-    m_netlistModel->updateNetlistData();
-    m_registerModel->updateNetlistData();
+    m_netlistModel->invalidate();
+    m_registerModel->invalidate();
 }
 }  // namespace vsrtl

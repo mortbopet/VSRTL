@@ -55,8 +55,8 @@
 #include <QModelIndex>
 #include <QVariant>
 
-#include "vsrtl_netlistitem.h"
 #include "vsrtl_netlistmodelbase.h"
+#include "vsrtl_treeitem.h"
 
 namespace vsrtl {
 
@@ -64,10 +64,24 @@ class Design;
 class Component;
 class Port;
 
-class NetlistModel : public NetlistModelBase {
+enum class PortDirection { Input, Output };
+
+class NetlistTreeItem : public TreeItem {
+public:
+    NetlistTreeItem(TreeItem* parent) : TreeItem(parent) {}
+    QVariant data(int column, int role = Qt::EditRole) const override;
+    bool setData(int column, const QVariant& value, int role = Qt::EditRole) override;
+
+    Component* m_component = nullptr;
+    Port* m_port = nullptr;
+    PortDirection m_direction;
+};
+
+class NetlistModel : public NetlistModelBase<NetlistTreeItem> {
     Q_OBJECT
 
 public:
+    enum columns { ComponentColumn, IOColumn, ValueColumn, NUM_COLUMNS };
     NetlistModel(const Design& arch, QObject* parent = nullptr);
 
     QVariant data(const QModelIndex& index, int role) const override;
@@ -77,12 +91,12 @@ public:
     QModelIndex lookupIndexForComponent(Component* c) const;
 
 private:
-    void updateNetlistItem(NetlistItem* index) override;
-    void addPortsToComponent(Port* port, NetlistItem* parent, NetlistData::IOType);
-    void loadDesign(NetlistItem* parent, const Design& design) override;
-    void loadDesignRecursive(NetlistItem* parent, const Component& component);
-
-    std::map<Component*, NetlistItem*> m_componentIndicies;
+    void addPortToComponent(Port* port, NetlistTreeItem* parent, PortDirection);
+    void loadDesign(NetlistTreeItem* parent, const Design& design);
+    void loadDesignRecursive(NetlistTreeItem* parent, const Component& component);
+    Component* getParentComponent(const QModelIndex& index) const;
+    std::map<Component*, NetlistTreeItem*> m_componentIndicies;
+    bool indexIsRegisterOutputPortValue(const QModelIndex& index) const;
 };
 
 }  // namespace vsrtl

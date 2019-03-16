@@ -57,17 +57,28 @@
 
 #include "vsrtl_netlistitem.h"
 #include "vsrtl_netlistmodelbase.h"
+#include "vsrtl_treeitem.h"
 
 namespace vsrtl {
 
-class Design;
-class Component;
-class Port;
+class Register;
 
-class RegisterModel : public NetlistModelBase {
+class RegisterTreeItem : public TreeItem {
+public:
+    RegisterTreeItem(TreeItem* parent) : TreeItem(parent) {}
+
+    enum class PortDirection { Input, Output };
+    QVariant data(int column, int role = Qt::EditRole) const override;
+    bool setData(int column, const QVariant& value, int role = Qt::EditRole) override;
+
+    Register* m_register = nullptr;
+};
+
+class RegisterModel : public NetlistModelBase<RegisterTreeItem> {
     Q_OBJECT
 
 public:
+    enum columns { ComponentColumn, ValueColumn, WidthColumn, NUM_COLUMNS };
     RegisterModel(const Design& arch, QObject* parent = nullptr);
 
     QVariant data(const QModelIndex& index, int role) const override;
@@ -75,8 +86,7 @@ public:
     bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
 
 private:
-    void loadDesign(NetlistItem* parent, const Design& component) override;
-    void updateNetlistItem(NetlistItem* index) override;
+    void loadDesign(RegisterTreeItem* parent, const Design& component);
     bool indexIsRegisterValue(const QModelIndex& index) const;
 };
 
