@@ -56,8 +56,6 @@
 #include <QModelIndex>
 #include <QVariant>
 
-#include "vsrtl_netlistitem.h"
-
 namespace vsrtl {
 
 class Design;
@@ -67,55 +65,82 @@ class Port;
 int getRootIndex(QModelIndex index);
 int getRootSelectedIndex(QItemSelectionModel* model);
 
+template <typename T>
 class NetlistModelBase : public QAbstractItemModel {
-    Q_OBJECT
-
 public:
-    NetlistModelBase(const Design& arch, QObject* parent = nullptr);
-    ~NetlistModelBase() override;
+    NetlistModelBase(QStringList headers, const Design& arch, QObject* parent = nullptr)
+        : m_headers(headers), m_arch(arch), QAbstractItemModel(parent) {}
 
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+    ~NetlistModelBase() override { delete rootItem; }
 
-    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex& index) const override;
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override {
+        if (orientation == Qt::Horizontal && role == Qt::DisplayRole && m_headers.size() > section)
+            return m_headers[section];
 
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
+        return QVariant();
+    }
+
+    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override {
+        if (parent.isValid() && parent.column() != 0)
+            return QModelIndex();
+
+        T* parentItem = getItem<T*>(parent);
+        if (!parentItem)
+            parentItem = rootItem;
+
+        T* childItem = static_cast<T*>(parentItem->child(row));
+        if (childItem) {
+            auto i = createIndex(row, column, childItem);
+            childItem->index = i;
+            return i;
+        } else
+            return QModelIndex();
+    }
+
+    QModelIndex parent(const QModelIndex& index) const override {
+        if (!index.isValid())
+            return QModelIndex();
+
+        auto* childItem = getItem<T*>(index);
+        auto* parentItem = childItem->parent();
+
+        if (parentItem == rootItem)
+            return QModelIndex();
+
+        return createIndex(parentItem->childNumber(), 0, parentItem);
+    }
+
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override {
+        auto* parentItem = getItem<T*>(parent);
+        return parentItem->childCount();
+    }
+
+    int columnCount(const QModelIndex& = QModelIndex()) const override { return m_headers.size(); }
 
     bool setHeaderData(int section, Qt::Orientation orientation, const QVariant& value,
-                       int role = Qt::EditRole) override;
+                       int role = Qt::EditRole) override {
+        if (role != Qt::EditRole || orientation != Qt::Horizontal || section > m_headers.size())
+            return false;
+        m_headers[section] = value.toString();
+
+        emit headerDataChanged(orientation, section, section);
+        return true;
+    }
 public slots:
-    void updateNetlistData();
+    void invalidate() { dataChanged(index(0, 0), index(rowCount(), columnCount())); }
 
 protected:
-    template <typename T>
-    T getCorePtr(NetlistItem* item) const {
-        auto p = item->getUserData().coreptr.value<T>();
-        return p ? p : nullptr;
+    template <typename UDT>  // Userdata type
+    T* getItem(const QModelIndex& index) const {
+        if (index.isValid()) {
+            return static_cast<T*>(index.internalPointer());
+        }
+        return rootItem;
     }
 
-    template <typename T>
-    T getCorePtr(const QModelIndex& index) const {
-        NetlistItem* item = getItem(index);
-        return getCorePtr<T>(item);
-    }
-
-    bool indexIsRegisterOutputPortValue(const QModelIndex& index) const;
-    Component* getParentComponent(const QModelIndex& index) const;
-    NetlistItem* getItem(const QModelIndex&) const;
-    void updateNetlistDataRecursive(NetlistItem* index);
-    virtual void updateNetlistItem(NetlistItem* index) = 0;
-
-    /**
-     * @brief loadDesign
-     * Subclasses are expexted to use loadDesign to implement the creation of their internal graph structure, using
-     * $parent as the root node
-     */
-    virtual void loadDesign(NetlistItem* parent, const Design& design) = 0;
-
-    NetlistItem* rootItem = nullptr;
-
+    T* rootItem = nullptr;
     const Design& m_arch;
+    QStringList m_headers;
 };
 
 }  // namespace vsrtl
