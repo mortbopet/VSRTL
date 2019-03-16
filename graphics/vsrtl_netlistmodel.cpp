@@ -60,64 +60,7 @@
 
 namespace vsrtl {
 
-NetlistItem* NetlistModel::getItem(const QModelIndex& index) const {
-    if (index.isValid()) {
-        NetlistItem* item = static_cast<NetlistItem*>(index.internalPointer());
-        if (item)
-            return item;
-    }
-    return rootItem;
-}
-
-int getRootIndex(QModelIndex index) {
-    if (index.isValid()) {
-        while (index.parent().isValid()) {
-            index = index.parent();
-        }
-        return index.row();
-    } else {
-        return -1;
-    }
-}
-
-int getRootSelectedIndex(QItemSelectionModel* model) {
-    auto indexes = model->selectedIndexes();
-    if (!indexes.isEmpty()) {
-        return getRootIndex(indexes.first());
-    } else {
-        return -1;
-    }
-}
-
-bool NetlistModel::indexIsRegisterOutputPortValue(const QModelIndex& index) const {
-    if (index.column() == VALUE_COL) {
-        NetlistItem* item = getItem(index);
-        NetlistItem* parentItem = item->parent();
-        Component* parentComponent = parentItem->getUserData().coreptr.value<Component*>();
-        if (parentItem && parentComponent) {
-            if (dynamic_cast<Register*>(parentComponent)) {
-                // Parent is register...
-                if (getCorePtr<Port*>(index) && item->getUserData().t == NetlistData::IOType::output) {
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
-Component* NetlistModel::getParentComponent(const QModelIndex& index) const {
-    NetlistItem* item = getItem(index);
-    if (item) {
-        item = item->parent();
-        if (item) {
-            return getCorePtr<Component*>(item->index);
-        }
-    }
-    return nullptr;
-}
-
-NetlistModel::NetlistModel(const Design& arch, QObject* parent) : QAbstractItemModel(parent), m_arch(arch) {
+NetlistModel::NetlistModel(const Design& arch, QObject* parent) : NetlistModelBase(arch, parent) {
     QStringList headers{"Component", "I/O", "Value"};
     QVector<QVariant> rootData;
     for (QString header : headers)
@@ -126,14 +69,6 @@ NetlistModel::NetlistModel(const Design& arch, QObject* parent) : QAbstractItemM
     rootItem = new NetlistItem(rootData);
 
     loadDesign(rootItem, m_arch);
-}
-
-NetlistModel::~NetlistModel() {
-    delete rootItem;
-}
-
-int NetlistModel::columnCount(const QModelIndex& /* parent */) const {
-    return rootItem->columnCount();
 }
 
 QVariant NetlistModel::data(const QModelIndex& index, int role) const {
@@ -158,93 +93,6 @@ Qt::ItemFlags NetlistModel::flags(const QModelIndex& index) const {
     return flags;
 }
 
-QVariant NetlistModel::headerData(int section, Qt::Orientation orientation, int role) const {
-    if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
-        return rootItem->data(section);
-
-    return QVariant();
-}
-
-QModelIndex NetlistModel::index(int row, int column, const QModelIndex& parent) const {
-    if (parent.isValid() && parent.column() != 0)
-        return QModelIndex();
-
-    NetlistItem* parentItem = getItem(parent);
-    if (!parentItem)
-        parentItem = rootItem;
-
-    NetlistItem* childItem = parentItem->child(row);
-    if (childItem) {
-        auto i = createIndex(row, column, childItem);
-        childItem->index = i;
-        return i;
-    } else
-        return QModelIndex();
-}
-
-bool NetlistModel::insertColumns(int position, int columns, const QModelIndex& parent) {
-    bool success;
-
-    beginInsertColumns(parent, position, position + columns - 1);
-    success = rootItem->insertColumns(position, columns);
-    endInsertColumns();
-
-    return success;
-}
-
-bool NetlistModel::insertRows(int position, int rows, const QModelIndex& parent) {
-    NetlistItem* parentItem = getItem(parent);
-    bool success;
-
-    beginInsertRows(parent, position, position + rows - 1);
-    success = parentItem->insertChildren(position, rows, rootItem->columnCount());
-    endInsertRows();
-
-    return success;
-}
-
-QModelIndex NetlistModel::parent(const QModelIndex& index) const {
-    if (!index.isValid())
-        return QModelIndex();
-
-    NetlistItem* childItem = getItem(index);
-    NetlistItem* parentItem = childItem->parent();
-
-    if (parentItem == rootItem)
-        return QModelIndex();
-
-    return createIndex(parentItem->childNumber(), 0, parentItem);
-}
-
-bool NetlistModel::removeColumns(int position, int columns, const QModelIndex& parent) {
-    bool success;
-
-    beginRemoveColumns(parent, position, position + columns - 1);
-    success = rootItem->removeColumns(position, columns);
-    endRemoveColumns();
-
-    if (rootItem->columnCount() == 0)
-        removeRows(0, rowCount());
-
-    return success;
-}
-
-bool NetlistModel::removeRows(int position, int rows, const QModelIndex& parent) {
-    NetlistItem* parentItem = getItem(parent);
-    bool success = true;
-
-    beginRemoveRows(parent, position, position + rows - 1);
-    success = parentItem->removeChildren(position, rows);
-    endRemoveRows();
-
-    return success;
-}
-
-int NetlistModel::rowCount(const QModelIndex& parent) const {
-    NetlistItem* parentItem = getItem(parent);
-    return parentItem->childCount();
-}
-
 bool NetlistModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     if (indexIsRegisterOutputPortValue(index)) {
         Register* reg = dynamic_cast<Register*>(getParentComponent(index));
@@ -258,32 +106,6 @@ bool NetlistModel::setData(const QModelIndex& index, const QVariant& value, int 
     return false;
 }
 
-bool NetlistModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant& value, int role) {
-    if (role != Qt::EditRole || orientation != Qt::Horizontal)
-        return false;
-
-    bool result = rootItem->setData(section, value);
-
-    if (result)
-        emit headerDataChanged(orientation, section, section);
-
-    return result;
-}
-
-void NetlistModel::updateNetlistItem(NetlistItem* index) {
-    const auto portPtr = getCorePtr<Port*>(index->index);
-    if (portPtr) {
-        index->setData(2, QVariant::fromValue(static_cast<VSRTL_VT_U>(*portPtr)));
-    }
-}
-
-void NetlistModel::updateNetlistDataRecursive(NetlistItem* index) {
-    updateNetlistItem(index);
-    for (int i = 0; i < index->childCount(); i++) {
-        updateNetlistDataRecursive(index->child(i));
-    }
-}
-
 QModelIndex NetlistModel::lookupIndexForComponent(Component* c) const {
     if (m_componentIndicies.find(c) != m_componentIndicies.end()) {
         NetlistItem* item = m_componentIndicies.at(c);
@@ -294,10 +116,11 @@ QModelIndex NetlistModel::lookupIndexForComponent(Component* c) const {
     return QModelIndex();
 }
 
-void NetlistModel::updateNetlistData() {
-    // For now, just reload the entire model
-    updateNetlistDataRecursive(rootItem);
-    dataChanged(index(0, 0), index(rowCount(), columnCount()));
+void NetlistModel::updateNetlistItem(NetlistItem* index) {
+    const auto portPtr = getCorePtr<Port*>(index);
+    if (portPtr) {
+        index->setData(2, QVariant::fromValue(static_cast<VSRTL_VT_U>(*portPtr)));
+    }
 }
 
 void NetlistModel::addPortsToComponent(Port* port, NetlistItem* parent, NetlistData::IOType dir) {
@@ -311,7 +134,7 @@ void NetlistModel::addPortsToComponent(Port* port, NetlistItem* parent, NetlistD
     child->setData(0, QVariant::fromValue(port), NetlistRoles::CorePtr);
 }
 
-void NetlistModel::loadDesign(NetlistItem* parent, const Component& component) {
+void NetlistModel::loadDesignRecursive(NetlistItem* parent, const Component& component) {
     auto& subComponents = component.getSubComponents();
 
     // Subcomponents
@@ -325,7 +148,7 @@ void NetlistModel::loadDesign(NetlistItem* parent, const Component& component) {
         child->setData(0, QString::fromStdString(subcomponent->getName()));
 
         // Recurse into the child
-        loadDesign(child, *subcomponent);
+        loadDesignRecursive(child, *subcomponent);
     }
 
     // I/O ports of component
@@ -337,4 +160,7 @@ void NetlistModel::loadDesign(NetlistItem* parent, const Component& component) {
     }
 }
 
+void NetlistModel::loadDesign(NetlistItem* parent, const Design& design) {
+    loadDesignRecursive(parent, design);
+}
 }  // namespace vsrtl

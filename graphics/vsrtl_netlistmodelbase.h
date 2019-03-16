@@ -105,7 +105,13 @@ protected:
     NetlistItem* getItem(const QModelIndex&) const;
     void updateNetlistDataRecursive(NetlistItem* index);
     virtual void updateNetlistItem(NetlistItem* index) = 0;
-    virtual void loadDesign(NetlistItem* parent, const Component& component) = 0;
+
+    /**
+     * @brief loadDesign
+     * Subclasses are expexted to use loadDesign to implement the creation of their internal graph structure, using
+     * $parent as the root node
+     */
+    virtual void loadDesign(NetlistItem* parent, const Design& design) = 0;
 
     NetlistItem* rootItem = nullptr;
 

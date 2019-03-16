@@ -56,6 +56,7 @@
 #include <QVariant>
 
 #include "vsrtl_netlistitem.h"
+#include "vsrtl_netlistmodelbase.h"
 
 namespace vsrtl {
 
@@ -63,58 +64,25 @@ class Design;
 class Component;
 class Port;
 
-class NetlistModel : public QAbstractItemModel {
+class NetlistModel : public NetlistModelBase {
     Q_OBJECT
 
 public:
     NetlistModel(const Design& arch, QObject* parent = nullptr);
-    ~NetlistModel() override;
 
     QVariant data(const QModelIndex& index, int role) const override;
-    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-
-    QModelIndex index(int row, int column, const QModelIndex& parent = QModelIndex()) const override;
-    QModelIndex parent(const QModelIndex& index) const override;
+    Qt::ItemFlags flags(const QModelIndex& index) const override;
+    bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
 
     QModelIndex lookupIndexForComponent(Component* c) const;
 
-    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
-    int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-
-    Qt::ItemFlags flags(const QModelIndex& index) const override;
-    bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
-    bool setHeaderData(int section, Qt::Orientation orientation, const QVariant& value,
-                       int role = Qt::EditRole) override;
-
-    bool insertColumns(int position, int columns, const QModelIndex& parent = QModelIndex()) override;
-    bool removeColumns(int position, int columns, const QModelIndex& parent = QModelIndex()) override;
-    bool insertRows(int position, int rows, const QModelIndex& parent = QModelIndex()) override;
-    bool removeRows(int position, int rows, const QModelIndex& parent = QModelIndex()) override;
-
-public slots:
-    void updateNetlistData();
-
 private:
-    template <typename T>
-    T getCorePtr(const QModelIndex& index) const {
-        NetlistItem* item = getItem(index);
-        auto p = item->getUserData().coreptr.value<T>();
-        return p ? p : nullptr;
-    }
-
-    bool indexIsRegisterOutputPortValue(const QModelIndex& index) const;
-    Component* getParentComponent(const QModelIndex& index) const;
-    NetlistItem* getItem(const QModelIndex&) const;
+    void updateNetlistItem(NetlistItem* index) override;
     void addPortsToComponent(Port* port, NetlistItem* parent, NetlistData::IOType);
-    void updateNetlistDataRecursive(NetlistItem* index);
-    void updateNetlistItem(NetlistItem* index);
-    void loadDesign(NetlistItem* parent, const Component& component);
-
-    NetlistItem* rootItem = nullptr;
+    void loadDesign(NetlistItem* parent, const Design& design) override;
+    void loadDesignRecursive(NetlistItem* parent, const Component& component);
 
     std::map<Component*, NetlistItem*> m_componentIndicies;
-
-    const Design& m_arch;
 };
 
 }  // namespace vsrtl
