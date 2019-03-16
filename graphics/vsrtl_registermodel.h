@@ -55,7 +55,7 @@
 #include <QModelIndex>
 #include <QVariant>
 
-#include "vsrtl_treeitem.h"
+#include "vsrtl_netlistitem.h"
 
 namespace vsrtl {
 
@@ -94,14 +94,14 @@ public slots:
 
 private:
     Component* getComponent(const QModelIndex& index) const;
-    TreeItem* getItem(const QModelIndex&) const;
-    void addPortsToComponent(Port* port, TreeItem* parent, NetlistData::IOType);
-    void updateNetlistDataRecursive(TreeItem* index);
-    void updateTreeItem(TreeItem* index);
-    void loadDesign(TreeItem* parent, const Design* component);
+    NetlistItem* getItem(const QModelIndex&) const;
+    void addPortsToComponent(Port* port, NetlistItem* parent, NetlistData::IOType);
+    void updateNetlistDataRecursive(NetlistItem* index);
+    void updateNetlistItem(NetlistItem* index);
+    void loadDesign(NetlistItem* parent, const Design* component);
     bool indexIsRegisterValue(const QModelIndex& index) const;
 
-    TreeItem* rootItem = nullptr;
+    NetlistItem* rootItem = nullptr;
 
     const Design& m_arch;
 };

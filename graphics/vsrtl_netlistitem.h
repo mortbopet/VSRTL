@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-#ifndef VSRTL_TREEITEM_H
-#define VSRTL_TREEITEM_H
+#ifndef VSRTL_NETLISTITEM_H
+#define VSRTL_NETLISTITEM_H
 
 #include <QList>
 #include <QModelIndex>
@@ -60,7 +60,7 @@
 
 namespace vsrtl {
 
-// TreeItem's are structured as having, in column 0; the NetlistData as userData
+// NetlistItem's are structured as having, in column 0; the NetlistData as userData
 // wherein the value is read and assigned to column 1
 
 #define COMPONENT_COL 0
@@ -76,19 +76,19 @@ typedef struct {
 
 enum NetlistRoles { PortPtr = Qt::UserRole + 1, ComponentPtr, PortType };
 
-class TreeItem {
+class NetlistItem {
 public:
-    explicit TreeItem(const QVector<QVariant>& data, TreeItem* parent = 0);
-    ~TreeItem();
+    explicit NetlistItem(const QVector<QVariant>& data, NetlistItem* parent = 0);
+    ~NetlistItem();
 
-    TreeItem* child(int number);
+    NetlistItem* child(int number);
     int childCount() const;
     int columnCount() const;
     QVariant data(int column, int role = Qt::EditRole) const;
     const NetlistData& getUserData() { return userData; }
     bool insertChildren(int position, int count, int columns);
     bool insertColumns(int position, int columns);
-    TreeItem* parent();
+    NetlistItem* parent();
     bool removeChildren(int position, int count);
     bool removeColumns(int position, int columns);
     int childNumber() const;
@@ -99,10 +99,10 @@ public:
     QModelIndex index;
 
 private:
-    QList<TreeItem*> childItems;
+    QList<NetlistItem*> childItems;
     QVector<QVariant> itemData;
     QString tooltip;
-    TreeItem* parentItem;
+    NetlistItem* parentItem;
     NetlistData userData;
 };
 
@@ -115,4 +115,4 @@ Q_DECLARE_METATYPE(vsrtl::Port*)
 Q_DECLARE_OPAQUE_POINTER(vsrtl::Component*)
 Q_DECLARE_METATYPE(vsrtl::Component*)
 
-#endif  // VSRTL_TREEITEM_H
+#endif  // VSRTL_NETLISTITEM_H

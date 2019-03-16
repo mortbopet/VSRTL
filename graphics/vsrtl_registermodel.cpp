@@ -53,16 +53,16 @@
 
 #include <QDebug>
 
+#include "vsrtl_netlistitem.h"
 #include "vsrtl_registermodel.h"
-#include "vsrtl_treeitem.h"
 
 #include "vsrtl_design.h"
 
 namespace vsrtl {
 
-TreeItem* RegisterModel::getItem(const QModelIndex& index) const {
+NetlistItem* RegisterModel::getItem(const QModelIndex& index) const {
     if (index.isValid()) {
-        TreeItem* item = static_cast<TreeItem*>(index.internalPointer());
+        NetlistItem* item = static_cast<NetlistItem*>(index.internalPointer());
         if (item)
             return item;
     }
@@ -70,12 +70,12 @@ TreeItem* RegisterModel::getItem(const QModelIndex& index) const {
 }
 
 bool RegisterModel::indexIsRegisterValue(const QModelIndex& index) const {
-    TreeItem* item = getItem(index);
+    NetlistItem* item = getItem(index);
     return dynamic_cast<Register*>(item->data(0, NetlistRoles::ComponentPtr).value<Component*>()) != nullptr;
 }
 
 Component* RegisterModel::getComponent(const QModelIndex& index) const {
-    TreeItem* item = getItem(index);
+    NetlistItem* item = getItem(index);
     if (item->getUserData().component) {
         return item->getUserData().component;
     }
@@ -88,7 +88,7 @@ RegisterModel::RegisterModel(const Design& arch, QObject* parent) : QAbstractIte
     for (QString header : headers)
         rootData << header;
 
-    rootItem = new TreeItem(rootData);
+    rootItem = new NetlistItem(rootData);
 
     loadDesign(rootItem, &m_arch);
 }
@@ -105,7 +105,7 @@ QVariant RegisterModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid())
         return QVariant();
 
-    TreeItem* item = getItem(index);
+    NetlistItem* item = getItem(index);
 
     // Formatting of "Value" column when a leaf (Register value) is seen
     if (index.column() == 1 && indexIsRegisterValue(index)) {
@@ -153,11 +153,11 @@ QModelIndex RegisterModel::index(int row, int column, const QModelIndex& parent)
     if (parent.isValid() && parent.column() != 0)
         return QModelIndex();
 
-    TreeItem* parentItem = getItem(parent);
+    NetlistItem* parentItem = getItem(parent);
     if (!parentItem)
         parentItem = rootItem;
 
-    TreeItem* childItem = parentItem->child(row);
+    NetlistItem* childItem = parentItem->child(row);
     if (childItem) {
         auto i = createIndex(row, column, childItem);
         childItem->index = i;
@@ -177,7 +177,7 @@ bool RegisterModel::insertColumns(int position, int columns, const QModelIndex& 
 }
 
 bool RegisterModel::insertRows(int position, int rows, const QModelIndex& parent) {
-    TreeItem* parentItem = getItem(parent);
+    NetlistItem* parentItem = getItem(parent);
     bool success;
 
     beginInsertRows(parent, position, position + rows - 1);
@@ -191,8 +191,8 @@ QModelIndex RegisterModel::parent(const QModelIndex& index) const {
     if (!index.isValid())
         return QModelIndex();
 
-    TreeItem* childItem = getItem(index);
-    TreeItem* parentItem = childItem->parent();
+    NetlistItem* childItem = getItem(index);
+    NetlistItem* parentItem = childItem->parent();
 
     if (parentItem == rootItem)
         return QModelIndex();
@@ -214,7 +214,7 @@ bool RegisterModel::removeColumns(int position, int columns, const QModelIndex& 
 }
 
 bool RegisterModel::removeRows(int position, int rows, const QModelIndex& parent) {
-    TreeItem* parentItem = getItem(parent);
+    NetlistItem* parentItem = getItem(parent);
     bool success = true;
 
     beginRemoveRows(parent, position, position + rows - 1);
@@ -225,7 +225,7 @@ bool RegisterModel::removeRows(int position, int rows, const QModelIndex& parent
 }
 
 int RegisterModel::rowCount(const QModelIndex& parent) const {
-    TreeItem* parentItem = getItem(parent);
+    NetlistItem* parentItem = getItem(parent);
     return parentItem->childCount();
 }
 
@@ -254,7 +254,7 @@ bool RegisterModel::setHeaderData(int section, Qt::Orientation orientation, cons
     return result;
 }
 
-void RegisterModel::updateTreeItem(TreeItem* index) {
+void RegisterModel::updateNetlistItem(NetlistItem* index) {
     const auto itemData = index->data(0, NetlistRoles::ComponentPtr);
     if (!itemData.isNull()) {
         Register* reg = static_cast<Register*>(itemData.value<Component*>());
@@ -262,8 +262,8 @@ void RegisterModel::updateTreeItem(TreeItem* index) {
     }
 }
 
-void RegisterModel::updateNetlistDataRecursive(TreeItem* index) {
-    updateTreeItem(index);
+void RegisterModel::updateNetlistDataRecursive(NetlistItem* index) {
+    updateNetlistItem(index);
     for (int i = 0; i < index->childCount(); i++) {
         updateNetlistDataRecursive(index->child(i));
     }
@@ -275,21 +275,21 @@ void RegisterModel::updateNetlistData() {
     dataChanged(index(0, 0), index(rowCount(), columnCount()));
 }
 
-void RegisterModel::addPortsToComponent(Port* port, TreeItem* parent, NetlistData::IOType dir) {
+void RegisterModel::addPortsToComponent(Port* port, NetlistItem* parent, NetlistData::IOType dir) {
     parent->insertChildren(parent->childCount(), 1, rootItem->columnCount());
 
     // Set component data (component name and signal value)S
-    TreeItem* child = parent->child(parent->childCount() - 1);
+    NetlistItem* child = parent->child(parent->childCount() - 1);
 
     child->setData(0, QString::fromStdString(port->getName()));
     child->setData(0, QVariant::fromValue(dir), NetlistRoles::PortType);
     child->setData(0, QVariant::fromValue(port), NetlistRoles::PortPtr);
 }
 
-void RegisterModel::loadDesign(TreeItem* parent, const Design* design) {
+void RegisterModel::loadDesign(NetlistItem* parent, const Design* design) {
     const auto& registers = design->getRegisters();
 
-    std::map<const Component*, TreeItem*> parentMap;
+    std::map<const Component*, NetlistItem*> parentMap;
 
     const Component* rootComponent = dynamic_cast<const Component*>(design);
     parentMap[rootComponent] = parent;
@@ -297,7 +297,7 @@ void RegisterModel::loadDesign(TreeItem* parent, const Design* design) {
     // Build a tree representing the hierarchy of components and subcomponents containing registers
     for (const auto& reg : registers) {
         const Component* regParent = reg->getParent();
-        TreeItem* regParentTreeItem = nullptr;
+        NetlistItem* regParentNetlistItem = nullptr;
 
         if (parentMap.count(regParent) == 0) {
             // Create new parents in the tree until either the root component is detected, or a parent of a parent
@@ -309,25 +309,25 @@ void RegisterModel::loadDesign(TreeItem* parent, const Design* design) {
             }
             // At this point, the first value in newParentsInTree has its parent present in the tree. Extend the
             // tree from this index
-            regParentTreeItem = parentMap[regParent];
+            regParentNetlistItem = parentMap[regParent];
             for (const auto& p : newParentsInTree) {
-                regParentTreeItem->insertChildren(regParentTreeItem->childCount(), 1, rootItem->columnCount());
-                regParentTreeItem = regParentTreeItem->child(regParentTreeItem->childCount() - 1);
-                regParentTreeItem->setData(0, QString::fromStdString(p->getName()));
+                regParentNetlistItem->insertChildren(regParentNetlistItem->childCount(), 1, rootItem->columnCount());
+                regParentNetlistItem = regParentNetlistItem->child(regParentNetlistItem->childCount() - 1);
+                regParentNetlistItem->setData(0, QString::fromStdString(p->getName()));
                 Q_ASSERT(parentMap.count(p) == 0);
-                parentMap[p] = regParentTreeItem;
+                parentMap[p] = regParentNetlistItem;
             }
-            // After the newParentsInTree stack has been iterated through, 'regParentTreeItem' will point to the
+            // After the newParentsInTree stack has been iterated through, 'regParentNetlistItem' will point to the
             // parent tree item of the current 'reg' in the outer foor loop
         } else {
-            regParentTreeItem = parentMap[regParent];
+            regParentNetlistItem = parentMap[regParent];
         }
 
         // Add register to its parent tree item
-        regParentTreeItem->insertChildren(regParentTreeItem->childCount(), 1, rootItem->columnCount());
+        regParentNetlistItem->insertChildren(regParentNetlistItem->childCount(), 1, rootItem->columnCount());
 
         // Set component data (component name and signal value)
-        TreeItem* child = regParentTreeItem->child(regParentTreeItem->childCount() - 1);
+        NetlistItem* child = regParentNetlistItem->child(regParentNetlistItem->childCount() - 1);
         child->setData(0, QVariant::fromValue(static_cast<Component*>(reg)), NetlistRoles::ComponentPtr);
         child->setData(0, QString::fromStdString(reg->getName()));
         child->setData(2, QString::number(reg->out.getWidth()));

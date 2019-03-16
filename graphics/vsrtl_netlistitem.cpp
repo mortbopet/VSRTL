@@ -48,48 +48,42 @@
 **
 ****************************************************************************/
 
-/*
-    treeitem.cpp
-
-    A container for items of data supplied by the simple tree model.
-*/
-
-#include "vsrtl_treeitem.h"
+#include "vsrtl_netlistitem.h"
 
 #include <QIcon>
 #include <QStringList>
 
 namespace vsrtl {
 
-TreeItem::TreeItem(const QVector<QVariant>& data, TreeItem* parent) {
+NetlistItem::NetlistItem(const QVector<QVariant>& data, NetlistItem* parent) {
     parentItem = parent;
     itemData = data;
 }
 
-TreeItem::~TreeItem() {
+NetlistItem::~NetlistItem() {
     qDeleteAll(childItems);
 }
 
-TreeItem* TreeItem::child(int number) {
+NetlistItem* NetlistItem::child(int number) {
     return childItems.value(number);
 }
 
-int TreeItem::childCount() const {
+int NetlistItem::childCount() const {
     return childItems.count();
 }
 
-int TreeItem::childNumber() const {
+int NetlistItem::childNumber() const {
     if (parentItem)
-        return parentItem->childItems.indexOf(const_cast<TreeItem*>(this));
+        return parentItem->childItems.indexOf(const_cast<NetlistItem*>(this));
 
     return 0;
 }
 
-int TreeItem::columnCount() const {
+int NetlistItem::columnCount() const {
     return itemData.count();
 }
 
-QVariant TreeItem::data(int column, int role) const {
+QVariant NetlistItem::data(int column, int role) const {
     if (role == Qt::ToolTipRole) {
         return tooltip;
     } else if (role == Qt::UserRole) {
@@ -117,37 +111,37 @@ QVariant TreeItem::data(int column, int role) const {
     return QVariant();
 }  // namespace vsrtl
 
-bool TreeItem::insertChildren(int position, int count, int columns) {
+bool NetlistItem::insertChildren(int position, int count, int columns) {
     if (position < 0 || position > childItems.size())
         return false;
 
     for (int row = 0; row < count; ++row) {
         QVector<QVariant> data(columns);
-        TreeItem* item = new TreeItem(data, this);
+        NetlistItem* item = new NetlistItem(data, this);
         childItems.insert(position, item);
     }
 
     return true;
 }
 
-bool TreeItem::insertColumns(int position, int columns) {
+bool NetlistItem::insertColumns(int position, int columns) {
     if (position < 0 || position > itemData.size())
         return false;
 
     for (int column = 0; column < columns; ++column)
         itemData.insert(position, QVariant());
 
-    foreach (TreeItem* child, childItems)
+    foreach (NetlistItem* child, childItems)
         child->insertColumns(position, columns);
 
     return true;
 }
 
-TreeItem* TreeItem::parent() {
+NetlistItem* NetlistItem::parent() {
     return parentItem;
 }
 
-bool TreeItem::removeChildren(int position, int count) {
+bool NetlistItem::removeChildren(int position, int count) {
     if (position < 0 || position + count > childItems.size())
         return false;
 
@@ -157,20 +151,20 @@ bool TreeItem::removeChildren(int position, int count) {
     return true;
 }
 
-bool TreeItem::removeColumns(int position, int columns) {
+bool NetlistItem::removeColumns(int position, int columns) {
     if (position < 0 || position + columns > itemData.size())
         return false;
 
     for (int column = 0; column < columns; ++column)
         itemData.remove(position);
 
-    foreach (TreeItem* child, childItems)
+    foreach (NetlistItem* child, childItems)
         child->removeColumns(position, columns);
 
     return true;
 }
 
-bool TreeItem::setData(int column, const QVariant& value, int role) {
+bool NetlistItem::setData(int column, const QVariant& value, int role) {
     if (column < 0 || column >= itemData.size())
         return false;
 

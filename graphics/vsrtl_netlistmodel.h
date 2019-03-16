@@ -55,7 +55,7 @@
 #include <QModelIndex>
 #include <QVariant>
 
-#include "vsrtl_treeitem.h"
+#include "vsrtl_netlistitem.h"
 
 namespace vsrtl {
 
@@ -63,14 +63,12 @@ class Design;
 class Component;
 class Port;
 
-
 class NetlistModel : public QAbstractItemModel {
     Q_OBJECT
 
 public:
     NetlistModel(const Design& arch, QObject* parent = nullptr);
     ~NetlistModel() override;
-    
 
     QVariant data(const QModelIndex& index, int role) const override;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
@@ -82,9 +80,7 @@ public:
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
-    
 
-    
     Qt::ItemFlags flags(const QModelIndex& index) const override;
     bool setData(const QModelIndex& index, const QVariant& value, int role = Qt::EditRole) override;
     bool setHeaderData(int section, Qt::Orientation orientation, const QVariant& value,
@@ -103,19 +99,18 @@ private:
     Port* getPort(const QModelIndex& index) const;
     Component* getComponent(const QModelIndex& index) const;
     Component* getParentComponent(const QModelIndex& index) const;
-    TreeItem* getItem(const QModelIndex&) const;
-    void addPortsToComponent(Port* port, TreeItem* parent, NetlistData::IOType);
-    void updateNetlistDataRecursive(TreeItem* index);
-    void updateTreeItem(TreeItem* index);
-    void loadDesign(TreeItem* parent, const Component& component);
+    NetlistItem* getItem(const QModelIndex&) const;
+    void addPortsToComponent(Port* port, NetlistItem* parent, NetlistData::IOType);
+    void updateNetlistDataRecursive(NetlistItem* index);
+    void updateNetlistItem(NetlistItem* index);
+    void loadDesign(NetlistItem* parent, const Component& component);
 
-    TreeItem* rootItem = nullptr;
+    NetlistItem* rootItem = nullptr;
 
-    std::map<Component*, TreeItem*> m_componentIndicies;
+    std::map<Component*, NetlistItem*> m_componentIndicies;
 
     const Design& m_arch;
 };
-
 
 }  // namespace vsrtl
 
