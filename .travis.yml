@@ -14,7 +14,7 @@ matrix:
       osx_image: xcode10
       language: c++
 
-    - env: VSRTL_PLATFORM='linux' CXX=g++-6 CC=gcc-6
+    - env: VSRTL_PLATFORM='linux_test' CXX=g++-6 CC=gcc-6
       os: linux
       dist: trusty
       addons:
