@@ -60,20 +60,11 @@
 
 namespace vsrtl {
 
-NetlistItem* RegisterModel::getItem(const QModelIndex& index) const {
-    if (index.isValid()) {
-        NetlistItem* item = static_cast<NetlistItem*>(index.internalPointer());
-        if (item)
-            return item;
-    }
-    return rootItem;
-}
-
 bool RegisterModel::indexIsRegisterValue(const QModelIndex& index) const {
     return dynamic_cast<Register*>(getCorePtr<Component*>(index)) != nullptr;
 }
 
-RegisterModel::RegisterModel(const Design& arch, QObject* parent) : QAbstractItemModel(parent), m_arch(arch) {
+RegisterModel::RegisterModel(const Design& arch, QObject* parent) : NetlistModelBase(arch, parent) {
     QStringList headers{"Component", "Value", "Width"};
     QVector<QVariant> rootData;
     for (QString header : headers)
@@ -81,15 +72,7 @@ RegisterModel::RegisterModel(const Design& arch, QObject* parent) : QAbstractIte
 
     rootItem = new NetlistItem(rootData);
 
-    loadDesign(rootItem, &m_arch);
-}
-
-RegisterModel::~RegisterModel() {
-    delete rootItem;
-}
-
-int RegisterModel::columnCount(const QModelIndex& /* parent */) const {
-    return rootItem->columnCount();
+    loadDesign(rootItem, m_arch);
 }
 
 QVariant RegisterModel::data(const QModelIndex& index, int role) const {
@@ -130,93 +113,6 @@ Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
     return flags;
 }
 
-QVariant RegisterModel::headerData(int section, Qt::Orientation orientation, int role) const {
-    if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
-        return rootItem->data(section);
-
-    return QVariant();
-}
-
-QModelIndex RegisterModel::index(int row, int column, const QModelIndex& parent) const {
-    if (parent.isValid() && parent.column() != 0)
-        return QModelIndex();
-
-    NetlistItem* parentItem = getItem(parent);
-    if (!parentItem)
-        parentItem = rootItem;
-
-    NetlistItem* childItem = parentItem->child(row);
-    if (childItem) {
-        auto i = createIndex(row, column, childItem);
-        childItem->index = i;
-        return i;
-    } else
-        return QModelIndex();
-}
-
-bool RegisterModel::insertColumns(int position, int columns, const QModelIndex& parent) {
-    bool success;
-
-    beginInsertColumns(parent, position, position + columns - 1);
-    success = rootItem->insertColumns(position, columns);
-    endInsertColumns();
-
-    return success;
-}
-
-bool RegisterModel::insertRows(int position, int rows, const QModelIndex& parent) {
-    NetlistItem* parentItem = getItem(parent);
-    bool success;
-
-    beginInsertRows(parent, position, position + rows - 1);
-    success = parentItem->insertChildren(position, rows, rootItem->columnCount());
-    endInsertRows();
-
-    return success;
-}
-
-QModelIndex RegisterModel::parent(const QModelIndex& index) const {
-    if (!index.isValid())
-        return QModelIndex();
-
-    NetlistItem* childItem = getItem(index);
-    NetlistItem* parentItem = childItem->parent();
-
-    if (parentItem == rootItem)
-        return QModelIndex();
-
-    return createIndex(parentItem->childNumber(), 0, parentItem);
-}
-
-bool RegisterModel::removeColumns(int position, int columns, const QModelIndex& parent) {
-    bool success;
-
-    beginRemoveColumns(parent, position, position + columns - 1);
-    success = rootItem->removeColumns(position, columns);
-    endRemoveColumns();
-
-    if (rootItem->columnCount() == 0)
-        removeRows(0, rowCount());
-
-    return success;
-}
-
-bool RegisterModel::removeRows(int position, int rows, const QModelIndex& parent) {
-    NetlistItem* parentItem = getItem(parent);
-    bool success = true;
-
-    beginRemoveRows(parent, position, position + rows - 1);
-    success = parentItem->removeChildren(position, rows);
-    endRemoveRows();
-
-    return success;
-}
-
-int RegisterModel::rowCount(const QModelIndex& parent) const {
-    NetlistItem* parentItem = getItem(parent);
-    return parentItem->childCount();
-}
-
 bool RegisterModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     if (index.column() == 1) {
         Register* reg = dynamic_cast<Register*>(getCorePtr<Component*>(index));
@@ -230,18 +126,6 @@ bool RegisterModel::setData(const QModelIndex& index, const QVariant& value, int
     return false;
 }
 
-bool RegisterModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant& value, int role) {
-    if (role != Qt::EditRole || orientation != Qt::Horizontal)
-        return false;
-
-    bool result = rootItem->setData(section, value);
-
-    if (result)
-        emit headerDataChanged(orientation, section, section);
-
-    return result;
-}
-
 void RegisterModel::updateNetlistItem(NetlistItem* index) {
     auto reg = dynamic_cast<Register*>(getCorePtr<Component*>(index));
     if (reg) {
@@ -249,36 +133,12 @@ void RegisterModel::updateNetlistItem(NetlistItem* index) {
     }
 }
 
-void RegisterModel::updateNetlistDataRecursive(NetlistItem* index) {
-    updateNetlistItem(index);
-    for (int i = 0; i < index->childCount(); i++) {
-        updateNetlistDataRecursive(index->child(i));
-    }
-}
-
-void RegisterModel::updateNetlistData() {
-    // For now, just reload the entire model
-    updateNetlistDataRecursive(rootItem);
-    dataChanged(index(0, 0), index(rowCount(), columnCount()));
-}
-
-void RegisterModel::addPortsToComponent(Port* port, NetlistItem* parent, NetlistData::IOType dir) {
-    parent->insertChildren(parent->childCount(), 1, rootItem->columnCount());
-
-    // Set component data (component name and signal value)S
-    NetlistItem* child = parent->child(parent->childCount() - 1);
-
-    child->setData(0, QString::fromStdString(port->getName()));
-    child->setData(0, QVariant::fromValue(dir), NetlistRoles::PortType);
-    child->setData(0, QVariant::fromValue(port), NetlistRoles::CorePtr);
-}
-
-void RegisterModel::loadDesign(NetlistItem* parent, const Design* design) {
-    const auto& registers = design->getRegisters();
+void RegisterModel::loadDesign(NetlistItem* parent, const Design& design) {
+    const auto& registers = design.getRegisters();
 
     std::map<const Component*, NetlistItem*> parentMap;
 
-    const Component* rootComponent = dynamic_cast<const Component*>(design);
+    const Component* rootComponent = dynamic_cast<const Component*>(&design);
     parentMap[rootComponent] = parent;
 
     // Build a tree representing the hierarchy of components and subcomponents containing registers
