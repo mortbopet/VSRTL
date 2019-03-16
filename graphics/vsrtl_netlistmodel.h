@@ -95,9 +95,14 @@ public slots:
     void updateNetlistData();
 
 private:
+    template <typename T>
+    T getCorePtr(const QModelIndex& index) const {
+        NetlistItem* item = getItem(index);
+        auto p = item->getUserData().coreptr.value<T>();
+        return p ? p : nullptr;
+    }
+
     bool indexIsRegisterOutputPortValue(const QModelIndex& index) const;
-    Port* getPort(const QModelIndex& index) const;
-    Component* getComponent(const QModelIndex& index) const;
     Component* getParentComponent(const QModelIndex& index) const;
     NetlistItem* getItem(const QModelIndex&) const;
     void addPortsToComponent(Port* port, NetlistItem* parent, NetlistData::IOType);

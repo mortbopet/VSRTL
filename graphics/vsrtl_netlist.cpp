@@ -82,7 +82,7 @@ namespace {
 void getIndexComponentPtr(const QItemSelection& selected, std::vector<Component*>& c_v) {
     for (const auto& sel : selected.indexes()) {
         NetlistItem* item = static_cast<NetlistItem*>(sel.internalPointer());
-        auto c = item->data(0, NetlistRoles::ComponentPtr).value<Component*>();
+        auto c = item->data(0, NetlistRoles::CorePtr).value<Component*>();
         if (c)
             c_v.push_back(c);
     }

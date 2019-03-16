@@ -70,16 +70,7 @@ NetlistItem* RegisterModel::getItem(const QModelIndex& index) const {
 }
 
 bool RegisterModel::indexIsRegisterValue(const QModelIndex& index) const {
-    NetlistItem* item = getItem(index);
-    return dynamic_cast<Register*>(item->data(0, NetlistRoles::ComponentPtr).value<Component*>()) != nullptr;
-}
-
-Component* RegisterModel::getComponent(const QModelIndex& index) const {
-    NetlistItem* item = getItem(index);
-    if (item->getUserData().component) {
-        return item->getUserData().component;
-    }
-    return nullptr;
+    return dynamic_cast<Register*>(getCorePtr<Component*>(index)) != nullptr;
 }
 
 RegisterModel::RegisterModel(const Design& arch, QObject* parent) : QAbstractItemModel(parent), m_arch(arch) {
@@ -136,9 +127,6 @@ Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
         flags |= Qt::ItemIsEditable;
     }
 
-    QVariant component = data(index, NetlistRoles::ComponentPtr);
-    if (component.isValid()) {
-    }
     return flags;
 }
 
@@ -231,7 +219,7 @@ int RegisterModel::rowCount(const QModelIndex& parent) const {
 
 bool RegisterModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     if (index.column() == 1) {
-        Register* reg = dynamic_cast<Register*>(getComponent(index));
+        Register* reg = dynamic_cast<Register*>(getCorePtr<Component*>(index));
         if (reg) {
             reg->forceValue(value.toInt());
             m_arch.propagateDesign();
@@ -255,9 +243,8 @@ bool RegisterModel::setHeaderData(int section, Qt::Orientation orientation, cons
 }
 
 void RegisterModel::updateNetlistItem(NetlistItem* index) {
-    const auto itemData = index->data(0, NetlistRoles::ComponentPtr);
-    if (!itemData.isNull()) {
-        Register* reg = static_cast<Register*>(itemData.value<Component*>());
+    auto reg = dynamic_cast<Register*>(getCorePtr<Component*>(index));
+    if (reg) {
         index->setData(1, QVariant::fromValue(static_cast<VSRTL_VT_U>(reg->out.value<VSRTL_VT_U>())));
     }
 }
@@ -283,7 +270,7 @@ void RegisterModel::addPortsToComponent(Port* port, NetlistItem* parent, Netlist
 
     child->setData(0, QString::fromStdString(port->getName()));
     child->setData(0, QVariant::fromValue(dir), NetlistRoles::PortType);
-    child->setData(0, QVariant::fromValue(port), NetlistRoles::PortPtr);
+    child->setData(0, QVariant::fromValue(port), NetlistRoles::CorePtr);
 }
 
 void RegisterModel::loadDesign(NetlistItem* parent, const Design* design) {
@@ -328,7 +315,7 @@ void RegisterModel::loadDesign(NetlistItem* parent, const Design* design) {
 
         // Set component data (component name and signal value)
         NetlistItem* child = regParentNetlistItem->child(regParentNetlistItem->childCount() - 1);
-        child->setData(0, QVariant::fromValue(static_cast<Component*>(reg)), NetlistRoles::ComponentPtr);
+        child->setData(0, QVariant::fromValue(static_cast<Component*>(reg)), NetlistRoles::CorePtr);
         child->setData(0, QString::fromStdString(reg->getName()));
         child->setData(2, QString::number(reg->out.getWidth()));
     }

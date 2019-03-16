@@ -70,11 +70,10 @@ namespace vsrtl {
 typedef struct {
     enum class IOType { invalid, input, output };
     IOType t = IOType::invalid;
-    Port* port = nullptr;
-    Component* component = nullptr;
+    QVariant coreptr;
 } NetlistData;
 
-enum NetlistRoles { PortPtr = Qt::UserRole + 1, ComponentPtr, PortType };
+enum NetlistRoles { CorePtr = Qt::UserRole + 1, PortType };
 
 class NetlistItem {
 public:
@@ -101,7 +100,6 @@ public:
 private:
     QList<NetlistItem*> childItems;
     QVector<QVariant> itemData;
-    QString tooltip;
     NetlistItem* parentItem;
     NetlistData userData;
 };
