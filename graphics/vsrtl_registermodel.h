@@ -37,7 +37,6 @@ public:
 
 private:
     void loadDesign(RegisterTreeItem* parent, const Design& component);
-    bool indexIsRegisterValue(const QModelIndex& index) const;
 };
 
 }  // namespace vsrtl

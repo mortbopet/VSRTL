@@ -53,10 +53,6 @@ bool RegisterTreeItem::setData(int column, const QVariant& value, int role) {
     return false;
 }
 
-bool RegisterModel::indexIsRegisterValue(const QModelIndex& index) const {
-    return getTreeItem(index)->m_register != nullptr;
-}
-
 RegisterModel::RegisterModel(const Design& arch, QObject* parent)
     : NetlistModelBase({"Component", "Value", "Width"}, arch, parent) {
     rootItem = new RegisterTreeItem(nullptr);
@@ -68,7 +64,6 @@ QVariant RegisterModel::data(const QModelIndex& index, int role) const {
         return QVariant();
 
     auto* item = getTreeItem(index);
-
     return item->data(index.column(), role);
 }
 
@@ -78,7 +73,7 @@ Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
     Qt::ItemFlags flags = QAbstractItemModel::flags(index);
 
     // Register values are editable
-    if (index.column() == 1 && indexIsRegisterValue(index)) {
+    if (index.column() == 1 && getTreeItem(index)->m_register != nullptr) {
         flags |= Qt::ItemIsEditable;
     }
 
