@@ -1,6 +1,7 @@
 #include <QItemSelectionModel>
 #include <QWidget>
 
+#include "vsrtl_displaytype.h"
 #include "vsrtl_registermodel.h"
 #include "vsrtl_treeitem.h"
 
@@ -19,7 +20,7 @@ QVariant RegisterTreeItem::data(int column, int role) const {
             }
             case Qt::DisplayRole: {
                 VSRTL_VT_U value = m_register->out.template value<VSRTL_VT_U>();
-                return "0x" + QString::number(value, 16).rightJustified(8, '0');
+                return encodeDisplayValue(value, m_register->out.getWidth(), m_displayType);
             }
         }
     }
@@ -43,7 +44,7 @@ QVariant RegisterTreeItem::data(int column, int role) const {
 bool RegisterTreeItem::setData(int column, const QVariant& value, int role) {
     if (index.column() == RegisterModel::ValueColumn) {
         if (m_register) {
-            m_register->forceValue(value.toInt());
+            m_register->forceValue(value.value<VSRTL_VT_U>());
             return true;
         }
     }
@@ -77,9 +78,10 @@ Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
     return flags;
 }
 
-bool RegisterModel::setData(const QModelIndex& index, const QVariant& value, int role) {
+bool RegisterModel::setData(const QModelIndex& index, const QVariant& var, int role) {
     auto* item = getTreeItem(index);
     if (item) {
+        VSRTL_VT_U value = decodeDisplayValue(var.toString(), item->m_register->out.getWidth(), item->m_displayType);
         bool resval = item->setData(index.column(), value, role);
         if (resval) {
             m_arch.propagateDesign();
