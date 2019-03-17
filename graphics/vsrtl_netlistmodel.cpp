@@ -24,6 +24,12 @@ QVariant NetlistTreeItem::data(int column, int role) const {
                 }
                 break;
             }
+            case NetlistModel::WidthColumn: {
+                if (m_port) {
+                    return m_port->getWidth();
+                }
+                break;
+            }
         }
     }
     return QVariant();
@@ -33,7 +39,7 @@ bool NetlistTreeItem::setData(int column, const QVariant& value, int role) {
 }
 
 NetlistModel::NetlistModel(const Design& arch, QObject* parent)
-    : NetlistModelBase({"Component", "I/O", "Value"}, arch, parent) {
+    : NetlistModelBase({"Component", "I/O", "Value", "Width"}, arch, parent) {
     rootItem = new NetlistTreeItem(nullptr);
 
     loadDesign(rootItem, m_arch);

@@ -31,7 +31,7 @@ class NetlistModel : public NetlistModelBase<NetlistTreeItem> {
     Q_OBJECT
 
 public:
-    enum columns { ComponentColumn, IOColumn, ValueColumn, NUM_COLUMNS };
+    enum columns { ComponentColumn, IOColumn, ValueColumn, WidthColumn, NUM_COLUMNS };
     NetlistModel(const Design& arch, QObject* parent = nullptr);
 
     QVariant data(const QModelIndex& index, int role) const override;

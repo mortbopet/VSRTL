@@ -27,7 +27,9 @@ Netlist::Netlist(Design& design, QWidget* parent) : QWidget(parent), ui(new Ui::
     ui->netlistView->setSelectionModel(m_selectionModel);
     connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, &Netlist::handleViewSelectionChanged);
 
-    ui->netlistView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->netlistView->header()->setSectionResizeMode(NetlistModel::ComponentColumn, QHeaderView::ResizeToContents);
+    ui->netlistView->header()->setSectionResizeMode(NetlistModel::IOColumn, QHeaderView::ResizeToContents);
+
     ui->registerView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
     ui->registerView->expandAll();
