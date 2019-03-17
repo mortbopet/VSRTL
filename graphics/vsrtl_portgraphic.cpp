@@ -19,7 +19,10 @@ PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_p
     m_pen.setColor(WIRE_DEFAULT_COLOR);
     m_pen.setCapStyle(Qt::RoundCap);
 
-    port->changed.Connect(this, &PortGraphic::updateSlot);
+    // PortGraphic logic is build by revolving around the root source port in a port-wire connection. Only receive
+    // update signals from root sources
+    if (port->getInputPort() == nullptr)
+        port->changed.Connect(this, &PortGraphic::updateSlot);
 
     setFlag(ItemIsSelectable);
 
