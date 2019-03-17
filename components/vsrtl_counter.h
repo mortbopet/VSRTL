@@ -35,10 +35,14 @@ public:
             c0->out >> adders[i]->B;
             adders[i]->S >> regs[i]->in;
         }
+
+        value->out >> outputReg->in;
     }
 
     std::vector<FullAdder*> adders;
     std::vector<Register*> regs;
+
+    SUBCOMPONENT(outputReg, Register, width);
 
     SUBCOMPONENT(value, Collator, width);
 
