@@ -43,7 +43,7 @@ QVariant NetlistModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid())
         return QVariant();
 
-    NetlistTreeItem* item = getItem(index);
+    NetlistTreeItem* item = getTreeItem(index);
     return item->data(index.column(), role);
 }
 
@@ -94,7 +94,7 @@ void NetlistModel::addPortToComponent(Port* port, NetlistTreeItem* parent, PortD
 
 bool NetlistModel::indexIsRegisterOutputPortValue(const QModelIndex& index) const {
     if (index.column() == ValueColumn) {
-        auto* item = getItem(index);
+        auto* item = getTreeItem(index);
         auto* parentItem = static_cast<NetlistTreeItem*>(item->parent());
         auto* parentComponent = parentItem->m_component;
         if (parentItem && parentComponent) {
@@ -137,7 +137,7 @@ void NetlistModel::loadDesignRecursive(NetlistTreeItem* parent, const Component&
 }
 
 Component* NetlistModel::getParentComponent(const QModelIndex& index) const {
-    auto* item = getItem(index);
+    auto* item = getTreeItem(index);
     if (item) {
         item = static_cast<NetlistTreeItem*>(item->parent());
         if (item) {
