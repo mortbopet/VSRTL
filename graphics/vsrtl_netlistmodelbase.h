@@ -9,8 +9,6 @@
 namespace vsrtl {
 
 class Design;
-class Component;
-class Port;
 
 int getRootIndex(QModelIndex index);
 int getRootSelectedIndex(QItemSelectionModel* model);

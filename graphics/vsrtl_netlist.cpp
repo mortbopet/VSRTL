@@ -81,8 +81,7 @@ void Netlist::updateSelection(const std::vector<Component*>& selected) {
 namespace {
 void getIndexComponentPtr(const QItemSelection& selected, std::vector<Component*>& c_v) {
     for (const auto& sel : selected.indexes()) {
-        NetlistItem* item = static_cast<NetlistItem*>(sel.internalPointer());
-        auto c = item->data(0, NetlistRoles::CorePtr).value<Component*>();
+        auto* c = static_cast<NetlistTreeItem*>(sel.internalPointer())->m_component;
         if (c)
             c_v.push_back(c);
     }

@@ -1,9 +1,6 @@
 #include <QItemSelectionModel>
 #include <QWidget>
 
-#include <QDebug>
-
-#include "vsrtl_netlistitem.h"
 #include "vsrtl_registermodel.h"
 #include "vsrtl_treeitem.h"
 

@@ -5,7 +5,6 @@
 #include <QModelIndex>
 #include <QVariant>
 
-#include "vsrtl_netlistitem.h"
 #include "vsrtl_netlistmodelbase.h"
 #include "vsrtl_treeitem.h"
 
