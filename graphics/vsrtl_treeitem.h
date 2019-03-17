@@ -6,6 +6,8 @@
 #include <QVariant>
 #include <QVector>
 
+#include "vsrtl_displaytype.h"
+
 namespace vsrtl {
 
 /** Generic tree structure node class */
@@ -27,9 +29,9 @@ public:
     // Store an index to the QModelIndex corresponding to this item in the tree. This is required for facilitating
     // selection behaviour via. selections made in the graphics component.
     QModelIndex index;
-    QString m_name;
 
-private:
+    QString m_name;
+    DisplayType m_displayType = DisplayType::Hex;
     QList<TreeItem*> childItems;
     TreeItem* parentItem;
 };
