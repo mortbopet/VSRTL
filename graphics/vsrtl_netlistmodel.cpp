@@ -10,10 +10,10 @@
 
 namespace vsrtl {
 
-QList<QAction*> NetlistTreeItem::getActions() const {
+QList<QMenu*> NetlistTreeItem::getActions() const {
     // Only return actions for items which have a port (default actions from TreeItem displays display type actions,
     // which are not applicable for Component items)
-    return m_port != nullptr ? TreeItem::getActions() : QList<QAction*>();
+    return m_port != nullptr ? TreeItem::getActions() : QList<QMenu*>();
 }
 
 QVariant NetlistTreeItem::data(int column, int role) const {

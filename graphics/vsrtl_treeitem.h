@@ -9,6 +9,8 @@
 
 #include "vsrtl_displaytype.h"
 
+QT_FORWARD_DECLARE_CLASS(QMenu)
+
 namespace vsrtl {
 
 /** Generic tree structure node class */
@@ -20,7 +22,7 @@ public:
 
     virtual QVariant data(int column, int role = Qt::EditRole) const = 0;
     virtual bool setData(int column, const QVariant& value, int role = Qt::EditRole) = 0;
-    virtual QList<QAction*> getActions() const;
+    virtual QList<QMenu*> getActions() const;
 
     TreeItem* child(int number);
     int childCount() const;
@@ -39,7 +41,7 @@ public:
     TreeItem* parentItem;
 
 private:
-    QList<QAction*> m_treeItemActions;
+    QMenu* m_displayTypeMenu;
 };
 
 }  // namespace vsrtl

@@ -1,5 +1,7 @@
 #include "vsrtl_treeitem.h"
 
+#include <QMenu>
+
 namespace vsrtl {
 
 TreeItem::TreeItem(TreeItem* parent) {
@@ -7,6 +9,7 @@ TreeItem::TreeItem(TreeItem* parent) {
 
     // Display type actions
     QActionGroup* displayTypeActionGroup = new QActionGroup(this);
+    m_displayTypeMenu = new QMenu("Display type");
 
     QAction* hexTypeAction = new QAction("Hex", this);
     displayTypeActionGroup->addAction(hexTypeAction);
@@ -15,7 +18,7 @@ TreeItem::TreeItem(TreeItem* parent) {
         if (checked)
             m_displayType = DisplayType::Hex;
     });
-    m_treeItemActions.append(hexTypeAction);
+    m_displayTypeMenu->addAction(hexTypeAction);
 
     QAction* binTypeAction = new QAction("Binary", this);
     displayTypeActionGroup->addAction(binTypeAction);
@@ -24,7 +27,7 @@ TreeItem::TreeItem(TreeItem* parent) {
         if (checked)
             m_displayType = DisplayType::Binary;
     });
-    m_treeItemActions.append(binTypeAction);
+    m_displayTypeMenu->addAction(binTypeAction);
 
     QAction* unsignedTypeAction = new QAction("Unsigned", this);
     displayTypeActionGroup->addAction(unsignedTypeAction);
@@ -33,7 +36,7 @@ TreeItem::TreeItem(TreeItem* parent) {
         if (checked)
             m_displayType = DisplayType::Unsigned;
     });
-    m_treeItemActions.append(unsignedTypeAction);
+    m_displayTypeMenu->addAction(unsignedTypeAction);
 
     QAction* signedTypeAction = new QAction("Signed", this);
     displayTypeActionGroup->addAction(signedTypeAction);
@@ -42,7 +45,7 @@ TreeItem::TreeItem(TreeItem* parent) {
         if (checked)
             m_displayType = DisplayType::Signed;
     });
-    m_treeItemActions.append(signedTypeAction);
+    m_displayTypeMenu->addAction(signedTypeAction);
 
     displayTypeActionGroup->setExclusive(true);
     hexTypeAction->setChecked(true);
@@ -67,8 +70,8 @@ int TreeItem::childNumber() const {
     return 0;
 }
 
-QList<QAction*> TreeItem::getActions() const {
-    return m_treeItemActions;
+QList<QMenu*> TreeItem::getActions() const {
+    return {m_displayTypeMenu};
 }
 
 bool TreeItem::insertChild(int position, TreeItem* item) {

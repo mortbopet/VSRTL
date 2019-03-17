@@ -28,7 +28,12 @@ private slots:
             QMenu menu;
             const auto& actions = item->getActions();
             if (actions.size() != 0) {
-                menu.addActions(item->getActions());
+                for (const auto& actionMenu : actions) {
+                    menu.addSection(actionMenu->title());
+                    for (const auto& action : actionMenu->actions()) {
+                        menu.addAction(action);
+                    }
+                }
                 menu.exec(viewport()->mapToGlobal(pos));
             }
         }
