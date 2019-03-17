@@ -21,6 +21,7 @@ public:
     NetlistTreeItem(TreeItem* parent) : TreeItem(parent) {}
     QVariant data(int column, int role = Qt::EditRole) const override;
     bool setData(int column, const QVariant& value, int role = Qt::EditRole) override;
+    QList<QAction*> getActions() const override;
 
     Component* m_component = nullptr;
     Port* m_port = nullptr;

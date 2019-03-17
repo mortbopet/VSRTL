@@ -4,6 +4,8 @@
 #include "vsrtl_netlistmodel.h"
 #include "vsrtl_registermodel.h"
 
+#include "vsrtl_netlistview.h"
+
 #include <QAction>
 
 namespace vsrtl {
@@ -11,31 +13,34 @@ namespace vsrtl {
 Netlist::Netlist(Design& design, QWidget* parent) : QWidget(parent), ui(new Ui::Netlist) {
     ui->setupUi(this);
 
-    ui->netlistView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-    ui->netlistView->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->registerView->setSelectionBehavior(QAbstractItemView::SelectItems);
-
+    m_netlistView = new NetlistView<NetlistTreeItem>(this);
     m_netlistModel = new NetlistModel(design, this);
-    ui->netlistView->setModel(m_netlistModel);
+    m_netlistView->setModel(m_netlistModel);
+    ui->netlistViews->addTab(m_netlistView, "Netlist");
     m_netlistModel->invalidate();
 
     m_registerModel = new RegisterModel(design, this);
-    ui->registerView->setModel(m_registerModel);
+    m_registerView = new NetlistView<RegisterTreeItem>(this);
+    m_registerView->setModel(m_registerModel);
+    ui->netlistViews->addTab(m_registerView, "Registers");
     m_registerModel->invalidate();
 
     m_selectionModel = new QItemSelectionModel(m_netlistModel);
-    ui->netlistView->setSelectionModel(m_selectionModel);
+    m_netlistView->setSelectionModel(m_selectionModel);
     connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, &Netlist::handleViewSelectionChanged);
 
-    ui->netlistView->header()->setSectionResizeMode(NetlistModel::ComponentColumn, QHeaderView::ResizeToContents);
-    ui->netlistView->header()->setSectionResizeMode(NetlistModel::IOColumn, QHeaderView::ResizeToContents);
+    m_netlistView->header()->setSectionResizeMode(NetlistModel::ComponentColumn, QHeaderView::ResizeToContents);
+    m_netlistView->header()->setSectionResizeMode(NetlistModel::IOColumn, QHeaderView::ResizeToContents);
 
-    ui->registerView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    m_registerView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
-    ui->registerView->expandAll();
-    ui->netlistView->expandAll();
+    m_netlistView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    m_netlistView->setSelectionBehavior(QAbstractItemView::SelectRows);
 
-    ui->registerView->setItemDelegate(new NetlistDelegate(this));
+    m_registerView->expandAll();
+    m_netlistView->expandAll();
+
+    m_registerView->setItemDelegate(new NetlistDelegate(this));
 
     const QIcon expandIcon = QIcon(":/icons/expand.svg");
     QAction* expandAct = new QAction(expandIcon, "Expand All", this);
@@ -54,11 +59,11 @@ void Netlist::setCurrentViewExpandState(bool state) {
     QTreeView* view;
     switch (ui->netlistViews->currentIndex()) {
         case 0: {
-            view = ui->netlistView;
+            view = m_netlistView;
             break;
         }
         case 1: {
-            view = ui->registerView;
+            view = m_registerView;
             break;
         }
         default:

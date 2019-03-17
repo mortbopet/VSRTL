@@ -9,6 +9,12 @@
 
 namespace vsrtl {
 
+QList<QAction*> RegisterTreeItem::getActions() const {
+    // Only return actions for items which have a port (default actions from TreeItem displays display type actions,
+    // which are not applicable for Component items)
+    return m_register != nullptr ? TreeItem::getActions() : QList<QAction*>();
+}
+
 QVariant RegisterTreeItem::data(int column, int role) const {
     if (column == 1 && m_register != nullptr) {
         switch (role) {

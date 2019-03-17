@@ -5,6 +5,7 @@
 #include <QWidget>
 
 #include "vsrtl_design.h"
+#include "vsrtl_netlistview.h"
 
 namespace vsrtl {
 
@@ -14,6 +15,8 @@ class Netlist;
 
 class NetlistModel;
 class RegisterModel;
+class RegisterTreeItem;
+class NetlistTreeItem;
 
 class Netlist : public QWidget {
     Q_OBJECT
@@ -39,6 +42,9 @@ private:
     QItemSelectionModel* m_selectionModel;
     NetlistModel* m_netlistModel;
     RegisterModel* m_registerModel;
+
+    NetlistView<RegisterTreeItem>* m_registerView;
+    NetlistView<NetlistTreeItem>* m_netlistView;
 };
 }  // namespace vsrtl
 
