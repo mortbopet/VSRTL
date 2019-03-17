@@ -6,6 +6,7 @@
 
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
+#include <QPropertyAnimation>
 #include <QStyleOptionGraphicsItem>
 
 namespace vsrtl {
@@ -16,13 +17,19 @@ PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_p
     m_widthText = QString::number(port->getWidth() - 1) + ":0";
     m_font = QFont("Monospace", 8);
     m_pen.setWidth(WIRE_WIDTH);
-    m_pen.setColor(WIRE_DEFAULT_COLOR);
     m_pen.setCapStyle(Qt::RoundCap);
 
     // PortGraphic logic is build by revolving around the root source port in a port-wire connection. Only receive
     // update signals from root sources
-    if (port->getInputPort() == nullptr)
+    if (port->getInputPort() == nullptr) {
         port->changed.Connect(this, &PortGraphic::updateSlot);
+    }
+    m_colorAnimation = new QPropertyAnimation(this, "penColor");
+    m_colorAnimation->setDuration(100);
+    m_colorAnimation->setStartValue(WIRE_BOOLHIGH_COLOR);
+    m_colorAnimation->setEndValue(WIRE_DEFAULT_COLOR);
+    m_colorAnimation->setEasingCurve(QEasingCurve::Linear);
+    connect(m_colorAnimation, &QPropertyAnimation::valueChanged, this, &PortGraphic::updatePenColor);
 
     setFlag(ItemIsSelectable);
 
@@ -84,6 +91,23 @@ QPointF PortGraphic::getOutputPoint() const {
     return QPointF(m_boundingRect.right(), 0);
 }
 
+void PortGraphic::updatePenColor() {
+    // This is a source port. Update pen based on current state
+    // Selection check is based on whether item is currently selected or about to be selected (via itemChange())
+    if (m_selected) {
+        m_pen.setColor(WIRE_SELECTED_COLOR);
+    } else if (m_port->getWidth() == 1) {
+        if (static_cast<bool>(*m_port)) {
+            m_pen.setColor(WIRE_BOOLHIGH_COLOR);
+        } else {
+            m_pen.setColor(WIRE_DEFAULT_COLOR);
+        }
+    } else {
+        m_pen.setColor(m_penColor);
+    }
+    propagateRedraw();
+}
+
 void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
     m_port->traverseToRoot([=](Port* node) {
         // Traverse to root, and only execute when no input wire is present. This signifies that the root source port
@@ -94,17 +118,13 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
                 portGraphic->m_selected = aboutToBeSelected;
             }
 
-            // This is a source port. Update pen based on current state
-            // Selection check is based on whether item is currently selected or about to be selected (via itemChange())
-            QColor c = WIRE_DEFAULT_COLOR;
-            if (portGraphic->m_selected) {
-                c = WIRE_SELECTED_COLOR;
-            } else if (m_port->getWidth() == 1) {
-                c = static_cast<bool>(*m_port) ? WIRE_BOOLHIGH_COLOR : c;
+            /* If the port is anything other than a boolean port, a change in the signal is represented by starting the
+             * color change animation. If it is a boolean signal, just update the pen color */
+            if (m_port->getWidth() != 1) {
+                portGraphic->m_colorAnimation->start();
             } else {
-                c = WIRE_DEFAULT_COLOR;
+                portGraphic->updatePenColor();
             }
-            portGraphic->m_pen.setColor(c);
 
             // Make output port cascade an update call to all ports and wires which originate from this source
             portGraphic->propagateRedraw();

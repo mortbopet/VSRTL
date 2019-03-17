@@ -8,6 +8,8 @@
 #include <QFont>
 #include <QPen>
 
+QT_FORWARD_DECLARE_CLASS(QPropertyAnimation)
+
 namespace vsrtl {
 
 class Port;
@@ -15,6 +17,9 @@ class Port;
 enum class PortType { in, out };
 
 class PortGraphic : public GraphicsBase {
+    Q_OBJECT
+    Q_PROPERTY(QColor penColor MEMBER m_penColor)
+
 public:
     PortGraphic(Port* port, PortType type, QGraphicsItem* parent = nullptr);
 
@@ -32,6 +37,9 @@ public:
     QPointF getOutputPoint() const;
 
     const QPen& getPen();
+
+private slots:
+    void updatePenColor();
 
 private:
     void redraw();
@@ -54,9 +62,12 @@ private:
     WireGraphic* m_outputWire = nullptr;
     WireGraphic* m_inputWire = nullptr;
 
+    QPropertyAnimation* m_colorAnimation;
+
     QString m_widthText;
     QFont m_font;
     QPen m_pen;
+    QColor m_penColor;
     QPen m_oldPen;  // Pen which was previously used for paint(). If a change between m_oldPen and m_pen is seen, this
                     // triggers redrawing of the connected wires
 };

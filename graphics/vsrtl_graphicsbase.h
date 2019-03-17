@@ -5,7 +5,7 @@
 
 namespace vsrtl {
 
-class GraphicsBase : public QGraphicsItem {
+class GraphicsBase : public QObject, public QGraphicsItem {
 public:
     GraphicsBase();
 
