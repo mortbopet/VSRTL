@@ -1,6 +1,7 @@
 #ifndef VSRTL_TREEITEM_H
 #define VSRTL_TREEITEM_H
 
+#include <QAction>
 #include <QList>
 #include <QModelIndex>
 #include <QVariant>
@@ -11,13 +12,15 @@
 namespace vsrtl {
 
 /** Generic tree structure node class */
-class TreeItem {
+class TreeItem : public QObject {
+    Q_OBJECT
 public:
     explicit TreeItem(TreeItem* parent);
     virtual ~TreeItem();
 
     virtual QVariant data(int column, int role = Qt::EditRole) const = 0;
     virtual bool setData(int column, const QVariant& value, int role = Qt::EditRole) = 0;
+    virtual QList<QAction*> getActions() const;
 
     TreeItem* child(int number);
     int childCount() const;
@@ -34,6 +37,9 @@ public:
     DisplayType m_displayType = DisplayType::Hex;
     QList<TreeItem*> childItems;
     TreeItem* parentItem;
+
+private:
+    QList<QAction*> m_treeItemActions;
 };
 
 }  // namespace vsrtl

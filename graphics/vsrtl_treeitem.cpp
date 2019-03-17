@@ -4,6 +4,48 @@ namespace vsrtl {
 
 TreeItem::TreeItem(TreeItem* parent) {
     parentItem = parent;
+
+    // Display type actions
+    QActionGroup* displayTypeActionGroup = new QActionGroup(this);
+
+    QAction* hexTypeAction = new QAction("Hex", this);
+    displayTypeActionGroup->addAction(hexTypeAction);
+    hexTypeAction->setCheckable(true);
+    connect(hexTypeAction, &QAction::triggered, [=](bool checked) {
+        if (checked)
+            m_displayType = DisplayType::Hex;
+    });
+    m_treeItemActions.append(hexTypeAction);
+
+    QAction* binTypeAction = new QAction("Binary", this);
+    displayTypeActionGroup->addAction(binTypeAction);
+    binTypeAction->setCheckable(true);
+    connect(binTypeAction, &QAction::triggered, [=](bool checked) {
+        if (checked)
+            m_displayType = DisplayType::Binary;
+    });
+    m_treeItemActions.append(binTypeAction);
+
+    QAction* unsignedTypeAction = new QAction("Unsigned", this);
+    displayTypeActionGroup->addAction(unsignedTypeAction);
+    unsignedTypeAction->setCheckable(true);
+    connect(unsignedTypeAction, &QAction::triggered, [=](bool checked) {
+        if (checked)
+            m_displayType = DisplayType::Unsigned;
+    });
+    m_treeItemActions.append(unsignedTypeAction);
+
+    QAction* signedTypeAction = new QAction("Signed", this);
+    displayTypeActionGroup->addAction(signedTypeAction);
+    signedTypeAction->setCheckable(true);
+    connect(signedTypeAction, &QAction::triggered, [=](bool checked) {
+        if (checked)
+            m_displayType = DisplayType::Signed;
+    });
+    m_treeItemActions.append(signedTypeAction);
+
+    displayTypeActionGroup->setExclusive(true);
+    hexTypeAction->setChecked(true);
 }
 
 TreeItem::~TreeItem() {
@@ -23,6 +65,10 @@ int TreeItem::childNumber() const {
         return parentItem->childItems.indexOf(const_cast<TreeItem*>(this));
 
     return 0;
+}
+
+QList<QAction*> TreeItem::getActions() const {
+    return m_treeItemActions;
 }
 
 bool TreeItem::insertChild(int position, TreeItem* item) {
