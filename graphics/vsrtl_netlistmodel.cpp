@@ -16,7 +16,7 @@ QVariant NetlistTreeItem::data(int column, int role) const {
     } else if (role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (column) {
             case NetlistModel::ComponentColumn: {
-                return getName();
+                return m_name;
             }
             case NetlistModel::ValueColumn: {
                 if (m_port) {
@@ -93,7 +93,7 @@ void NetlistModel::addPortToComponent(Port* port, NetlistTreeItem* parent, PortD
     auto* child = new NetlistTreeItem(parent);
     parent->insertChild(parent->childCount(), child);
 
-    child->setName(QString::fromStdString(port->getName()));
+    child->m_name = QString::fromStdString(port->getName());
     child->m_direction = dir;
     child->m_port = port;
 }
@@ -127,7 +127,7 @@ void NetlistModel::loadDesignRecursive(NetlistTreeItem* parent, const Component&
         m_componentIndicies[subcomponent.get()] = child;
 
         child->m_component = subcomponent.get();
-        child->setName(QString::fromStdString(subcomponent->getName()));
+        child->m_name = QString::fromStdString(subcomponent->getName());
 
         // Recurse into the child
         loadDesignRecursive(child, *subcomponent);

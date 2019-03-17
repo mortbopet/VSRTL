@@ -24,17 +24,14 @@ public:
     bool removeChildren(int position, int count);
     int childNumber() const;
 
-    const QString& getName() const { return m_name; }
-    void setName(const QString& name) { m_name = name; }
-
     // Store an index to the QModelIndex corresponding to this item in the tree. This is required for facilitating
     // selection behaviour via. selections made in the graphics component.
     QModelIndex index;
+    QString m_name;
 
 private:
     QList<TreeItem*> childItems;
     TreeItem* parentItem;
-    QString m_name;
 };
 
 }  // namespace vsrtl

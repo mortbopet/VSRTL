@@ -27,7 +27,7 @@ QVariant RegisterTreeItem::data(int column, int role) const {
     if (role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (column) {
             case RegisterModel::ComponentColumn: {
-                return getName();
+                return m_name;
             }
             case RegisterModel::WidthColumn: {
                 if (m_register) {
@@ -118,7 +118,7 @@ void RegisterModel::loadDesign(RegisterTreeItem* parent, const Design& design) {
                 auto* newParent = new RegisterTreeItem(regParentNetlistItem);
                 regParentNetlistItem->insertChild(regParentNetlistItem->childCount(), newParent);
                 regParentNetlistItem = newParent;
-                regParentNetlistItem->setName(QString::fromStdString(p->getName()));
+                regParentNetlistItem->m_name = QString::fromStdString(p->getName());
                 Q_ASSERT(parentMap.count(p) == 0);
                 parentMap[p] = regParentNetlistItem;
             }
@@ -135,7 +135,7 @@ void RegisterModel::loadDesign(RegisterTreeItem* parent, const Design& design) {
 
         // Set component data (component name and signal value)
         child->m_register = reg;
-        child->setName(QString::fromStdString(reg->getName()));
+        child->m_name = QString::fromStdString(reg->getName());
     }
 }
 
