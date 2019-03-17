@@ -11,7 +11,7 @@
 namespace vsrtl {
 
 QVariant NetlistTreeItem::data(int column, int role) const {
-    if (column == NetlistModel::IOColumn && role == Qt::DecorationRole) {
+    if (column == NetlistModel::IOColumn && role == Qt::DecorationRole && m_port != nullptr) {
         return m_direction == PortDirection::Input ? QIcon(":/icons/input.svg") : QIcon(":/icons/output.svg");
     } else if (role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (column) {
