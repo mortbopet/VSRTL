@@ -54,7 +54,7 @@ bool RegisterTreeItem::setData(int column, const QVariant& value, int role) {
 }
 
 bool RegisterModel::indexIsRegisterValue(const QModelIndex& index) const {
-    return getItem<RegisterTreeItem*>(index)->m_register != nullptr;
+    return getItem(index)->m_register != nullptr;
 }
 
 RegisterModel::RegisterModel(const Design& arch, QObject* parent)
@@ -67,7 +67,7 @@ QVariant RegisterModel::data(const QModelIndex& index, int role) const {
     if (!index.isValid())
         return QVariant();
 
-    auto* item = getItem<RegisterTreeItem*>(index);
+    auto* item = getItem(index);
 
     return item->data(index.column(), role);
 }
@@ -86,7 +86,7 @@ Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
 }
 
 bool RegisterModel::setData(const QModelIndex& index, const QVariant& value, int role) {
-    auto* item = getItem<RegisterTreeItem*>(index);
+    auto* item = getItem(index);
     if (item) {
         bool resval = item->setData(index.column(), value, role);
         if (resval) {

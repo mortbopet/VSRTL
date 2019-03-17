@@ -34,7 +34,7 @@ public:
         if (parent.isValid() && parent.column() != 0)
             return QModelIndex();
 
-        T* parentItem = getItem<T*>(parent);
+        T* parentItem = getItem(parent);
         if (!parentItem)
             parentItem = rootItem;
 
@@ -51,7 +51,7 @@ public:
         if (!index.isValid())
             return QModelIndex();
 
-        auto* childItem = getItem<T*>(index);
+        auto* childItem = getItem(index);
         auto* parentItem = childItem->parent();
 
         if (parentItem == rootItem)
@@ -61,7 +61,7 @@ public:
     }
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override {
-        auto* parentItem = getItem<T*>(parent);
+        auto* parentItem = getItem(parent);
         return parentItem->childCount();
     }
 
@@ -80,7 +80,6 @@ public slots:
     void invalidate() { dataChanged(index(0, 0), index(rowCount(), columnCount())); }
 
 protected:
-    template <typename UDT>  // Userdata type
     T* getItem(const QModelIndex& index) const {
         if (index.isValid()) {
             return static_cast<T*>(index.internalPointer());
