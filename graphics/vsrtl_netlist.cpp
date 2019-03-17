@@ -7,6 +7,7 @@
 #include "vsrtl_netlistview.h"
 
 #include <QAction>
+#include <QHeaderView>
 
 namespace vsrtl {
 
