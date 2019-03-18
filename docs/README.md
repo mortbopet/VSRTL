@@ -1,4 +1,8 @@
 # VSRTL Reference
+## Why?
+VSRTL has its roots in the [Ripes](https://github.com/mortbopet/Ripes) application, an application for visualizing how assembly level code is executed on a pipelined processor. Within the implementation of Ripes, there existed no link between describing the underlying simulator for the processor circuit and the visualization. In turn, this resulted in a large and difficult to maintain implementation where changes in the underlying circuit had to be manually described in an accompanying graphical component. For Ripes, it was intended to at some point include multiple processor models, which may gradually introduce more advances features, in line with how pipelined processors are presented in a computer architecture course. However given initial simulator implementation, writing multiple simulators and visualizations in this way was out of the question.  
+Instead, VSRTL was started. Given experiences and takeaways from Ripes, VSRTL intends to provide a method of simulating and visualizing any appropriately described digital circuit. The goal of VSRTL is to be as automated as possible, allowing a user to solely focus on the circuit description, removing any need to control any parameters in relation to visualization.  
+
 
 ## Usage
 This repository provides a default application, [app.cpp](https://github.com/mortbopet/VSRTL/blob/master/app.cpp) which demonstrates the basic capabilities of VSRTL. Compiling and executing this app presents the VSRTL user interface, wherein the user may control the circuit, as described below.
@@ -21,7 +25,7 @@ The VSRTL user-interface provides the following operations for controlling a sim
 Register values may be modified through the netlist, at any point in time. This modified register value will upon modification propagate through the circuit.
 
 ## Libraries
-vsrtl is splsit into three libraries *core*, *graphics* and *components*.
+VSRTL is split into three libraries *core*, *graphics* and *components*.
 
 ### [VSRTL Core](core.md#top)
 The core library provides all circuit primitives, such as multiplexers, registers and logic gates, which are required to describe larger, more complex circuits.
@@ -29,8 +33,8 @@ Furthermore, the core library contains logic for circuit propagation and clockin
 The core library is fully independant on Qt, and as such simulations can be run without a graphical interface. The core library is designed in such a way as to allow for alternative visualizer implementations or command line interfaces.
 
 ### [VSRTL Graphics](graphics.md#top)
-The *graphics* library is a Qt based library for displaying a graphical representation of a circuit described using vsrtl core. The graphics library implements graphics for each of the VSRTL Core components as well as component-specific visualizations. The aim of the visualizations is to display the underlying changes in the circuit.
-Given a vsrtl::Design, the vsrtl::widget of the graphics library may traverse the graph which is the circuit design created in vsrtl core, and create a corresponding visualization of the circuit.
+The *graphics* library is a Qt based library for displaying a graphical representation of a circuit described using VSRTL core. The graphics library implements graphics for each of the VSRTL Core components as well as component-specific visualizations. The aim of the visualizations is to display the underlying changes in the circuit.
+Given a `vsrtl::Design`, the `vsrtl::VSRTLWidget` of the graphics library may traverse the graph which is the circuit design created in VSRTL core, and create a corresponding visualization of the circuit.
 
 ### [VSRTL Components](components.md#top)
 The *components* library contains a collection of circuit designs such as:
