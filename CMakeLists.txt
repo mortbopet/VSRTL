@@ -40,7 +40,7 @@ if(COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   else()
     target_link_libraries(coverage_config INTERFACE --coverage)
   endif()
-endif(COVERAGE)
+endif(COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
 ######################################################################
 ## Library setup
