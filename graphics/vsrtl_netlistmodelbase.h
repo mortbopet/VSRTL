@@ -16,7 +16,7 @@ int getRootSelectedIndex(QItemSelectionModel* model);
 template <typename T>
 class NetlistModelBase : public QAbstractItemModel {
 public:
-    NetlistModelBase(QStringList headers, const Design& arch, QObject* parent = nullptr)
+    NetlistModelBase(QStringList headers, Design& arch, QObject* parent = nullptr)
         : m_headers(headers), m_arch(arch), QAbstractItemModel(parent) {}
 
     ~NetlistModelBase() override { delete rootItem; }
@@ -86,7 +86,7 @@ protected:
     }
 
     T* rootItem = nullptr;
-    const Design& m_arch;
+    Design& m_arch;
     QStringList m_headers;
 };
 

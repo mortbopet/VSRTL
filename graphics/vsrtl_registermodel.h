@@ -29,7 +29,7 @@ class RegisterModel : public NetlistModelBase<RegisterTreeItem> {
 
 public:
     enum columns { ComponentColumn, ValueColumn, WidthColumn, NUM_COLUMNS };
-    RegisterModel(const Design& arch, QObject* parent = nullptr);
+    RegisterModel(Design& arch, QObject* parent = nullptr);
 
     QVariant data(const QModelIndex& index, int role) const override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;

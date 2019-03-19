@@ -57,7 +57,7 @@ bool RegisterTreeItem::setData(int column, const QVariant& value, int role) {
     return false;
 }
 
-RegisterModel::RegisterModel(const Design& arch, QObject* parent)
+RegisterModel::RegisterModel(Design& arch, QObject* parent)
     : NetlistModelBase({"Component", "Value", "Width"}, arch, parent) {
     rootItem = new RegisterTreeItem(nullptr);
     loadDesign(rootItem, m_arch);

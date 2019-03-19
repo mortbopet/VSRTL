@@ -62,7 +62,7 @@ public:
     std::vector<Port*> createInputPorts(std::string name, unsigned int n, unsigned int width = 0);
     std::vector<Port*> createOutputPorts(std::string name, unsigned int n, unsigned int width = 0);
 
-    void propagateComponent();
+    void propagateComponent(std::vector<Port*>& propagationStack);
     void initialize();
     void verifyComponent() const;
     bool hasSubcomponents() const { return m_subcomponents.size() != 0; }

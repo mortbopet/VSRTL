@@ -75,17 +75,17 @@ public:
 
     inline bool canrewind() const { return m_rewindstackCount != 0; }
 
-    void propagateDesign() const {
-        // Propagate circuit values - we propagate >this<, the top level component, which contains all subcomponents of
-        // the design
-
+    void createPropagationStack() {
+        // The circuit is traversed to find the sequence of which ports may be propagated, such that all input
+        // dependencies for each component are met when a port is propagated. With this, propagateDesign() may
+        // sequentially ierate through the propagation stack to propagate the value of each port
         for (const auto& reg : m_registers)
-            reg->propagateComponent();
+            reg->propagateComponent(m_propagationStack);
+    }
 
-        // Reset propagation state of all components (uncolor graph)
-        for (const auto& c : m_componentGraph) {
-            c.first->resetPropagation();
-        }
+    void propagateDesign() {
+        for (const auto& p : m_propagationStack)
+            p->setPortValue();
     }
 
     /**
@@ -109,6 +109,9 @@ public:
         if (detectCombinationalLoop()) {
             throw std::runtime_error("Combinational loop detected in circuit");
         }
+
+        // Traverse the graph to create the optimal propagation sequence
+        createPropagationStack();
 
         // Reset the circuit to propagate initial state
         // @todo this should be changed, such that ports initially have a value of "X" until they are assigned
@@ -178,6 +181,8 @@ private:
     unsigned int m_rewindstackCount = 0;
     std::map<Component*, std::vector<Component*>> m_componentGraph;
     std::set<Register*> m_registers;
+
+    std::vector<Port*> m_propagationStack;
 };
 }  // namespace vsrtl
 

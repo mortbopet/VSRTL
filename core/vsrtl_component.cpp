@@ -18,7 +18,7 @@ void Component::addSubcomponent(Component* subcomponent) {
     m_subcomponents.push_back(std::unique_ptr<Component>(subcomponent));
 }
 
-void Component::propagateComponent() {
+void Component::propagateComponent(std::vector<Port*>& propagationStack) {
     // Component has already been propagated
     if (m_propagationState == PropagationState::propagated)
         return;
@@ -28,7 +28,7 @@ void Component::propagateComponent() {
         /** @remark register <must> be saved before propagateComponent reaches the register ! */
         m_propagationState = PropagationState::propagated;
         for (const auto& s : m_outputports) {
-            s->propagate();
+            s->propagate(propagationStack);
         }
     } else {
         // All sequential logic must have their inputs propagated before they themselves can propagate. If this is
@@ -41,12 +41,12 @@ void Component::propagateComponent() {
         }
 
         for (const auto& sc : m_subcomponents)
-            sc->propagateComponent();
+            sc->propagateComponent(propagationStack);
 
         // At this point, all input ports are assured to be propagated. In this case, it is safe to propagate
         // the outputs of the component.
         for (const auto& s : m_outputports) {
-            s->propagate();
+            s->propagate(propagationStack);
         }
         m_propagationState = PropagationState::propagated;
 
@@ -60,7 +60,7 @@ void Component::propagateComponent() {
         for (const auto& in : out->getOutputPorts()) {
             // With the input port of the connected component propagated, the parent component may be propagated.
             // This will succeed if all input components to the parent component has been propagated.
-            in->getParent()->propagateComponent();
+            in->getParent()->propagateComponent(propagationStack);
 
             // To facilitate output -> output connections, we need to trigger propagation in the output's parent
             // aswell
@@ -75,7 +75,7 @@ void Component::propagateComponent() {
              *
              */
             for (const auto& inout : in->getOutputPorts())
-                inout->getParent()->propagateComponent();
+                inout->getParent()->propagateComponent(propagationStack);
         }
     }
 }

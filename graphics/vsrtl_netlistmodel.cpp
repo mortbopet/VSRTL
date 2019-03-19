@@ -45,7 +45,7 @@ bool NetlistTreeItem::setData(int column, const QVariant& value, int role) {
     return false;
 }
 
-NetlistModel::NetlistModel(const Design& arch, QObject* parent)
+NetlistModel::NetlistModel(Design& arch, QObject* parent)
     : NetlistModelBase({"Component", "I/O", "Value", "Width"}, arch, parent) {
     rootItem = new NetlistTreeItem(nullptr);
 

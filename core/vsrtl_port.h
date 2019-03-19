@@ -85,20 +85,27 @@ public:
 
     explicit operator VSRTL_VT_S() const { return signextend<VSRTL_VT_S>(m_value, m_width); }
 
-    void operator<<(std::function<VSRTL_VT_U()>&& propagationFunction) { m_propagationFunction = propagationFunction; }
-    void propagate() {
+    void setPortValue() {
         auto prePropagateValue = m_value;
+        if (m_propagationFunction != nullptr) {
+            m_value = m_propagationFunction();
+        } else {
+            m_value = static_cast<VSRTL_VT_U>(*m_inputPort);
+        }
+        if (m_value != prePropagateValue) {
+            // Signal all watcher of this port that the port value changed
+            changed.Emit();
+        }
+    }
+
+    void operator<<(std::function<VSRTL_VT_U()>&& propagationFunction) { m_propagationFunction = propagationFunction; }
+    void propagate(std::vector<Port*>& propagationStack) {
         if (m_propagationState == PropagationState::unpropagated) {
-            setPortValue();
+            propagationStack.push_back(this);
             // Propagate the value to the ports which connect to this
             for (const auto& port : m_outputPorts)
-                port->propagate();
+                port->propagate(propagationStack);
             m_propagationState = PropagationState::propagated;
-
-            // Signal all watcher of this port that the port value changed
-            if (m_value != prePropagateValue) {
-                changed.Emit();
-            }
         }
     }
 
@@ -125,14 +132,6 @@ protected:
     Port* m_inputPort = nullptr;
     // A port may have multiple outputs     [port]->...->
     std::vector<Port*> m_outputPorts;
-
-    void setPortValue() {
-        if (m_propagationFunction != nullptr) {
-            m_value = m_propagationFunction();
-        } else {
-            m_value = static_cast<VSRTL_VT_U>(*m_inputPort);
-        }
-    }
 
     std::function<VSRTL_VT_U()> m_propagationFunction;
     PropagationState m_propagationState = PropagationState::unpropagated;
