@@ -57,6 +57,11 @@ bool RegisterTreeItem::setData(int column, const QVariant& value, int role) {
     return false;
 }
 
+void RegisterModel::invalidate() {
+    // Data changed within Design, invalidate value column
+    dataChanged(index(0, ValueColumn), index(rowCount(), ValueColumn), {Qt::DisplayRole});
+}
+
 RegisterModel::RegisterModel(Design& arch, QObject* parent)
     : NetlistModelBase({"Component", "Value", "Width"}, arch, parent) {
     rootItem = new RegisterTreeItem(nullptr);

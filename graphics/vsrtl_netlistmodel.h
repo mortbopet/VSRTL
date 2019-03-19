@@ -41,6 +41,9 @@ public:
 
     QModelIndex lookupIndexForComponent(Component* c) const;
 
+public slots:
+    void invalidate() override;
+
 private:
     void addPortToComponent(Port* port, NetlistTreeItem* parent, PortDirection);
     void loadDesign(NetlistTreeItem* parent, const Design& design);

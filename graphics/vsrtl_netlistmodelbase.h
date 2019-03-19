@@ -75,7 +75,7 @@ public:
         return true;
     }
 public slots:
-    void invalidate() { dataChanged(index(0, 0), index(rowCount(), columnCount())); }
+    virtual void invalidate() = 0;
 
 protected:
     T* getTreeItem(const QModelIndex& index) const {

@@ -86,6 +86,11 @@ bool NetlistModel::setData(const QModelIndex& index, const QVariant& value, int 
     return false;
 }
 
+void NetlistModel::invalidate() {
+    // Data changed within Design, invalidate value column
+    dataChanged(index(0, ValueColumn), index(rowCount(), ValueColumn), {Qt::DisplayRole});
+}
+
 QModelIndex NetlistModel::lookupIndexForComponent(Component* c) const {
     if (m_componentIndicies.find(c) != m_componentIndicies.end()) {
         NetlistTreeItem* item = m_componentIndicies.at(c);
