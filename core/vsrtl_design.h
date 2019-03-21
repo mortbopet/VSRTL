@@ -177,7 +177,6 @@ private:
         }
     }
 
-    std::shared_ptr<Memory> m_memory;
     unsigned int m_rewindstackCount = 0;
     std::map<Component*, std::vector<Component*>> m_componentGraph;
     std::set<Register*> m_registers;

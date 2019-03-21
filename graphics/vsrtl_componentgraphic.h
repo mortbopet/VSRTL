@@ -19,12 +19,6 @@ public:
     ComponentGraphic(Component& c);
 
     QRectF boundingRect() const override;
-    QRectF baseRect() const { return m_baseRect; }
-    QRectF sceneBaseRect() const;
-    /** @todo remember to implement shape()
-     * We do not want our bounding rectangle to be the shape of the object, since the IO pins of an object shouldnt be
-     * factored into collisions - wherease shape() should be ONLY the object
-     */
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
 
     /**
@@ -52,27 +46,22 @@ protected:
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
-    enum GeometryChangeFlag {
-        Resize = 1 << 0,
-        Expand = 1 << 1,
-        Collapse = 1 << 2,
-        ChildJustExpanded = 1 << 3,
-        ChildJustCollapsed = 1 << 4
+    enum class GeometryChange {
+        None,
+        Resize,
+        Expand,
+        Collapse,
+        ChildJustExpanded,
+        ChildJustCollapsed,
     };
-    void updateBaseRect(GeometryChangeFlag flag);
-    void updateTextPosition();
     void createSubcomponents();
-    void setIOPortPositions();
-    void setLabelPosition();
-    void updateGeometry(GeometryChangeFlag flag);
-    void updateSubcomponentRect();
-    void updateBoundingRect();
-    void getSubGraphicsItems(QGraphicsItemGroup& g);
+    void updateGeometry(QRect newGridRect, GeometryChange flag);
+    QRectF sceneGridRect() const;
     bool rectContainsAllSubcomponents(const QRectF& r) const;
-    bool snapToSubcomponentRect(QRectF& r) const;
-    void orderSubcomponents();
-    void initializePorts();
-    void updateDrawShape();
+    bool snapToMinGridRect(QRect& r) const;
+    void placeAndRouteSubcomponents();
+    QRect subcomponentBoundingGridRect() const;
+
     ComponentGraphic* getParent() const;
 
     // Called by vsrtl_core component linked via signal/slot mechanism
@@ -87,25 +76,21 @@ protected:
     QMap<Port*, PortGraphic*> m_inputPorts;
     QMap<Port*, PortGraphic*> m_outputPorts;
 
-    Label* m_label;
+    Label* m_label = nullptr;
 
-    QRectF m_savedBaseRect = QRectF();
-    const QRectF m_minRect;
-    QRectF m_baseRect;
-    QRectF m_boundingRect;
+    // Rectangels:
+    const QRect m_minGridRect;  // Minimum component size in grid-coordinates
+    QRect m_gridRect;           // Current component size in grid-coordinates
     QPainterPath m_shape;
-    QRectF m_textRect;
-    QRectF m_subcomponentRect;
-    QFont m_font;
-    QString m_displayText;
 
-    QPointF m_textPos;
-    QPointF m_expandButtonPos;
+    QFont m_font;
+
+    QPointF m_expandButtonPos;  // Draw position of expand/collapse button in scene coordinates
 
     Component& m_component;
 
-    QToolButton* m_expandButton;
-    QGraphicsProxyWidget* m_expandButtonProxy;
+    QToolButton* m_expandButton = nullptr;
+    QGraphicsProxyWidget* m_expandButtonProxy = nullptr;
 
 public:
     /**
@@ -118,15 +103,14 @@ public:
 
     struct Shape {
         std::function<QPainterPath(QTransform)> shapeFunc;
-        QRectF min_rect;
+        QRect min_rect;
     };
 
     static void setComponentShape(std::type_index component, Shape shape) {
         Q_ASSERT(!s_componentShapes.contains(component));
-        Q_ASSERT(shape.min_rect.topLeft() == QPointF(0, 0));
+        Q_ASSERT(shape.min_rect.topLeft() == QPoint(0, 0));
 
         // Ensure that minimum rectangle is snapping to the grid
-        scaleToGrid(shape.min_rect, GRID_SIZE);
         s_componentShapes[component] = shape;
     }
 
@@ -138,7 +122,7 @@ public:
         return s_componentShapes[component].shapeFunc(transform);
     }
 
-    static QRectF getComponentMinRect(std::type_index component) {
+    static QRect getComponentMinGridRect(std::type_index component) {
         // If no shape has been registered for the base component type, revert to displaying as a "Component"
         if (!s_componentShapes.contains(component)) {
             return s_componentShapes[typeid(Component)].min_rect;

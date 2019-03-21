@@ -22,13 +22,34 @@
 
 namespace vsrtl {
 
-static constexpr qreal c_resizeMargin = 6;
+namespace {
+
+static inline QRectF gridToScene(const QRect& gridRect) {
+    // Scales a rectangle in grid coordinates to scene coordinates
+    QRectF sceneGridRect;
+    sceneGridRect.setWidth(gridRect.width() * GRID_SIZE);
+    sceneGridRect.setHeight(gridRect.height() * GRID_SIZE);
+    return sceneGridRect;
+}
+
+static inline QRect sceneToGrid(QRectF sceneRect) {
+    // Scales a rectangle in scene coordinates to grid coordinates
+    sceneRect.setWidth(sceneRect.width() / GRID_SIZE);
+    sceneRect.setHeight(sceneRect.height() / GRID_SIZE);
+
+    // When converting to integer-based grid rect, round up to ensure all components are inside
+    return QRect(QPoint(0, 0), QSize(std::ceil(sceneRect.width()), std::ceil(sceneRect.height())));
+}
+
+}  // namespace
+
+static constexpr qreal c_resizeMargin = GRID_SIZE;
 static constexpr qreal c_collapsedSideMargin = 15;
 
 QMap<std::type_index, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
 
 ComponentGraphic::ComponentGraphic(Component& c)
-    : m_component(c), m_minRect(ComponentGraphic::getComponentMinRect(c.getTypeId())) {
+    : m_component(c), m_minGridRect(ComponentGraphic::getComponentMinGridRect(c.getTypeId())) {
     c.changed.Connect(this, &ComponentGraphic::updateSlot);
     c.registerGraphic(this);
 }
@@ -45,7 +66,13 @@ void ComponentGraphic::initialize() {
 
     m_label = new Label(QString::fromStdString(m_component.getName()), this);
 
-    initializePorts();
+    // Create IO ports of Component
+    for (const auto& c : m_component.getInputs()) {
+        m_inputPorts[c.get()] = new PortGraphic(c.get(), PortType::in, this);
+    }
+    for (const auto& c : m_component.getOutputs()) {
+        m_outputPorts[c.get()] = new PortGraphic(c.get(), PortType::out, this);
+    }
 
     if (hasSubcomponents()) {
         // Setup expand button
@@ -56,21 +83,11 @@ void ComponentGraphic::initialize() {
         m_expandButtonProxy->setParentItem(this);
 
         createSubcomponents();
-        orderSubcomponents();
-        setExpanded(false);
-    } else {
-        updateGeometry(Collapse);
+        placeAndRouteSubcomponents();
     }
-}
 
-void ComponentGraphic::initializePorts() {
-    // Create IO ports of Component
-    for (const auto& c : m_component.getInputs()) {
-        m_inputPorts[c.get()] = new PortGraphic(c.get(), PortType::in, this);
-    }
-    for (const auto& c : m_component.getOutputs()) {
-        m_outputPorts[c.get()] = new PortGraphic(c.get(), PortType::out, this);
-    }
+    // By default, a component is collapsed. This has no effect if a component does not have any subcomponents
+    setExpanded(false);
 }
 
 /**
@@ -97,45 +114,37 @@ void ComponentGraphic::createSubcomponents() {
     }
 }
 
-template <typename K, typename V>
-K reverseLookup(const std::map<K, V>& m, const V& v) {
-    for (const auto& i : m) {
-        if (i.second == v)
-            return i.first;
-    }
-    return K();
-}
-
-void ComponentGraphic::orderSubcomponents() {
+void ComponentGraphic::placeAndRouteSubcomponents() {
     const auto& placements = PlaceRoute::get()->placeAndRoute(m_subcomponents);
     for (const auto& p : placements) {
         p.first->setPos(p.second);
     }
 }
 
-void ComponentGraphic::setExpanded(bool expanded) {
-    m_isExpanded = expanded;
-    m_expandButton->setChecked(m_isExpanded);
+void ComponentGraphic::setExpanded(bool state) {
+    m_isExpanded = state;
+    GeometryChange changeReason = GeometryChange::None;
 
-    GeometryChangeFlag changeReason;
+    if (m_expandButton != nullptr) {
+        m_expandButton->setChecked(m_isExpanded);
 
-    if (!m_isExpanded) {
-        changeReason = Collapse;
-        m_savedBaseRect = m_baseRect;
-        m_expandButton->setIcon(QIcon(":/icons/plus.svg"));
-        for (const auto& c : m_subcomponents) {
-            c->hide();
-        }
-    } else {
-        changeReason = Expand;
-        m_expandButton->setIcon(QIcon(":/icons/minus.svg"));
-        for (const auto& c : m_subcomponents) {
-            c->show();
+        if (!m_isExpanded) {
+            changeReason = GeometryChange::Collapse;
+            m_expandButton->setIcon(QIcon(":/icons/plus.svg"));
+            for (const auto& c : m_subcomponents) {
+                c->hide();
+            }
+        } else {
+            changeReason = GeometryChange::Expand;
+            m_expandButton->setIcon(QIcon(":/icons/minus.svg"));
+            for (const auto& c : m_subcomponents) {
+                c->show();
+            }
         }
     }
 
     // Recalculate geometry based on now showing child components
-    updateGeometry(changeReason);
+    updateGeometry(QRect(), changeReason);
 }
 
 ComponentGraphic* ComponentGraphic::getParent() const {
@@ -143,67 +152,113 @@ ComponentGraphic* ComponentGraphic::getParent() const {
     return static_cast<ComponentGraphic*>(parentItem());
 }
 
-void ComponentGraphic::updateDrawShape() {
-    QTransform t;
-    t.scale(m_baseRect.width(), m_baseRect.height());
-    m_shape = ComponentGraphic::getComponentShape(m_component.getTypeId(), t);
+QRect ComponentGraphic::subcomponentBoundingGridRect() const {
+    // Calculate bounding rectangle of subcomponents in scene coordinates, convert to grid coordinates, and
+    // apply as grid rectangle
+    auto sceneBoundingRect = QRectF();
+    for (const auto& c : m_subcomponents) {
+        sceneBoundingRect =
+            boundingRectOfRects<QRectF>(sceneBoundingRect, mapFromItem(c, c->boundingRect()).boundingRect());
+    }
+
+    return sceneToGrid(sceneBoundingRect);
 }
 
-void ComponentGraphic::setLabelPosition() {
-    m_label->setPos(m_baseRect.width() / 2, 5);
-}
-
-void ComponentGraphic::updateGeometry(GeometryChangeFlag flag) {
+void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     // Rect will change when expanding, so notify canvas that the rect of the current component will be dirty
     prepareGeometryChange();
 
-    // Order matters!
-    updateSubcomponentRect();
-    updateBaseRect(flag);
-    updateBoundingRect();
-    updateTextPosition();
-    setIOPortPositions();
-    setLabelPosition();
+    // Assert that components without subcomponents cannot be requested to expand or collapse
+    Q_ASSERT(!((flag == GeometryChange::Expand || flag == GeometryChange::Collapse) && !hasSubcomponents()));
 
-    updateDrawShape();
+    // ================= Grid rect sizing ========================= //
+    // move operation has already resized base rect to a valid size
 
+    switch (flag) {
+        case GeometryChange::Collapse:
+        case GeometryChange::None: {
+            m_gridRect = m_minGridRect;
+
+            // Add height to component based on the largest number of input or output ports. There should always be a
+            // margin of 1 on top- and bottom of component
+            int largestPortSize =
+                m_inputPorts.size() > m_outputPorts.size() ? m_inputPorts.size() : m_outputPorts.size();
+            if ((m_gridRect.height() - 2) <= largestPortSize)
+                m_gridRect.adjust(0, 0, 0, largestPortSize - 2);
+
+            // Add width to the component based on the name of the component - we define that 2 characters is equal to 1
+            // grid spacing : todo; this ratio should be configurable
+            m_gridRect.adjust(0, 0, m_component.getName().length() / GRID_SIZE, 0);
+            break;
+        }
+        case GeometryChange::Resize: {
+            if (snapToMinGridRect(newGridRect)) {
+                m_gridRect = newGridRect;
+            } else {
+                return;
+            }
+            break;
+        }
+        case GeometryChange::Expand:
+        case GeometryChange::ChildJustCollapsed:
+        case GeometryChange::ChildJustExpanded: {
+            if (!rectContainsAllSubcomponents(sceneGridRect())) {
+                m_gridRect = subcomponentBoundingGridRect();
+            }
+            break;
+        }
+    }
+
+    // =========================== Scene item positioning ====================== //
+    const QRectF sceneRect = sceneGridRect();
+
+    // 1. Set Input/Output port positions
+    if (/*m_isExpanded*/ false) {
+        // Some fancy logic for positioning IO positions in the best way to facilitate nice signal lines between
+        // components
+    } else {
+        // Component is unexpanded - IO should be positionen in even positions
+        int i = 0;
+        const qreal in_seg_y = sceneRect.height() / m_inputPorts.size();
+        for (const auto& p : m_inputPorts) {
+            const qreal y = i * in_seg_y + in_seg_y / 2;
+            p->setPos(QPointF(sceneRect.left() - p->boundingRect().width(), y));
+            i++;
+        }
+        i = 0;
+        const qreal out_seg_y = sceneRect.height() / m_outputPorts.size();
+        for (const auto& p : m_outputPorts) {
+            const qreal y = i * out_seg_y + out_seg_y / 2;
+            p->setPos(QPointF(sceneRect.right(), y));
+            i++;
+        }
+    }
+
+    // 2. Set label position
+    m_label->setPos(sceneRect.width() / 2, 0);
+
+    // 3 .Update the draw shape, scaling it to the current scene size of the component
+    QTransform t;
+    t.scale(sceneRect.width(), sceneRect.height());
+    m_shape = ComponentGraphic::getComponentShape(m_component.getTypeId(), t);
+
+    // 5. Position the expand-button
     if (hasSubcomponents()) {
         if (m_isExpanded) {
             m_expandButtonProxy->setPos(QPointF(0, 0));
         } else {
             // Center
-            const qreal x = m_baseRect.width() / 2 - m_expandButton->width() / 2;
-            const qreal y = m_baseRect.height() / 2 - m_expandButton->height() / 2;
+            const qreal x = sceneRect.width() / 2 - m_expandButton->width() / 2;
+            const qreal y = sceneRect.height() / 2 - m_expandButton->height() / 2;
             m_expandButtonProxy->setPos(QPointF(x, y));
         }
     }
 
-    // If we have a parent, it should now update its geometry based on new size of this
-    if (parentItem()) {
-        getParent()->updateGeometry(flag & Expand ? ChildJustExpanded : ChildJustCollapsed);
+    // 4. If we have a parent, it should now update its geometry based on new size of its subcomponent(s)
+    if (parentItem() && (flag == GeometryChange::Expand || flag == GeometryChange::Collapse)) {
+        getParent()->updateGeometry(QRect(), flag == GeometryChange::Expand ? GeometryChange::ChildJustExpanded
+                                                                            : GeometryChange::ChildJustCollapsed);
     }
-
-    // Schedule a redraw after updating the component geometry
-    update();
-}
-
-void ComponentGraphic::updateSubcomponentRect() {
-    if (m_isExpanded) {
-        m_subcomponentRect = QRectF();
-        for (const auto& c : m_subcomponents) {
-            // Bounding rects of subcomponents can have negative coordinates, but we want m_subcomponentRect to start in
-            // (0,0). Normalize to ensure.
-            m_subcomponentRect =
-                boundingRectOfRects<QRectF>(m_subcomponentRect, mapFromItem(c, c->boundingRect()).boundingRect());
-        }
-        m_subcomponentRect = normalizeRect(m_subcomponentRect);
-    } else {
-        m_subcomponentRect = QRectF();
-    }
-}
-
-QRectF ComponentGraphic::sceneBaseRect() const {
-    return baseRect().translated(scenePos());
 }
 
 QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
@@ -224,7 +279,7 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
         return QPointF(x, y);
         /*
         // Restrict position changes to inside parent item
-        const auto& parentRect = getParent()->baseRect();
+        const auto& parentRect = getParent()->sceneGridRect;
         const auto& thisRect = boundingRect();
         const auto& offset = thisRect.topLeft();
         QPointF newPos = value.toPointF();
@@ -240,103 +295,6 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
     return QGraphicsItem::itemChange(change, value);
 }
 
-void ComponentGraphic::updateTextPosition() {
-    QPointF basePos(m_baseRect.width() / 2 - m_textRect.width() / 2, 0);
-    if (m_isExpanded) {
-        // Move text to top of component to make space for subcomponents
-        basePos.setY(BUTTON_INDENT + m_textRect.height());
-    } else {
-        basePos.setY(m_baseRect.height() / 2 + m_textRect.height() / 4);
-    }
-    m_textPos = basePos;
-}
-
-void ComponentGraphic::setIOPortPositions() {
-    if (/*m_isExpanded*/ false) {
-        // Some fancy logic for positioning IO positions in the best way to facilitate nice signal lines between
-        // components
-    } else {
-        // Component is unexpanded - IO should be positionen in even positions
-        int i = 0;
-        const qreal in_seg_y = m_baseRect.height() / m_inputPorts.size();
-        for (const auto& c : m_inputPorts) {
-            const qreal y = i * in_seg_y + in_seg_y / 2;
-            c->setPos(QPointF(m_baseRect.left() - c->boundingRect().width(), y));
-            i++;
-        }
-        i = 0;
-        const qreal out_seg_y = m_baseRect.height() / m_outputPorts.size();
-        for (const auto& c : m_outputPorts) {
-            const qreal y = i * out_seg_y + out_seg_y / 2;
-            c->setPos(QPointF(m_baseRect.right(), y));
-            i++;
-        }
-    }
-}
-
-void ComponentGraphic::updateBaseRect(GeometryChangeFlag flag) {
-    if (flag == Resize) {
-        // move operation has already resized base rect to a valid size
-        return;
-    }
-    if (flag == Expand && m_savedBaseRect != QRectF()) {
-        // Component has previously been expanded and potentially resized - just use the stored base rect size
-        m_baseRect = m_savedBaseRect;
-        return;
-    }
-
-    if (flag == ChildJustExpanded) {
-        if (!rectContainsAllSubcomponents(m_baseRect)) {
-            updateSubcomponentRect();
-            m_baseRect.setBottomRight(m_subcomponentRect.bottomRight());
-        }
-        return;
-    }
-
-    // Recalculate base rect
-    m_baseRect = QRectF();
-
-    // Include expand button in baserect sizing
-    if (hasSubcomponents()) {
-        m_baseRect.adjust(0, 0, m_expandButtonProxy->boundingRect().width(),
-                          m_expandButtonProxy->boundingRect().height());
-    }
-
-    // Adjust for size of the subcomponent rectangle
-    if (m_isExpanded) {
-        const auto dx = m_baseRect.width() - m_subcomponentRect.width() - SIDE_MARGIN * 2;
-        const auto dy =
-            m_baseRect.height() - m_subcomponentRect.height() - TOP_MARGIN - BOT_MARGIN - m_textRect.height();
-
-        // expand baseRect to fix subcomponent rect - this is the smallest possible base rect size, used for
-        m_baseRect.adjust(0, 0, dx < 0 ? -dx : 0, dy < 0 ? -dy : 0);
-    } else if (hasSubcomponents()) {
-        // Expand rect to have padding between expand button and edges
-        m_baseRect.adjust(0, 0, c_collapsedSideMargin, c_collapsedSideMargin);
-    }
-
-    // Adjust for Ports
-    const auto& largestPortVector = m_inputPorts.size() > m_outputPorts.size() ? m_inputPorts : m_outputPorts;
-    for (const auto& port : largestPortVector) {
-        m_baseRect.adjust(0, 0, 0, port->boundingRect().height());
-    }
-
-    // Snap to minimum size of rect
-    if (m_baseRect.height() < m_minRect.height()) {
-        m_baseRect.setHeight(m_minRect.height());
-    }
-    if (m_baseRect.width() < m_minRect.width()) {
-        m_baseRect.setWidth(m_minRect.width());
-    }
-
-    // Round up to grid size
-    m_baseRect.setHeight(roundUp(m_baseRect.height(), GRID_SIZE));
-    m_baseRect.setWidth(roundUp(m_baseRect.width(), GRID_SIZE));
-
-    // ------------------ Post Base rect ------------------------
-    m_expandButtonPos = QPointF(BUTTON_INDENT, BUTTON_INDENT);
-}
-
 void ComponentGraphic::setShape(const QPainterPath& shape) {
     m_shape = shape;
 }
@@ -350,15 +308,6 @@ qreal largestPortWidth(const QMap<Port*, PortGraphic*>& ports) {
     return width;
 }
 }  // namespace
-
-void ComponentGraphic::updateBoundingRect() {
-    m_boundingRect = m_baseRect;
-    // Adjust slightly for stuff such as shadows, pen sizes etc.
-    m_boundingRect.adjust(-SIDE_MARGIN, -SIDE_MARGIN, SIDE_MARGIN, SIDE_MARGIN);
-
-    // Adjust for IO pins. IO pins may vary in size, so find the largest
-    m_boundingRect.adjust(-largestPortWidth(m_inputPorts), 0, largestPortWidth(m_outputPorts), 0);
-}
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
     QColor color = hasSubcomponents() ? QColor("#ecf0f1") : QColor(Qt::white);
@@ -382,22 +331,6 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
     painter->setPen(oldPen);
 
-    // Draw text
-    if (lod >= 0.35) {
-        painter->setFont(m_font);
-        painter->save();
-        // painter->scale(0.1, 0.1);
-        painter->drawText(m_textPos, m_displayText);
-        painter->restore();
-    }
-
-    /*
-    // DEBUG: draw bounding rect and base rect
-    painter->setPen(QPen(Qt::red, 1));
-    painter->drawRect(boundingRect());
-    painter->setPen(oldPen);
-    */
-
     if (hasSubcomponents()) {
         // Determine whether expand button should be shown
         if (lod >= 0.35) {
@@ -408,6 +341,14 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     }
 
     paintOverlay(painter, option, w);
+
+#ifdef VSRTL_DEBUG_DRAW
+    painter->save();
+    painter->setPen(Qt::green);
+    painter->drawRect(sceneGridRect());
+    painter->restore();
+    DRAW_BOUNDING_RECT(painter)
+#endif
 }
 
 bool ComponentGraphic::rectContainsAllSubcomponents(const QRectF& r) const {
@@ -420,16 +361,15 @@ bool ComponentGraphic::rectContainsAllSubcomponents(const QRectF& r) const {
 }
 
 /**
- * @brief Adjust bounds of r to snap on the boundaries of the subcomponent rect
- * @param r: new rect to check against m_subcomponentRect
- * @return is r different from the subcomponent rect
+ * @brief Adjust bounds of r to snap on the boundaries of the minimum grid rectangle, or if the component is currently
+ * expanded, a rect which contains the subcomponents
  */
-bool ComponentGraphic::snapToSubcomponentRect(QRectF& r) const {
+bool ComponentGraphic::snapToMinGridRect(QRect& r) const {
     bool snap_r, snap_b;
     snap_r = false;
     snap_b = false;
 
-    const auto& cmpRect = hasSubcomponents() ? m_subcomponentRect : m_minRect;
+    const auto& cmpRect = hasSubcomponents() && isExpanded() ? subcomponentBoundingGridRect() : m_minGridRect;
 
     if (r.right() < cmpRect.right()) {
         r.setRight(cmpRect.right());
@@ -443,8 +383,17 @@ bool ComponentGraphic::snapToSubcomponentRect(QRectF& r) const {
     return !(snap_r & snap_b);
 }
 
+QRectF ComponentGraphic::sceneGridRect() const {
+    return gridToScene(m_gridRect);
+}
+
 QRectF ComponentGraphic::boundingRect() const {
-    return m_boundingRect;
+    QRectF boundingRect = sceneGridRect();
+
+    // Adjust slightly for stuff such as shadows, pen sizes etc.
+    boundingRect.adjust(-SIDE_MARGIN, -SIDE_MARGIN, SIDE_MARGIN, SIDE_MARGIN);
+
+    return boundingRect;
 }
 
 void ComponentGraphic::mousePressEvent(QGraphicsSceneMouseEvent* event) {
@@ -459,14 +408,11 @@ void ComponentGraphic::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 
 void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     if (m_resizeDragging) {
-        QPointF pos = event->pos();
-        roundNear(pos, GRID_SIZE);  // snap to grid
-        auto newRect = m_baseRect;
-        newRect.setBottomRight(pos);
-        if (snapToSubcomponentRect(newRect)) {
-            m_baseRect = newRect;
-            updateGeometry(Resize);
-        }
+        QPoint gridPos = (event->pos() / GRID_SIZE).toPoint();
+        auto newGridRect = m_gridRect;
+        newGridRect.setBottomRight(gridPos);
+
+        updateGeometry(newGridRect, GeometryChange::Resize);
     }
 
     QGraphicsItem::mouseMoveEvent(event);
@@ -480,8 +426,9 @@ void ComponentGraphic::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 void ComponentGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
-    if (baseRect().width() - event->pos().x() <= c_resizeMargin &&
-        baseRect().height() - event->pos().y() <= c_resizeMargin) {
+    const auto& sceneRect = sceneGridRect();
+    if (sceneRect.width() - event->pos().x() <= c_resizeMargin &&
+        sceneRect.height() - event->pos().y() <= c_resizeMargin) {
         this->setCursor(Qt::SizeFDiagCursor);
         m_inResizeDragZone = true;
     } else {
