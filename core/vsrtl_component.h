@@ -67,18 +67,31 @@ public:
     void verifyComponent() const;
     bool hasSubcomponents() const { return m_subcomponents.size() != 0; }
 
+    /**
+     * getInput&OutputComponents does not return a set, although it naturally should. In partitioning the circuit graph,
+     * it is beneficial to know whether two components have multiple edges between each other.
+     */
+    std::vector<Component*> getInputComponents() const {
+        std::vector<Component*> v;
+        for (const auto& s : m_inputports) {
+            v.push_back(s->getInputPort()->getParent());
+        }
+        return v;
+    }
+    std::vector<Component*> getOutputComponents() const {
+        std::vector<Component*> v;
+        for (const auto& p : m_outputports) {
+            for (const auto& pc : p->getOutputPorts())
+                v.push_back(pc->getParent());
+        }
+        return v;
+    }
+
     const Component* getParent() const { return m_parent; }
     const std::string& getName() const { return m_displayName; }
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
     const std::vector<std::unique_ptr<Port>>& getOutputs() const { return m_outputports; }
     const std::vector<std::unique_ptr<Port>>& getInputs() const { return m_inputports; }
-
-    /**
-     * getInput&OutputComponents does not return a set, although it naturally should. In partitioning the circuit graph,
-     * it is beneficial to know whether two components have multiple edges between each other.
-     */
-    std::vector<Component*> getInputComponents() const;
-    std::vector<Component*> getOutputComponents() const;
 
     Gallant::Signal0<> changed;
 

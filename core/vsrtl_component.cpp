@@ -111,23 +111,6 @@ void Component::initialize() {
     }
 }
 
-std::vector<Component*> Component::getInputComponents() const {
-    std::vector<Component*> v;
-    for (const auto& s : m_inputports) {
-        v.push_back(s->getInputPort()->getParent());
-    }
-    return v;
-}
-
-std::vector<Component*> Component::getOutputComponents() const {
-    std::vector<Component*> v;
-    for (const auto& p : m_outputports) {
-        for (const auto& pc : p->getOutputPorts())
-            v.push_back(pc->getParent());
-    }
-    return v;
-}
-
 void Component::getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
     // Register adjacent components (child components) in the graph, and add subcomponents to graph
     componentGraph[this];
