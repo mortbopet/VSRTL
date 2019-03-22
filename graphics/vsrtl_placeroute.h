@@ -1,7 +1,9 @@
 #ifndef VSRTL_PLACEROUTE_H
 #define VSRTL_PLACEROUTE_H
 
+#include <QList>
 #include <QPointF>
+#include <QRect>
 #include <map>
 #include <vector>
 
@@ -9,6 +11,33 @@ namespace vsrtl {
 
 class ComponentGraphic;
 class Component;
+
+struct Placement {
+    QRectF chipRect;
+    QList<QRectF> components;
+};
+
+struct RoutingRegion {
+    RoutingRegion(QRectF rect) {
+        r = rect;
+        h_cap = r.width();
+        v_cap = r.height();
+    }
+
+    QRectF r;   // Region size and position
+    int h_cap;  // Horizontal capacity of routing region
+    int v_cap;  // Vertical capacity of routing region
+
+    // Adjacency pointers
+    RoutingRegion* top = nullptr;
+    RoutingRegion* bottom = nullptr;
+    RoutingRegion* left = nullptr;
+    RoutingRegion* right = nullptr;
+
+    bool operator==(const RoutingRegion& lhs) const { return r == lhs.r; }
+};
+
+QList<RoutingRegion> defineRoutingRegions(const Placement&);
 
 enum class PlaceAlg { TopologicalSort };
 enum class RouteAlg { Direct };
