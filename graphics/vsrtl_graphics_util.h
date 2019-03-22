@@ -40,6 +40,15 @@ RectType boundingRectOfRects(const RectType& r1, const RectType& r2) {
 }
 
 template <typename RectType>
+RectType boundingRectOfRects(const QList<RectType>& rects) {
+    RectType br;
+    for (const auto& r : rects) {
+        br = boundingRectOfRects<RectType>(br, r);
+    }
+    return br;
+}
+
+template <typename RectType>
 RectType normalizeRect(const RectType& r1) {
     auto r = r1;
     r.setTopLeft(QPointF(0, 0));
