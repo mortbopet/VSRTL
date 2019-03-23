@@ -1,11 +1,11 @@
 #include <QtTest/QTest>
 #include "vsrtl_placeroute.h"
 
-class tst_routingregion : public QObject {
-    Q_OBJECT private slots : void testDefineRoutingRegions();
+class tst_connectivityGraph : public QObject {
+    Q_OBJECT private slots : void testcreateConnectivityGraph();
 };
 
-void tst_routingregion::testDefineRoutingRegions() {
+void tst_connectivityGraph::testcreateConnectivityGraph() {
     /*
      * Test is based on the figure presented in figure 5.18 of
      * VLSI Physical Design: From Graph Partitioning to Timing Closure, with the center (abnormally) shaped object being
@@ -141,7 +141,7 @@ void tst_routingregion::testDefineRoutingRegions() {
     verificationRegions.push_back(rr20);
     verificationRegions.push_back(rr21);
 
-    auto regions = vsrtl::defineRoutingRegions(p);
+    auto regions = vsrtl::createConnectivityGraph(p);
 
     QVERIFY(regions.size() == verificationRegions.size());
 
@@ -149,7 +149,7 @@ void tst_routingregion::testDefineRoutingRegions() {
     for (auto it = verificationRegions.begin(); it != verificationRegions.end();) {
         auto it_res = std::find_if(regions.begin(), regions.end(), [it](const auto& r) { return *r.get() == *it; });
         if (it_res != regions.end()) {
-            it = verificationRegions.erase(it);  //.base());
+            it = verificationRegions.erase(it);
         } else {
             it++;
         }
@@ -157,5 +157,5 @@ void tst_routingregion::testDefineRoutingRegions() {
     QVERIFY(verificationRegions.size() == 0);
 }
 
-QTEST_APPLESS_MAIN(tst_routingregion)
-#include "tst_routingregion.moc"
+QTEST_APPLESS_MAIN(tst_connectivityGraph)
+#include "tst_connectivitygraph.moc"

@@ -57,7 +57,7 @@ struct RoutingRegion {
     }
 };
 
-std::vector<std::unique_ptr<RoutingRegion>> defineRoutingRegions(const Placement&);
+std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placement&);
 
 enum class PlaceAlg { TopologicalSort };
 enum class RouteAlg { Direct };

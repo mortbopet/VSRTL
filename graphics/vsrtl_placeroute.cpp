@@ -167,7 +167,7 @@ static inline Line getEdge(const QRect& rect, Edge e) {
 
 }  // namespace
 
-std::vector<std::unique_ptr<RoutingRegion>> defineRoutingRegions(const Placement& placement) {
+std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
     Q_ASSERT(placement.chipRect.contains(boundingRectOfRects<QRect>(placement.components)));
     Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
