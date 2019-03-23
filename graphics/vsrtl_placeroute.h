@@ -14,18 +14,18 @@ class ComponentGraphic;
 class Component;
 
 struct Placement {
-    QRectF chipRect;
-    QList<QRectF> components;
+    QRect chipRect;
+    QList<QRect> components;
 };
 
 struct RoutingRegion {
-    RoutingRegion(QRectF rect) {
+    RoutingRegion(QRect rect) {
         r = rect;
         h_cap = r.width();
         v_cap = r.height();
     }
 
-    QRectF r;   // Region size and position
+    QRect r;    // Region size and position
     int h_cap;  // Horizontal capacity of routing region
     int v_cap;  // Vertical capacity of routing region
 
@@ -52,6 +52,7 @@ struct RoutingRegion {
             return false;
         if (!cmpRoutingRegPtr(right, lhs.right))
             return false;
+
         return r == lhs.r;
     }
 };

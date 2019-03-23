@@ -12,48 +12,147 @@ void tst_routingregion::testDefineRoutingRegions() {
      * defined as a rectangle
      */
     // Define components
-    QRectF chipRect(QPoint(0, 0), QPoint(10, 12));
-    QRectF c_A(QPoint(2, 3), QPoint(5, 7));
-    QRectF c_B(QPoint(2, 10), QPoint(9, 11));
-    QRectF c_C(QPoint(6, 1), QPoint(9, 7));
+    QRect chipRect(QPoint(0, 0), QSize(10, 12));
+    QRect c_A(QPoint(2, 3), QSize(3, 4));
+    QRect c_B(QPoint(2, 10), QSize(7, 1));
+    QRect c_C(QPoint(6, 1), QSize(3, 6));
 
     vsrtl::Placement p{chipRect, {c_A, c_B, c_C}};
 
     // Define verification routing regions
-    QList<vsrtl::RoutingRegion> verificationRegions;
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(0, 0), QSizeF(2, 1)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(0, 1), QSizeF(2, 2)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(0, 3), QSizeF(2, 4)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(0, 7), QSizeF(2, 3)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(0, 10), QSizeF(2, 1)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(0, 11), QSizeF(2, 1)));
+    auto rr1 = vsrtl::RoutingRegion(QRect(QPoint(0, 0), QSize(2, 1)));
+    auto rr2 = vsrtl::RoutingRegion(QRect(QPoint(0, 1), QSize(2, 2)));
+    auto rr3 = vsrtl::RoutingRegion(QRect(QPoint(0, 3), QSize(2, 4)));
+    auto rr4 = vsrtl::RoutingRegion(QRect(QPoint(0, 7), QSize(2, 3)));
+    auto rr5 = vsrtl::RoutingRegion(QRect(QPoint(0, 10), QSize(2, 1)));
+    auto rr6 = vsrtl::RoutingRegion(QRect(QPoint(0, 11), QSize(2, 1)));
 
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(2, 0), QSizeF(3, 1)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(2, 1), QSizeF(3, 2)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(2, 7), QSizeF(3, 3)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(2, 11), QSizeF(7, 1)));
+    auto rr7 = vsrtl::RoutingRegion(QRect(QPoint(2, 0), QSize(3, 1)));
+    auto rr8 = vsrtl::RoutingRegion(QRect(QPoint(2, 1), QSize(3, 2)));
+    auto rr9 = vsrtl::RoutingRegion(QRect(QPoint(2, 7), QSize(3, 3)));
+    auto rr10 = vsrtl::RoutingRegion(QRect(QPoint(2, 11), QSize(7, 1)));
 
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(5, 0), QSizeF(1, 1)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(5, 1), QSizeF(1, 2)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(5, 3), QSizeF(1, 4)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(5, 7), QSizeF(1, 3)));
+    auto rr11 = vsrtl::RoutingRegion(QRect(QPoint(5, 0), QSize(1, 1)));
+    auto rr12 = vsrtl::RoutingRegion(QRect(QPoint(5, 1), QSize(1, 2)));
+    auto rr13 = vsrtl::RoutingRegion(QRect(QPoint(5, 3), QSize(1, 4)));
+    auto rr14 = vsrtl::RoutingRegion(QRect(QPoint(5, 7), QSize(1, 3)));
 
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(6, 0), QSizeF(3, 1)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(6, 7), QSizeF(3, 3)));
+    auto rr15 = vsrtl::RoutingRegion(QRect(QPoint(6, 0), QSize(3, 1)));
+    auto rr16 = vsrtl::RoutingRegion(QRect(QPoint(6, 7), QSize(3, 3)));
 
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(9, 0), QSizeF(1, 1)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(9, 1), QSizeF(1, 6)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(9, 7), QSizeF(1, 3)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(9, 10), QSizeF(1, 1)));
-    verificationRegions << vsrtl::RoutingRegion(QRectF(QPointF(9, 11), QSizeF(1, 1)));
+    auto rr17 = vsrtl::RoutingRegion(QRect(QPoint(9, 0), QSize(1, 1)));
+    auto rr18 = vsrtl::RoutingRegion(QRect(QPoint(9, 1), QSize(1, 6)));
+    auto rr19 = vsrtl::RoutingRegion(QRect(QPoint(9, 7), QSize(1, 3)));
+    auto rr20 = vsrtl::RoutingRegion(QRect(QPoint(9, 10), QSize(1, 1)));
+    auto rr21 = vsrtl::RoutingRegion(QRect(QPoint(9, 11), QSize(1, 1)));
 
-    const auto regions = vsrtl::defineRoutingRegions(p);
+    // Set routing region connections
+    rr1.right = &rr7;
+    rr1.bottom = &rr2;
+
+    rr2.top = &rr1;
+    rr2.right = &rr8;
+    rr2.bottom = &rr3;
+
+    rr3.top = &rr2;
+    rr3.bottom = &rr4;
+
+    rr4.top = &rr3;
+    rr4.right = &rr9;
+    rr4.bottom = &rr5;
+
+    rr5.top = &rr4;
+    rr5.bottom = &rr6;
+
+    rr6.top = &rr5;
+    rr6.right = &rr10;
+
+    rr7.left = &rr1;
+    rr7.bottom = &rr8;
+    rr7.right = &rr11;
+
+    rr8.top = &rr7;
+    rr8.left = &rr2;
+    rr8.right = &rr12;
+
+    rr9.left = &rr4;
+    rr9.right = &rr14;
+
+    rr10.left = &rr6;
+    rr10.right = &rr21;
+
+    rr11.left = &rr7;
+    rr11.bottom = &rr12;
+    rr11.right = &rr15;
+
+    rr12.left = &rr8;
+    rr12.top = &rr11;
+    rr12.bottom = &rr13;
+
+    rr13.top = &rr12;
+    rr13.bottom = &rr14;
+
+    rr14.top = &rr13;
+    rr14.left = &rr9;
+    rr14.right = &rr16;
+
+    rr15.left = &rr11;
+    rr15.right = &rr17;
+
+    rr16.left = &rr14;
+    rr16.right = &rr19;
+
+    rr17.left = &rr15;
+    rr17.bottom = &rr18;
+
+    rr18.top = &rr17;
+    rr18.bottom = &rr19;
+
+    rr19.top = &rr18;
+    rr19.left = &rr16;
+    rr19.bottom = &rr20;
+
+    rr20.top = &rr19;
+    rr20.bottom = &rr21;
+
+    rr21.top = &rr20;
+    rr21.left = &rr10;
+
+    std::vector<vsrtl::RoutingRegion> verificationRegions;
+    verificationRegions.push_back(rr1);
+    verificationRegions.push_back(rr2);
+    verificationRegions.push_back(rr3);
+    verificationRegions.push_back(rr4);
+    verificationRegions.push_back(rr5);
+    verificationRegions.push_back(rr6);
+    verificationRegions.push_back(rr7);
+    verificationRegions.push_back(rr8);
+    verificationRegions.push_back(rr9);
+    verificationRegions.push_back(rr10);
+    verificationRegions.push_back(rr11);
+    verificationRegions.push_back(rr12);
+    verificationRegions.push_back(rr13);
+    verificationRegions.push_back(rr14);
+    verificationRegions.push_back(rr15);
+    verificationRegions.push_back(rr16);
+    verificationRegions.push_back(rr17);
+    verificationRegions.push_back(rr18);
+    verificationRegions.push_back(rr19);
+    verificationRegions.push_back(rr20);
+    verificationRegions.push_back(rr21);
+
+    auto regions = vsrtl::defineRoutingRegions(p);
 
     QVERIFY(regions.size() == verificationRegions.size());
 
     // Verify that computed regions are equal to expected regions
-    for (const auto& region : regions) {
-        verificationRegions.removeOne(region);
+    for (auto it = verificationRegions.begin(); it != verificationRegions.end();) {
+        auto it_res = std::find_if(regions.begin(), regions.end(), [it](const auto& r) { return *r.get() == *it; });
+        if (it_res != regions.end()) {
+            it = verificationRegions.erase(it);  //.base());
+        } else {
+            it++;
+        }
     }
     QVERIFY(verificationRegions.size() == 0);
 }

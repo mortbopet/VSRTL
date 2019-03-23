@@ -74,41 +74,129 @@ struct RegionGroup {
     RoutingRegion* bottomleft = nullptr;
     RoutingRegion* bottomright = nullptr;
 };
+
+enum Orientation { Horizontal, Vertical };
+enum IntersectType { Cross, OnEdge };
+
+/**
+ * @brief The Line class
+ * Simple orthogonal line class with integer coordinates. Similar to QLine, however, this does not carry the strange
+ * "historical" artifacts which are present in QLine.
+ */
+class Line {
+public:
+    Line(QPoint p1, QPoint p2) {
+        // Assert that the line is orthogonal to one of the grid axis
+        Q_ASSERT(p1.x() == p2.x() || p1.y() == p2.y());
+        m_p1 = p1;
+        m_p2 = p2;
+
+        m_orientation = p1.x() == p2.x() ? Orientation::Vertical : Orientation::Horizontal;
+    }
+
+    const QPoint& p1() const { return m_p1; }
+    const QPoint& p2() const { return m_p2; }
+    void setP1(const QPoint& p) { m_p1 = p; }
+    void setP2(const QPoint& p) { m_p2 = p; }
+    Orientation orientation() const { return m_orientation; }
+    bool intersect(const Line& other, QPoint& p, IntersectType type) const {
+        Q_ASSERT(orientation() != other.orientation());
+        const Line *hz, *vt;
+        if (m_orientation == Orientation::Horizontal) {
+            hz = this;
+            vt = &other;
+        } else {
+            hz = &other;
+            vt = this;
+        }
+
+        // Assert that the lines are orthogonal
+        Q_ASSERT(hz->p1().y() == hz->p2().y());
+        Q_ASSERT(vt->p2().x() == vt->p2().x());
+
+        bool hz_intersect, vt_intersect;
+        if (type == IntersectType::Cross) {
+            // Lines must cross before an intersection is registered
+            hz_intersect = (hz->p1().x() < vt->p1().x()) && (vt->p1().x() < hz->p2().x());
+            vt_intersect = (vt->p1().y() < hz->p1().y()) && (hz->p1().y() < vt->p2().y());
+        } else {
+            // Lines may terminate on top of another for an intersection to register
+            hz_intersect = (hz->p1().x() <= vt->p1().x()) && (vt->p1().x() <= hz->p2().x());
+            vt_intersect = (vt->p1().y() <= hz->p1().y()) && (hz->p1().y() <= vt->p2().y());
+        }
+
+        if (hz_intersect && vt_intersect) {
+            p = QPoint(vt->p1().x(), hz->p1().y());
+            return true;
+        }
+        p = QPoint();
+        return false;
+    }
+
+    bool operator==(const Line& rhs) const { return m_p1 == rhs.m_p1 && m_p2 == rhs.m_p2; }
+
+private:
+    QPoint m_p1;
+    QPoint m_p2;
+    Orientation m_orientation;
+};
+
+enum class Edge { Top, Bottom, Left, Right };
+static inline Line getEdge(const QRect& rect, Edge e) {
+    // Qt "For historical reasons" return points which are offset by 1 for all rect points other than topleft. To ensure
+    // control over this, we manually derive edge points, https://doc.qt.io/Qt-5/qrect.html#bottomRight
+    const auto bottomLeft = rect.topLeft() + QPoint(0, rect.height());
+    const auto topRight = rect.topLeft() + QPoint(rect.width(), 0);
+    const auto bottomRight = bottomLeft + QPoint(rect.width(), 0);
+
+    switch (e) {
+        case Edge::Top: {
+            return Line(rect.topLeft(), topRight);
+        }
+        case Edge::Bottom: {
+            return Line(bottomLeft, bottomRight);
+        }
+        case Edge::Left: {
+            return Line(rect.topLeft(), bottomLeft);
+        }
+        case Edge::Right: {
+            return Line(topRight, bottomRight);
+        }
+    }
+}
+
 }  // namespace
 
 std::vector<std::unique_ptr<RoutingRegion>> defineRoutingRegions(const Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
-    Q_ASSERT(placement.chipRect.contains(boundingRectOfRects<QRectF>(placement.components)));
+    Q_ASSERT(placement.chipRect.contains(boundingRectOfRects<QRect>(placement.components)));
+    Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
 
     // Note: Even though the QRect's are in purely integer coordinates, doing things by floating points provides various
     // Qt utility functions
     std::vector<std::unique_ptr<RoutingRegion>> regions;
     const auto& chipBoundary = placement.chipRect;
 
-    QList<QLineF> hz_bounding_lines, vt_bounding_lines, hz_region_lines, vt_region_lines;
+    QList<Line> hz_bounding_lines, vt_bounding_lines, hz_region_lines, vt_region_lines;
 
     // create horizontal and vertical bounding rectangle lines
     for (const auto& r : placement.components) {
-        hz_bounding_lines << QLineF(r.topLeft(), r.topRight()) << QLineF(r.bottomLeft(), r.bottomRight());
-        vt_bounding_lines << QLineF(r.topLeft(), r.bottomLeft()) << QLineF(r.topRight(), r.bottomRight());
+        hz_bounding_lines << getEdge(r, Edge::Top) << getEdge(r, Edge::Bottom);
+        vt_bounding_lines << getEdge(r, Edge::Left) << getEdge(r, Edge::Right);
     }
 
     // Extrude horizontal lines
-    for (const auto& line : hz_bounding_lines) {
+    for (const auto& h_line : hz_bounding_lines) {
         // Stretch line to chip boundary
-        QLineF stretchedLine = QLineF({chipBoundary.left(), line.p1().y()}, {chipBoundary.right(), line.p1().y()});
+        Line stretchedLine = Line({chipBoundary.left(), h_line.p1().y()}, {chipBoundary.width(), h_line.p1().y()});
 
         // Narrow line until no boundaries are met
         for (const auto& v_line : vt_bounding_lines) {
-            QPointF intersectPoint;
-            if (stretchedLine.intersect(v_line, &intersectPoint) == QLineF::BoundedIntersection) {
-                // check for intersection with own bounding rectangle (QLineF::Intersect intersect when a line ends on
-                // top of another line, which is the case for the components own bounding rectangles)
-                if (intersectPoint == v_line.p1() || intersectPoint == v_line.p2())
-                    continue;
-
+            QPoint intersectPoint;
+            if (stretchedLine.intersect(v_line, intersectPoint, IntersectType::Cross)) {
                 // Contract based on point closest to original line segment
-                if ((intersectPoint - line.p1()).manhattanLength() < (intersectPoint - line.p2()).manhattanLength()) {
+                if ((intersectPoint - h_line.p1()).manhattanLength() <
+                    (intersectPoint - h_line.p2()).manhattanLength()) {
                     stretchedLine.setP1(intersectPoint);
                 } else {
                     stretchedLine.setP2(intersectPoint);
@@ -124,15 +212,13 @@ std::vector<std::unique_ptr<RoutingRegion>> defineRoutingRegions(const Placement
     // Extrude vertical lines
     for (const auto& line : vt_bounding_lines) {
         // Stretch line to chip boundary
-        QLineF stretchedLine = QLineF({line.p1().x(), chipBoundary.top()}, {line.p1().x(), chipBoundary.bottom()});
+        Line stretchedLine = Line({line.p1().x(), chipBoundary.top()}, {line.p1().x(), chipBoundary.height()});
 
         // Narrow line until no boundaries are met
         for (const auto& h_line : hz_bounding_lines) {
-            QPointF intersectPoint;
-            if (stretchedLine.intersect(h_line, &intersectPoint) == QLineF::BoundedIntersection) {
-                if (intersectPoint == h_line.p1() || intersectPoint == h_line.p2())
-                    continue;
-
+            QPoint intersectPoint;
+            // Intersecting lines must cross each other. This avoids intersections with a rectangles own sides
+            if (h_line.intersect(stretchedLine, intersectPoint, IntersectType::Cross)) {
                 // Contract based on point closest to original line segment
                 if ((intersectPoint - line.p1()).manhattanLength() < (intersectPoint - line.p2()).manhattanLength()) {
                     stretchedLine.setP1(intersectPoint);
@@ -148,54 +234,57 @@ std::vector<std::unique_ptr<RoutingRegion>> defineRoutingRegions(const Placement
     }
 
     // Add chip boundaries to region lines
-    hz_region_lines << QLineF(chipBoundary.topLeft(), chipBoundary.topRight())
-                    << QLineF(chipBoundary.bottomLeft(), chipBoundary.bottomRight());
-    vt_region_lines << QLineF(chipBoundary.topLeft(), chipBoundary.bottomLeft())
-                    << QLineF(chipBoundary.topRight(), chipBoundary.bottomRight());
+    hz_region_lines << getEdge(chipBoundary, Edge::Top) << getEdge(chipBoundary, Edge::Bottom);
+    vt_region_lines << getEdge(chipBoundary, Edge::Left) << getEdge(chipBoundary, Edge::Right);
 
     // Sort bounding lines
     // Top to bottom
     std::sort(hz_region_lines.begin(), hz_region_lines.end(),
-              [](const QLineF& a, const QLineF& b) { return a.p1().y() < b.p1().y(); });
+              [](const auto& a, const auto& b) { return a.p1().y() < b.p1().y(); });
     // Left to right
     std::sort(vt_region_lines.begin(), vt_region_lines.end(),
-              [](const QLineF& a, const QLineF& b) { return a.p1().x() < b.p1().x(); });
+              [](const auto& a, const auto& b) { return a.p1().x() < b.p1().x(); });
 
     // ============ Routing region creation =================== //
+
     // Maintain a map of regions around each intersecion point in the graph. This will aid in connecting the graph after
     // the regions are found
-    std::map<QPointF, RegionGroup> regionGroups;
+    std::map<QPoint, RegionGroup> regionGroups;
+
+    // Bounding lines are no longer needed
+    hz_bounding_lines.clear();
+    vt_bounding_lines.clear();
 
     // Find intersections between horizontal and vertical region lines, and create corresponding routing regions.
-    QPointF regionTopRight, regionBottomLeft, regionBottomRight, regionTopLeft;
+    QPoint regionTopRight, regionBottomLeft, regionBottomRight, regionTopLeft;
     for (int hi = 1; hi < hz_region_lines.size(); hi++) {
         for (int vi = 1; vi < vt_region_lines.size(); vi++) {
             const auto& vt_region_line = vt_region_lines[vi];
             const auto& hz_region_line = hz_region_lines[hi];
-            if (vt_region_line.intersect(hz_region_line, &regionBottomRight) == QLineF::BoundedIntersection) {
+            if (hz_region_line.intersect(vt_region_line, regionBottomRight, IntersectType::OnEdge)) {
                 // Intersection found (bottom right of region), a region may be created.
                 // 1. Locate the point above the current intersection point (top right of region)
                 for (int hi_rev = hi - 1; hi_rev >= 0; hi_rev--) {
-                    if (hz_region_lines[hi_rev].intersect(vt_region_line, &regionTopRight) ==
-                        QLineF::BoundedIntersection) {
+                    if (hz_region_lines[hi_rev].intersect(vt_region_line, regionTopRight, IntersectType::OnEdge)) {
                         break;
                     }
                 }
 
                 // 2. Locate the point to the left of the current intersection point (bottom right of region)
                 for (int vi_rev = vi - 1; vi_rev >= 0; vi_rev--) {
-                    if (vt_region_lines[vi_rev].intersect(hz_region_line, &regionBottomLeft) ==
-                        QLineF::BoundedIntersection) {
+                    if (hz_region_line.intersect(vt_region_lines[vi_rev], regionBottomLeft, IntersectType::OnEdge)) {
                         break;
                     }
                 }
 
                 // Sanity check
                 Q_ASSERT(!regionBottomLeft.isNull() && !regionTopRight.isNull());
-                regionTopLeft = QPointF(regionBottomLeft.x(), regionTopRight.y());
+                regionTopLeft = QPoint(regionBottomLeft.x(), regionTopRight.y());
 
-                // Check whether the region is enclosing a component
-                QRectF newRegionRect = QRectF(regionTopLeft.toPoint(), regionBottomRight.toPoint());
+                // Check whether the region is enclosing a component.
+                // Note: (1,1) is subtracted from the bottom right corner to transform the coordinates into the QRect
+                // expected format of the bottom-right corner
+                QRect newRegionRect = QRect(regionTopLeft, regionBottomRight - QPoint(1, 1));
                 auto it = std::find_if(placement.components.begin(), placement.components.end(),
                                        [&newRegionRect](const auto& r) { return r == newRegionRect; });
 
