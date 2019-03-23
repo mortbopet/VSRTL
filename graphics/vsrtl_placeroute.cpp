@@ -67,13 +67,22 @@ std::map<ComponentGraphic*, QPointF> PlaceRoute::placeAndRoute(const std::vector
     }
 }
 
-QList<RoutingRegion> defineRoutingRegions(const Placement& placement) {
+namespace {
+struct RegionGroup {
+    RoutingRegion* topleft = nullptr;
+    RoutingRegion* topright = nullptr;
+    RoutingRegion* bottomleft = nullptr;
+    RoutingRegion* bottomright = nullptr;
+};
+}  // namespace
+
+std::vector<std::unique_ptr<RoutingRegion>> defineRoutingRegions(const Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
     Q_ASSERT(placement.chipRect.contains(boundingRectOfRects<QRectF>(placement.components)));
 
     // Note: Even though the QRect's are in purely integer coordinates, doing things by floating points provides various
     // Qt utility functions
-    QList<RoutingRegion> regions;
+    std::vector<std::unique_ptr<RoutingRegion>> regions;
     const auto& chipBoundary = placement.chipRect;
 
     QList<QLineF> hz_bounding_lines, vt_bounding_lines, hz_region_lines, vt_region_lines;
@@ -152,6 +161,11 @@ QList<RoutingRegion> defineRoutingRegions(const Placement& placement) {
     std::sort(vt_region_lines.begin(), vt_region_lines.end(),
               [](const QLineF& a, const QLineF& b) { return a.p1().x() < b.p1().x(); });
 
+    // ============ Routing region creation =================== //
+    // Maintain a map of regions around each intersecion point in the graph. This will aid in connecting the graph after
+    // the regions are found
+    std::map<QPointF, RegionGroup> regionGroups;
+
     // Find intersections between horizontal and vertical region lines, and create corresponding routing regions.
     QPointF regionTopRight, regionBottomLeft, regionBottomRight, regionTopLeft;
     for (int hi = 1; hi < hz_region_lines.size(); hi++) {
@@ -180,21 +194,57 @@ QList<RoutingRegion> defineRoutingRegions(const Placement& placement) {
                 Q_ASSERT(!regionBottomLeft.isNull() && !regionTopRight.isNull());
                 regionTopLeft = QPointF(regionBottomLeft.x(), regionTopRight.y());
 
-                // Create the region
-                regions << RoutingRegion(QRectF(regionTopLeft.toPoint(), regionBottomRight.toPoint()));
+                // Check whether the region is enclosing a component
+                QRectF newRegionRect = QRectF(regionTopLeft.toPoint(), regionBottomRight.toPoint());
+                auto it = std::find_if(placement.components.begin(), placement.components.end(),
+                                       [&newRegionRect](const auto& r) { return r == newRegionRect; });
+
+                if (it == placement.components.end()) {
+                    // This is a new routing regio
+                    regions.push_back(std::make_unique<RoutingRegion>(newRegionRect));
+                    RoutingRegion* newRegion = regions.rbegin()->get();
+
+                    // Add region to regionGroups
+                    regionGroups[regionTopLeft].bottomright = newRegion;
+                    regionGroups[regionBottomLeft].topright = newRegion;
+                    regionGroups[regionTopRight].bottomleft = newRegion;
+                    regionGroups[regionBottomRight].topleft = newRegion;
+                }
             }
         }
     }
 
-    // Remove regions which are enclosing components
-    for (int i = regions.size() - 1; i >= 0; i--) {
-        auto res = std::find(placement.components.begin(), placement.components.end(), regions[i].r);
-        if (res != placement.components.end()) {
-            regions.removeAt(i);
+    // =================== Connectivity graph connection ========================== //
+    for (const auto& iter : regionGroups) {
+        const RegionGroup& group = iter.second;
+        if (group.topleft != nullptr) {
+            group.topleft->bottom = group.bottomleft;
+            group.topleft->right = group.topright;
+        }
+
+        if (group.topright != nullptr) {
+            group.topright->left = group.topleft;
+            group.topright->bottom = group.bottomright;
+        }
+        if (group.bottomleft != nullptr) {
+            group.bottomleft->top = group.topleft;
+            group.bottomleft->right = group.bottomright;
+        }
+        if (group.bottomright != nullptr) {
+            group.bottomright->left = group.bottomleft;
+            group.bottomright->top = group.topright;
         }
     }
 
     return regions;
-}  // namespace vsrtl
+}
 
 }  // namespace vsrtl
+
+// less-than operator for QPointF, required for storing QPointF as index in a std::map
+bool operator<(const QPointF& p1, const QPointF& p2) {
+    if (p1.x() == p2.x()) {
+        return p1.y() < p2.y();
+    }
+    return p1.x() < p2.x();
+}

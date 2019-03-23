@@ -5,6 +5,7 @@
 #include <QPointF>
 #include <QRect>
 #include <map>
+#include <memory>
 #include <vector>
 
 namespace vsrtl {
@@ -34,10 +35,28 @@ struct RoutingRegion {
     RoutingRegion* left = nullptr;
     RoutingRegion* right = nullptr;
 
-    bool operator==(const RoutingRegion& lhs) const { return r == lhs.r; }
+    static inline bool cmpRoutingRegPtr(RoutingRegion* a, RoutingRegion* b) {
+        if ((a == nullptr && b != nullptr) || (b == nullptr && a != nullptr))
+            return false;
+        if (a == nullptr && b == nullptr)
+            return true;
+        return a->r == b->r;
+    }
+
+    bool operator==(const RoutingRegion& lhs) const {
+        if (!cmpRoutingRegPtr(top, lhs.top))
+            return false;
+        if (!cmpRoutingRegPtr(bottom, lhs.bottom))
+            return false;
+        if (!cmpRoutingRegPtr(left, lhs.left))
+            return false;
+        if (!cmpRoutingRegPtr(right, lhs.right))
+            return false;
+        return r == lhs.r;
+    }
 };
 
-QList<RoutingRegion> defineRoutingRegions(const Placement&);
+std::vector<std::unique_ptr<RoutingRegion>> defineRoutingRegions(const Placement&);
 
 enum class PlaceAlg { TopologicalSort };
 enum class RouteAlg { Direct };
