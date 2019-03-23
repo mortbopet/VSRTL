@@ -172,23 +172,25 @@ std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placem
     Q_ASSERT(placement.chipRect.contains(boundingRectOfRects<QRect>(placement.components)));
     Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
 
-    // Note: Even though the QRect's are in purely integer coordinates, doing things by floating points provides various
-    // Qt utility functions
     std::vector<std::unique_ptr<RoutingRegion>> regions;
-    const auto& chipBoundary = placement.chipRect;
+    const auto& chipRect = placement.chipRect;
 
     QList<Line> hz_bounding_lines, vt_bounding_lines, hz_region_lines, vt_region_lines;
 
-    // create horizontal and vertical bounding rectangle lines
+    // Get horizontal and vertical bounding rectangle lines for all components on chip
     for (const auto& r : placement.components) {
         hz_bounding_lines << getEdge(r, Edge::Top) << getEdge(r, Edge::Bottom);
         vt_bounding_lines << getEdge(r, Edge::Left) << getEdge(r, Edge::Right);
     }
 
+    // ============== Component edge extrusion =================
+    // This step extrudes the horizontal and vertical bounding rectangle lines for each component on the chip. The
+    // extrusion will extend the line in each direction, until an obstacle is met (chip edges or other components)
+
     // Extrude horizontal lines
     for (const auto& h_line : hz_bounding_lines) {
         // Stretch line to chip boundary
-        Line stretchedLine = Line({chipBoundary.left(), h_line.p1().y()}, {chipBoundary.width(), h_line.p1().y()});
+        Line stretchedLine = Line({chipRect.left(), h_line.p1().y()}, {chipRect.width(), h_line.p1().y()});
 
         // Narrow line until no boundaries are met
         for (const auto& v_line : vt_bounding_lines) {
@@ -212,7 +214,7 @@ std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placem
     // Extrude vertical lines
     for (const auto& line : vt_bounding_lines) {
         // Stretch line to chip boundary
-        Line stretchedLine = Line({line.p1().x(), chipBoundary.top()}, {line.p1().x(), chipBoundary.height()});
+        Line stretchedLine = Line({line.p1().x(), chipRect.top()}, {line.p1().x(), chipRect.height()});
 
         // Narrow line until no boundaries are met
         for (const auto& h_line : hz_bounding_lines) {
@@ -234,8 +236,8 @@ std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placem
     }
 
     // Add chip boundaries to region lines
-    hz_region_lines << getEdge(chipBoundary, Edge::Top) << getEdge(chipBoundary, Edge::Bottom);
-    vt_region_lines << getEdge(chipBoundary, Edge::Left) << getEdge(chipBoundary, Edge::Right);
+    hz_region_lines << getEdge(chipRect, Edge::Top) << getEdge(chipRect, Edge::Bottom);
+    vt_region_lines << getEdge(chipRect, Edge::Left) << getEdge(chipRect, Edge::Right);
 
     // Sort bounding lines
     // Top to bottom
