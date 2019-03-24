@@ -10,8 +10,8 @@ RegisterGraphic::RegisterGraphic(Register& c) : ComponentGraphic(c), m_register(
 
 void RegisterGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* w) {
     painter->save();
-    QFont f(painter->font());
-    f.setPointSize(8);
+    QFont f("monospace");
+    f.setPointSize(12);
     painter->setFont(f);
 
     const QString d_text("D");
@@ -24,14 +24,14 @@ void RegisterGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraphics
     for (const auto& ip : m_inputPorts) {
         if (ip->getPort() == &m_register.in) {
             drawPos = mapFromItem(ip, ip->getOutputPoint());
-            drawPos += QPointF(d_rect.width() / 4, -d_rect.height() / 2);
+            drawPos += QPointF(d_rect.width() / 2.5, -d_rect.height() / 2);
             painter->drawText(drawPos.x(), drawPos.y(), d_rect.width(), d_rect.height(), Qt::AlignCenter, d_text);
         }
     }
     for (const auto& op : m_outputPorts) {
         if (op->getPort() == &m_register.out) {
             drawPos = mapFromItem(op, op->getInputPoint());
-            drawPos += QPointF(-q_rect.width() - q_rect.width() / 4, -q_rect.height() / 2);
+            drawPos += QPointF(-q_rect.width() - q_rect.width() / 3, -q_rect.height() / 2);
             painter->drawText(drawPos.x(), drawPos.y(), q_rect.width(), q_rect.height(), Qt::AlignCenter, q_text);
         }
     }
