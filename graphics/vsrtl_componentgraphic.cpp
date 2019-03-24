@@ -202,9 +202,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         case GeometryChange::Expand:
         case GeometryChange::ChildJustCollapsed:
         case GeometryChange::ChildJustExpanded: {
-            if (!rectContainsAllSubcomponents(sceneGridRect())) {
-                m_gridRect = subcomponentBoundingGridRect();
-            }
+            m_gridRect = subcomponentBoundingGridRect();
             break;
         }
     }
