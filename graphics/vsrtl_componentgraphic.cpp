@@ -222,18 +222,19 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         // Some fancy logic for positioning IO positions in the best way to facilitate nice signal lines between
         // components
     } else {
-        // Component is unexpanded - IO should be positionen in even positions
+        // Component is unexpanded - IO should be positionen in even positions.
+        // +2 to ensure a 1 grid margin at the top and bottom of the component
         int i = 0;
-        const qreal in_seg_y = sceneRect.height() / m_inputPorts.size();
+        const qreal in_seg_y = sceneRect.height() / (m_inputPorts.size());
         for (const auto& p : m_inputPorts) {
-            const qreal y = i * in_seg_y + in_seg_y / 2;
+            const qreal y = roundUp((i * in_seg_y + in_seg_y / 2), GRID_SIZE) - GRID_SIZE / 2;
             p->setPos(QPointF(sceneRect.left() - p->boundingRect().width(), y));
             i++;
         }
         i = 0;
-        const qreal out_seg_y = sceneRect.height() / m_outputPorts.size();
+        const qreal out_seg_y = sceneRect.height() / (m_outputPorts.size());
         for (const auto& p : m_outputPorts) {
-            const qreal y = i * out_seg_y + out_seg_y / 2;
+            const qreal y = roundUp((i * out_seg_y + out_seg_y / 2), GRID_SIZE) - GRID_SIZE / 2;
             p->setPos(QPointF(sceneRect.right(), y));
             i++;
         }
