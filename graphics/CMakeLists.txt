@@ -16,6 +16,12 @@ file ( GLOB RESOURCES resources/*.qrc)
 ######################################################################
 
 add_library(${GRAPHICS_LIB} ${LIB_SOURCES} ${LIB_HEADERS} ${UIS} ${RESOURCES} )
+
+option(VSRTL_DEBUG_DRAWING "Draw bounding rectangles & scene grid background" OFF)
+if(VSRTL_DEBUG_DRAWING)
+    target_compile_definitions(${GRAPHICS_LIB} PRIVATE VSRTL_DEBUG_DRAW=1)
+endif()
+
 target_link_libraries(${GRAPHICS_LIB} Qt5::Core Qt5::Widgets)
 
 target_include_directories(${GRAPHICS_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
