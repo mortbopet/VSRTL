@@ -1,5 +1,6 @@
 #include "vsrtl_componentgraphic.h"
 
+#include "vsrtl_componentbutton.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_label.h"
@@ -19,6 +20,8 @@
 #include <QStyleOptionGraphicsItem>
 
 #include <QDebug>
+#include <QMatrix>
+#include <QPushButton>
 
 namespace vsrtl {
 
@@ -76,11 +79,8 @@ void ComponentGraphic::initialize() {
 
     if (hasSubcomponents()) {
         // Setup expand button
-        m_expandButton = new QToolButton();
-        m_expandButton->setCheckable(true);
-        QObject::connect(m_expandButton, &QToolButton::toggled, [this](bool expanded) { setExpanded(expanded); });
-        m_expandButtonProxy = scene()->addWidget(m_expandButton);
-        m_expandButtonProxy->setParentItem(this);
+        m_expandButton = new ComponentButton(this);
+        connect(m_expandButton, &ComponentButton::toggled, [this](bool expanded) { setExpanded(expanded); });
 
         createSubcomponents();
         placeAndRouteSubcomponents();
@@ -130,13 +130,11 @@ void ComponentGraphic::setExpanded(bool state) {
 
         if (!m_isExpanded) {
             changeReason = GeometryChange::Collapse;
-            m_expandButton->setIcon(QIcon(":/icons/plus.svg"));
             for (const auto& c : m_subcomponents) {
                 c->hide();
             }
         } else {
             changeReason = GeometryChange::Expand;
-            m_expandButton->setIcon(QIcon(":/icons/minus.svg"));
             for (const auto& c : m_subcomponents) {
                 c->show();
             }
@@ -251,12 +249,12 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     // 5. Position the expand-button
     if (hasSubcomponents()) {
         if (m_isExpanded) {
-            m_expandButtonProxy->setPos(QPointF(0, 0));
+            m_expandButton->setPos(QPointF(0, 0));
         } else {
             // Center
-            const qreal x = sceneRect.width() / 2 - m_expandButton->width() / 2;
-            const qreal y = sceneRect.height() / 2 - m_expandButton->height() / 2;
-            m_expandButtonProxy->setPos(QPointF(x, y));
+            const qreal x = sceneRect.width() / 2 - m_expandButton->boundingRect().width() / 2;
+            const qreal y = sceneRect.height() / 2 - m_expandButton->boundingRect().height() / 2;
+            m_expandButton->setPos(QPointF(x, y));
         }
     }
 
@@ -340,9 +338,9 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     if (hasSubcomponents()) {
         // Determine whether expand button should be shown
         if (lod >= 0.35) {
-            m_expandButtonProxy->show();
+            m_expandButton->show();
         } else {
-            m_expandButtonProxy->hide();
+            m_expandButton->hide();
         }
     }
 

@@ -13,6 +13,7 @@ namespace vsrtl {
 
 class PortGraphic;
 class Label;
+class ComponentButton;
 
 class ComponentGraphic : public GraphicsBase {
 public:
@@ -90,8 +91,7 @@ protected:
 
     Component& m_component;
 
-    QToolButton* m_expandButton = nullptr;
-    QGraphicsProxyWidget* m_expandButtonProxy = nullptr;
+    ComponentButton* m_expandButton = nullptr;
 
 public:
     /**
