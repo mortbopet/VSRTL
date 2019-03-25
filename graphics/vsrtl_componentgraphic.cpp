@@ -164,6 +164,20 @@ QRect ComponentGraphic::subcomponentBoundingGridRect() const {
     return sceneToGrid(sceneBoundingRect);
 }
 
+QRect ComponentGraphic::adjustedMinGridRect() const {
+    // Returns the minimum grid rect of the current component with ports taken into account
+
+    // Add height to component based on the largest number of input or output ports. There should always be a
+    // margin of 1 on top- and bottom of component
+    QRect adjustedRect = m_minGridRect;
+    const int largestPortSize = m_inputPorts.size() > m_outputPorts.size() ? m_inputPorts.size() : m_outputPorts.size();
+    const int heightToAdd = (largestPortSize + 2) - adjustedRect.height();
+    if (heightToAdd > 0) {
+        adjustedRect.adjust(0, 0, 0, heightToAdd);
+    }
+    return adjustedRect;
+}
+
 void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     // Rect will change when expanding, so notify canvas that the rect of the current component will be dirty
     prepareGeometryChange();
@@ -177,14 +191,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     switch (flag) {
         case GeometryChange::Collapse:
         case GeometryChange::None: {
-            m_gridRect = m_minGridRect;
-
-            // Add height to component based on the largest number of input or output ports. There should always be a
-            // margin of 1 on top- and bottom of component
-            int largestPortSize =
-                m_inputPorts.size() > m_outputPorts.size() ? m_inputPorts.size() : m_outputPorts.size();
-            if ((m_gridRect.height() - 2) <= largestPortSize)
-                m_gridRect.adjust(0, 0, 0, largestPortSize - 2);
+            m_gridRect = adjustedMinGridRect();
 
             // Add width to the component based on the name of the component - we define that 2 characters is equal to 1
             // grid spacing : todo; this ratio should be configurable
@@ -367,7 +374,7 @@ bool ComponentGraphic::snapToMinGridRect(QRect& r) const {
     snap_r = false;
     snap_b = false;
 
-    const auto& cmpRect = hasSubcomponents() && isExpanded() ? subcomponentBoundingGridRect() : m_minGridRect;
+    const auto& cmpRect = hasSubcomponents() && isExpanded() ? subcomponentBoundingGridRect() : adjustedMinGridRect();
 
     if (r.right() < cmpRect.right()) {
         r.setRight(cmpRect.right());
