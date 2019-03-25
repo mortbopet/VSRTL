@@ -2,7 +2,9 @@
 #include "ui_vsrtl_widget.h"
 #include "vsrtl_design.h"
 #include "vsrtl_portgraphic.h"
+#include "vsrtl_scene.h"
 #include "vsrtl_traversal_util.h"
+#include "vsrtl_view.h"
 
 #include "vsrtl_shape.h"
 
@@ -22,7 +24,7 @@ VSRTLWidget::VSRTLWidget(Design& arch, QWidget* parent) : m_arch(arch), QWidget(
 
     m_view = new VSRTLView(this);
     m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);
-    m_scene = new QGraphicsScene(this);
+    m_scene = new VSRTLScene(this);
     m_view->setScene(m_scene);
     ui->viewLayout->addWidget(m_view);
     connect(m_scene, &QGraphicsScene::selectionChanged, this, (&VSRTLWidget::handleSceneSelectionChanged));

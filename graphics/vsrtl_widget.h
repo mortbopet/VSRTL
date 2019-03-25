@@ -3,11 +3,13 @@
 
 #include <QMainWindow>
 #include "vsrtl_componentgraphic.h"
-#include "vsrtl_view.h"
 
 QT_FORWARD_DECLARE_CLASS(QGraphicsScene)
 
 namespace vsrtl {
+
+class VSRTLView;
+class VSRTLScene;
 
 namespace Ui {
 class VSRTLWidget;
@@ -52,7 +54,7 @@ private:
     Ui::VSRTLWidget* ui;
 
     VSRTLView* m_view;
-    QGraphicsScene* m_scene;
+    VSRTLScene* m_scene;
 
     Design& m_arch;
 };
