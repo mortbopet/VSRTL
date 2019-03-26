@@ -259,40 +259,75 @@ std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placem
 
     // Find intersections between horizontal and vertical region lines, and create corresponding routing regions.
     QPoint regionTopRight, regionBottomLeft, regionBottomRight, regionTopLeft;
+    QPoint regionBottom, regionTop;
+    Line* topHzLine;
     for (int hi = 1; hi < hz_region_lines.size(); hi++) {
         for (int vi = 1; vi < vt_region_lines.size(); vi++) {
+            if (hi == 3 && vi == 2) {
+                volatile int a;
+            }
             const auto& vt_region_line = vt_region_lines[vi];
             const auto& hz_region_line = hz_region_lines[hi];
-            if (hz_region_line.intersect(vt_region_line, regionBottomRight, IntersectType::OnEdge)) {
-                // Intersection found (bottom right of region), a region may be created.
+            if (hz_region_line.intersect(vt_region_line, regionBottom, IntersectType::OnEdge)) {
+                // Intersection found (bottom left or right point of region)
+
                 // 1. Locate the point above the current intersection point (top right of region)
                 for (int hi_rev = hi - 1; hi_rev >= 0; hi_rev--) {
-                    if (hz_region_lines[hi_rev].intersect(vt_region_line, regionTopRight, IntersectType::OnEdge)) {
+                    topHzLine = &hz_region_lines[hi_rev];
+                    if (topHzLine->intersect(vt_region_line, regionTop, IntersectType::OnEdge)) {
+                        // Intersection found (top left or right point of region)
                         break;
+                    }
+                }
+                // Determine whether bottom right or bottom left point was found
+                if (vt_region_line.p1().x() == hz_region_line.p1().x()) {
+                    // Bottom left corner was found
+                    regionBottomLeft = regionBottom;
+                    // Locate bottom right of region
+                    for (int vi_rev = vi + 1; vi_rev < vt_region_lines.size(); vi_rev++) {
+                        if (hz_region_line.intersect(vt_region_lines[vi_rev], regionBottomRight,
+                                                     IntersectType::OnEdge)) {
+                            break;
+                        }
+                    }
+                } else {
+                    // Bottom right corner was found.
+                    // Check whether topHzLine terminates in the topRightCorner - in this case, there can be no routing
+                    // region here (the region would pass into a component). No check is done for when the bottom left
+                    // corner is found,given that the algorithm iterates from vertical lines, left to right.
+                    if (topHzLine->p1().x() == regionBottom.x()) {
+                        continue;
+                    }
+                    regionBottomRight = regionBottom;
+                    // Locate bottom left of region
+                    for (int vi_rev = vi - 1; vi_rev >= 0; vi_rev--) {
+                        if (hz_region_line.intersect(vt_region_lines[vi_rev], regionBottomLeft,
+                                                     IntersectType::OnEdge)) {
+                            break;
+                        }
                     }
                 }
 
-                // 2. Locate the point to the left of the current intersection point (bottom right of region)
-                for (int vi_rev = vi - 1; vi_rev >= 0; vi_rev--) {
-                    if (hz_region_line.intersect(vt_region_lines[vi_rev], regionBottomLeft, IntersectType::OnEdge)) {
-                        break;
-                    }
-                }
+                // Set top right and left coordinates
+                regionTopRight = QPoint(regionBottomRight.x(), regionTop.y());
+                regionTopLeft = QPoint(regionBottomLeft.x(), regionTop.y());
 
                 // Sanity check
                 Q_ASSERT(!regionBottomLeft.isNull() && !regionTopRight.isNull());
-                regionTopLeft = QPoint(regionBottomLeft.x(), regionTopRight.y());
 
                 // Check whether the region is enclosing a component.
                 // Note: (1,1) is subtracted from the bottom right corner to transform the coordinates into the QRect
                 // expected format of the bottom-right corner
                 QRect newRegionRect = QRect(regionTopLeft, regionBottomRight - QPoint(1, 1));
-                auto it = std::find_if(placement.components.begin(), placement.components.end(),
-                                       [&newRegionRect](const auto& r) { return r == newRegionRect; });
 
-                if (it == placement.components.end()) {
-                    // This is a new routing regio
-                    regions.push_back(std::make_unique<RoutingRegion>(newRegionRect));
+                if (std::find(placement.components.begin(), placement.components.end(), newRegionRect) ==
+                    placement.components.end()) {
+                    if (std::find_if(regions.begin(), regions.end(), [&newRegionRect](const auto& p) {
+                            return p.get()->r == newRegionRect;
+                        }) == regions.end())
+
+                        // This is a new routing region
+                        regions.push_back(std::make_unique<RoutingRegion>(newRegionRect));
                     RoutingRegion* newRegion = regions.rbegin()->get();
 
                     // Add region to regionGroups
