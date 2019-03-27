@@ -54,7 +54,7 @@ private:
     ValueDisplayFormat m_valueBase = ValueDisplayFormat::baseTen;
 
     QRectF m_boundingRect;
-    QRectF m_innerRect;
+    QRectF m_textRect;
 
     PortType m_type;
     Port* m_port;

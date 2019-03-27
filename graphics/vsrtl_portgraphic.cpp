@@ -84,11 +84,11 @@ QRectF PortGraphic::boundingRect() const {
 }
 
 QPointF PortGraphic::getInputPoint() const {
-    return QPointF(m_boundingRect.left(), 0);
+    return QPointF(0, 0);
 }
 
 QPointF PortGraphic::getOutputPoint() const {
-    return QPointF(m_boundingRect.right(), 0);
+    return QPointF(GRID_SIZE, 0);
 }
 
 void PortGraphic::updatePenColor() {
@@ -144,9 +144,17 @@ void PortGraphic::updateGeometry() {
     }
 
     QFontMetrics fm(m_font);
-    const auto textRect = fm.boundingRect(m_widthText);
+    m_textRect = fm.boundingRect(m_widthText);
 
-    m_boundingRect = QRectF(0, 0, textRect.width() + PORT_INNER_MARGIN, textRect.height() + PORT_INNER_MARGIN);
+    if (m_type == PortType::out) {
+        m_boundingRect = QRectF(0, 0, m_textRect.width() + PORT_INNER_MARGIN, m_textRect.height() + PORT_INNER_MARGIN);
+    } else {
+        m_boundingRect = QRectF(GRID_SIZE - m_textRect.width() - PORT_INNER_MARGIN, 0,
+                                m_textRect.width() + PORT_INNER_MARGIN, m_textRect.height() + PORT_INNER_MARGIN);
+    }
+
+    // Adjust for pen sizes etc.
+    m_boundingRect.adjust(-5, -5, 5, 5);
 }
 
 const QPen& PortGraphic::getPen() {
@@ -163,11 +171,11 @@ const QPen& PortGraphic::getPen() {
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
     painter->save();
     painter->setFont(m_font);
-    const int offset = m_type == PortType::out ? PORT_INNER_MARGIN : 0;
-    painter->drawText(QPointF(offset, m_boundingRect.height() / 2 + PORT_INNER_MARGIN), m_widthText);
+    const int offset = m_type == PortType::out ? PORT_INNER_MARGIN : GRID_SIZE - m_textRect.width() - PORT_INNER_MARGIN;
+    painter->drawText(QPointF(offset, m_textRect.height() / 2 + PORT_INNER_MARGIN), m_widthText);
 
     painter->setPen(getPen());
-    painter->drawLine(QPointF(0, 0), QPointF(m_boundingRect.width(), 0));
+    painter->drawLine(QPointF(0, 0), QPointF(GRID_SIZE, 0));
 
     painter->restore();
 
