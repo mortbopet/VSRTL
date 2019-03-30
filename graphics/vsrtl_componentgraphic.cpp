@@ -83,7 +83,6 @@ void ComponentGraphic::initialize() {
         connect(m_expandButton, &ComponentButton::toggled, [this](bool expanded) { setExpanded(expanded); });
 
         createSubcomponents();
-        placeAndRouteSubcomponents();
     }
 
     // By default, a component is collapsed. This has no effect if a component does not have any subcomponents
@@ -114,18 +113,16 @@ void ComponentGraphic::createSubcomponents() {
     }
 }
 
-void ComponentGraphic::placeAndRouteSubcomponents() {
-    const auto& placements = PlaceRoute::get()->placeAndRoute(m_subcomponents);
-    for (const auto& p : placements) {
-        p.first->setPos(p.second);
-    }
+void ComponentGraphic::setGridPos(const QPoint& p) {
+    m_gridPos = p;
 }
 
 void ComponentGraphic::setExpanded(bool state) {
     m_isExpanded = state;
     GeometryChange changeReason = GeometryChange::None;
 
-    if (m_expandButton != nullptr) {
+    if (hasSubcomponents()) {
+        Q_ASSERT(m_expandButton != nullptr);
         m_expandButton->setChecked(m_isExpanded);
 
         if (!m_isExpanded) {
@@ -138,11 +135,16 @@ void ComponentGraphic::setExpanded(bool state) {
             for (const auto& c : m_subcomponents) {
                 c->show();
             }
+            placeAndRouteSubcomponents();
         }
     }
 
     // Recalculate geometry based on now showing child components
     updateGeometry(QRect(), changeReason);
+}
+
+void ComponentGraphic::placeAndRouteSubcomponents() {
+    PlaceRoute::get()->placeAndRoute(m_subcomponents);
 }
 
 ComponentGraphic* ComponentGraphic::getParent() const {
@@ -183,6 +185,9 @@ QRect ComponentGraphic::adjustedMinGridRect(bool includePorts) const {
         if (m_outputPorts.size() > 0)
             adjustedRect.adjust(0, 0, 1, 0);
     }
+
+    // Move to grid position
+    adjustedRect.moveTo(m_gridPos);
 
     return adjustedRect;
 }

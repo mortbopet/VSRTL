@@ -5,6 +5,7 @@
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_traversal_util.h"
 
+#include <QRect>
 #include <cmath>
 #include <deque>
 
@@ -33,8 +34,7 @@ void topologicalSortUtil(Component* c, std::map<Component*, bool>& visited, std:
     stack.push_front(c);
 }
 
-std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) {
-    std::map<ComponentGraphic*, QPointF> placements;
+void topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) {
     std::map<Component*, bool> visited;
     std::deque<Component*> stack;
 
@@ -48,14 +48,13 @@ std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<
     }
 
     // Position components
-    QPointF pos = QPointF(25, 25);  // Start a bit offset from the parent borders
+    auto pos = QPoint(4, 4);  // Start a bit offset from the chip boundary borders
     for (const auto& c : stack) {
         auto* g = getGraphic<ComponentGraphic*>(c);
-        placements[g] = pos;
-        pos.rx() += g->boundingRect().width() + COMPONENT_COLUMN_MARGIN;
+        g->setGridPos(pos);
+        // Add 4 grid spaces between each component
+        pos.rx() += g->adjustedMinGridRect(true).width() + 4;
     }
-
-    return placements;
 }
 
 namespace {
@@ -378,16 +377,34 @@ std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placem
     return regions;
 }
 
-std::map<ComponentGraphic*, QPointF> PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components) const {
+void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components) const {
     auto netlist = createNetlist(components);
     // Placement
     switch (m_placementAlgorithm) {
         case PlaceAlg::TopologicalSort: {
-            return topologicalSortPlacement(components);
+            topologicalSortPlacement(components);
+            break;
         }
         default:
             Q_ASSERT(false);
     }
+
+    // Place graphical components based on new position of grid components
+    for (const auto& c : components) {
+        const QPoint gridPos = c->adjustedMinGridRect(true).topLeft();
+        c->setPos(gridPos * GRID_SIZE);
+    }
+
+    // Connectivity graph: Transform current components into a placement format suitable for creating the connectivity
+    // graph
+    Placement placement;
+    for (const auto& c : components) {
+        placement.components << c->adjustedMinGridRect(true);
+    }
+    placement.chipRect = boundingRectOfRects(placement.components);
+    auto cGraph = createConnectivityGraph(placement);
+
+    // Placement
 }
 
 }  // namespace vsrtl

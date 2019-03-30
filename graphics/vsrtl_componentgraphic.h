@@ -39,6 +39,8 @@ public:
 
     void setExpanded(bool isExpanded);
     bool hasSubcomponents() const;
+    void setGridPos(const QPoint& p);
+    QRect adjustedMinGridRect(bool includePorts) const;
 
     const auto& outputPorts() const { return m_outputPorts; }
 
@@ -64,7 +66,6 @@ protected:
     bool snapToMinGridRect(QRect& r) const;
     void placeAndRouteSubcomponents();
     QRect subcomponentBoundingGridRect() const;
-    QRect adjustedMinGridRect(bool includePorts) const;
 
     ComponentGraphic* getParent() const;
 
@@ -84,7 +85,8 @@ protected:
 
     // Rectangels:
     const QRect m_minGridRect;  // Minimum component size in grid-coordinates
-    QRect m_gridRect;           // Current component size in grid-coordinates
+    QPoint m_gridPos;
+    QRect m_gridRect;  // Current component size in grid-coordinates
     QPainterPath m_shape;
 
     QFont m_font;

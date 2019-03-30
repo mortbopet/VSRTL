@@ -92,7 +92,7 @@ public:
 
     /** @todo: Return a data structure which may be interpreted by the calling ComponentGraphic to place its
      * subcomponents and draw the signal paths. For now, just return a structure suitable for placement*/
-    std::map<ComponentGraphic*, QPointF> placeAndRoute(const std::vector<ComponentGraphic*>& components) const;
+    void placeAndRoute(const std::vector<ComponentGraphic*>& components) const;
 
 private:
     PlaceRoute() {}
