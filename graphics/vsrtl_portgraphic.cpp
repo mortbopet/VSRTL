@@ -11,6 +11,8 @@
 
 namespace vsrtl {
 
+int PortGraphic::s_portGridWidth = 2;
+
 PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
     port->registerGraphic(this);
     setParentItem(parent);
@@ -88,7 +90,7 @@ QPointF PortGraphic::getInputPoint() const {
 }
 
 QPointF PortGraphic::getOutputPoint() const {
-    return QPointF(GRID_SIZE, 0);
+    return QPointF(s_portGridWidth * GRID_SIZE, 0);
 }
 
 void PortGraphic::updatePenColor() {
@@ -171,11 +173,12 @@ const QPen& PortGraphic::getPen() {
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
     painter->save();
     painter->setFont(m_font);
-    const int offset = m_type == PortType::out ? PORT_INNER_MARGIN : GRID_SIZE - m_textRect.width() - PORT_INNER_MARGIN;
+    const int offset = m_type == PortType::out ? PORT_INNER_MARGIN
+                                               : s_portGridWidth * GRID_SIZE - m_textRect.width() - PORT_INNER_MARGIN;
     painter->drawText(QPointF(offset, m_textRect.height() / 2 + PORT_INNER_MARGIN), m_widthText);
 
     painter->setPen(getPen());
-    painter->drawLine(QPointF(0, 0), QPointF(GRID_SIZE, 0));
+    painter->drawLine(QPointF(0, 0), QPointF(s_portGridWidth * GRID_SIZE, 0));
 
     painter->restore();
 

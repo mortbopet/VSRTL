@@ -62,7 +62,7 @@ protected:
     bool snapToMinGridRect(QRect& r) const;
     void placeAndRouteSubcomponents();
     QRect subcomponentBoundingGridRect() const;
-    QRect adjustedMinGridRect() const;
+    QRect adjustedMinGridRect(bool includePorts) const;
 
     ComponentGraphic* getParent() const;
 

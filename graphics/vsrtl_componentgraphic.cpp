@@ -162,7 +162,7 @@ QRect ComponentGraphic::subcomponentBoundingGridRect() const {
     return sceneToGrid(sceneBoundingRect);
 }
 
-QRect ComponentGraphic::adjustedMinGridRect() const {
+QRect ComponentGraphic::adjustedMinGridRect(bool includePorts) const {
     // Returns the minimum grid rect of the current component with ports taken into account
 
     // Add height to component based on the largest number of input or output ports. There should always be a
@@ -173,6 +173,17 @@ QRect ComponentGraphic::adjustedMinGridRect() const {
     if (heightToAdd > 0) {
         adjustedRect.adjust(0, 0, 0, heightToAdd);
     }
+
+    if (includePorts) {
+        // To the view of the place/route algorithms, ports reside on the edge of a component - however, this is not how
+        // components are drawn. Ports are defined as 1 grid tick wide, add this o each side if there are input/output
+        // ports
+        if (m_inputPorts.size() > 0)
+            adjustedRect.adjust(0, 0, 1, 0);
+        if (m_outputPorts.size() > 0)
+            adjustedRect.adjust(0, 0, 1, 0);
+    }
+
     return adjustedRect;
 }
 
@@ -189,7 +200,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     switch (flag) {
         case GeometryChange::Collapse:
         case GeometryChange::None: {
-            m_gridRect = adjustedMinGridRect();
+            m_gridRect = adjustedMinGridRect(false);
 
             // Add width to the component based on the name of the component - we define that 2 characters is equal to 1
             // grid spacing : todo; this ratio should be configurable
@@ -226,7 +237,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         const qreal in_seg_y = sceneRect.height() / (m_inputPorts.size());
         for (const auto& p : m_inputPorts) {
             const qreal y = roundUp((i * in_seg_y + in_seg_y / 2), GRID_SIZE) - GRID_SIZE / 2;
-            p->setPos(QPointF(sceneRect.left() - GRID_SIZE, y));
+            p->setPos(QPointF(sceneRect.left() - GRID_SIZE * PortGraphic::portGridWidth(), y));
             i++;
         }
         i = 0;
@@ -373,7 +384,8 @@ bool ComponentGraphic::snapToMinGridRect(QRect& r) const {
     snap_r = false;
     snap_b = false;
 
-    const auto& cmpRect = hasSubcomponents() && isExpanded() ? subcomponentBoundingGridRect() : adjustedMinGridRect();
+    const auto& cmpRect =
+        hasSubcomponents() && isExpanded() ? subcomponentBoundingGridRect() : adjustedMinGridRect(true);
 
     if (r.right() < cmpRect.right()) {
         r.setRight(cmpRect.right());

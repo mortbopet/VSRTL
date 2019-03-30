@@ -38,6 +38,8 @@ public:
 
     const QPen& getPen();
 
+    static int portGridWidth() { return s_portGridWidth; }
+
 private slots:
     void updatePenColor();
 
@@ -52,6 +54,8 @@ private:
     bool m_selected = false;
     bool m_showValue = false;
     ValueDisplayFormat m_valueBase = ValueDisplayFormat::baseTen;
+
+    static int s_portGridWidth;
 
     QRectF m_boundingRect;
     QRectF m_textRect;
