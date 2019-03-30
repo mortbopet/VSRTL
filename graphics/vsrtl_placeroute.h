@@ -11,7 +11,10 @@
 namespace vsrtl {
 
 class ComponentGraphic;
+class PortGraphic;
 class Component;
+
+enum class Edge { Top, Bottom, Left, Right };
 
 struct Placement {
     QRect chipRect;
@@ -56,6 +59,16 @@ struct RoutingRegion {
         return r == lhs.r;
     }
 };
+
+struct NetNode {
+    PortGraphic* port = nullptr;
+    RoutingRegion* region = nullptr;
+    Edge edgePos;
+    unsigned int edgeIndex;
+};
+
+using Net = std::vector<NetNode>;
+using Netlist = std::vector<Net>;
 
 std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placement&);
 

@@ -2,6 +2,7 @@
 #include "vsrtl_component.h"
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_graphics_defines.h"
+#include "vsrtl_portgraphic.h"
 #include "vsrtl_traversal_util.h"
 
 #include <cmath>
@@ -55,16 +56,6 @@ std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<
     }
 
     return placements;
-}
-
-std::map<ComponentGraphic*, QPointF> PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components) const {
-    switch (m_placementAlgorithm) {
-        case PlaceAlg::TopologicalSort: {
-            return topologicalSortPlacement(components);
-        }
-        default:
-            Q_ASSERT(false);
-    }
 }
 
 namespace {
@@ -141,7 +132,6 @@ private:
     Orientation m_orientation;
 };
 
-enum class Edge { Top, Bottom, Left, Right };
 static inline Line getEdge(const QRect& rect, Edge e) {
     // Qt "For historical reasons" return points which are offset by 1 for all rect points other than topleft. To ensure
     // control over this, we manually derive edge points, https://doc.qt.io/Qt-5/qrect.html#bottomRight
@@ -166,6 +156,29 @@ static inline Line getEdge(const QRect& rect, Edge e) {
 }
 
 }  // namespace
+
+Netlist createNetlist(const std::vector<ComponentGraphic*>& components) {
+    Netlist netlist;
+    for (const auto& c : components) {
+        for (const auto& outputPort : c->outputPorts()) {
+            Net net;
+            NetNode source;
+            source.edgeIndex = outputPort->gridIndex();
+            source.edgePos = Edge::Right;
+            source.port = outputPort;
+            net.push_back(source);
+            for (const auto& sinkPort : outputPort->getPort()->getOutputPorts()) {
+                NetNode sink;
+                sink.port = getGraphic<PortGraphic*>(sinkPort);
+                sink.edgeIndex = sink.port->gridIndex();
+                sink.edgePos = Edge::Left;
+                net.push_back(sink);
+            }
+            netlist.push_back(net);
+        }
+    }
+    return netlist;
+}
 
 std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
@@ -363,6 +376,18 @@ std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placem
     }
 
     return regions;
+}
+
+std::map<ComponentGraphic*, QPointF> PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components) const {
+    auto netlist = createNetlist(components);
+    // Placement
+    switch (m_placementAlgorithm) {
+        case PlaceAlg::TopologicalSort: {
+            return topologicalSortPlacement(components);
+        }
+        default:
+            Q_ASSERT(false);
+    }
 }
 
 }  // namespace vsrtl
