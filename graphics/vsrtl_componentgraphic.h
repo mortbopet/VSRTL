@@ -40,6 +40,8 @@ public:
     void setExpanded(bool isExpanded);
     bool hasSubcomponents() const;
 
+    const auto& outputPorts() const { return m_outputPorts; }
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;

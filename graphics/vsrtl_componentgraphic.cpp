@@ -236,14 +236,18 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         int i = 0;
         const qreal in_seg_y = sceneRect.height() / (m_inputPorts.size());
         for (const auto& p : m_inputPorts) {
-            const qreal y = roundUp((i * in_seg_y + in_seg_y / 2), GRID_SIZE) - GRID_SIZE / 2;
+            int gridIndex = roundUp((i * in_seg_y + in_seg_y / 2), GRID_SIZE) / GRID_SIZE;
+            p->setGridIndex(gridIndex);
+            const qreal y = gridIndex * GRID_SIZE - GRID_SIZE / 2;
             p->setPos(QPointF(sceneRect.left() - GRID_SIZE * PortGraphic::portGridWidth(), y));
             i++;
         }
         i = 0;
         const qreal out_seg_y = sceneRect.height() / (m_outputPorts.size());
         for (const auto& p : m_outputPorts) {
-            const qreal y = roundUp((i * out_seg_y + out_seg_y / 2), GRID_SIZE) - GRID_SIZE / 2;
+            const int gridIndex = roundUp((i * out_seg_y + out_seg_y / 2), GRID_SIZE) / GRID_SIZE;
+            p->setGridIndex(gridIndex);
+            const qreal y = gridIndex * GRID_SIZE - GRID_SIZE / 2;
             p->setPos(QPointF(sceneRect.right(), y));
             i++;
         }
