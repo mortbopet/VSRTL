@@ -41,7 +41,7 @@ public:
     void setExpanded(bool isExpanded);
     bool hasSubcomponents() const;
     void setGridPos(const QPoint& p);
-    QRect adjustedMinGridRect(bool includePorts) const;
+    QRect adjustedMinGridRect(bool includePorts, bool moveToPos = true) const;
 
     const auto& outputPorts() const { return m_outputPorts; }
 

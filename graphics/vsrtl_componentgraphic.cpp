@@ -163,7 +163,7 @@ QRect ComponentGraphic::subcomponentBoundingGridRect() const {
     return sceneToGrid(sceneBoundingRect);
 }
 
-QRect ComponentGraphic::adjustedMinGridRect(bool includePorts) const {
+QRect ComponentGraphic::adjustedMinGridRect(bool includePorts, bool moveToGridPos) const {
     // Returns the minimum grid rect of the current component with ports taken into account
 
     // Add height to component based on the largest number of input or output ports. There should always be a
@@ -177,16 +177,17 @@ QRect ComponentGraphic::adjustedMinGridRect(bool includePorts) const {
 
     if (includePorts) {
         // To the view of the place/route algorithms, ports reside on the edge of a component - however, this is not how
-        // components are drawn. Ports are defined as 1 grid tick wide, add this o each side if there are input/output
-        // ports
+        // components are drawn.
         if (m_inputPorts.size() > 0)
-            adjustedRect.adjust(0, 0, 1, 0);
+            adjustedRect.adjust(0, 0, PortGraphic::portGridWidth(), 0);
         if (m_outputPorts.size() > 0)
-            adjustedRect.adjust(0, 0, 1, 0);
+            adjustedRect.adjust(0, 0, PortGraphic::portGridWidth(), 0);
     }
 
-    // Move to grid position
-    adjustedRect.moveTo(m_gridPos);
+    // Move to grid position in parent coordinate system
+    if (moveToGridPos) {
+        adjustedRect.moveTo(m_gridPos);
+    }
 
     return adjustedRect;
 }
@@ -372,18 +373,20 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     painter->drawRect(sceneGridRect());
     painter->restore();
     DRAW_BOUNDING_RECT(painter)
-#endif
 
     // Routing regions
-    painter->save();
-    painter->setPen(Qt::red);
-    for (const auto& rr : m_routingRegions) {
-        auto rect = rr.get()->r;
-        scaleToGrid(rect, GRID_SIZE);
-        painter->drawRect(rect);
+    if (hasSubcomponents() && m_isExpanded) {
+        painter->save();
+        painter->setPen(Qt::red);
+        auto br = boundingRect();
+        for (const auto& rr : m_routingRegions) {
+            auto sceneGridRect = gridToScene(rr.get()->r);
+            sceneGridRect.moveTo(rr.get()->r.topLeft() * GRID_SIZE);
+            painter->drawRect(sceneGridRect);
+        }
+        painter->restore();
     }
-    painter->restore();
-    DRAW_BOUNDING_RECT(painter)
+#endif
 }
 
 bool ComponentGraphic::rectContainsAllSubcomponents(const QRectF& r) const {
@@ -405,7 +408,7 @@ bool ComponentGraphic::snapToMinGridRect(QRect& r) const {
     snap_b = false;
 
     const auto& cmpRect =
-        hasSubcomponents() && isExpanded() ? subcomponentBoundingGridRect() : adjustedMinGridRect(true);
+        hasSubcomponents() && isExpanded() ? subcomponentBoundingGridRect() : adjustedMinGridRect(false, false);
 
     if (r.right() < cmpRect.right()) {
         r.setRight(cmpRect.right());
@@ -447,7 +450,6 @@ void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
         QPoint gridPos = (event->pos() / GRID_SIZE).toPoint();
         auto newGridRect = m_gridRect;
         newGridRect.setBottomRight(gridPos);
-
         updateGeometry(newGridRect, GeometryChange::Resize);
     }
 

@@ -276,9 +276,6 @@ RoutingRegions createConnectivityGraph(const Placement& placement) {
     Line* topHzLine;
     for (int hi = 1; hi < hz_region_lines.size(); hi++) {
         for (int vi = 1; vi < vt_region_lines.size(); vi++) {
-            if (hi == 3 && vi == 2) {
-                volatile int a;
-            }
             const auto& vt_region_line = vt_region_lines[vi];
             const auto& hz_region_line = hz_region_lines[hi];
             if (hz_region_line.intersect(vt_region_line, regionBottom, IntersectType::OnEdge)) {

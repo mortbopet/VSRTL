@@ -13,12 +13,6 @@ inline int roundUp(int v, int m) {
     return v + m - remainder;
 }
 
-template <typename RectType>
-inline void scaleToGrid(RectType& r, int gridsize) {
-    r.setWidth(r.width() * gridsize);
-    r.setHeight(r.height() * gridsize);
-}
-
 // Round v to nearest multiple of m (tie: round up)
 inline int roundNear(int v, int m) {
     return ((v + m / 2) / m) * m;
@@ -37,7 +31,13 @@ RectType boundingRectOfRects(const RectType& r1, const RectType& r2) {
     top = r1.top() < r2.top() ? r1.top() : r2.top();
     bottom = r1.bottom() > r2.bottom() ? r1.bottom() : r2.bottom();
 
-    return RectType(left, top, right, bottom);
+    RectType r;
+    r.setLeft(left);
+    r.setRight(right);
+    r.setTop(top);
+    r.setBottom(bottom);
+
+    return r;
 }
 
 template <typename RectType>
