@@ -5,7 +5,6 @@
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_label.h"
 #include "vsrtl_multiplexergraphic.h"
-#include "vsrtl_placeroute.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_registergraphic.h"
 #include "vsrtl_traversal_util.h"
@@ -144,7 +143,7 @@ void ComponentGraphic::setExpanded(bool state) {
 }
 
 void ComponentGraphic::placeAndRouteSubcomponents() {
-    PlaceRoute::get()->placeAndRoute(m_subcomponents);
+    m_routingRegions = pr::PlaceRoute::get().placeAndRoute(m_subcomponents);
 }
 
 ComponentGraphic* ComponentGraphic::getParent() const {
@@ -367,12 +366,24 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     paintOverlay(painter, option, w);
 
 #ifdef VSRTL_DEBUG_DRAW
+    // Bounding rect
     painter->save();
     painter->setPen(Qt::green);
     painter->drawRect(sceneGridRect());
     painter->restore();
     DRAW_BOUNDING_RECT(painter)
 #endif
+
+    // Routing regions
+    painter->save();
+    painter->setPen(Qt::red);
+    for (const auto& rr : m_routingRegions) {
+        auto rect = rr.get()->r;
+        scaleToGrid(rect, GRID_SIZE);
+        painter->drawRect(rect);
+    }
+    painter->restore();
+    DRAW_BOUNDING_RECT(painter)
 }
 
 bool ComponentGraphic::rectContainsAllSubcomponents(const QRectF& r) const {

@@ -8,6 +8,7 @@
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_graphicsbase.h"
+#include "vsrtl_placeroute.h"
 
 namespace vsrtl {
 
@@ -96,6 +97,7 @@ protected:
     Component& m_component;
 
     ComponentButton* m_expandButton = nullptr;
+    pr::RoutingRegions m_routingRegions;
 
 public:
     /**

@@ -12,39 +12,39 @@ void tst_connectivityGraph::testcreateConnectivityGraph() {
      * defined as a rectangle
      */
     // Define components
-    vsrtl::RoutingComponent chipRect(QPoint(0, 0), QSize(10, 12));
-    vsrtl::RoutingComponent c_A(QPoint(2, 3), QSize(3, 4));
-    vsrtl::RoutingComponent c_B(QPoint(2, 10), QSize(7, 1));
-    vsrtl::RoutingComponent c_C(QPoint(6, 1), QSize(3, 6));
+    vsrtl::pr::RoutingComponent chipRect(QPoint(0, 0), QSize(10, 12));
+    vsrtl::pr::RoutingComponent c_A(QPoint(2, 3), QSize(3, 4));
+    vsrtl::pr::RoutingComponent c_B(QPoint(2, 10), QSize(7, 1));
+    vsrtl::pr::RoutingComponent c_C(QPoint(6, 1), QSize(3, 6));
 
-    vsrtl::Placement p{chipRect, {c_A, c_B, c_C}};
+    vsrtl::pr::Placement p{chipRect, {c_A, c_B, c_C}};
 
     // Define verification routing regions
-    auto rr1 = vsrtl::RoutingRegion(QRect(QPoint(0, 0), QSize(2, 1)));
-    auto rr2 = vsrtl::RoutingRegion(QRect(QPoint(0, 1), QSize(2, 2)));
-    auto rr3 = vsrtl::RoutingRegion(QRect(QPoint(0, 3), QSize(2, 4)));
-    auto rr4 = vsrtl::RoutingRegion(QRect(QPoint(0, 7), QSize(2, 3)));
-    auto rr5 = vsrtl::RoutingRegion(QRect(QPoint(0, 10), QSize(2, 1)));
-    auto rr6 = vsrtl::RoutingRegion(QRect(QPoint(0, 11), QSize(2, 1)));
+    auto rr1 = vsrtl::pr::RoutingRegion(QRect(QPoint(0, 0), QSize(2, 1)));
+    auto rr2 = vsrtl::pr::RoutingRegion(QRect(QPoint(0, 1), QSize(2, 2)));
+    auto rr3 = vsrtl::pr::RoutingRegion(QRect(QPoint(0, 3), QSize(2, 4)));
+    auto rr4 = vsrtl::pr::RoutingRegion(QRect(QPoint(0, 7), QSize(2, 3)));
+    auto rr5 = vsrtl::pr::RoutingRegion(QRect(QPoint(0, 10), QSize(2, 1)));
+    auto rr6 = vsrtl::pr::RoutingRegion(QRect(QPoint(0, 11), QSize(2, 1)));
 
-    auto rr7 = vsrtl::RoutingRegion(QRect(QPoint(2, 0), QSize(3, 1)));
-    auto rr8 = vsrtl::RoutingRegion(QRect(QPoint(2, 1), QSize(3, 2)));
-    auto rr9 = vsrtl::RoutingRegion(QRect(QPoint(2, 7), QSize(3, 3)));
-    auto rr10 = vsrtl::RoutingRegion(QRect(QPoint(2, 11), QSize(7, 1)));
+    auto rr7 = vsrtl::pr::RoutingRegion(QRect(QPoint(2, 0), QSize(3, 1)));
+    auto rr8 = vsrtl::pr::RoutingRegion(QRect(QPoint(2, 1), QSize(3, 2)));
+    auto rr9 = vsrtl::pr::RoutingRegion(QRect(QPoint(2, 7), QSize(3, 3)));
+    auto rr10 = vsrtl::pr::RoutingRegion(QRect(QPoint(2, 11), QSize(7, 1)));
 
-    auto rr11 = vsrtl::RoutingRegion(QRect(QPoint(5, 0), QSize(1, 1)));
-    auto rr12 = vsrtl::RoutingRegion(QRect(QPoint(5, 1), QSize(1, 2)));
-    auto rr13 = vsrtl::RoutingRegion(QRect(QPoint(5, 3), QSize(1, 4)));
-    auto rr14 = vsrtl::RoutingRegion(QRect(QPoint(5, 7), QSize(1, 3)));
+    auto rr11 = vsrtl::pr::RoutingRegion(QRect(QPoint(5, 0), QSize(1, 1)));
+    auto rr12 = vsrtl::pr::RoutingRegion(QRect(QPoint(5, 1), QSize(1, 2)));
+    auto rr13 = vsrtl::pr::RoutingRegion(QRect(QPoint(5, 3), QSize(1, 4)));
+    auto rr14 = vsrtl::pr::RoutingRegion(QRect(QPoint(5, 7), QSize(1, 3)));
 
-    auto rr15 = vsrtl::RoutingRegion(QRect(QPoint(6, 0), QSize(3, 1)));
-    auto rr16 = vsrtl::RoutingRegion(QRect(QPoint(6, 7), QSize(3, 3)));
+    auto rr15 = vsrtl::pr::RoutingRegion(QRect(QPoint(6, 0), QSize(3, 1)));
+    auto rr16 = vsrtl::pr::RoutingRegion(QRect(QPoint(6, 7), QSize(3, 3)));
 
-    auto rr17 = vsrtl::RoutingRegion(QRect(QPoint(9, 0), QSize(1, 1)));
-    auto rr18 = vsrtl::RoutingRegion(QRect(QPoint(9, 1), QSize(1, 6)));
-    auto rr19 = vsrtl::RoutingRegion(QRect(QPoint(9, 7), QSize(1, 3)));
-    auto rr20 = vsrtl::RoutingRegion(QRect(QPoint(9, 10), QSize(1, 1)));
-    auto rr21 = vsrtl::RoutingRegion(QRect(QPoint(9, 11), QSize(1, 1)));
+    auto rr17 = vsrtl::pr::RoutingRegion(QRect(QPoint(9, 0), QSize(1, 1)));
+    auto rr18 = vsrtl::pr::RoutingRegion(QRect(QPoint(9, 1), QSize(1, 6)));
+    auto rr19 = vsrtl::pr::RoutingRegion(QRect(QPoint(9, 7), QSize(1, 3)));
+    auto rr20 = vsrtl::pr::RoutingRegion(QRect(QPoint(9, 10), QSize(1, 1)));
+    auto rr21 = vsrtl::pr::RoutingRegion(QRect(QPoint(9, 11), QSize(1, 1)));
 
     // Set routing region connections
     rr1.right = &rr7;
@@ -118,7 +118,7 @@ void tst_connectivityGraph::testcreateConnectivityGraph() {
     rr21.top = &rr20;
     rr21.left = &rr10;
 
-    std::vector<vsrtl::RoutingRegion> verificationRegions;
+    std::vector<vsrtl::pr::RoutingRegion> verificationRegions;
     verificationRegions.push_back(rr1);
     verificationRegions.push_back(rr2);
     verificationRegions.push_back(rr3);
@@ -141,7 +141,7 @@ void tst_connectivityGraph::testcreateConnectivityGraph() {
     verificationRegions.push_back(rr20);
     verificationRegions.push_back(rr21);
 
-    auto regions = vsrtl::createConnectivityGraph(p);
+    auto regions = vsrtl::pr::createConnectivityGraph(p);
 
     QVERIFY(regions.size() == verificationRegions.size());
 

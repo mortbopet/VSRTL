@@ -9,10 +9,11 @@
 #include <vector>
 
 namespace vsrtl {
-
 class ComponentGraphic;
 class PortGraphic;
 class Component;
+
+namespace pr {
 
 enum class Edge { Top, Bottom, Left, Right };
 
@@ -81,8 +82,9 @@ struct NetNode {
 
 using Net = std::vector<NetNode>;
 using Netlist = std::vector<Net>;
+using RoutingRegions = std::vector<std::unique_ptr<RoutingRegion>>;
 
-std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placement&);
+RoutingRegions createConnectivityGraph(const Placement&);
 
 enum class PlaceAlg { TopologicalSort };
 enum class RouteAlg { Direct };
@@ -94,9 +96,9 @@ enum class RouteAlg { Direct };
  */
 class PlaceRoute {
 public:
-    static const PlaceRoute* get() {
+    static PlaceRoute& get() {
         static PlaceRoute* instance = new PlaceRoute();
-        return instance;
+        return *instance;
     }
 
     void setPlacementAlgorithm(PlaceAlg alg) { m_placementAlgorithm = alg; }
@@ -104,7 +106,7 @@ public:
 
     /** @todo: Return a data structure which may be interpreted by the calling ComponentGraphic to place its
      * subcomponents and draw the signal paths. For now, just return a structure suitable for placement*/
-    void placeAndRoute(const std::vector<ComponentGraphic*>& components) const;
+    RoutingRegions placeAndRoute(const std::vector<ComponentGraphic*>& components);
 
 private:
     PlaceRoute() {}
@@ -112,6 +114,7 @@ private:
     PlaceAlg m_placementAlgorithm = PlaceAlg::TopologicalSort;
     RouteAlg m_routingAlgorithm = RouteAlg::Direct;
 };
+}  // namespace pr
 }  // namespace vsrtl
 
 #endif  // VSRTL_PLACEROUTE_H

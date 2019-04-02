@@ -10,6 +10,7 @@
 #include <deque>
 
 namespace vsrtl {
+namespace pr {
 
 /**
  * @brief topologicalSortUtil
@@ -179,7 +180,7 @@ Netlist createNetlist(const std::vector<ComponentGraphic*>& components) {
     return netlist;
 }
 
-std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placement& placement) {
+RoutingRegions createConnectivityGraph(const Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
     Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(placement.components)));
     Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
@@ -374,10 +375,19 @@ std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placem
         }
     }
 
+    // ======================= Routing Region Association ======================= //
+    for (auto& rc : placement.components) {
+        // Algorithm have failed if regionGroups does not contain an entry for each corner of all routing components
+        // Q_ASSERT(regionGroups.count(rc.topLeft()));
+        // Q_ASSERT(regionGroups.count(rc.topRight()));
+        // Q_ASSERT(regionGroups.count(rc.bottomRight()));
+        // Q_ASSERT(regionGroups.count(rc.bottomLeft()));
+    }
+
     return regions;
 }
 
-void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components) const {
+RoutingRegions PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components) {
     auto netlist = createNetlist(components);
     // Placement
     switch (m_placementAlgorithm) {
@@ -407,9 +417,11 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components)
     placement.chipRect = boundingRectOfRects(placement.components);
     auto cGraph = createConnectivityGraph(placement);
 
+    return cGraph;
     // Routing
 }
 
+}  // namespace pr
 }  // namespace vsrtl
 
 // less-than operator for QPointF, required for storing QPointF as index in a std::map
