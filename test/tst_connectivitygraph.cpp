@@ -12,10 +12,10 @@ void tst_connectivityGraph::testcreateConnectivityGraph() {
      * defined as a rectangle
      */
     // Define components
-    QRect chipRect(QPoint(0, 0), QSize(10, 12));
-    QRect c_A(QPoint(2, 3), QSize(3, 4));
-    QRect c_B(QPoint(2, 10), QSize(7, 1));
-    QRect c_C(QPoint(6, 1), QSize(3, 6));
+    vsrtl::RoutingComponent chipRect(QPoint(0, 0), QSize(10, 12));
+    vsrtl::RoutingComponent c_A(QPoint(2, 3), QSize(3, 4));
+    vsrtl::RoutingComponent c_B(QPoint(2, 10), QSize(7, 1));
+    vsrtl::RoutingComponent c_C(QPoint(6, 1), QSize(3, 6));
 
     vsrtl::Placement p{chipRect, {c_A, c_B, c_C}};
 

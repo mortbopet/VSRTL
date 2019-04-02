@@ -16,11 +16,6 @@ class Component;
 
 enum class Edge { Top, Bottom, Left, Right };
 
-struct Placement {
-    QRect chipRect;
-    QList<QRect> components;
-};
-
 struct RoutingRegion {
     RoutingRegion(QRect rect) {
         r = rect;
@@ -58,6 +53,23 @@ struct RoutingRegion {
 
         return r == lhs.r;
     }
+};
+
+class RoutingComponent : public QRect {
+public:
+    using QRect::QRect;
+    using QRect::operator=;
+
+    ComponentGraphic* component;
+    RoutingRegion* topRegion = nullptr;
+    RoutingRegion* leftRegion = nullptr;
+    RoutingRegion* rightRegion = nullptr;
+    RoutingRegion* bottomRegion = nullptr;
+};
+
+struct Placement {
+    QRect chipRect;
+    QList<RoutingComponent> components;
 };
 
 struct NetNode {

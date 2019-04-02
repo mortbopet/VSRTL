@@ -181,7 +181,7 @@ Netlist createNetlist(const std::vector<ComponentGraphic*>& components) {
 
 std::vector<std::unique_ptr<RoutingRegion>> createConnectivityGraph(const Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
-    Q_ASSERT(placement.chipRect.contains(boundingRectOfRects<QRect>(placement.components)));
+    Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(placement.components)));
     Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
 
     std::vector<std::unique_ptr<RoutingRegion>> regions;
@@ -399,12 +399,15 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components)
     // graph
     Placement placement;
     for (const auto& c : components) {
-        placement.components << c->adjustedMinGridRect(true);
+        RoutingComponent rc;
+        rc = (c->adjustedMinGridRect(true));
+        rc.component = c;
+        placement.components << rc;
     }
     placement.chipRect = boundingRectOfRects(placement.components);
     auto cGraph = createConnectivityGraph(placement);
 
-    // Placement
+    // Routing
 }
 
 }  // namespace vsrtl

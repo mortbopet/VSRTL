@@ -43,7 +43,7 @@ template <typename RectType>
 RectType boundingRectOfRects(const QList<RectType>& rects) {
     RectType br;
     for (const auto& r : rects) {
-        br = boundingRectOfRects<RectType>(br, r);
+        br = boundingRectOfRects(br, r);
     }
     return br;
 }
