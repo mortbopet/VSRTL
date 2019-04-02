@@ -13,7 +13,8 @@ inline int roundUp(int v, int m) {
     return v + m - remainder;
 }
 
-inline void scaleToGrid(QRectF& r, int gridsize) {
+template <typename RectType>
+inline void scaleToGrid(RectType& r, int gridsize) {
     r.setWidth(r.width() * gridsize);
     r.setHeight(r.height() * gridsize);
 }
