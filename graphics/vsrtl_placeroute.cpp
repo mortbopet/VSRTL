@@ -49,7 +49,7 @@ void topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) 
     }
 
     // Position components
-    auto pos = QPoint(4, 4);  // Start a bit offset from the chip boundary borders
+    auto pos = QPoint(CHIP_MARGIN, CHIP_MARGIN);  // Start a bit offset from the chip boundary borders
     for (const auto& c : stack) {
         auto* g = getGraphic<ComponentGraphic*>(c);
         g->setGridPos(pos);
@@ -133,24 +133,18 @@ private:
 };
 
 static inline Line getEdge(const QRect& rect, Edge e) {
-    // Qt "For historical reasons" return points which are offset by 1 for all rect points other than topleft. To ensure
-    // control over this, we manually derive edge points, https://doc.qt.io/Qt-5/qrect.html#bottomRight
-    const auto bottomLeft = rect.topLeft() + QPoint(0, rect.height());
-    const auto topRight = rect.topLeft() + QPoint(rect.width(), 0);
-    const auto bottomRight = bottomLeft + QPoint(rect.width(), 0);
-
     switch (e) {
         case Edge::Top: {
-            return Line(rect.topLeft(), topRight);
+            return Line(rect.topLeft(), rect.topRight());
         }
         case Edge::Bottom: {
-            return Line(bottomLeft, bottomRight);
+            return Line(rect.bottomLeft(), rect.bottomRight());
         }
         case Edge::Left: {
-            return Line(rect.topLeft(), bottomLeft);
+            return Line(rect.topLeft(), rect.bottomLeft());
         }
         case Edge::Right: {
-            return Line(topRight, bottomRight);
+            return Line(rect.topRight(), rect.bottomRight());
         }
     }
 }
@@ -318,17 +312,13 @@ RoutingRegions createConnectivityGraph(const Placement& placement) {
                     }
                 }
 
-                // Set top right and left coordinates
-                regionTopRight = QPoint(regionBottomRight.x(), regionTop.y());
+                // Set top left coordinate
                 regionTopLeft = QPoint(regionBottomLeft.x(), regionTop.y());
-
-                // Sanity check
-                Q_ASSERT(!regionBottomLeft.isNull() && !regionTopRight.isNull());
 
                 // Check whether the region is enclosing a component.
                 // Note: (1,1) is subtracted from the bottom right corner to transform the coordinates into the QRect
                 // expected format of the bottom-right corner
-                QRect newRegionRect = QRect(regionTopLeft, regionBottomRight - QPoint(1, 1));
+                QRect newRegionRect = QRect(regionTopLeft, regionBottomRight);
 
                 if (std::find(placement.components.begin(), placement.components.end(), newRegionRect) ==
                     placement.components.end()) {
@@ -341,10 +331,10 @@ RoutingRegions createConnectivityGraph(const Placement& placement) {
                     RoutingRegion* newRegion = regions.rbegin()->get();
 
                     // Add region to regionGroups
-                    regionGroups[regionTopLeft].bottomright = newRegion;
-                    regionGroups[regionBottomLeft].topright = newRegion;
-                    regionGroups[regionTopRight].bottomleft = newRegion;
-                    regionGroups[regionBottomRight].topleft = newRegion;
+                    regionGroups[newRegionRect.topLeft()].bottomright = newRegion;
+                    regionGroups[newRegionRect.bottomLeft()].topright = newRegion;
+                    regionGroups[newRegionRect.topRight()].bottomleft = newRegion;
+                    regionGroups[newRegionRect.bottomRight()].topleft = newRegion;
                 }
             }
         }
@@ -374,14 +364,20 @@ RoutingRegions createConnectivityGraph(const Placement& placement) {
 
     // ======================= Routing Region Association ======================= //
     for (auto& rc : placement.components) {
-        // Algorithm have failed if regionGroups does not contain an entry for each corner of all routing components
-        // Q_ASSERT(regionGroups.count(rc.topLeft()));
-        // Q_ASSERT(regionGroups.count(rc.topRight()));
-        // Q_ASSERT(regionGroups.count(rc.bottomRight()));
-        // Q_ASSERT(regionGroups.count(rc.bottomLeft()));
+        // The algorithm have failed if regionGroups does not contain an entry for each corner of all routing components
+        Q_ASSERT(regionGroups.count(rc.topLeft()));
+        Q_ASSERT(regionGroups.count(rc.topRight()));
+        Q_ASSERT(regionGroups.count(rc.bottomRight()));
+        Q_ASSERT(regionGroups.count(rc.bottomLeft()));
     }
 
     return regions;
+}
+
+QRect qrectToGridRect(const QRect& rect) {
+    QPoint bottomRight = rect.topLeft();
+    bottomRight += QPoint(rect.width(), rect.height());
+    return QRect(rect.topLeft(), bottomRight);
 }
 
 RoutingRegions PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components) {
@@ -412,6 +408,8 @@ RoutingRegions PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& c
         placement.components << rc;
     }
     placement.chipRect = boundingRectOfRects(placement.components);
+    // Add margins to chip rect to allow routing on right- and bottom borders
+    placement.chipRect.adjust(0, 0, CHIP_MARGIN, CHIP_MARGIN);
     auto cGraph = createConnectivityGraph(placement);
 
     return cGraph;

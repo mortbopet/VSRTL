@@ -20,6 +20,7 @@ enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99
 #define BUTTON_EXPAND_COLOR QColor("#26a65b")
 
 #define GRID_SIZE 15
+#define CHIP_MARGIN 3
 
 #define TOP_MARGIN 10
 #define BOT_MARGIN TOP_MARGIN

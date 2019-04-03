@@ -27,10 +27,11 @@ namespace vsrtl {
 namespace {
 
 static inline QRectF gridToScene(const QRect& gridRect) {
-    // Scales a rectangle in grid coordinates to scene coordinates
+    // Scales a rectangle in grid coordinates to scene coordinates. -1 because QRect returns width and height offset by
+    // 1 for "historical reasons"
     QRectF sceneGridRect;
-    sceneGridRect.setWidth(gridRect.width() * GRID_SIZE);
-    sceneGridRect.setHeight(gridRect.height() * GRID_SIZE);
+    sceneGridRect.setWidth((gridRect.width() - 1) * GRID_SIZE);
+    sceneGridRect.setHeight((gridRect.height() - 1) * GRID_SIZE);
     return sceneGridRect;
 }
 
@@ -378,7 +379,6 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     if (hasSubcomponents() && m_isExpanded) {
         painter->save();
         painter->setPen(Qt::red);
-        auto br = boundingRect();
         for (const auto& rr : m_routingRegions) {
             auto sceneGridRect = gridToScene(rr.get()->r);
             sceneGridRect.moveTo(rr.get()->r.topLeft() * GRID_SIZE);
@@ -399,8 +399,8 @@ bool ComponentGraphic::rectContainsAllSubcomponents(const QRectF& r) const {
 }
 
 /**
- * @brief Adjust bounds of r to snap on the boundaries of the minimum grid rectangle, or if the component is currently
- * expanded, a rect which contains the subcomponents
+ * @brief Adjust bounds of r to snap on the boundaries of the minimum grid rectangle, or if the component is
+ * currently expanded, a rect which contains the subcomponents
  */
 bool ComponentGraphic::snapToMinGridRect(QRect& r) const {
     bool snap_r, snap_b;
