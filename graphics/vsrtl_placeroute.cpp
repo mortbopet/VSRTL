@@ -174,7 +174,7 @@ Netlist createNetlist(const std::vector<ComponentGraphic*>& components) {
     return netlist;
 }
 
-RoutingRegions createConnectivityGraph(const Placement& placement) {
+RoutingRegions createConnectivityGraph(Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
     Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(placement.components)));
     Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
@@ -369,6 +369,10 @@ RoutingRegions createConnectivityGraph(const Placement& placement) {
         Q_ASSERT(regionGroups.count(rc.topRight()));
         Q_ASSERT(regionGroups.count(rc.bottomRight()));
         Q_ASSERT(regionGroups.count(rc.bottomLeft()));
+        rc.topRegion = regionGroups[rc.topLeft()].topright;
+        rc.leftRegion = regionGroups[rc.topLeft()].bottomleft;
+        rc.rightRegion = regionGroups[rc.topRight()].bottomright;
+        rc.bottomRegion = regionGroups[rc.bottomLeft()].bottomright;
     }
 
     return regions;

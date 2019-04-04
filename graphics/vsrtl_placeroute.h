@@ -84,7 +84,7 @@ using Net = std::vector<NetNode>;
 using Netlist = std::vector<Net>;
 using RoutingRegions = std::vector<std::unique_ptr<RoutingRegion>>;
 
-RoutingRegions createConnectivityGraph(const Placement&);
+RoutingRegions createConnectivityGraph(Placement&);
 
 enum class PlaceAlg { TopologicalSort };
 enum class RouteAlg { Direct };
