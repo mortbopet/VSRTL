@@ -74,13 +74,18 @@ struct Placement {
 };
 
 struct NetNode {
+    ComponentGraphic* component = nullptr;
     PortGraphic* port = nullptr;
     RoutingRegion* region = nullptr;
     Edge edgePos;
     unsigned int edgeIndex;
 };
 
-using Net = std::vector<NetNode>;
+struct Net {
+    std::vector<NetNode> nodes;
+    std::vector<std::vector<RoutingRegion*>> routes;
+};
+
 using Netlist = std::vector<Net>;
 using RoutingRegions = std::vector<std::unique_ptr<RoutingRegion>>;
 
