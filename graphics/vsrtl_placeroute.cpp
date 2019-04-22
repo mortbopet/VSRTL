@@ -166,10 +166,17 @@ public:
         }
     }
 
-    RoutingRegion* lookup(int x, int y) const {
-        const auto& vertMap = regionMap.lower_bound(x);
+    RoutingRegion* lookup(const QPoint& index, Edge tieBreakVt = Edge::Left, Edge tieBreakHz = Edge::Top) const {
+        return lookup(index.x(), index.y(), tieBreakVt, tieBreakHz);
+    }
+
+    RoutingRegion* lookup(int x, int y, Edge tieBreakVt = Edge::Left, Edge tieBreakHz = Edge::Top) const {
+        Q_ASSERT(tieBreakHz == Edge::Top || tieBreakHz == Edge::Bottom);
+        Q_ASSERT(tieBreakVt == Edge::Left || tieBreakVt == Edge::Right);
+
+        const auto& vertMap = regionMap.lower_bound(x + (tieBreakVt == Edge::Left ? 0 : 1));
         if (vertMap != regionMap.end()) {
-            const auto& regionIt = vertMap->second.lower_bound(y);
+            const auto& regionIt = vertMap->second.lower_bound(y + (tieBreakHz == Edge::Top ? 0 : 1));
             if (regionIt != vertMap->second.end()) {
                 return regionIt->second;
             }
@@ -184,28 +191,37 @@ public:
 
 Netlist createNetlist(Placement& placement, const RegionMap& regionMap) {
     Netlist netlist;
-    for (const auto& c : placement.components) {
-        for (const auto& outputPort : c.component->outputPorts()) {
+    for (const auto& routingComponent : placement.components) {
+        for (const auto& outputPort : routingComponent.componentGraphic->outputPorts()) {
             // Note: terminal position currently is fixed to right => output, left => input
             Net net;
             NetNode source;
-            source.component = c.component;
+            source.componentGraphic = routingComponent.componentGraphic;
             source.edgeIndex = outputPort->gridIndex();
             source.edgePos = Edge::Right;
             source.port = outputPort;
-            source.region = c.rightRegion;
+
+            // Get source port grid position
+            QPoint portPos = routingComponent.topRight();
+            portPos.ry() += source.edgeIndex;
+            source.region = regionMap.lookup(portPos, Edge::Right);
             net.nodes.push_back(source);
             for (const auto& sinkPort : outputPort->getPort()->getOutputPorts()) {
                 NetNode sink;
                 sink.port = getGraphic<PortGraphic*>(sinkPort);
-                sink.component = getGraphic<ComponentGraphic*>(sinkPort->getParent());
+                sink.componentGraphic = getGraphic<ComponentGraphic*>(sinkPort->getParent());
                 // Lookup routing component for sink component graphic
-                auto rc_i = std::find_if(placement.components.begin(), placement.components.end(),
-                                         [&sink](const auto& rc) { return rc.component == sink.component; });
+                auto rc_i =
+                    std::find_if(placement.components.begin(), placement.components.end(),
+                                 [&sink](const auto& rc) { return rc.componentGraphic == sink.componentGraphic; });
                 Q_ASSERT(rc_i != placement.components.end());
                 sink.edgeIndex = sink.port->gridIndex();
                 sink.edgePos = Edge::Left;
-                sink.region = rc_i->leftRegion;
+
+                // Get sink port grid position
+                portPos = rc_i->topLeft();
+                portPos.ry() += sink.edgeIndex;
+                sink.region = regionMap.lookup(portPos, Edge::Left);
                 net.nodes.push_back(sink);
             }
             netlist.push_back(net);
@@ -553,7 +569,7 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
     for (const auto& c : components) {
         RoutingComponent rc;
         rc = (c->adjustedMinGridRect(true, true));
-        rc.component = c;
+        rc.componentGraphic = c;
         placement.components << rc;
     }
     placement.chipRect = boundingRectOfRects(placement.components);

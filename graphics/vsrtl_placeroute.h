@@ -61,7 +61,7 @@ public:
     using QRect::QRect;
     using QRect::operator=;
 
-    ComponentGraphic* component;
+    ComponentGraphic* componentGraphic;
     RoutingRegion* topRegion = nullptr;
     RoutingRegion* leftRegion = nullptr;
     RoutingRegion* rightRegion = nullptr;
@@ -74,7 +74,7 @@ struct Placement {
 };
 
 struct NetNode {
-    ComponentGraphic* component = nullptr;
+    ComponentGraphic* componentGraphic = nullptr;
     PortGraphic* port = nullptr;
     RoutingRegion* region = nullptr;
     Edge edgePos;
