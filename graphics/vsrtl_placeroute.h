@@ -111,7 +111,7 @@ public:
 
     /** @todo: Return a data structure which may be interpreted by the calling ComponentGraphic to place its
      * subcomponents and draw the signal paths. For now, just return a structure suitable for placement*/
-    RoutingRegions placeAndRoute(const std::vector<ComponentGraphic*>& components);
+    void placeAndRoute(const std::vector<ComponentGraphic*>& components, RoutingRegions& regions, Netlist& netlist);
 
 private:
     PlaceRoute() {}

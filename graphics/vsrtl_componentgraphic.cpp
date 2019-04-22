@@ -24,28 +24,6 @@
 
 namespace vsrtl {
 
-namespace {
-
-static inline QRectF gridToScene(const QRect& gridRect) {
-    // Scales a rectangle in grid coordinates to scene coordinates. -1 because QRect returns width and height offset by
-    // 1 for "historical reasons"
-    QRectF sceneGridRect;
-    sceneGridRect.setWidth((gridRect.width() - 1) * GRID_SIZE);
-    sceneGridRect.setHeight((gridRect.height() - 1) * GRID_SIZE);
-    return sceneGridRect;
-}
-
-static inline QRect sceneToGrid(QRectF sceneRect) {
-    // Scales a rectangle in scene coordinates to grid coordinates
-    sceneRect.setWidth(sceneRect.width() / GRID_SIZE);
-    sceneRect.setHeight(sceneRect.height() / GRID_SIZE);
-
-    // When converting to integer-based grid rect, round up to ensure all components are inside
-    return QRect(QPoint(0, 0), QSize(std::ceil(sceneRect.width()), std::ceil(sceneRect.height())));
-}
-
-}  // namespace
-
 static constexpr qreal c_resizeMargin = GRID_SIZE;
 static constexpr qreal c_collapsedSideMargin = 15;
 
@@ -144,7 +122,12 @@ void ComponentGraphic::setExpanded(bool state) {
 }
 
 void ComponentGraphic::placeAndRouteSubcomponents() {
-    m_routingRegions = pr::PlaceRoute::get().placeAndRoute(m_subcomponents);
+    pr::PlaceRoute::get().placeAndRoute(m_subcomponents, m_routingRegions, m_netlist);
+
+    // Propagate routings to wires
+    for (const auto& net : m_netlist) {
+        net.nodes[0].port->setNet(net);
+    }
 }
 
 ComponentGraphic* ComponentGraphic::getParent() const {
@@ -164,7 +147,7 @@ QRect ComponentGraphic::subcomponentBoundingGridRect() const {
     return sceneToGrid(sceneBoundingRect);
 }
 
-QRect ComponentGraphic::adjustedMinGridRect(bool includePorts, bool moveToGridPos) const {
+QRect ComponentGraphic::adjustedMinGridRect(bool includePorts, bool moveToParentGridPos) const {
     // Returns the minimum grid rect of the current component with ports taken into account
 
     // Add height to component based on the largest number of input or output ports. There should always be a
@@ -186,7 +169,7 @@ QRect ComponentGraphic::adjustedMinGridRect(bool includePorts, bool moveToGridPo
     }
 
     // Move to grid position in parent coordinate system
-    if (moveToGridPos) {
+    if (moveToParentGridPos) {
         adjustedRect.moveTo(m_gridPos);
     }
 
@@ -206,7 +189,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     switch (flag) {
         case GeometryChange::Collapse:
         case GeometryChange::None: {
-            m_gridRect = adjustedMinGridRect(false);
+            m_gridRect = adjustedMinGridRect(false, false);
 
             // Add width to the component based on the name of the component - we define that 2 characters is equal to 1
             // grid spacing : todo; this ratio should be configurable
@@ -265,6 +248,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     // 3 .Update the draw shape, scaling it to the current scene size of the component
     QTransform t;
     t.scale(sceneRect.width(), sceneRect.height());
+    t.translate(sceneRect.topLeft().x(), sceneRect.topLeft().y());
     m_shape = ComponentGraphic::getComponentShape(m_component.getTypeId(), t);
 
     // 5. Position the expand-button

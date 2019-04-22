@@ -57,6 +57,10 @@ void PortGraphic::redraw() {
     }
 }
 
+void PortGraphic::setNet(const pr::Net& net) {
+    m_outputWire->setNet(net);
+}
+
 void PortGraphic::propagateRedraw() {
     m_port->traverseToSinks([=](Port* port) {
         auto* portGraphic = getGraphic<PortGraphic*>(port);

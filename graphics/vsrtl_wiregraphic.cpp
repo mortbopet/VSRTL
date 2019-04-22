@@ -1,5 +1,6 @@
 #include "vsrtl_wiregraphic.h"
 #include "vsrtl_componentgraphic.h"
+#include "vsrtl_graphics_util.h"
 #include "vsrtl_port.h"
 #include "vsrtl_portgraphic.h"
 
@@ -32,6 +33,10 @@ QRectF WireGraphic::boundingRect() const {
     // HACK HACK HACK
 
     return br;
+}
+
+void WireGraphic::setNet(const pr::Net& net) {
+    m_net = net;
 }
 
 /**
@@ -71,13 +76,36 @@ const QPen& WireGraphic::getPen() {
 void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
     painter->save();
     painter->setPen(getPen());
-    for (const auto& toPort : m_toGraphicPorts) {
-        const auto* portParent = dynamic_cast<ComponentGraphic*>(toPort->parentItem());
-        if (portParent->isVisible()) {
-            painter->drawLine(mapFromItem(m_fromPort, m_fromPort->getOutputPoint()),
-                              mapFromItem(toPort, toPort->getInputPoint()));
+
+    if (m_net.routes.size() > 0) {
+        auto inputPortParent = dynamic_cast<ComponentGraphic*>(m_fromPort->parentItem());
+        auto subcomponentParent = dynamic_cast<ComponentGraphic*>(inputPortParent->parentItem());
+        for (int route_index = 0; route_index < m_net.routes.size(); route_index++) {
+            // Find destination point - m_net.nodes contains #source node + #destination nodes, m_net.routes contains
+            // #destination_nodes routes
+            const auto& toPort = m_net.nodes[route_index + 1].port;
+            // Naming is a bit inconsistent here - a route is noted from destination to source, and so we draw the route
+            // in reverse
+            QPointF from = mapFromItem(toPort, toPort->getInputPoint());
+            QPointF intermediate;
+            QPointF end = mapFromItem(m_fromPort, m_fromPort->getOutputPoint());
+            for (const auto& rr : m_net.routes[route_index]) {
+                intermediate = mapFromItem(subcomponentParent, gridToScene(rr->r).center());
+                painter->drawLine(from, intermediate);
+                from = intermediate;
+            }
+            painter->drawLine(from, end);
+        }
+    } /* else {
+        for (const auto& toPort : m_toGraphicPorts) {
+            const auto* portParent = dynamic_cast<ComponentGraphic*>(toPort->parentItem());
+            if (portParent->isVisible()) {
+                painter->drawLine(mapFromItem(m_fromPort, m_fromPort->getOutputPoint()),
+                                  mapFromItem(toPort, toPort->getInputPoint()));
+            }
         }
     }
+    */
 
     painter->restore();
 }

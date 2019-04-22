@@ -2,6 +2,7 @@
 #define VSRTL_WIREGRAPHIC_H
 
 #include "vsrtl_graphicsbase.h"
+#include "vsrtl_placeroute.h"
 
 #include <QPen>
 
@@ -24,10 +25,13 @@ public:
     PortGraphic* getFromPort() const { return m_fromPort; }
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }
 
+    void setNet(const pr::Net& net);
+
 private:
     PortGraphic* m_fromPort;
     const std::vector<Port*>& m_toPorts;
     std::vector<PortGraphic*> m_toGraphicPorts;
+    pr::Net m_net;
 };
 }  // namespace vsrtl
 

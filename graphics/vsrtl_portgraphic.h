@@ -3,6 +3,7 @@
 
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphicsbase.h"
+#include "vsrtl_placeroute.h"
 #include "vsrtl_wiregraphic.h"
 
 #include <QFont>
@@ -32,6 +33,8 @@ public:
     void setInputWire(WireGraphic* wire);
     void updateInputWire();
     void updateWireGeometry();
+
+    void setNet(const pr::Net& net);
 
     QPointF getInputPoint() const;
     QPointF getOutputPoint() const;

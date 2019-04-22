@@ -54,7 +54,7 @@ void topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) 
         auto* g = getGraphic<ComponentGraphic*>(c);
         g->setGridPos(pos);
         // Add 4 grid spaces between each component
-        pos.rx() += g->adjustedMinGridRect(true).width() + 4;
+        pos.rx() += g->adjustedMinGridRect(true, false).width() + 4;
     }
 }
 
@@ -162,15 +162,19 @@ Netlist createNetlist(Placement& placement) {
             source.edgeIndex = outputPort->gridIndex();
             source.edgePos = Edge::Right;
             source.port = outputPort;
-            source.region = c.leftRegion;
+            source.region = c.rightRegion;
             net.nodes.push_back(source);
             for (const auto& sinkPort : outputPort->getPort()->getOutputPorts()) {
                 NetNode sink;
                 sink.port = getGraphic<PortGraphic*>(sinkPort);
                 sink.component = getGraphic<ComponentGraphic*>(sinkPort->getParent());
+                // Lookup routing component for sink component graphic
+                auto rc_i = std::find_if(placement.components.begin(), placement.components.end(),
+                                         [&sink](const auto& rc) { return rc.component == sink.component; });
+                Q_ASSERT(rc_i != placement.components.end());
                 sink.edgeIndex = sink.port->gridIndex();
                 sink.edgePos = Edge::Left;
-                sink.region = c.rightRegion;
+                sink.region = rc_i->leftRegion;
                 net.nodes.push_back(sink);
             }
             netlist.push_back(net);
@@ -489,7 +493,8 @@ std::vector<RoutingRegion*> aStarSearch(RoutingRegion* start, RoutingRegion* goa
     Q_ASSERT(false);
 }
 
-RoutingRegions PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components) {
+void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components, RoutingRegions& regions,
+                               Netlist& cmpNetlist) {
     // Placement
     switch (m_placementAlgorithm) {
         case PlaceAlg::TopologicalSort: {
@@ -502,7 +507,12 @@ RoutingRegions PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& c
 
     // Place graphical components based on new position of grid components
     for (const auto& c : components) {
-        const QPoint gridPos = c->adjustedMinGridRect(true).topLeft();
+        QPoint gridPos = c->adjustedMinGridRect(true, true).topLeft();
+        // The Place/Route algorithms sees a components grid rectangle to contain its ports - however, to translate
+        // component positioning to actual positioning, we must position according to whether an input port is present.
+        if (c->getComponent()->getInputs().size() > 0) {
+            gridPos += QPoint(PortGraphic::portGridWidth(), 0);
+        }
         c->setPos(gridPos * GRID_SIZE);
     }
 
@@ -511,7 +521,7 @@ RoutingRegions PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& c
     Placement placement;
     for (const auto& c : components) {
         RoutingComponent rc;
-        rc = (c->adjustedMinGridRect(true));
+        rc = (c->adjustedMinGridRect(true, true));
         rc.component = c;
         placement.components << rc;
     }
@@ -538,7 +548,8 @@ RoutingRegions PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& c
         }
     }
 
-    return cGraph;
+    regions = std::move(cGraph);
+    cmpNetlist = netlist;
 }
 
 }  // namespace pr
