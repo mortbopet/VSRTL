@@ -4,6 +4,7 @@
 #include "vsrtl_graphics_defines.h"
 
 #include <QRect>
+#include <cmath>
 
 namespace vsrtl {
 
