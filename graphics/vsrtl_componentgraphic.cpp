@@ -358,6 +358,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     painter->drawRect(sceneGridRect());
     painter->restore();
     DRAW_BOUNDING_RECT(painter)
+#endif
 
     // Routing regions
     if (hasSubcomponents() && m_isExpanded) {
@@ -370,7 +371,6 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         }
         painter->restore();
     }
-#endif
 }
 
 bool ComponentGraphic::rectContainsAllSubcomponents(const QRectF& r) const {

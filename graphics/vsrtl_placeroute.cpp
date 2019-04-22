@@ -151,7 +151,38 @@ static inline Line getEdge(const QRect& rect, Edge e) {
 
 }  // namespace
 
-Netlist createNetlist(Placement& placement) {
+/**
+ * @brief The RegionMap class
+ * Data structure for retrieving the region group which envelops the provided index.
+ */
+class RegionMap {
+public:
+    RegionMap(const RoutingRegions& regions) {
+        // Regions will be mapped to their lower-right corner in terms of indexing operations.
+        // This is given the user of std::map::lower_bound to determine the map index
+        for (const auto& region : regions) {
+            const auto& bottomRight = region->r.bottomRight();
+            regionMap[bottomRight.x()][bottomRight.y()] = region.get();
+        }
+    }
+
+    RoutingRegion* lookup(int x, int y) const {
+        const auto& vertMap = regionMap.lower_bound(x);
+        if (vertMap != regionMap.end()) {
+            const auto& regionIt = vertMap->second.lower_bound(y);
+            if (regionIt != vertMap->second.end()) {
+                return regionIt->second;
+            }
+        }
+
+        // Could not find a routing region corresponding to the index
+        return nullptr;
+    }
+    // Indexable region map
+    std::map<int, std::map<int, RoutingRegion*>> regionMap;
+};
+
+Netlist createNetlist(Placement& placement, const RegionMap& regionMap) {
     Netlist netlist;
     for (const auto& c : placement.components) {
         for (const auto& outputPort : c.component->outputPorts()) {
@@ -530,8 +561,11 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
     placement.chipRect.adjust(0, 0, CHIP_MARGIN, CHIP_MARGIN);
     auto cGraph = createConnectivityGraph(placement);
 
+    // Indexable region map
+    const auto regionMap = RegionMap(cGraph);
+
     // Routing
-    auto netlist = createNetlist(placement);
+    auto netlist = createNetlist(placement, regionMap);
     // Reserve a horizontal and vertical track for each netnode in their corresponding routing region in the netlist
     for (const auto& net : netlist) {
         for (const auto& netnode : net.nodes) {
