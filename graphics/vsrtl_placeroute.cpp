@@ -321,7 +321,7 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
     vt_bounding_lines.clear();
 
     // Find intersections between horizontal and vertical region lines, and create corresponding routing regions.
-    QPoint regionTopRight, regionBottomLeft, regionBottomRight, regionTopLeft;
+    QPoint regionBottomLeft, regionBottomRight, regionTopLeft;
     QPoint regionBottom, regionTop;
     Line* topHzLine;
     for (int hi = 1; hi < hz_region_lines.size(); hi++) {
