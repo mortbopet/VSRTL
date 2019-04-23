@@ -459,7 +459,7 @@ std::vector<RoutingRegion*> reconstructPath(std::map<RoutingRegion*, RoutingRegi
     std::vector<RoutingRegion*> totalPath{current};
     while (cameFrom.count(current) > 0) {
         current = cameFrom[current];
-        totalPath.push_back(current);
+        totalPath.insert(totalPath.begin(), current);
     }
     return totalPath;
 }
