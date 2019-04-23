@@ -80,33 +80,24 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
     if (m_net.routes.size() > 0) {
         auto inputPortParent = dynamic_cast<ComponentGraphic*>(m_fromPort->parentItem());
         auto subcomponentParent = dynamic_cast<ComponentGraphic*>(inputPortParent->parentItem());
-        for (int route_index = 0; route_index < m_net.routes.size(); route_index++) {
+        for (const auto& route : m_net.routes) {
+            Q_ASSERT(route.start.port == m_fromPort);
             // Find destination point - m_net.nodes contains #source node + #destination nodes, m_net.routes contains
             // #destination_nodes routes
-            const auto& toPort = m_net.nodes[route_index + 1].port;
+            const auto& toPort = route.end.port;
             // Naming is a bit inconsistent here - a route is noted from destination to source, and so we draw the route
             // in reverse
             QPointF from = mapFromItem(toPort, toPort->getInputPoint());
             QPointF intermediate;
-            QPointF end = mapFromItem(m_fromPort, m_fromPort->getOutputPoint());
-            for (const auto& rr : m_net.routes[route_index]) {
-                intermediate = mapFromItem(subcomponentParent, gridToScene(rr->r).center());
+            for (const auto& routingRegion : route.path) {
+                intermediate = mapFromItem(subcomponentParent, gridToScene(routingRegion->r).center());
                 painter->drawLine(from, intermediate);
                 from = intermediate;
             }
+            const QPointF end = mapFromItem(route.start.port, route.start.port->getOutputPoint());
             painter->drawLine(from, end);
         }
-    } /* else {
-        for (const auto& toPort : m_toGraphicPorts) {
-            const auto* portParent = dynamic_cast<ComponentGraphic*>(toPort->parentItem());
-            if (portParent->isVisible()) {
-                painter->drawLine(mapFromItem(m_fromPort, m_fromPort->getOutputPoint()),
-                                  mapFromItem(toPort, toPort->getInputPoint()));
-            }
-        }
     }
-    */
-
     painter->restore();
 }
 }  // namespace vsrtl

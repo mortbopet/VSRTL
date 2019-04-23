@@ -591,10 +591,14 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
         }
     }
 
-    // Route via. a* search
+    // Route via. a* search between start- and stop nodes, using the available routing regions
     for (auto& net : netlist) {
         for (int i = 1; i < net.nodes.size(); i++) {
-            net.routes.push_back(aStarSearch(net.nodes[0].region, net.nodes[i].region));
+            Route r;
+            r.start = net.nodes[0];
+            r.end = net.nodes[i];
+            r.path = aStarSearch(net.nodes[0].region, net.nodes[i].region);
+            net.routes.push_back(r);
         }
     }
 

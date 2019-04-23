@@ -81,9 +81,15 @@ struct NetNode {
     unsigned int edgeIndex;
 };
 
+struct Route {
+    NetNode start;
+    NetNode end;
+    std::vector<RoutingRegion*> path;
+};
+
 struct Net {
     std::vector<NetNode> nodes;
-    std::vector<std::vector<RoutingRegion*>> routes;
+    std::vector<Route> routes;
 };
 
 using Netlist = std::vector<Net>;
