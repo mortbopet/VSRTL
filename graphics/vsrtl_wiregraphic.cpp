@@ -73,6 +73,11 @@ const QPen& WireGraphic::getPen() {
     return m_fromPort->getPen();
 }
 
+QPointF drawNextPoint(QPainter* painter, QPointF from, QPointF intermediate) {
+    painter->drawLine(from, intermediate);
+    return intermediate;
+}
+
 void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
     painter->save();
     painter->setPen(getPen());
@@ -85,16 +90,31 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
             // Find destination point - m_net.nodes contains #source node + #destination nodes, m_net.routes contains
             // #destination_nodes routes
             const auto& toPort = route.end.port;
-            // Naming is a bit inconsistent here - a route is noted from destination to source, and so we draw the route
-            // in reverse
-            QPointF from = mapFromItem(toPort, toPort->getInputPoint());
+            const QPointF end = mapFromItem(toPort, toPort->getInputPoint());
             QPointF intermediate;
-            for (const auto& routingRegion : route.path) {
-                intermediate = mapFromItem(subcomponentParent, gridToScene(routingRegion->r).center());
-                painter->drawLine(from, intermediate);
-                from = intermediate;
+            QPointF from = mapFromItem(route.start.port, route.start.port->getOutputPoint());
+            for (int i = 0; i < route.path.size(); i++) {
+                bool drawIntermediate = true;
+                // The following two statements looks like duplicate code. However, it is important that the code path
+                // for each conditional segment is hit when route.path.size() == 1
+                if (i == 0) {
+                    intermediate = mapFromItem(subcomponentParent, gridToScene(route.path[i]->r).center());
+                    intermediate.setY(from.y());
+                    from = drawNextPoint(painter, from, intermediate);
+                    drawIntermediate = false;
+                }
+                if (i == (route.path.size() - 1)) {
+                    intermediate = mapFromItem(subcomponentParent, gridToScene(route.path[i]->r).center());
+                    intermediate.setY(end.y());
+                    from = drawNextPoint(painter, from, intermediate);
+                    drawIntermediate = false;
+                }
+
+                if (drawIntermediate) {
+                    from = drawNextPoint(painter, from,
+                                         mapFromItem(subcomponentParent, gridToScene(route.path[i]->r).center()));
+                }
             }
-            const QPointF end = mapFromItem(route.start.port, route.start.port->getOutputPoint());
             painter->drawLine(from, end);
         }
     }
