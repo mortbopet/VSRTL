@@ -123,11 +123,6 @@ void ComponentGraphic::setExpanded(bool state) {
 
 void ComponentGraphic::placeAndRouteSubcomponents() {
     pr::PlaceRoute::get().placeAndRoute(m_subcomponents, m_routingRegions, m_netlist);
-
-    // Propagate routings to wires
-    for (const auto& net : m_netlist) {
-        net.nodes[0].port->setNet(net);
-    }
 }
 
 ComponentGraphic* ComponentGraphic::getParent() const {

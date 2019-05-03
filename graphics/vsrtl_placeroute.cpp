@@ -66,7 +66,6 @@ struct RegionGroup {
     RoutingRegion* bottomright = nullptr;
 };
 
-enum Orientation { Horizontal, Vertical };
 enum IntersectType { Cross, OnEdge };
 
 /**
@@ -82,18 +81,18 @@ public:
         m_p1 = p1;
         m_p2 = p2;
 
-        m_orientation = p1.x() == p2.x() ? Orientation::Vertical : Orientation::Horizontal;
+        m_orientation = p1.x() == p2.x() ? Direction::Vertical : Direction::Horizontal;
     }
 
     const QPoint& p1() const { return m_p1; }
     const QPoint& p2() const { return m_p2; }
     void setP1(const QPoint& p) { m_p1 = p; }
     void setP2(const QPoint& p) { m_p2 = p; }
-    Orientation orientation() const { return m_orientation; }
+    Direction orientation() const { return m_orientation; }
     bool intersect(const Line& other, QPoint& p, IntersectType type) const {
         Q_ASSERT(orientation() != other.orientation());
         const Line *hz, *vt;
-        if (m_orientation == Orientation::Horizontal) {
+        if (m_orientation == Direction::Horizontal) {
             hz = this;
             vt = &other;
         } else {
@@ -129,7 +128,7 @@ public:
 private:
     QPoint m_p1;
     QPoint m_p2;
-    Orientation m_orientation;
+    Direction m_orientation;
 };
 
 static inline Line getEdge(const QRect& rect, Edge e) {
@@ -189,12 +188,12 @@ public:
     std::map<int, std::map<int, RoutingRegion*>> regionMap;
 };
 
-Netlist createNetlist(Placement& placement, const RegionMap& regionMap) {
-    Netlist netlist;
+NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
+    auto netlist = std::make_unique<Netlist>();
     for (const auto& routingComponent : placement.components) {
         for (const auto& outputPort : routingComponent.componentGraphic->outputPorts()) {
             // Note: terminal position currently is fixed to right => output, left => input
-            Net net;
+            auto net = std::make_unique<Net>();
             NetNode source;
             source.componentGraphic = routingComponent.componentGraphic;
             source.edgeIndex = outputPort->gridIndex();
@@ -205,7 +204,6 @@ Netlist createNetlist(Placement& placement, const RegionMap& regionMap) {
             QPoint portPos = routingComponent.topRight();
             portPos.ry() += source.edgeIndex;
             source.region = regionMap.lookup(portPos, Edge::Right);
-            net.nodes.push_back(source);
             for (const auto& sinkPort : outputPort->getPort()->getOutputPorts()) {
                 NetNode sink;
                 sink.port = getGraphic<PortGraphic*>(sinkPort);
@@ -222,9 +220,9 @@ Netlist createNetlist(Placement& placement, const RegionMap& regionMap) {
                 portPos = rc_i->topLeft();
                 portPos.ry() += sink.edgeIndex;
                 sink.region = regionMap.lookup(portPos, Edge::Left);
-                net.nodes.push_back(sink);
+                net->push_back(std::make_unique<Route>(source, sink));
             }
-            netlist.push_back(net);
+            netlist->push_back(std::move(net));
         }
     }
     return netlist;
@@ -457,7 +455,14 @@ unsigned int heuristicCost(RoutingRegion* start, RoutingRegion* goal) {
 
 std::vector<RoutingRegion*> reconstructPath(std::map<RoutingRegion*, RoutingRegion*> cameFrom, RoutingRegion* current) {
     std::vector<RoutingRegion*> totalPath{current};
+
     while (cameFrom.count(current) > 0) {
+        // Based on the difference between the centers of the two routing regions, figure out if the move was
+        // horizontally or vertically
+        QPointF diff = cameFrom[current]->r.center() - current->r.center();
+        Q_ASSERT(diff.x() == 0 || diff.y() == 0);
+        if (diff.x() == 0) {
+        }
         current = cameFrom[current];
         totalPath.insert(totalPath.begin(), current);
     }
@@ -582,28 +587,19 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
 
     // Routing
     auto netlist = createNetlist(placement, regionMap);
-    // Reserve a horizontal and vertical track for each netnode in their corresponding routing region in the netlist
-    for (const auto& net : netlist) {
-        for (const auto& netnode : net.nodes) {
-            // Q_ASSERT(netnode.region->h_cap > 0 && netnode.region->v_cap > 0);
-            // netnode.region->h_cap--;
-            // netnode.region->v_cap--;
-        }
-    }
 
     // Route via. a* search between start- and stop nodes, using the available routing regions
-    for (auto& net : netlist) {
-        for (int i = 1; i < net.nodes.size(); i++) {
-            Route r;
-            r.start = net.nodes[0];
-            r.end = net.nodes[i];
-            r.path = aStarSearch(net.nodes[0].region, net.nodes[i].region);
-            net.routes.push_back(r);
+    for (auto& net : *netlist) {
+        if (net->size() == 0)
+            continue;
+        for (const auto& route : *net) {
+            route->path = aStarSearch(route->start.region, route->end.region);
         }
+        // Move net pointer ownership to a start port of the net (All start ports are equal within the net)
+        (*net)[0]->start.port->setNet(net);
     }
 
     regions = std::move(cGraph);
-    cmpNetlist = netlist;
 }
 
 }  // namespace pr

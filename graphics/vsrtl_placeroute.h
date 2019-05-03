@@ -16,17 +16,16 @@ class Component;
 namespace pr {
 
 enum class Edge { Top, Bottom, Left, Right };
+enum Direction { Horizontal, Vertical };
 
 struct RoutingRegion {
-    RoutingRegion(QRect rect) {
-        r = rect;
-        h_cap = r.width();
-        v_cap = r.height();
-    }
+    RoutingRegion(QRect rect) : h_cap(rect.width()), v_cap(rect.height()) { r = rect; }
 
     QRect r;    // Region size and position
     int h_cap;  // Horizontal capacity of routing region
     int v_cap;  // Vertical capacity of routing region
+    int h_used = 0;
+    int v_used = 0;
 
     // Adjacency pointers
     RoutingRegion* top = nullptr;
@@ -82,17 +81,18 @@ struct NetNode {
 };
 
 struct Route {
+    Route(NetNode s, NetNode e) : start(s), end(e) {}
     NetNode start;
     NetNode end;
     std::vector<RoutingRegion*> path;
 };
 
-struct Net {
-    std::vector<NetNode> nodes;
-    std::vector<Route> routes;
-};
+#define WRAP_UNIQUEPTR(type) using type##Ptr = std::unique_ptr<type>;
 
-using Netlist = std::vector<Net>;
+using Net = std::vector<std::unique_ptr<Route>>;
+WRAP_UNIQUEPTR(Net)
+using Netlist = std::vector<NetPtr>;
+WRAP_UNIQUEPTR(Netlist)
 using RoutingRegions = std::vector<std::unique_ptr<RoutingRegion>>;
 
 RoutingRegions createConnectivityGraph(Placement&);

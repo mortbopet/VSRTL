@@ -57,7 +57,7 @@ void PortGraphic::redraw() {
     }
 }
 
-void PortGraphic::setNet(const pr::Net& net) {
+void PortGraphic::setNet(pr::NetPtr& net) {
     m_outputWire->setNet(net);
 }
 

@@ -35,8 +35,8 @@ QRectF WireGraphic::boundingRect() const {
     return br;
 }
 
-void WireGraphic::setNet(const pr::Net& net) {
-    m_net = net;
+void WireGraphic::setNet(pr::NetPtr& net) {
+    m_net = std::move(net);
 }
 
 /**
@@ -82,29 +82,29 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
     painter->save();
     painter->setPen(getPen());
 
-    if (m_net.routes.size() > 0) {
+    if (m_net != nullptr && m_net->size() > 0) {
         auto inputPortParent = dynamic_cast<ComponentGraphic*>(m_fromPort->parentItem());
         auto subcomponentParent = dynamic_cast<ComponentGraphic*>(inputPortParent->parentItem());
-        for (const auto& route : m_net.routes) {
-            Q_ASSERT(route.start.port == m_fromPort);
+        for (const auto& route : *m_net) {
+            Q_ASSERT(route->start.port == m_fromPort);
             // Find destination point - m_net.nodes contains #source node + #destination nodes, m_net.routes contains
             // #destination_nodes routes
-            const auto& toPort = route.end.port;
+            const auto& toPort = route->end.port;
             const QPointF end = mapFromItem(toPort, toPort->getInputPoint());
             QPointF intermediate;
-            QPointF from = mapFromItem(route.start.port, route.start.port->getOutputPoint());
-            for (int i = 0; i < route.path.size(); i++) {
+            QPointF from = mapFromItem(route->start.port, route->start.port->getOutputPoint());
+            for (int i = 0; i < route->path.size(); i++) {
                 bool drawIntermediate = true;
                 // The following two statements looks like duplicate code. However, it is important that the code path
-                // for each conditional segment is hit when route.path.size() == 1
+                // for each conditional segment is hit when route->path.size() == 1
                 if (i == 0) {
-                    intermediate = mapFromItem(subcomponentParent, gridToScene(route.path[i]->r).center());
+                    intermediate = mapFromItem(subcomponentParent, gridToScene(route->path[i]->r).center());
                     intermediate.setY(from.y());
                     from = drawNextPoint(painter, from, intermediate);
                     drawIntermediate = false;
                 }
-                if (i == (route.path.size() - 1)) {
-                    intermediate = mapFromItem(subcomponentParent, gridToScene(route.path[i]->r).center());
+                if (i == (route->path.size() - 1)) {
+                    intermediate = mapFromItem(subcomponentParent, gridToScene(route->path[i]->r).center());
                     intermediate.setY(end.y());
                     from = drawNextPoint(painter, from, intermediate);
                     drawIntermediate = false;
@@ -112,7 +112,7 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
 
                 if (drawIntermediate) {
                     from = drawNextPoint(painter, from,
-                                         mapFromItem(subcomponentParent, gridToScene(route.path[i]->r).center()));
+                                         mapFromItem(subcomponentParent, gridToScene(route->path[i]->r).center()));
                 }
             }
             painter->drawLine(from, end);
