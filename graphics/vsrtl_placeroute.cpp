@@ -453,26 +453,37 @@ unsigned int heuristicCost(RoutingRegion* start, RoutingRegion* goal) {
     return (goal->r.center() - start->r.center()).manhattanLength();
 }
 
-std::vector<RoutingRegion*> reconstructPath(std::map<RoutingRegion*, RoutingRegion*> cameFrom, RoutingRegion* current) {
+std::vector<RoutingRegion*> reconstructPath(Route* route, std::map<RoutingRegion*, RoutingRegion*> cameFromMap,
+                                            RoutingRegion* current) {
     std::vector<RoutingRegion*> totalPath{current};
 
-    while (cameFrom.count(current) > 0) {
+    while (cameFromMap.count(current) > 0) {
+        auto cameFrom = cameFromMap[current];
         // Based on the difference between the centers of the two routing regions, figure out if the move was
-        // horizontally or vertically
-        QPointF diff = cameFrom[current]->r.center() - current->r.center();
+        // horizontally or vertically.
+        // In the given routing region, assign a track to the Route
+        QPointF diff = cameFrom->r.center() - current->r.center();
         Q_ASSERT(diff.x() == 0 || diff.y() == 0);
         if (diff.x() == 0) {
+            cameFrom->assignedRoutes[route] = {Direction::Vertical, cameFrom->v_used};
+            cameFrom->v_used++;
+        } else {
+            cameFrom->assignedRoutes[route] = {Direction::Horizontal, cameFrom->h_used};
+            cameFrom->h_used++;
         }
-        current = cameFrom[current];
+        current = cameFrom;
         totalPath.insert(totalPath.begin(), current);
     }
     return totalPath;
 }
 
-std::vector<RoutingRegion*> aStarSearch(RoutingRegion* start, RoutingRegion* goal) {
+void findRoute(std::unique_ptr<Route>& route) {
     // Blatantly copied from https://en.wikipedia.org/wiki/A*_search_algorithm
     // Precondition: start- and stop regions must have their horizontal and vertical capacities pre-decremented for the
     // given number of terminals within them
+
+    RoutingRegion* start = route->start.region;
+    RoutingRegion* goal = route->end.region;
 
     // The set of nodes already evaluated
     std::set<RoutingRegion*> closedSet;
@@ -511,7 +522,8 @@ std::vector<RoutingRegion*> aStarSearch(RoutingRegion* start, RoutingRegion* goa
         }
 
         if (current == goal) {
-            return reconstructPath(cameFrom, current);
+            route->path = reconstructPath(route.get(), cameFrom, current);
+            return;
         }
 
         openSet.erase(current);
@@ -590,10 +602,14 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
 
     // Route via. a* search between start- and stop nodes, using the available routing regions
     for (auto& net : *netlist) {
-        if (net->size() == 0)
+        if (net->size() == 0) {
+            // Skip empty nets
             continue;
-        for (const auto& route : *net) {
-            route->path = aStarSearch(route->start.region, route->end.region);
+        }
+
+        // Find a route to each start-stop pair in the net
+        for (auto& route : *net) {
+            findRoute(route);
         }
         // Move net pointer ownership to a start port of the net (All start ports are equal within the net)
         (*net)[0]->start.port->setNet(net);

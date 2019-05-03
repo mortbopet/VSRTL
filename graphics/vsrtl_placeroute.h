@@ -18,6 +18,12 @@ namespace pr {
 enum class Edge { Top, Bottom, Left, Right };
 enum Direction { Horizontal, Vertical };
 
+struct RouteAssignment {
+    Direction dir;
+    int index;
+};
+
+struct Route;
 struct RoutingRegion {
     RoutingRegion(QRect rect) : h_cap(rect.width()), v_cap(rect.height()) { r = rect; }
 
@@ -26,6 +32,8 @@ struct RoutingRegion {
     int v_cap;  // Vertical capacity of routing region
     int h_used = 0;
     int v_used = 0;
+
+    std::map<Route*, RouteAssignment> assignedRoutes;
 
     // Adjacency pointers
     RoutingRegion* top = nullptr;
