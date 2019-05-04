@@ -462,6 +462,22 @@ void RoutingRegion::registerRoute(Route* r, Direction d) {
     }
 }
 
+void RoutingRegion::assignRoutes() {
+    const float hz_diff = static_cast<float>(h_cap) / (horizontalRoutes.size() + 1);
+    const float vt_diff = static_cast<float>(v_cap) / (verticalRoutes.size() + 1);
+
+    float hz_pos = hz_diff;
+    float vt_pos = vt_diff;
+    for (const auto& route : horizontalRoutes) {
+        assignedRoutes[route] = {Direction::Horizontal, hz_pos};
+        hz_pos += hz_diff;
+    }
+    for (const auto& route : verticalRoutes) {
+        assignedRoutes[route] = {Direction::Horizontal, vt_pos};
+        vt_pos += vt_diff;
+    }
+}
+
 void RoutingRegion::setRegion(Edge e, RoutingRegion* region) {
     switch (e) {
         case Edge::Top: {
@@ -642,7 +658,7 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
     // Indexable region map
     const auto regionMap = RegionMap(cGraph);
 
-    // Routing
+    /* ======================= ROUTING ======================= */
     auto netlist = createNetlist(placement, regionMap);
 
     // Route via. a* search between start- and stop nodes, using the available routing regions
@@ -658,6 +674,12 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
         }
         // Move net pointer ownership to a start port of the net (All start ports are equal within the net)
         (*net)[0]->start.port->setNet(net);
+    }
+
+    // During findRoute, all routes have registered to their routing regions. With knowledge of how many routes occupy
+    // each routing region, a route is assigned a lane within the routing region
+    for (const auto& region : cGraph) {
+        region->assignRoutes();
     }
 
     regions = std::move(cGraph);
