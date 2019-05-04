@@ -47,76 +47,76 @@ void tst_connectivityGraph::testcreateConnectivityGraph() {
     auto rr21 = vsrtl::pr::RoutingRegion(QRect(QPoint(9, 11), QSize(1, 1)));
 
     // Set routing region connections
-    rr1.right = &rr7;
-    rr1.bottom = &rr2;
+    rr1.setRegion(vsrtl::pr::Edge::Right, &rr7);
+    rr1.setRegion(vsrtl::pr::Edge::Bottom, &rr2);
 
-    rr2.top = &rr1;
-    rr2.right = &rr8;
-    rr2.bottom = &rr3;
+    rr2.setRegion(vsrtl::pr::Edge::Top, &rr1);
+    rr2.setRegion(vsrtl::pr::Edge::Right, &rr8);
+    rr2.setRegion(vsrtl::pr::Edge::Bottom, &rr3);
 
-    rr3.top = &rr2;
-    rr3.bottom = &rr4;
+    rr3.setRegion(vsrtl::pr::Edge::Top, &rr2);
+    rr3.setRegion(vsrtl::pr::Edge::Bottom, &rr4);
 
-    rr4.top = &rr3;
-    rr4.right = &rr9;
-    rr4.bottom = &rr5;
+    rr4.setRegion(vsrtl::pr::Edge::Top, &rr3);
+    rr4.setRegion(vsrtl::pr::Edge::Right, &rr9);
+    rr4.setRegion(vsrtl::pr::Edge::Bottom, &rr5);
 
-    rr5.top = &rr4;
-    rr5.bottom = &rr6;
+    rr5.setRegion(vsrtl::pr::Edge::Top, &rr4);
+    rr5.setRegion(vsrtl::pr::Edge::Bottom, &rr6);
 
-    rr6.top = &rr5;
-    rr6.right = &rr10;
+    rr6.setRegion(vsrtl::pr::Edge::Top, &rr5);
+    rr6.setRegion(vsrtl::pr::Edge::Right, &rr10);
 
-    rr7.left = &rr1;
-    rr7.bottom = &rr8;
-    rr7.right = &rr11;
+    rr7.setRegion(vsrtl::pr::Edge::Left, &rr1);
+    rr7.setRegion(vsrtl::pr::Edge::Bottom, &rr8);
+    rr7.setRegion(vsrtl::pr::Edge::Right, &rr11);
 
-    rr8.top = &rr7;
-    rr8.left = &rr2;
-    rr8.right = &rr12;
+    rr8.setRegion(vsrtl::pr::Edge::Top, &rr7);
+    rr8.setRegion(vsrtl::pr::Edge::Left, &rr2);
+    rr8.setRegion(vsrtl::pr::Edge::Right, &rr12);
 
-    rr9.left = &rr4;
-    rr9.right = &rr14;
+    rr9.setRegion(vsrtl::pr::Edge::Left, &rr4);
+    rr9.setRegion(vsrtl::pr::Edge::Right, &rr14);
 
-    rr10.left = &rr6;
-    rr10.right = &rr21;
+    rr10.setRegion(vsrtl::pr::Edge::Left, &rr6);
+    rr10.setRegion(vsrtl::pr::Edge::Right, &rr21);
 
-    rr11.left = &rr7;
-    rr11.bottom = &rr12;
-    rr11.right = &rr15;
+    rr11.setRegion(vsrtl::pr::Edge::Left, &rr7);
+    rr11.setRegion(vsrtl::pr::Edge::Bottom, &rr12);
+    rr11.setRegion(vsrtl::pr::Edge::Right, &rr15);
 
-    rr12.left = &rr8;
-    rr12.top = &rr11;
-    rr12.bottom = &rr13;
+    rr12.setRegion(vsrtl::pr::Edge::Left, &rr8);
+    rr12.setRegion(vsrtl::pr::Edge::Top, &rr11);
+    rr12.setRegion(vsrtl::pr::Edge::Bottom, &rr13);
 
-    rr13.top = &rr12;
-    rr13.bottom = &rr14;
+    rr13.setRegion(vsrtl::pr::Edge::Top, &rr12);
+    rr13.setRegion(vsrtl::pr::Edge::Bottom, &rr14);
 
-    rr14.top = &rr13;
-    rr14.left = &rr9;
-    rr14.right = &rr16;
+    rr14.setRegion(vsrtl::pr::Edge::Top, &rr13);
+    rr14.setRegion(vsrtl::pr::Edge::Left, &rr9);
+    rr14.setRegion(vsrtl::pr::Edge::Right, &rr16);
 
-    rr15.left = &rr11;
-    rr15.right = &rr17;
+    rr15.setRegion(vsrtl::pr::Edge::Left, &rr11);
+    rr15.setRegion(vsrtl::pr::Edge::Right, &rr17);
 
-    rr16.left = &rr14;
-    rr16.right = &rr19;
+    rr16.setRegion(vsrtl::pr::Edge::Left, &rr14);
+    rr16.setRegion(vsrtl::pr::Edge::Right, &rr19);
 
-    rr17.left = &rr15;
-    rr17.bottom = &rr18;
+    rr17.setRegion(vsrtl::pr::Edge::Left, &rr15);
+    rr17.setRegion(vsrtl::pr::Edge::Bottom, &rr18);
 
-    rr18.top = &rr17;
-    rr18.bottom = &rr19;
+    rr18.setRegion(vsrtl::pr::Edge::Top, &rr17);
+    rr18.setRegion(vsrtl::pr::Edge::Bottom, &rr19);
 
-    rr19.top = &rr18;
-    rr19.left = &rr16;
-    rr19.bottom = &rr20;
+    rr19.setRegion(vsrtl::pr::Edge::Top, &rr18);
+    rr19.setRegion(vsrtl::pr::Edge::Left, &rr16);
+    rr19.setRegion(vsrtl::pr::Edge::Bottom, &rr20);
 
-    rr20.top = &rr19;
-    rr20.bottom = &rr21;
+    rr20.setRegion(vsrtl::pr::Edge::Top, &rr19);
+    rr20.setRegion(vsrtl::pr::Edge::Bottom, &rr21);
 
-    rr21.top = &rr20;
-    rr21.left = &rr10;
+    rr21.setRegion(vsrtl::pr::Edge::Top, &rr20);
+    rr21.setRegion(vsrtl::pr::Edge::Left, &rr10);
 
     std::vector<vsrtl::pr::RoutingRegion> verificationRegions;
     verificationRegions.push_back(rr1);

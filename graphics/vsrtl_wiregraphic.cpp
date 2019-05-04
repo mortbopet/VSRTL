@@ -98,13 +98,13 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
                 // The following two statements looks like duplicate code. However, it is important that the code path
                 // for each conditional segment is hit when route->path.size() == 1
                 if (i == 0) {
-                    intermediate = mapFromItem(subcomponentParent, gridToScene(route->path[i]->r).center());
+                    intermediate = mapFromItem(subcomponentParent, gridToScene(route->path[i]->rect()).center());
                     intermediate.setY(from.y());
                     from = drawNextPoint(painter, from, intermediate);
                     drawIntermediate = false;
                 }
                 if (i == (route->path.size() - 1)) {
-                    intermediate = mapFromItem(subcomponentParent, gridToScene(route->path[i]->r).center());
+                    intermediate = mapFromItem(subcomponentParent, gridToScene(route->path[i]->rect()).center());
                     intermediate.setY(end.y());
                     from = drawNextPoint(painter, from, intermediate);
                     drawIntermediate = false;
@@ -112,7 +112,7 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
 
                 if (drawIntermediate) {
                     from = drawNextPoint(painter, from,
-                                         mapFromItem(subcomponentParent, gridToScene(route->path[i]->r).center()));
+                                         mapFromItem(subcomponentParent, gridToScene(route->path[i]->rect()).center()));
                 }
             }
             painter->drawLine(from, end);

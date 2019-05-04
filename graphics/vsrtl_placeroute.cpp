@@ -59,13 +59,6 @@ void topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) 
 }
 
 namespace {
-struct RegionGroup {
-    RoutingRegion* topleft = nullptr;
-    RoutingRegion* topright = nullptr;
-    RoutingRegion* bottomleft = nullptr;
-    RoutingRegion* bottomright = nullptr;
-};
-
 enum IntersectType { Cross, OnEdge };
 
 /**
@@ -160,7 +153,7 @@ public:
         // Regions will be mapped to their lower-right corner in terms of indexing operations.
         // This is given the user of std::map::lower_bound to determine the map index
         for (const auto& region : regions) {
-            const auto& bottomRight = region->r.bottomRight();
+            const auto& bottomRight = region->rect().bottomRight();
             regionMap[bottomRight.x()][bottomRight.y()] = region.get();
         }
     }
@@ -226,6 +219,47 @@ NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
         }
     }
     return netlist;
+}
+
+void RegionGroup::setRegion(Corner c, RoutingRegion* region) {
+    switch (c) {
+        case Corner::BottomLeft: {
+            bottomleft = region;
+            return;
+        }
+        case Corner::BottomRight: {
+            bottomright = region;
+            return;
+        }
+        case Corner::TopLeft: {
+            topleft = region;
+            return;
+        }
+        case Corner::TopRight: {
+            topright = region;
+            return;
+        }
+    }
+}
+
+void RegionGroup::connectRegions() {
+    if (topleft != nullptr) {
+        topleft->setRegion(Edge::Bottom, bottomleft);
+        topleft->setRegion(Edge::Right, topright);
+    }
+
+    if (topright != nullptr) {
+        topright->setRegion(Edge::Left, topleft);
+        topright->setRegion(Edge::Bottom, bottomright);
+    }
+    if (bottomleft != nullptr) {
+        bottomleft->setRegion(Edge::Top, topleft);
+        bottomleft->setRegion(Edge::Right, bottomright);
+    }
+    if (bottomright != nullptr) {
+        bottomright->setRegion(Edge::Left, bottomleft);
+        bottomright->setRegion(Edge::Top, topright);
+    }
 }
 
 RoutingRegions createConnectivityGraph(Placement& placement) {
@@ -377,7 +411,7 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
                 if (std::find(placement.components.begin(), placement.components.end(), newRegionRect) ==
                     placement.components.end()) {
                     if (std::find_if(regions.begin(), regions.end(), [&newRegionRect](const auto& p) {
-                            return p.get()->r == newRegionRect;
+                            return p.get()->rect() == newRegionRect;
                         }) == regions.end())
 
                         // This is a new routing region
@@ -385,35 +419,19 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
                     RoutingRegion* newRegion = regions.rbegin()->get();
 
                     // Add region to regionGroups
-                    regionGroups[newRegionRect.topLeft()].bottomright = newRegion;
-                    regionGroups[newRegionRect.bottomLeft()].topright = newRegion;
-                    regionGroups[newRegionRect.topRight()].bottomleft = newRegion;
-                    regionGroups[newRegionRect.bottomRight()].topleft = newRegion;
+                    regionGroups[newRegionRect.topLeft()].setRegion(Corner::BottomRight, newRegion);
+                    regionGroups[newRegionRect.bottomLeft()].setRegion(Corner::TopRight, newRegion);
+                    regionGroups[newRegionRect.topRight()].setRegion(Corner::BottomLeft, newRegion);
+                    regionGroups[newRegionRect.bottomRight()].setRegion(Corner::TopLeft, newRegion);
                 }
             }
         }
     }
 
     // =================== Connectivity graph connection ========================== //
-    for (const auto& iter : regionGroups) {
-        const RegionGroup& group = iter.second;
-        if (group.topleft != nullptr) {
-            group.topleft->bottom = group.bottomleft;
-            group.topleft->right = group.topright;
-        }
-
-        if (group.topright != nullptr) {
-            group.topright->left = group.topleft;
-            group.topright->bottom = group.bottomright;
-        }
-        if (group.bottomleft != nullptr) {
-            group.bottomleft->top = group.topleft;
-            group.bottomleft->right = group.bottomright;
-        }
-        if (group.bottomright != nullptr) {
-            group.bottomright->left = group.bottomleft;
-            group.bottomright->top = group.topright;
-        }
+    for (auto& iter : regionGroups) {
+        RegionGroup& group = iter.second;
+        group.connectRegions();
     }
 
     // ======================= Routing Region Association ======================= //
@@ -430,6 +448,39 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
     }
 
     return regions;
+}
+
+const std::vector<RoutingRegion*> RoutingRegion::adjacentRegions() {
+    return {top, bottom, left, right};
+}
+
+void RoutingRegion::registerRoute(Route* r, Direction d) {
+    if (d == Direction::Horizontal) {
+        horizontalRoutes.push_back(r);
+    } else {
+        verticalRoutes.push_back(r);
+    }
+}
+
+void RoutingRegion::setRegion(Edge e, RoutingRegion* region) {
+    switch (e) {
+        case Edge::Top: {
+            top = region;
+            return;
+        }
+        case Edge::Bottom: {
+            bottom = region;
+            return;
+        }
+        case Edge::Left: {
+            left = region;
+            return;
+        }
+        case Edge::Right: {
+            right = region;
+            return;
+        }
+    }
 }
 
 QRect qrectToGridRect(const QRect& rect) {
@@ -450,7 +501,7 @@ V getDef(const std::map<K, V>& m, const K& key, const V& defval) {
 
 unsigned int heuristicCost(RoutingRegion* start, RoutingRegion* goal) {
     // The heuristic cost estimate is the manhattan distance between the center of the two routing regions
-    return (goal->r.center() - start->r.center()).manhattanLength();
+    return (goal->rect().center() - start->rect().center()).manhattanLength();
 }
 
 std::vector<RoutingRegion*> reconstructPath(Route* route, std::map<RoutingRegion*, RoutingRegion*> cameFromMap,
@@ -462,15 +513,10 @@ std::vector<RoutingRegion*> reconstructPath(Route* route, std::map<RoutingRegion
         // Based on the difference between the centers of the two routing regions, figure out if the move was
         // horizontally or vertically.
         // In the given routing region, assign a track to the Route
-        QPointF diff = cameFrom->r.center() - current->r.center();
+        QPointF diff = cameFrom->rect().center() - current->rect().center();
         Q_ASSERT(diff.x() == 0 || diff.y() == 0);
-        if (diff.x() == 0) {
-            cameFrom->assignedRoutes[route] = {Direction::Vertical, cameFrom->v_used};
-            cameFrom->v_used++;
-        } else {
-            cameFrom->assignedRoutes[route] = {Direction::Horizontal, cameFrom->h_used};
-            cameFrom->h_used++;
-        }
+        cameFrom->registerRoute(route, diff.x() == 0 ? Direction::Vertical : Direction::Horizontal);
+
         current = cameFrom;
         totalPath.insert(totalPath.begin(), current);
     }
@@ -529,7 +575,7 @@ void findRoute(std::unique_ptr<Route>& route) {
         openSet.erase(current);
         closedSet.emplace(current);
 
-        for (const auto& neighbour : {current->top, current->bottom, current->left, current->right}) {
+        for (const auto& neighbour : current->adjacentRegions()) {
             if (neighbour == nullptr) {
                 continue;
             }
