@@ -122,7 +122,7 @@ void ComponentGraphic::setExpanded(bool state) {
 }
 
 void ComponentGraphic::placeAndRouteSubcomponents() {
-    pr::PlaceRoute::get().placeAndRoute(m_subcomponents, m_routingRegions, m_netlist);
+    pr::PlaceRoute::get().placeAndRoute(m_subcomponents, m_routingRegions);
 }
 
 ComponentGraphic* ComponentGraphic::getParent() const {

@@ -557,8 +557,7 @@ void findRoute(std::unique_ptr<Route>& route) {
     Q_ASSERT(false);
 }
 
-void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components, RoutingRegions& regions,
-                               Netlist& cmpNetlist) {
+void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components, RoutingRegions& regions) {
     // Placement
     switch (m_placementAlgorithm) {
         case PlaceAlg::TopologicalSort: {
