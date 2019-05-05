@@ -16,7 +16,13 @@ Figure: A simulation of a 3-bit counter utilizing 3 full adders. **Note**; place
 
 
 # Building
-With the dependencies installed, open `vsrtl/CMakeLists.txt` as a CMake project in your favourite editor, run CMake and build `app.cpp`.
+```
+git clone --recurse-submodules https://github.com/mortbopet/VSRTL.git
+cd VSRTL/
+cmake .
+make -j$(nproc)
+```
+
 ## Dependencies:
 * **Core**
   * C++14 toolchain
