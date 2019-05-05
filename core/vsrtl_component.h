@@ -163,22 +163,20 @@ public:
     }
     bool hasSubcomponents() const { return m_subcomponents.size() != 0; }
 
-    /**
-     * getInput&OutputComponents does not return a set, although it naturally should. In partitioning the circuit graph,
-     * it is beneficial to know whether two components have multiple edges between each other.
-     */
-    std::vector<Component*> getInputComponents() const {
-        std::vector<Component*> v;
+    /* getInput&OutputComponents returns a mapping of k;v = [connected component, number of connections to the
+     * component] */
+    std::map<Component*, int> getInputComponents() const {
+        std::map<Component*, int> v;
         for (const auto& s : m_inputports) {
-            v.push_back(s->getInputPort()->getParent());
+            v[s->getParent()] = v[s->getParent()] + 1;
         }
         return v;
     }
-    std::vector<Component*> getOutputComponents() const {
-        std::vector<Component*> v;
+    std::map<Component*, int> getOutputComponents() const {
+        std::map<Component*, int> v;
         for (const auto& p : m_outputports) {
             for (const auto& pc : p->getOutputPorts())
-                v.push_back(pc->getParent());
+                v[pc->getParent()] = v[pc->getParent()] + 1;
         }
         return v;
     }
