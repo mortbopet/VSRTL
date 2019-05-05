@@ -137,7 +137,7 @@ using RoutingRegions = std::vector<std::unique_ptr<RoutingRegion>>;
 using PartitionedGraph = std::pair<std::set<Component*>, std::set<Component*>>;
 RoutingRegions createConnectivityGraph(Placement&);
 
-enum class PlaceAlg { TopologicalSort };
+enum class PlaceAlg { TopologicalSort, MinCutKL };
 enum class RouteAlg { Direct };
 /**
  * @brief The PlaceRoute class
@@ -162,7 +162,7 @@ public:
 private:
     PlaceRoute() {}
 
-    PlaceAlg m_placementAlgorithm = PlaceAlg::TopologicalSort;
+    PlaceAlg m_placementAlgorithm = PlaceAlg::MinCutKL;
     RouteAlg m_routingAlgorithm = RouteAlg::Direct;
 };
 }  // namespace pr
