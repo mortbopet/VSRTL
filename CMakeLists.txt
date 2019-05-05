@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9)
 set (CMAKE_CXX_STANDARD 17)
-project(vsrtl)
+project(vsrtl CXX)
 
 ######################################################################
 ## GUI setup
@@ -60,3 +60,7 @@ set(APP_NAME app)
 add_executable(${APP_NAME} app.cpp)
 target_link_libraries(${APP_NAME} Qt5::Core Qt5::Widgets)
 target_link_libraries(${APP_NAME} ${CORE_LIB} ${GRAPHICS_LIB} ${COMPONENTS_LIB})
+
+# Final sanity check to verify that C++17 is available in the compiler
+set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 17)
+set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
