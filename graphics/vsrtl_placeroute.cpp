@@ -28,8 +28,8 @@ void topologicalSortUtil(Component* c, std::map<Component*, bool>& visited, std:
     for (const auto& cc : c->getOutputComponents()) {
         // The find call ensures that the output components are inside this subcomponent. OutputComponents are "parent"
         // agnostic, and has no notion of enclosing components.
-        if (visited.find(cc) != visited.end() && !visited[cc]) {
-            topologicalSortUtil(cc, visited, stack);
+        if (visited.find(cc.first) != visited.end() && !visited[cc.first]) {
+            topologicalSortUtil(cc.first, visited, stack);
         }
     }
     stack.push_front(c);
@@ -180,6 +180,140 @@ public:
     // Indexable region map
     std::map<int, std::map<int, RoutingRegion*>> regionMap;
 };
+
+template <typename T>
+void largestRunningSum(const T& c, int& i_max, int& sum_max) {
+    int sum = 0;
+    for (int i = 0; i < c.size(); i++) {
+        const int newSum = sum + c[i];
+        if (newSum > sum) {
+            i_max = i;
+            sum_max = newSum;
+        }
+        sum = newSum;
+    }
+}
+
+int KLdValue(Component* node, const std::set<Component*>& A, const std::set<Component*>& B) {
+    // Assert that the node is only present in one of the sets
+    Q_ASSERT((A.count(node) == 0) ^ (B.count(0) == 0));
+    const auto& internalSet = A.count(node) > 0 ? A : B;
+    const auto& externalSet = B.count(node) > 0 ? A : B;
+
+    int I_cost = 0;
+    int E_cost = 0;
+
+    /* Get connected components of node.
+       Each call returns a mapping of connected component and number of occurances of said component. Merge the two
+       maps. */
+    auto connectedComponents = node->getInputComponents();
+    for (const auto& c : node->getOutputComponents()) {
+        // If no entry exists for c.first in connectedComponents, the entry will be zero initialized, and the value from
+        // OutputComponents will be added to this zero.
+        connectedComponents[c.first] = connectedComponents[c.first] + c.second;
+    }
+
+    // Compute internal and external costs
+    for (const auto& c : connectedComponents) {
+        if (internalSet.count(c.first) > 0) {
+            I_cost += c.second;
+        } else if (externalSet.count(c.first) > 0) {
+            E_cost += c.second;
+        } else {
+            // Ignore connections to components which are not considered part of the current partitioning run
+        }
+    }
+
+    return E_cost - I_cost;
+}
+
+template <typename T>
+void splitContainer(const T& in, T& A, T& B) {
+    int i = 0;
+    for (const auto& it : in) {
+        if (i < (in.size() / 2)) {
+            A.emplace(it);
+        } else {
+            B.emplace(it);
+        }
+        i++;
+    }
+}
+
+PartitionedGraph KernighanLin(std::set<Component*>& graph) {
+    Q_ASSERT(graph.size() > 1);
+    // Create an initial balanced distribution
+    std::set<Component*> A, B;
+    splitContainer(graph, A, B);
+
+    int g_max = INT_MIN;
+    do {
+        // Calculate D value for each node in A, B,
+        std::map<Component*, int> D;
+        for (const auto& c : graph) {
+            D[c] = KLdValue(c, A, B);
+        }
+
+        // let gv, av, and bv be empty lists
+        std::vector<Component*> av, bv;
+        std::vector<int> gv;
+
+        // While partitioning the graph, the number of nodes which are to be considered in each pass shrinks with each
+        // iteration. Reflect these changes in sets A_pass, B_pass
+        std::set<Component*> A_pass = A;
+        std::set<Component*> B_pass = B;
+        for (int i = 0; i < graph.size(); i++) {
+            // find a from A and b from B, such that g = D[a] + D[b] - 2*c(a, b) is maximal
+            Component* a = nullptr;
+            Component* b = nullptr;
+            int d_max = INT_MIN;
+            int g = d_max;
+            for (const auto& a_it : A_pass) {
+                for (const auto& b_it : B_pass) {
+                    // Cost between two nodes is equal to the D-value between the two nodes.
+                    g = D[a_it] + D[b_it] - 2 * KLdValue(a_it, {a_it}, {b_it});
+                    if (g > d_max) {
+                        a = a_it;
+                        b = b_it;
+                        d_max = g;
+                    }
+                }
+            }
+            Q_ASSERT(a != nullptr && b != nullptr);
+            // a and b which maximizes g has been found. Add values to gv, av, bv
+            gv.push_back(g);
+            av.push_back(a);
+            bv.push_back(b);
+            // remove a and b from further consideration in this pass.
+            A_pass.erase(a);
+            B_pass.erase(b);
+
+            // Update D values for the elements of A_pass, B_pass
+            for (const auto& c : A_pass) {
+                D[c] = KLdValue(c, A_pass, B_pass);
+            }
+            for (const auto& c : A_pass) {
+                D[c] = KLdValue(c, A_pass, B_pass);
+            }
+        }
+
+        // find index i which maximizes g_max, the sum of gv[0],...,gv[i]
+        int i_max;
+        largestRunningSum(gv, i_max, g_max);
+        if (g_max > 0) {
+            // Exchange av[0],av[1],...,av[i] with bv[0],bv[1],...,bv[i]
+            for (int i = 0; i <= i_max; i++) {
+                A.erase(av[i]);
+                A.emplace(bv[i]);
+                B.erase(bv[i]);
+                B.emplace(av[i]);
+            }
+        }
+    } while (g_max > 0);
+
+    // A min-cut partitioned graph can now be returned
+    return {A, B};
+}
 
 NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
     auto netlist = std::make_unique<Netlist>();

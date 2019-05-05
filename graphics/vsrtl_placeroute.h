@@ -6,6 +6,7 @@
 #include <QRect>
 #include <map>
 #include <memory>
+#include <set>
 #include <vector>
 
 namespace vsrtl {
@@ -133,6 +134,7 @@ using Netlist = std::vector<NetPtr>;
 WRAP_UNIQUEPTR(Netlist)
 using RoutingRegions = std::vector<std::unique_ptr<RoutingRegion>>;
 
+using PartitionedGraph = std::pair<std::set<Component*>, std::set<Component*>>;
 RoutingRegions createConnectivityGraph(Placement&);
 
 enum class PlaceAlg { TopologicalSort };
