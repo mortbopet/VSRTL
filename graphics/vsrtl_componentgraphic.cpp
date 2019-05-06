@@ -93,6 +93,11 @@ void ComponentGraphic::createSubcomponents() {
 
 void ComponentGraphic::setGridPos(const QPoint& p) {
     m_gridPos = p;
+    setPos(m_gridPos * GRID_SIZE);
+}
+
+const QPoint& ComponentGraphic::gridPos() const {
+    return m_gridPos;
 }
 
 void ComponentGraphic::setExpanded(bool state) {

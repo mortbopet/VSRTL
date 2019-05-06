@@ -270,7 +270,7 @@ public:
                 width = a_rect.width() + b_rect.width();
                 height = a_rect.height() > b_rect.height() ? a_rect.height() : b_rect.height();
             }
-            cachedRect = QRect(0, 0, width + rectpadding, height + rectpadding * 2);
+            cachedRect = QRect(0, 0, width, height + rectpadding * 2);
         } else if (value) {
             // Leaf node. Here we calculate the optimal rect size for a given component.
             auto* g = getGraphic<ComponentGraphic*>(value);
@@ -355,7 +355,7 @@ void MinCutPlacement(const std::vector<ComponentGraphic*>& components) {
     QRect circuitRect = rootPartitionNode.rect();
     // add padding around the edges of the circuit rectangle. padding is added in the positive x- and y directions to
     // maintain the top-left point of the circuit rectangle in (0,0)
-    const int padding = 4;
+    const int padding = 0;
     circuitRect.adjusted(0, 0, padding, padding);
 
     // Place the circuit with the center of the circuit rectangle as the initial offset point
@@ -937,18 +937,6 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
         default:
             Q_ASSERT(false);
     }
-
-    // Place graphical components based on new position of grid components
-    for (const auto& c : components) {
-        QPoint gridPos = c->adjustedMinGridRect(true, true).topLeft();
-        // The Place/Route algorithms sees a components grid rectangle to contain its ports - however, to translate
-        // component positioning to actual positioning, we must position according to whether an input port is present.
-        if (c->getComponent()->getInputs().size() > 0) {
-            gridPos += QPoint(PortGraphic::portGridWidth(), 0);
-        }
-        c->setPos(gridPos * GRID_SIZE);
-    }
-
     // Connectivity graph: Transform current components into a placement format suitable for creating the connectivity
     // graph
     Placement placement;
