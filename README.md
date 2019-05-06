@@ -12,8 +12,7 @@ If you would like to contribute, check the [issues](https://github.com/mortbopet
   <img src="https://github.com/mortbopet/vsrtl/blob/master/resources/gif1.gif?raw=true" width=75%/>
 </p>
 
-Figure: A simulation of a 3-bit counter utilizing 3 full adders. **Note**; placement and routing have not yet been implemented, and as such component placement in this image is manual, and signals are drawn as straight lines from source to sinks.
-
+Figure: A simulation of a 8-bit counter using full adders. **Note**; placement and routing is being actively developed, and as such positioning of objects and wire routing are not final.
 
 # Building
 ```
