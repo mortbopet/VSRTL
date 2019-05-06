@@ -194,13 +194,100 @@ void topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) 
     }
 }
 
-template <typename T>
+template <typename V, typename T>
 struct BinTree {
-    std::unique_ptr<BinTree> left, right;
-    T value = nullptr;
+    std::unique_ptr<T> a, b;
+    V value;
 };
 
-void recursivePartitioning(BinTree<Component*>& node, std::set<Component*> components) {
+enum class CutlineDirection { Alternating, Repeating };
+// The cutline direction within a node determines whether the children in the node are conceptually placed
+// left/right or up/down
+/*Horizontal:
+ *   ____
+ *  |___|a
+ *  |___|b
+ *
+ * vertical:
+ *   _____
+ * a|  |  |b
+ *  |__|__|
+ */
+
+class PartitioningTree : public BinTree<Component*, PartitioningTree> {
+public:
+    Direction cutlinedir;
+    const int rectpadding = 2;
+    QRect cachedRect;
+
+    void place(const QPoint offset) {
+        // Given an offset, propagates placement values down the tree structure, modifying offset according
+        if (a || b) {
+            Q_ASSERT(cachedRect.isValid());  // should have been calculated by a previous call to rect()
+            // Internal node
+            // Add this node's rect to the offset, and propagate the call further down the tree
+            QPoint a_offset = offset;
+            QPoint b_offset = offset;
+            if (cutlinedir == Direction::Horizontal) {
+                a_offset -= QPoint(0, cachedRect.height() / 4);
+                b_offset += QPoint(0, cachedRect.height() / 4);
+            } else if (cutlinedir == Direction::Vertical) {
+                a_offset -= QPoint(cachedRect.width() / 4, 0);
+                b_offset += QPoint(cachedRect.width() / 4, 0);
+            }
+            a->place(a_offset);
+            b->place(b_offset);
+        } else if (value) {
+            // Leaf node
+            // Place the component based on the offset received. The component should be centered at the offset point.
+            // GridPos() refers to the top-left corner of the component
+            auto* g = getGraphic<ComponentGraphic*>(value);
+            const auto componentRect = g->adjustedMinGridRect(false, false);
+            g->setGridPos(offset - QPoint(componentRect.width() / 2, componentRect.height() / 2));
+        }
+    }
+
+    QRect rect() {
+        // Check if rect has already been calculated. If so, return cached value
+        if (cachedRect.isValid()) {
+            return cachedRect;
+        }
+        // Calculate rect
+        if (a || b) {
+            // Internal node
+            // Get node rectangle sizes of subnodes and join them together based on this nodes cutline direction
+            const auto& a_rect = a->rect();
+            const auto& b_rect = b->rect();
+            int width, height;
+            if (cutlinedir == Direction::Horizontal) {
+                // For horizontal cuts, components will be placed above and below each other. Width will be the width of
+                // the largest component, height will be the total height of the two components
+                width = a_rect.width() > b_rect.width() ? a_rect.width() : b_rect.width();
+                height = a_rect.height() + b_rect.height();
+            } else if (cutlinedir == Direction::Vertical) {
+                // For vertical cuts, components will be placed left and right of each other. Height will be the height
+                // of the tallest component. Width will be the total width of the two components
+                width = a_rect.width() + b_rect.width();
+                height = a_rect.height() > b_rect.height() ? a_rect.height() : b_rect.height();
+            }
+            cachedRect = QRect(0, 0, width + rectpadding, height + rectpadding * 2);
+        } else if (value) {
+            // Leaf node. Here we calculate the optimal rect size for a given component.
+            auto* g = getGraphic<ComponentGraphic*>(value);
+
+            /** To the left and right of the component, add 1.5 * #_ports of spacing, allowing for the wires of a port
+             * to be routed + other wires. The 0.5 factor is added assuming that other components might route through
+             * the region adjacent to the region which will be placed next to the component.
+             * @todo: A linear factor for adding extra width to a components region is probably not applicable, and will
+             * add too much spacing for components with a large number of I/O */
+            auto rect = g->adjustedMinGridRect(true, false);
+            cachedRect = rect.adjusted(0, 0, value->getInputs().size() + value->getOutputs().size(), 0);
+        }
+        return cachedRect;
+    }
+};
+
+void recursivePartitioning(PartitioningTree& node, std::set<Component*> components, CutlineDirection dir) {
     // This function will recurse through a set of components, splitting the components into a binary tree. Within a
     // node in the tree, the left and right subtrees represents sets minimum cut sets, generated via. the Kernighan-Lin
     // algorithm.
@@ -217,32 +304,62 @@ void recursivePartitioning(BinTree<Component*>& node, std::set<Component*> compo
      *        1b
      * And so forth, until the full binary tree has been resolved.
      */
-    node.left = std::make_unique<BinTree<Component*>>();
-    node.right = std::make_unique<BinTree<Component*>>();
+    node.a = std::make_unique<PartitioningTree>();
+    node.b = std::make_unique<PartitioningTree>();
+
+    // Assign cutline direction to child nodes
+    Direction childrenCutlineDir;
+    if (dir == CutlineDirection::Alternating) {
+        childrenCutlineDir = node.cutlinedir == Direction::Horizontal ? Direction::Vertical : Direction::Horizontal;
+    } else if (dir == CutlineDirection::Repeating) {
+        // Unimplemnented
+        Q_ASSERT(false);
+    }
+    node.a->cutlinedir = childrenCutlineDir;
+    node.b->cutlinedir = childrenCutlineDir;
     if (components.size() <= 2) {
         // Leaf nodes, assign components in the tree
-        node.left->value = *components.begin();
+        node.a->value = *components.begin();
         if (components.size() == 2) {
-            node.right->value = *components.rbegin();
+            node.b->value = *components.rbegin();
         }
     } else {
         // partition the graph into two disjoint sets
         auto partitionedGraph = KernighanLin(components);
         // Run the cycle util with new nodes in the tree for each side of the partitioned graph
-        recursivePartitioning(*node.left, partitionedGraph.first);
-        recursivePartitioning(*node.right, partitionedGraph.second);
+        recursivePartitioning(*node.a, partitionedGraph.first, dir);
+        recursivePartitioning(*node.b, partitionedGraph.second, dir);
     }
 }
 
-void MinCutKLPlacement(const std::vector<ComponentGraphic*>& components) {
-    // Create a set of the components
+void MinCutPlacement(const std::vector<ComponentGraphic*>& components) {
+    /**
+      Min cut placement:
+      1. Use a partitioning algorithm to divide the netlist as well as the layout region in progressively smaller
+      sub-regions and sub-netlists
+      2. Each sub-region is assigned to a part of the sub-netlist.
+      3. The layout is divided in binary,steps and may be explored as a binary tree
+    */
+    // Create a set of components
     std::set<Component*> c_set;
     for (const auto& c : components) {
         c_set.emplace(c->getComponent());
     }
 
-    BinTree<Component*> rootPartitionNode;
-    recursivePartitioning(rootPartitionNode, c_set);
+    // recursively partition the graph and routing regions. Initial cut is determined to be a vertical cut
+    PartitioningTree rootPartitionNode;
+    rootPartitionNode.cutlinedir = Direction::Vertical;
+    recursivePartitioning(rootPartitionNode, c_set, CutlineDirection::Alternating);
+
+    // Get total size of the partitioned circuit
+    QRect circuitRect = rootPartitionNode.rect();
+    // add padding around the edges of the circuit rectangle. padding is added in the positive x- and y directions to
+    // maintain the top-left point of the circuit rectangle in (0,0)
+    const int padding = 4;
+    circuitRect.adjusted(0, 0, padding, padding);
+
+    // Place the circuit with the center of the circuit rectangle as the initial offset point
+    rootPartitionNode.place(circuitRect.center());
 }
 
 namespace {
@@ -809,12 +926,12 @@ void findRoute(std::unique_ptr<Route>& route) {
 void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components, RoutingRegions& regions) {
     // Placement
     switch (m_placementAlgorithm) {
-        case PlaceAlg::TopologicalSort: {
+        case PlaceAlg::Topological1D: {
             topologicalSortPlacement(components);
             break;
         }
-        case PlaceAlg::MinCutKL: {
-            MinCutKLPlacement(components);
+        case PlaceAlg::MinCut: {
+            MinCutPlacement(components);
             break;
         }
         default:
