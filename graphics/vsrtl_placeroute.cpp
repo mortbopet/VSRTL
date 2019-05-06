@@ -229,11 +229,11 @@ public:
             QPoint a_offset = offset;
             QPoint b_offset = offset;
             if (cutlinedir == Direction::Horizontal) {
-                a_offset -= QPoint(0, cachedRect.height() / 4);
-                b_offset += QPoint(0, cachedRect.height() / 4);
+                a_offset -= QPoint(0, a->rect().height() / 2);
+                b_offset += QPoint(0, b->rect().height() / 2);
             } else if (cutlinedir == Direction::Vertical) {
-                a_offset -= QPoint(cachedRect.width() / 4, 0);
-                b_offset += QPoint(cachedRect.width() / 4, 0);
+                a_offset -= QPoint(a->rect().width() / 2, 0);
+                b_offset += QPoint(b->rect().width() / 2, 0);
             }
             a->place(a_offset);
             b->place(b_offset);
@@ -259,29 +259,32 @@ public:
             const auto& a_rect = a->rect();
             const auto& b_rect = b->rect();
             int width, height;
-            if (cutlinedir == Direction::Horizontal) {
-                // For horizontal cuts, components will be placed above and below each other. Width will be the width of
-                // the largest component, height will be the total height of the two components
-                width = a_rect.width() > b_rect.width() ? a_rect.width() : b_rect.width();
-                height = a_rect.height() + b_rect.height();
-            } else if (cutlinedir == Direction::Vertical) {
-                // For vertical cuts, components will be placed left and right of each other. Height will be the height
-                // of the tallest component. Width will be the total width of the two components
-                width = a_rect.width() + b_rect.width();
-                height = a_rect.height() > b_rect.height() ? a_rect.height() : b_rect.height();
+            switch (cutlinedir) {
+                case Direction::Horizontal: {
+                    // For horizontal cuts, components will be placed above and below each other. Width will be the
+                    // width of the largest component, height will be the total height of the two components
+                    width = a_rect.width() > b_rect.width() ? a_rect.width() : b_rect.width();
+                    height = a_rect.height() + b_rect.height();
+                    break;
+                }
+                case Direction::Vertical: {
+                    // For vertical cuts, components will be placed left and right of each other. Height will be the
+                    // height of the tallest component. Width will be the total width of the two components
+                    width = a_rect.width() + b_rect.width();
+                    height = a_rect.height() > b_rect.height() ? a_rect.height() : b_rect.height();
+                    break;
+                }
             }
-            cachedRect = QRect(0, 0, width, height + rectpadding * 2);
+            cachedRect = QRect(0, 0, width, height);
         } else if (value) {
             // Leaf node. Here we calculate the optimal rect size for a given component.
             auto* g = getGraphic<ComponentGraphic*>(value);
 
-            /** To the left and right of the component, add 1.5 * #_ports of spacing, allowing for the wires of a port
-             * to be routed + other wires. The 0.5 factor is added assuming that other components might route through
-             * the region adjacent to the region which will be placed next to the component.
-             * @todo: A linear factor for adding extra width to a components region is probably not applicable, and will
-             * add too much spacing for components with a large number of I/O */
+            /** @todo: A better estimation of the required padding around a component based on its number of IO ports */
             auto rect = g->adjustedMinGridRect(true, false);
-            cachedRect = rect.adjusted(0, 0, value->getInputs().size() + value->getOutputs().size(), 0);
+            const int widthPadding = (value->getInputs().size() + value->getOutputs().size()) * 1.5;
+            const int heightPadding = (value->getInputs().size() + value->getOutputs().size()) / 2;
+            cachedRect = rect.adjusted(0, 0, widthPadding, heightPadding);
         }
         return cachedRect;
     }
