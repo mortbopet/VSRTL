@@ -294,8 +294,8 @@ public:
 
             /** @todo: A better estimation of the required padding around a component based on its number of IO ports */
             auto rect = g->adjustedMinGridRect(true, false);
-            const int widthPadding = (value->getInputs().size() + value->getOutputs().size()) * 1.5;
-            const int heightPadding = (value->getInputs().size() + value->getOutputs().size()) / 2;
+            const int widthPadding = (value->getInputs().size() + value->getOutputs().size());
+            const int heightPadding = widthPadding / 2;
             cachedRect = rect.adjusted(0, 0, widthPadding, heightPadding);
         }
         return cachedRect;
@@ -366,15 +366,27 @@ void MinCutPlacement(const std::vector<ComponentGraphic*>& components) {
     rootPartitionNode.cutlinedir = Direction::Vertical;
     recursivePartitioning(rootPartitionNode, c_set, CutlineDirection::Alternating);
 
-    // Get total size of the partitioned circuit
-    QRect circuitRect = rootPartitionNode.rect();
-    // add padding around the edges of the circuit rectangle. padding is added in the positive x- and y directions to
-    // maintain the top-left point of the circuit rectangle in (0,0)
-    const int padding = 4;
-    circuitRect.adjust(0, 0, padding, padding);
+    // With the circuit partitioned, call rect() on the top node, to propagate rect calculation and caching through the
+    // tree
+    rootPartitionNode.rect();
 
-    // Place the circuit with the center of the circuit rectangle as the initial offset point
-    rootPartitionNode.place(circuitRect.center());
+    // Assign the offset where the placement algorithm will start at.
+    // This offset will be the center between the two initial partitions + a small offset in the +x, +y direction to
+    // move the entire circuit away from the edge of the chip, making space for wires to be routed around the edge of
+    // the chip area.
+    /*
+     * __________
+     * | a |  b  |
+     * |   |     |
+     * |   x     |
+     * |   |     |
+     * |___|_____|
+     */
+    const QRect leftRect = rootPartitionNode.a->rect();
+    const int padding = 2;
+    QPoint offset(leftRect.right(), leftRect.center().y());
+    offset += QPoint(padding, padding);
+    rootPartitionNode.place(offset);
 }
 
 namespace {
