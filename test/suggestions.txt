@@ -1,4 +1,0 @@
-Negative constants - fix compile time verification of whether constant fits in bit field
-Combinational loops
-test assertion (ie. width asserttion of Primitives)
-Each pipeline could come with its own set of tests - perhaps some form of ArchitectureTestFramework class?
