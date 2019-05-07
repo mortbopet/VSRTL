@@ -168,7 +168,7 @@ public:
     std::map<Component*, int> getInputComponents() const {
         std::map<Component*, int> v;
         for (const auto& s : m_inputports) {
-            v[s->getParent()] = v[s->getParent()] + 1;
+            v[s->getInputPort()->getParent()] += 1;
         }
         return v;
     }
@@ -176,7 +176,7 @@ public:
         std::map<Component*, int> v;
         for (const auto& p : m_outputports) {
             for (const auto& pc : p->getOutputPorts())
-                v[pc->getParent()] = v[pc->getParent()] + 1;
+                v[pc->getParent()] += 1;
         }
         return v;
     }
