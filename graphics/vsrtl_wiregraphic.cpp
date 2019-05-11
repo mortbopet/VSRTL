@@ -1,7 +1,7 @@
 #include "vsrtl_wiregraphic.h"
+#include "core/vsrtl_port.h"
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_graphics_util.h"
-#include "vsrtl_port.h"
 #include "vsrtl_portgraphic.h"
 
 #include "vsrtl_graphics_defines.h"

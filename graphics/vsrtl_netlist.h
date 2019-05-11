@@ -4,7 +4,7 @@
 #include <QItemSelection>
 #include <QWidget>
 
-#include "vsrtl_design.h"
+#include "core/vsrtl_design.h"
 #include "vsrtl_netlistview.h"
 
 namespace vsrtl {

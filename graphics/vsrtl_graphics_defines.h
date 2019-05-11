@@ -2,7 +2,7 @@
 #define VSRTL_GRAPHICS_DEFINES_H
 
 #include <QMetaType>
-#include "vsrtl_defines.h"
+#include "core/vsrtl_defines.h"
 
 // Allow vsrtl base value types to be used as a QVariant
 Q_DECLARE_METATYPE(vsrtl::VSRTL_VT_S)

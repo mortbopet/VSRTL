@@ -1,9 +1,9 @@
 #ifndef VSRTL_PORTGRAPHIC_H
 #define VSRTL_PORTGRAPHIC_H
 
+#include "eda/vsrtl_placeroute.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphicsbase.h"
-#include "vsrtl_placeroute.h"
 #include "vsrtl_wiregraphic.h"
 
 #include <QFont>

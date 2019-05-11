@@ -6,7 +6,7 @@
 
 #include "vsrtl_netlistmodel.h"
 
-#include "vsrtl_design.h"
+#include "core/vsrtl_design.h"
 
 namespace vsrtl {
 

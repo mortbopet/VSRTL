@@ -5,7 +5,7 @@
 #include "vsrtl_registermodel.h"
 #include "vsrtl_treeitem.h"
 
-#include "vsrtl_design.h"
+#include "core/vsrtl_design.h"
 
 namespace vsrtl {
 

@@ -1,7 +1,7 @@
 #include "vsrtl_portgraphic.h"
+#include "core/vsrtl_port.h"
+#include "core/vsrtl_traversal_util.h"
 #include "vsrtl_componentgraphic.h"
-#include "vsrtl_port.h"
-#include "vsrtl_traversal_util.h"
 #include "vsrtl_wiregraphic.h"
 
 #include <QGraphicsSceneMouseEvent>

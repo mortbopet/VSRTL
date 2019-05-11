@@ -1,14 +1,14 @@
 #include "vsrtl_widget.h"
+#include "core/vsrtl_design.h"
+#include "core/vsrtl_traversal_util.h"
 #include "ui_vsrtl_widget.h"
-#include "vsrtl_design.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_scene.h"
-#include "vsrtl_traversal_util.h"
 #include "vsrtl_view.h"
 
-#include "vsrtl_shape.h"
+#include "core/vsrtl_core.h"
 
-#include "vsrtl_core.h"
+#include "vsrtl_shape.h"
 
 #include <memory>
 

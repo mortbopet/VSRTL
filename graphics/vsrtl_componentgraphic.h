@@ -4,11 +4,11 @@
 #include <QFont>
 #include <QToolButton>
 
-#include "vsrtl_component.h"
+#include "core/vsrtl_component.h"
+#include "eda/vsrtl_placeroute.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_graphicsbase.h"
-#include "vsrtl_placeroute.h"
 
 namespace vsrtl {
 

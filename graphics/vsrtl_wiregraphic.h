@@ -1,8 +1,8 @@
 #ifndef VSRTL_WIREGRAPHIC_H
 #define VSRTL_WIREGRAPHIC_H
 
-#include "vsrtl_graphicsbase.h"
-#include "vsrtl_placeroute.h"
+#include "eda/vsrtl_placeroute.h"
+#include "graphics/vsrtl_graphicsbase.h"
 
 #include <QPen>
 

@@ -1,6 +1,6 @@
 #include "vsrtl_mainwindow.h"
+#include "core/vsrtl_design.h"
 #include "ui_vsrtl_mainwindow.h"
-#include "vsrtl_design.h"
 #include "vsrtl_netlist.h"
 #include "vsrtl_netlistmodel.h"
 #include "vsrtl_widget.h"

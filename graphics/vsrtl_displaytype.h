@@ -1,8 +1,8 @@
 #ifndef VSRTL_DISPLAYTYPE_H
 #define VSRTL_DISPLAYTYPE_H
 
-#include "vsrtl_binutils.h"
-#include "vsrtl_defines.h"
+#include "core/vsrtl_binutils.h"
+#include "core/vsrtl_defines.h"
 
 #include <QString>
 

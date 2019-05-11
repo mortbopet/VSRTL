@@ -1,5 +1,5 @@
 #include "vsrtl_netlistdelegate.h"
-#include "vsrtl_defines.h"
+#include "core/vsrtl_defines.h"
 #include "vsrtl_displaytype.h"
 #include "vsrtl_treeitem.h"
 

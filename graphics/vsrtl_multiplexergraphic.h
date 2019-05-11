@@ -3,7 +3,7 @@
 
 #include "vsrtl_componentgraphic.h"
 
-#include "vsrtl_multiplexer.h"
+#include "core/vsrtl_multiplexer.h"
 
 namespace vsrtl {
 

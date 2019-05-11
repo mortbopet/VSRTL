@@ -3,7 +3,7 @@
 
 #include "vsrtl_componentgraphic.h"
 
-#include "vsrtl_register.h"
+#include "core/vsrtl_register.h"
 
 namespace vsrtl {
 
@@ -18,5 +18,4 @@ private:
 
 }  // namespace vsrtl
 
-
-#endif // VSRTL_REGISTERGRAPHIC_H
+#endif  // VSRTL_REGISTERGRAPHIC_H

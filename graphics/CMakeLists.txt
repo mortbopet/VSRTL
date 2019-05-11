@@ -25,9 +25,8 @@ endif()
 target_link_libraries(${GRAPHICS_LIB} Qt5::Core Qt5::Widgets)
 
 target_include_directories(${GRAPHICS_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${GRAPHICS_LIB} PUBLIC ${PROJECT_SOURCE_DIR})
 
-include_directories("../core/")
-include_directories("../eda/")
 
 set_target_properties(${GRAPHICS_LIB} PROPERTIES LINKER_LANGUAGE CXX)
 

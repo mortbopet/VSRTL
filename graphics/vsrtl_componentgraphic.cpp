@@ -1,5 +1,6 @@
 #include "vsrtl_componentgraphic.h"
 
+#include "core/vsrtl_traversal_util.h"
 #include "vsrtl_componentbutton.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
@@ -7,7 +8,6 @@
 #include "vsrtl_multiplexergraphic.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_registergraphic.h"
-#include "vsrtl_traversal_util.h"
 
 #include <qmath.h>
 #include <deque>
