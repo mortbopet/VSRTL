@@ -12,7 +12,6 @@ enum class Direction { Horizontal, Vertical };
 enum class Corner { TopLeft, TopRight, BottomRight, BottomLeft };
 enum class IntersectType { Cross, OnEdge };
 
-
 /**
  * @brief The Line class
  * Simple orthogonal line class with integer coordinates. Similar to QLine, however, this does not carry the strange
@@ -20,21 +19,17 @@ enum class IntersectType { Cross, OnEdge };
  */
 class Line {
 public:
-
-    Line(QPoint p1, QPoint p2) {
+    constexpr Line(const QPoint& p1, const QPoint& p2)
+        : m_p1(p1), m_p2(p2), m_orientation(p1.x() == p2.x() ? Direction::Vertical : Direction::Horizontal) {
         // Assert that the line is orthogonal to one of the grid axis
         Q_ASSERT(p1.x() == p2.x() || p1.y() == p2.y());
-        m_p1 = p1;
-        m_p2 = p2;
-
-        m_orientation = p1.x() == p2.x() ? Direction::Vertical : Direction::Horizontal;
     }
 
-    const QPoint& p1() const { return m_p1; }
-    const QPoint& p2() const { return m_p2; }
-    void setP1(const QPoint& p) { m_p1 = p; }
-    void setP2(const QPoint& p) { m_p2 = p; }
-    Direction orientation() const { return m_orientation; }
+    constexpr const QPoint& p1() const { return m_p1; }
+    constexpr const QPoint& p2() const { return m_p2; }
+    constexpr void setP1(const QPoint& p) { m_p1 = p; }
+    constexpr void setP2(const QPoint& p) { m_p2 = p; }
+    constexpr Direction orientation() const { return m_orientation; }
     bool intersect(const Line& other, QPoint& p, IntersectType type) const {
         Q_ASSERT(orientation() != other.orientation());
         const Line *hz, *vt;
@@ -69,7 +64,7 @@ public:
         return false;
     }
 
-    bool operator==(const Line& rhs) const { return m_p1 == rhs.m_p1 && m_p2 == rhs.m_p2; }
+    constexpr bool operator==(const Line& rhs) const { return m_p1 == rhs.m_p1 && m_p2 == rhs.m_p2; }
 
 private:
     QPoint m_p1;
@@ -77,7 +72,7 @@ private:
     Direction m_orientation;
 };
 
-static inline Line getEdge(const QRect& rect, Edge e) {
+constexpr inline Line getEdge(const QRect& rect, Edge e) {
     switch (e) {
         case Edge::Top: {
             return Line(rect.topLeft(), rect.topRight());
@@ -94,7 +89,7 @@ static inline Line getEdge(const QRect& rect, Edge e) {
     }
 }
 
-}
-}
+}  // namespace eda
+}  // namespace vsrtl
 
-#endif // GEOMETRY_H
+#endif  // GEOMETRY_H
