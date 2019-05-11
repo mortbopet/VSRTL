@@ -9,16 +9,14 @@
 #include <set>
 #include <vector>
 
+#include "geometry.h"
+
 namespace vsrtl {
 class ComponentGraphic;
 class PortGraphic;
 class Component;
 
-namespace pr {
-
-enum class Edge { Top, Bottom, Left, Right };
-enum class Direction { Horizontal, Vertical };
-enum class Corner { TopLeft, TopRight, BottomRight, BottomLeft };
+namespace eda {
 
 struct Route;
 class RoutingRegion;
@@ -165,7 +163,7 @@ private:
     PlaceAlg m_placementAlgorithm = PlaceAlg::MinCut;
     RouteAlg m_routingAlgorithm = RouteAlg::Direct;
 };
-}  // namespace pr
+}  // namespace eda
 }  // namespace vsrtl
 
 #endif  // VSRTL_PLACEROUTE_H

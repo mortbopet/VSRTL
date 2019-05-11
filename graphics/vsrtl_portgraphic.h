@@ -34,7 +34,7 @@ public:
     void updateInputWire();
     void updateWireGeometry();
 
-    void setNet(pr::NetPtr& net);
+    void setNet(eda::NetPtr& net);
 
     QPointF getInputPoint() const;
     QPointF getOutputPoint() const;

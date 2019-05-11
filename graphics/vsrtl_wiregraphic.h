@@ -25,13 +25,13 @@ public:
     PortGraphic* getFromPort() const { return m_fromPort; }
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }
 
-    void setNet(pr::NetPtr& net);
+    void setNet(eda::NetPtr& net);
 
 private:
-    PortGraphic* m_fromPort;
+    PortGraphic* m_fromPort = nullptr;
     const std::vector<Port*>& m_toPorts;
     std::vector<PortGraphic*> m_toGraphicPorts;
-    pr::NetPtr m_net;
+    eda::NetPtr m_net;
 };
 }  // namespace vsrtl
 

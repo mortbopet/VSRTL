@@ -98,8 +98,8 @@ protected:
     Component& m_component;
 
     ComponentButton* m_expandButton = nullptr;
-    pr::RoutingRegions m_routingRegions;
-    pr::Netlist m_netlist;
+    eda::RoutingRegions m_routingRegions;
+    eda::Netlist m_netlist;
 
 public:
     /**

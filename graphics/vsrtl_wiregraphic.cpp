@@ -35,7 +35,7 @@ QRectF WireGraphic::boundingRect() const {
     return br;
 }
 
-void WireGraphic::setNet(pr::NetPtr& net) {
+void WireGraphic::setNet(eda::NetPtr& net) {
     m_net = std::move(net);
 }
 
