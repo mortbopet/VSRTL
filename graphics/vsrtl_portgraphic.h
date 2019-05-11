@@ -42,8 +42,8 @@ public:
     const QPen& getPen();
 
     static int portGridWidth() { return s_portGridWidth; }
-    int gridIndex() { return m_gridIndex; }
-    void setGridIndex(int i) { m_gridIndex = i; }
+    unsigned int gridIndex() { return m_gridIndex; }
+    void setGridIndex(unsigned int i) { m_gridIndex = i; }
 
 private slots:
     void updatePenColor();
@@ -61,13 +61,13 @@ private:
     ValueDisplayFormat m_valueBase = ValueDisplayFormat::baseTen;
 
     static int s_portGridWidth;
-    int m_gridIndex;
+    unsigned int m_gridIndex;
 
     QRectF m_boundingRect;
     QRectF m_textRect;
 
     PortType m_type;
-    Port* m_port;
+    Port* m_port = nullptr;
 
     WireGraphic* m_outputWire = nullptr;
     WireGraphic* m_inputWire = nullptr;

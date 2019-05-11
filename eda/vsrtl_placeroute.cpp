@@ -17,8 +17,8 @@ void largestRunningSum(const T& c, unsigned int& i_max, int& sum_max) {
     int sum = c[0];
     sum_max = sum;
     i_max = 0;
-    for (int i = 1; i < c.size(); i++) {
-        const int newSum = sum + c[i];
+    for (unsigned int i = 1; i < c.size(); i++) {
+        const auto newSum = sum + c[i];
         if (newSum > sum) {
             i_max = i;
             sum_max = newSum;
@@ -294,8 +294,8 @@ public:
 
             /** @todo: A better estimation of the required padding around a component based on its number of IO ports */
             auto rect = g->adjustedMinGridRect(true, false);
-            const int widthPadding = (value->getInputs().size() + value->getOutputs().size());
-            const int heightPadding = widthPadding / 2;
+            const int widthPadding = static_cast<int>(value->getInputs().size() + value->getOutputs().size());
+            const int heightPadding = static_cast<int>(widthPadding / 2);
             cachedRect = rect.adjusted(0, 0, widthPadding, heightPadding);
         }
         return cachedRect;
@@ -686,7 +686,7 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
     // Find intersections between horizontal and vertical region lines, and create corresponding routing regions.
     QPoint regionBottomLeft, regionBottomRight, regionTopLeft;
     QPoint regionBottom, regionTop;
-    Line* topHzLine;
+    Line* topHzLine = nullptr;
     for (int hi = 1; hi < hz_region_lines.size(); hi++) {
         for (int vi = 1; vi < vt_region_lines.size(); vi++) {
             const auto& vt_region_line = vt_region_lines[vi];
@@ -846,7 +846,7 @@ V getDef(const std::map<K, V>& m, const K& key, const V& defval) {
     }
 }
 
-unsigned int heuristicCost(RoutingRegion* start, RoutingRegion* goal) {
+int heuristicCost(RoutingRegion* start, RoutingRegion* goal) {
     // The heuristic cost estimate is the manhattan distance between the center of the two routing regions
     return (goal->rect().center() - start->rect().center()).manhattanLength();
 }
@@ -860,7 +860,7 @@ std::vector<RoutingRegion*> reconstructPath(Route* route, std::map<RoutingRegion
         // Based on the difference between the centers of the two routing regions, figure out if the move was
         // horizontally or vertically.
         // In the given routing region, assign a track to the Route
-        QPointF diff = cameFrom->rect().center() - current->rect().center();
+        QPoint diff = cameFrom->rect().center() - current->rect().center();
         Q_ASSERT(diff.x() == 0 || diff.y() == 0);
         cameFrom->registerRoute(route, diff.x() == 0 ? Direction::Vertical : Direction::Horizontal);
 
@@ -891,11 +891,11 @@ void findRoute(std::unique_ptr<Route>& route) {
     std::map<RoutingRegion*, RoutingRegion*> cameFrom;
 
     // For each node, the cost of getting from the start node to that node.
-    std::map<RoutingRegion*, unsigned int> gScore;
+    std::map<RoutingRegion*, int> gScore;
 
     // For each node, the total cost of getting from the start node to the goal
     // by passing by that node. That value is partly known, partly heuristic.
-    std::map<RoutingRegion*, unsigned int> fScore;
+    std::map<RoutingRegion*, int> fScore;
 
     // The cost of going from start to start is zero.
     gScore[start] = 0;
@@ -903,12 +903,12 @@ void findRoute(std::unique_ptr<Route>& route) {
     // For the first node, that value is completely heuristic.
     fScore[start] = heuristicCost(start, goal);
 
-    RoutingRegion* current;
+    RoutingRegion* current = nullptr;
     while (!openSet.empty()) {
         // Find node in openSet with the lowest fScore value
-        unsigned int lowestScore = static_cast<unsigned int>(-1);
+        int lowestScore = INT_MAX;
         for (const auto& node : openSet) {
-            if (getDef(fScore, node, UINT_MAX) < lowestScore) {
+            if (getDef(fScore, node, INT_MAX) < lowestScore) {
                 current = node;
                 lowestScore = fScore[node];
             }
@@ -932,19 +932,19 @@ void findRoute(std::unique_ptr<Route>& route) {
             }
 
             // The distance from start to a neighbor
-            unsigned int tentative_gScore = getDef(gScore, current, UINT_MAX) + heuristicCost(current, neighbour);
+            int tentative_gScore = getDef(gScore, current, INT_MAX) + heuristicCost(current, neighbour);
 
             if (openSet.count(neighbour) == 0) {
                 // Discovered a new node
                 openSet.emplace(neighbour);
-            } else if (tentative_gScore >= getDef(gScore, neighbour, UINT_MAX)) {
+            } else if (tentative_gScore >= getDef(gScore, neighbour, INT_MAX)) {
                 continue;
             }
 
             // This path is the best until now. Record it!
             cameFrom[neighbour] = current;
             gScore[neighbour] = tentative_gScore;
-            fScore[neighbour] = getDef(gScore, neighbour, UINT_MAX) + heuristicCost(neighbour, goal);
+            fScore[neighbour] = getDef(gScore, neighbour, INT_MAX) + heuristicCost(neighbour, goal);
         }
     }
     Q_ASSERT(false);
@@ -961,8 +961,6 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
             MinCutPlacement(components);
             break;
         }
-        default:
-            Q_ASSERT(false);
     }
     // Connectivity graph: Transform current components into a placement format suitable for creating the connectivity
     // graph
@@ -1012,7 +1010,7 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
 }  // namespace vsrtl
 
 // less-than operator for QPointF, required for storing QPointF as index in a std::map
-bool operator<(const QPointF& p1, const QPointF& p2) {
+bool operator<(const QPoint& p1, const QPoint& p2) {
     if (p1.x() == p2.x()) {
         return p1.y() < p2.y();
     }

@@ -33,7 +33,7 @@ public:
 
     void forceValue(VSRTL_VT_U value) {
         // Sign-extension with unsigned type forces width truncation to m_width bits
-        m_savedValue = signextend(value, m_width);
+        m_savedValue = signextend<VSRTL_VT_U>(value, m_width);
         // Forced values are a modification of the current state and thus not pushed onto the rewind stack
     }
 

@@ -23,9 +23,9 @@ inline T signextend(const T x) {
 }
 
 // Runtime signextension
-template <typename T>
-inline T signextend(const T x, unsigned B) {
-    int const m = CHAR_BIT * sizeof(T) - B;
+template <typename T, typename TV>
+inline T signextend(const TV x, unsigned B) {
+    int const m = CHAR_BIT * sizeof(TV) - B;
     return (x << m) >> m;
 }
 

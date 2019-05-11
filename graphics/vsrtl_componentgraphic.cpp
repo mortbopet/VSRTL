@@ -25,12 +25,11 @@
 namespace vsrtl {
 
 static constexpr qreal c_resizeMargin = GRID_SIZE;
-static constexpr qreal c_collapsedSideMargin = 15;
 
 QMap<std::type_index, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
 
 ComponentGraphic::ComponentGraphic(Component& c)
-    : m_component(c), m_minGridRect(ComponentGraphic::getComponentMinGridRect(c.getTypeId())) {
+    : m_minGridRect(ComponentGraphic::getComponentMinGridRect(c.getTypeId())), m_component(c) {
     c.changed.Connect(this, &ComponentGraphic::updateSlot);
     c.registerGraphic(this);
 }
@@ -193,7 +192,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
 
             // Add width to the component based on the name of the component - we define that 2 characters is equal to 1
             // grid spacing : todo; this ratio should be configurable
-            m_gridRect.adjust(0, 0, m_component.getName().length() / GRID_SIZE, 0);
+            m_gridRect.adjust(0, 0, static_cast<int>(m_component.getName().length()) / GRID_SIZE, 0);
             break;
         }
         case GeometryChange::Resize: {
@@ -225,7 +224,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         int i = 0;
         const qreal in_seg_y = sceneRect.height() / (m_inputPorts.size());
         for (const auto& p : m_inputPorts) {
-            int gridIndex = roundUp((i * in_seg_y + in_seg_y / 2), GRID_SIZE) / GRID_SIZE;
+            int gridIndex = roundUp(static_cast<int>(i * in_seg_y + in_seg_y / 2), GRID_SIZE) / GRID_SIZE;
             p->setGridIndex(gridIndex);
             const qreal y = gridIndex * GRID_SIZE - GRID_SIZE / 2;
             p->setPos(QPointF(sceneRect.left() - GRID_SIZE * PortGraphic::portGridWidth(), y));
@@ -234,7 +233,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         i = 0;
         const qreal out_seg_y = sceneRect.height() / (m_outputPorts.size());
         for (const auto& p : m_outputPorts) {
-            const int gridIndex = roundUp((i * out_seg_y + out_seg_y / 2), GRID_SIZE) / GRID_SIZE;
+            const int gridIndex = roundUp(static_cast<int>(i * out_seg_y + out_seg_y / 2), GRID_SIZE) / GRID_SIZE;
             p->setGridIndex(gridIndex);
             const qreal y = gridIndex * GRID_SIZE - GRID_SIZE / 2;
             p->setPos(QPointF(sceneRect.right(), y));
@@ -307,16 +306,6 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
 void ComponentGraphic::setShape(const QPainterPath& shape) {
     m_shape = shape;
 }
-
-namespace {
-qreal largestPortWidth(const QMap<Port*, PortGraphic*>& ports) {
-    qreal width = 0;
-    for (const auto& port : ports) {
-        width = port->boundingRect().width() > width ? port->boundingRect().width() : width;
-    }
-    return width;
-}
-}  // namespace
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
     QColor color = hasSubcomponents() ? QColor("#ecf0f1") : QColor(Qt::white);

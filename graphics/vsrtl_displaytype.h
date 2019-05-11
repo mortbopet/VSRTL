@@ -15,7 +15,7 @@ static const auto binRegex = QRegExp("0[bB][0-1]+");
 static const auto unsignedRegex = QRegExp("[0-9]+");
 static const auto signedRegex = QRegExp("[-]*[0-9]+");
 
-static inline VSRTL_VT_U decodeDisplayValue(const QString& valueString, int width, DisplayType t) {
+static inline VSRTL_VT_U decodeDisplayValue(const QString& valueString, unsigned int width, DisplayType t) {
     bool ok = false;
     VSRTL_VT_U value;
     switch (t) {
@@ -39,7 +39,7 @@ static inline VSRTL_VT_U decodeDisplayValue(const QString& valueString, int widt
             // set zero as sign bit at $width
             value &= ~(0x1 << width);
             // Sign extend from $width
-            value = signextend(value, width);
+            value = signextend<VSRTL_VT_U>(value, width);
             break;
         }
     }
@@ -47,7 +47,7 @@ static inline VSRTL_VT_U decodeDisplayValue(const QString& valueString, int widt
     return value;
 }
 
-static inline QString encodeDisplayValue(VSRTL_VT_U value, int width, DisplayType t) {
+static inline QString encodeDisplayValue(VSRTL_VT_U value, unsigned int width, DisplayType t) {
     switch (t) {
         case DisplayType::Hex: {
             return "0x" + QString::number(value, 16).rightJustified(8, '0');

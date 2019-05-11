@@ -48,7 +48,7 @@ struct RouteAssignment {
 
 class RoutingRegion {
 public:
-    RoutingRegion(QRect rect) : h_cap(rect.width()), v_cap(rect.height()), r(rect) {}
+    RoutingRegion(QRect rect) : r(rect), h_cap(rect.width()), v_cap(rect.height()) {}
 
     const QRect& rect() { return r; }
     const std::vector<RoutingRegion*> adjacentRegions();

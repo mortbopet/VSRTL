@@ -22,8 +22,8 @@ inline int roundNear(int v, int m) {
 }
 
 inline void roundNear(QPointF& p, int m) {
-    p.setX(roundNear(p.x(), m));
-    p.setY(roundNear(p.y(), m));
+    p.setX(roundNear(static_cast<int>(p.x()), m));
+    p.setY(roundNear(static_cast<int>(p.y()), m));
 }
 
 template <typename RectType>
@@ -75,7 +75,8 @@ static inline QRect sceneToGrid(QRectF sceneRect) {
     sceneRect.setHeight(sceneRect.height() / GRID_SIZE);
 
     // When converting to integer-based grid rect, round up to ensure all components are inside
-    return QRect(QPoint(0, 0), QSize(std::ceil(sceneRect.width()), std::ceil(sceneRect.height())));
+    return QRect(QPoint(0, 0), QSize(static_cast<int>(std::ceil(sceneRect.width())),
+                                     static_cast<int>(std::ceil(sceneRect.height()))));
 }
 
 }  // namespace vsrtl

@@ -24,7 +24,7 @@ enum class PropagationState { unpropagated, propagated, constant };
 class Port : public Base {
 public:
     Port(std::string name, Component* parent, unsigned int width = 0)
-        : m_parent(parent), m_name(name), m_width(width) {}
+        : m_parent(parent), m_width(width), m_name(name) {}
     bool isConnected() const { return m_inputPort != nullptr || m_propagationFunction != nullptr; }
     std::string getName() const { return m_name; }
     Component* getParent() const { return m_parent; }
@@ -128,15 +128,17 @@ protected:
     // propagated.
     VSRTL_VT_U m_value = 0xdeadbeef;
 
+    Component* m_parent = nullptr;
+
+    PropagationState m_propagationState = PropagationState::unpropagated;
+    unsigned int m_width = 0;
+
     // A port may only have a single input  ->[port]
     Port* m_inputPort = nullptr;
     // A port may have multiple outputs     [port]->...->
     std::vector<Port*> m_outputPorts;
 
     std::function<VSRTL_VT_U()> m_propagationFunction;
-    PropagationState m_propagationState = PropagationState::unpropagated;
-    Component* m_parent;
-    unsigned int m_width = 0;
 
 private:
     std::string m_name;
