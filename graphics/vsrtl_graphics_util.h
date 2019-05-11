@@ -43,8 +43,8 @@ RectType boundingRectOfRects(const RectType& r1, const RectType& r2) {
     return r;
 }
 
-template <typename RectType>
-RectType boundingRectOfRects(const QList<RectType>& rects) {
+template <typename RectType, template <typename> class Container>
+RectType boundingRectOfRects(const Container<RectType>& rects) {
     RectType br;
     for (const auto& r : rects) {
         br = boundingRectOfRects(br, r);
