@@ -1,4 +1,4 @@
-#include "vsrtl_placeroute.h"
+﻿#include "vsrtl_placeroute.h"
 #include "core/vsrtl_component.h"
 #include "core/vsrtl_traversal_util.h"
 #include "graphics/vsrtl_componentgraphic.h"
@@ -8,6 +8,7 @@
 #include <QRect>
 #include <cmath>
 #include <deque>
+#include "astar.h"
 
 namespace vsrtl {
 namespace eda {
@@ -751,120 +752,6 @@ QRect qrectToGridRect(const QRect& rect) {
     return QRect(rect.topLeft(), bottomRight);
 }
 
-template <typename K, typename V>
-V getDef(const std::map<K, V>& m, const K& key, const V& defval) {
-    typename std::map<K, V>::const_iterator it = m.find(key);
-    if (it == m.end()) {
-        return defval;
-    } else {
-        return it->second;
-    }
-}
-
-int heuristicCost(RoutingRegion* start, RoutingRegion* goal) {
-    // The heuristic cost estimate is the manhattan distance between the center of the two routing regions
-    return (goal->rect().center() - start->rect().center()).manhattanLength();
-}
-
-std::vector<RoutingRegion*> reconstructPath(Route* route, std::map<RoutingRegion*, RoutingRegion*> cameFromMap,
-                                            RoutingRegion* current) {
-    std::vector<RoutingRegion*> totalPath{current};
-
-    while (cameFromMap.count(current) > 0) {
-        auto cameFrom = cameFromMap[current];
-        // Based on the difference between the centers of the two routing regions, figure out if the move was
-        // horizontally or vertically.
-        // In the given routing region, assign a track to the Route
-        QPoint diff = cameFrom->rect().center() - current->rect().center();
-        Q_ASSERT(diff.x() == 0 || diff.y() == 0);
-        cameFrom->registerRoute(route, diff.x() == 0 ? Direction::Vertical : Direction::Horizontal);
-
-        current = cameFrom;
-        totalPath.insert(totalPath.begin(), current);
-    }
-    return totalPath;
-}
-
-void findRoute(std::unique_ptr<Route>& route) {
-    // Blatantly copied from https://en.wikipedia.org/wiki/A*_search_algorithm
-    // Precondition: start- and stop regions must have their horizontal and vertical capacities pre-decremented for the
-    // given number of terminals within them
-
-    RoutingRegion* start = route->start.region;
-    RoutingRegion* goal = route->end.region;
-
-    // The set of nodes already evaluated
-    std::set<RoutingRegion*> closedSet;
-
-    // The set of currently discovered nodes that are not evaluated yet.
-    // Initially, only the start node is known.
-    std::set<RoutingRegion*> openSet{start};
-
-    // For each node, which node it can most efficiently be reached from.
-    // If a node can be reached from many nodes, cameFrom will eventually contain the
-    // most efficient previous step.
-    std::map<RoutingRegion*, RoutingRegion*> cameFrom;
-
-    // For each node, the cost of getting from the start node to that node.
-    std::map<RoutingRegion*, int> gScore;
-
-    // For each node, the total cost of getting from the start node to the goal
-    // by passing by that node. That value is partly known, partly heuristic.
-    std::map<RoutingRegion*, int> fScore;
-
-    // The cost of going from start to start is zero.
-    gScore[start] = 0;
-
-    // For the first node, that value is completely heuristic.
-    fScore[start] = heuristicCost(start, goal);
-
-    RoutingRegion* current = nullptr;
-    while (!openSet.empty()) {
-        // Find node in openSet with the lowest fScore value
-        int lowestScore = INT_MAX;
-        for (const auto& node : openSet) {
-            if (getDef(fScore, node, INT_MAX) < lowestScore) {
-                current = node;
-                lowestScore = fScore[node];
-            }
-        }
-
-        if (current == goal) {
-            route->path = reconstructPath(route.get(), cameFrom, current);
-            return;
-        }
-
-        openSet.erase(current);
-        closedSet.emplace(current);
-
-        for (const auto& neighbour : current->adjacentRegions()) {
-            if (neighbour == nullptr) {
-                continue;
-            }
-            if (closedSet.count(neighbour) > 0) {
-                // Ignore the neighbor which is already evaluated.
-                continue;
-            }
-
-            // The distance from start to a neighbor
-            int tentative_gScore = getDef(gScore, current, INT_MAX) + heuristicCost(current, neighbour);
-
-            if (openSet.count(neighbour) == 0) {
-                // Discovered a new node
-                openSet.emplace(neighbour);
-            } else if (tentative_gScore >= getDef(gScore, neighbour, INT_MAX)) {
-                continue;
-            }
-
-            // This path is the best until now. Record it!
-            cameFrom[neighbour] = current;
-            gScore[neighbour] = tentative_gScore;
-            fScore[neighbour] = getDef(gScore, neighbour, INT_MAX) + heuristicCost(neighbour, goal);
-        }
-    }
-    Q_ASSERT(false);
-}
-
 void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components, RoutingRegions& regions) {
     // Placement
     switch (m_placementAlgorithm) {
@@ -895,6 +782,10 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
     const auto regionMap = RegionMap(cGraph);
 
     /* ======================= ROUTING ======================= */
+    // Define a heuristic cost function for routing regions
+    const auto rrHeuristic = [](RoutingRegion* start, RoutingRegion* goal) {
+        return (goal->rect().center() - start->rect().center()).manhattanLength();
+    };
     auto netlist = createNetlist(placement, regionMap);
 
     // Route via. a* search between start- and stop nodes, using the available routing regions
@@ -906,7 +797,8 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
 
         // Find a route to each start-stop pair in the net
         for (auto& route : *net) {
-            findRoute(route);
+            route->path = AStar<RoutingRegion, &RoutingRegion::adjacentRegions>(route->start.region, route->end.region,
+                                                                                rrHeuristic);
         }
         // Move net pointer ownership to a start port of the net (All start ports are equal within the net)
         (*net)[0]->start.port->setNet(net);
