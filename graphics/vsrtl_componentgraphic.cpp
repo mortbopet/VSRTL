@@ -9,6 +9,8 @@
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_registergraphic.h"
 
+#include "eda/utilities.h"
+
 #include <qmath.h>
 #include <deque>
 
@@ -26,12 +28,12 @@ namespace vsrtl {
 
 static constexpr qreal c_resizeMargin = GRID_SIZE;
 
-QMap<std::type_index, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
+ComponentGraphic::ComponentGraphic(Component& c) : m_component(c), m_gridComponent(c) {
+    m_gridComponent.modified.Connect(this, &ComponentGraphic::updateSlot);
 
-ComponentGraphic::ComponentGraphic(Component& c)
-    : m_minGridRect(ComponentGraphic::getComponentMinGridRect(c.getTypeId())), m_component(c) {
-    c.changed.Connect(this, &ComponentGraphic::updateSlot);
-    c.registerGraphic(this);
+    // Register this as the super object of the grid component. The grid component itself will be the super object of
+    // the Component c
+    m_gridComponent.registerSuper(this);
 }
 
 bool ComponentGraphic::hasSubcomponents() const {
@@ -48,10 +50,10 @@ void ComponentGraphic::initialize() {
 
     // Create IO ports of Component
     for (const auto& c : m_component.getInputs()) {
-        m_inputPorts[c.get()] = new PortGraphic(c.get(), PortType::in, this);
+        m_inputPorts[c.get()] = new PortGraphic(*getSuper<eda::GridPort*>(c.get()), PortType::in, this);
     }
     for (const auto& c : m_component.getOutputs()) {
-        m_outputPorts[c.get()] = new PortGraphic(c.get(), PortType::out, this);
+        m_outputPorts[c.get()] = new PortGraphic(*getSuper<eda::GridPort*>(c.get()), PortType::out, this);
     }
 
     if (hasSubcomponents()) {
@@ -61,6 +63,10 @@ void ComponentGraphic::initialize() {
 
         createSubcomponents();
     }
+
+    // All subcomponents have been created, and registerred their super components. Propagate initialization call to the
+    // underlying GridComponent's
+    m_gridComponent.initialize();
 
     // By default, a component is collapsed. This has no effect if a component does not have any subcomponents
     setExpanded(false);
@@ -90,15 +96,6 @@ void ComponentGraphic::createSubcomponents() {
     }
 }
 
-void ComponentGraphic::setGridPos(const QPoint& p) {
-    m_gridPos = p;
-    setPos(m_gridPos * GRID_SIZE);
-}
-
-const QPoint& ComponentGraphic::gridPos() const {
-    return m_gridPos;
-}
-
 void ComponentGraphic::setExpanded(bool state) {
     m_isExpanded = state;
     GeometryChange changeReason = GeometryChange::None;
@@ -126,7 +123,7 @@ void ComponentGraphic::setExpanded(bool state) {
 }
 
 void ComponentGraphic::placeAndRouteSubcomponents() {
-    eda::PlaceRoute::get().placeAndRoute(m_subcomponents, m_routingRegions);
+    eda::PlaceRoute::get().placeAndRoute(m_gridComponent.subcomponents(), m_routingRegions);
 }
 
 ComponentGraphic* ComponentGraphic::getParent() const {
@@ -139,40 +136,10 @@ QRect ComponentGraphic::subcomponentBoundingGridRect() const {
     // apply as grid rectangle
     auto sceneBoundingRect = QRectF();
     for (const auto& c : m_subcomponents) {
-        sceneBoundingRect =
-            boundingRectOfRects<QRectF>(sceneBoundingRect, mapFromItem(c, c->boundingRect()).boundingRect());
+        sceneBoundingRect = eda::boundingRect(sceneBoundingRect, mapFromItem(c, c->boundingRect()).boundingRect());
     }
 
     return sceneToGrid(sceneBoundingRect);
-}
-
-QRect ComponentGraphic::adjustedMinGridRect(bool includePorts, bool moveToParentGridPos) const {
-    // Returns the minimum grid rect of the current component with ports taken into account
-
-    // Add height to component based on the largest number of input or output ports. There should always be a
-    // margin of 1 on top- and bottom of component
-    QRect adjustedRect = m_minGridRect;
-    const int largestPortSize = m_inputPorts.size() > m_outputPorts.size() ? m_inputPorts.size() : m_outputPorts.size();
-    const int heightToAdd = (largestPortSize + 2) - adjustedRect.height();
-    if (heightToAdd > 0) {
-        adjustedRect.adjust(0, 0, 0, heightToAdd);
-    }
-
-    if (includePorts) {
-        // To the view of the place/route algorithms, ports reside on the edge of a component - however, this is not how
-        // components are drawn.
-        if (m_inputPorts.size() > 0)
-            adjustedRect.adjust(0, 0, PortGraphic::portGridWidth(), 0);
-        if (m_outputPorts.size() > 0)
-            adjustedRect.adjust(0, 0, PortGraphic::portGridWidth(), 0);
-    }
-
-    // Move to grid position in parent coordinate system
-    if (moveToParentGridPos) {
-        adjustedRect.moveTo(m_gridPos);
-    }
-
-    return adjustedRect;
 }
 
 void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
@@ -185,6 +152,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     // ================= Grid rect sizing ========================= //
     // move operation has already resized base rect to a valid size
 
+    /*
     switch (flag) {
         case GeometryChange::Collapse:
         case GeometryChange::None: {
@@ -210,6 +178,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
             break;
         }
     }
+    */
 
     // =========================== Scene item positioning ====================== //
     const QRectF sceneRect = sceneGridRect();
@@ -219,25 +188,13 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         // Some fancy logic for positioning IO positions in the best way to facilitate nice signal lines between
         // components
     } else {
-        // Component is unexpanded - IO should be positionen in even positions.
-        // +2 to ensure a 1 grid margin at the top and bottom of the component
-        int i = 0;
-        const qreal in_seg_y = sceneRect.height() / (m_inputPorts.size());
         for (const auto& p : m_inputPorts) {
-            int gridIndex = roundUp(static_cast<int>(i * in_seg_y + in_seg_y / 2), GRID_SIZE) / GRID_SIZE;
-            p->setGridIndex(gridIndex);
-            const qreal y = gridIndex * GRID_SIZE - GRID_SIZE / 2;
-            p->setPos(QPointF(sceneRect.left() - GRID_SIZE * PortGraphic::portGridWidth(), y));
-            i++;
+            const qreal y = p->getGridPort().getPosition().second * GRID_SIZE - GRID_SIZE / 2;
+            p->setPos(QPointF(sceneRect.left() - GRID_SIZE * eda::GridPort::width(), y));
         }
-        i = 0;
-        const qreal out_seg_y = sceneRect.height() / (m_outputPorts.size());
         for (const auto& p : m_outputPorts) {
-            const int gridIndex = roundUp(static_cast<int>(i * out_seg_y + out_seg_y / 2), GRID_SIZE) / GRID_SIZE;
-            p->setGridIndex(gridIndex);
-            const qreal y = gridIndex * GRID_SIZE - GRID_SIZE / 2;
+            const qreal y = p->getGridPort().getPosition().second * GRID_SIZE - GRID_SIZE / 2;
             p->setPos(QPointF(sceneRect.right(), y));
-            i++;
         }
     }
 
@@ -248,7 +205,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     QTransform t;
     t.scale(sceneRect.width(), sceneRect.height());
     t.translate(sceneRect.topLeft().x(), sceneRect.topLeft().y());
-    m_shape = ComponentGraphic::getComponentShape(m_component.getTypeId(), t);
+    m_shape = eda::getComponentShape(m_component.getTypeId(), t);
 
     // 5. Position the expand-button
     if (hasSubcomponents()) {
@@ -381,7 +338,7 @@ bool ComponentGraphic::snapToMinGridRect(QRect& r) const {
     snap_b = false;
 
     const auto& cmpRect =
-        hasSubcomponents() && isExpanded() ? subcomponentBoundingGridRect() : adjustedMinGridRect(false, false);
+        hasSubcomponents() && isExpanded() ? subcomponentBoundingGridRect() : static_cast<QRect>(m_gridComponent);
 
     if (r.right() < cmpRect.right()) {
         r.setRight(cmpRect.right());
@@ -396,7 +353,7 @@ bool ComponentGraphic::snapToMinGridRect(QRect& r) const {
 }
 
 QRectF ComponentGraphic::sceneGridRect() const {
-    return gridToScene(m_gridRect);
+    return gridToScene(m_gridComponent);
 }
 
 QRectF ComponentGraphic::boundingRect() const {
@@ -421,7 +378,7 @@ void ComponentGraphic::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     if (m_resizeDragging) {
         QPoint gridPos = (event->pos() / GRID_SIZE).toPoint();
-        auto newGridRect = m_gridRect;
+        QRect newGridRect = m_gridComponent;
         newGridRect.setBottomRight(gridPos);
         updateGeometry(newGridRect, GeometryChange::Resize);
     }

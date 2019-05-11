@@ -5,6 +5,7 @@
 #include <QToolButton>
 
 #include "core/vsrtl_component.h"
+#include "eda/gridcomponent.h"
 #include "eda/vsrtl_placeroute.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
@@ -40,9 +41,6 @@ public:
 
     void setExpanded(bool isExpanded);
     bool hasSubcomponents() const;
-    void setGridPos(const QPoint& p);
-    const QPoint& gridPos() const;
-    QRect adjustedMinGridRect(bool includePorts, bool moveToParentGridPos) const;
 
     const auto& outputPorts() const { return m_outputPorts; }
 
@@ -86,60 +84,19 @@ protected:
     Label* m_label = nullptr;
 
     // Rectangels:
-    const QRect m_minGridRect;  // Minimum component size in grid-coordinates
-    QPoint m_gridPos;           // Component positioning in its parent grid coordinate system
-    QRect m_gridRect;           // Current component size in grid-coordinates
     QPainterPath m_shape;
-
     QFont m_font;
-
     QPointF m_expandButtonPos;  // Draw position of expand/collapse button in scene coordinates
 
     Component& m_component;
+
+    eda::GridComponent m_gridComponent;
 
     ComponentButton* m_expandButton = nullptr;
     eda::RoutingRegions m_routingRegions;
     eda::Netlist m_netlist;
 
 public:
-    /**
-     * @brief The Shape struct
-     * Component shapes should be scalable in x- and y direction, but may contain complex shapes such as circles.
-     * The Shape struct, and shape generation, thus provides an interface for generating (scaling) a QPainterPath,
-     * without using QPainte's scale functionality.
-     * We avoid using QPainter::scale, given that this also scales the pen, yielding invalid drawings.
-     */
-
-    struct Shape {
-        std::function<QPainterPath(QTransform)> shapeFunc;
-        QRect min_rect;
-    };
-
-    static void setComponentShape(std::type_index component, Shape shape) {
-        Q_ASSERT(!s_componentShapes.contains(component));
-        Q_ASSERT(shape.min_rect.topLeft() == QPoint(0, 0));
-
-        // Ensure that minimum rectangle is snapping to the grid
-        s_componentShapes[component] = shape;
-    }
-
-    static QPainterPath getComponentShape(std::type_index component, QTransform transform) {
-        // If no shape has been registered for the base component type, revert to displaying as a "Component"
-        if (!s_componentShapes.contains(component)) {
-            return s_componentShapes[typeid(Component)].shapeFunc(transform);
-        }
-        return s_componentShapes[component].shapeFunc(transform);
-    }
-
-    static QRect getComponentMinGridRect(std::type_index component) {
-        // If no shape has been registered for the base component type, revert to displaying as a "Component"
-        if (!s_componentShapes.contains(component)) {
-            return s_componentShapes[typeid(Component)].min_rect;
-        }
-        return s_componentShapes[component].min_rect;
-    }
-
-    static QMap<std::type_index, Shape> s_componentShapes;
 };
 }  // namespace vsrtl
 

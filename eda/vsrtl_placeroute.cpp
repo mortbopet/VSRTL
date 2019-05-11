@@ -1,9 +1,7 @@
 ﻿#include "vsrtl_placeroute.h"
 #include "core/vsrtl_component.h"
 #include "core/vsrtl_traversal_util.h"
-#include "graphics/vsrtl_componentgraphic.h"
-#include "graphics/vsrtl_graphics_defines.h"
-#include "graphics/vsrtl_portgraphic.h"
+#include "utilities.h"
 
 #include <QRect>
 #include <cmath>
@@ -14,6 +12,8 @@
 
 namespace vsrtl {
 namespace eda {
+
+#define CHIP_MARGIN 4
 
 /**
  * @brief topologicalSortUtil
@@ -26,20 +26,22 @@ namespace eda {
  * @param parent
  */
 
-void topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) {
-    std::vector<Component*> componentVector;
+void topologicalSortPlacement(const std::vector<GridComponent*>& components) {
+    std::vector<const Component*> componentVector;
     for (const auto& c : components)
-        componentVector.push_back(c->getComponent());
+        componentVector.push_back(&c->component());
 
-    std::deque<Component*> stack = topologicalSort(componentVector, &Component::getOutputComponents);
+    std::deque<const Component*> stack = topologicalSort(componentVector, &Component::getOutputComponents);
 
     // Position components
     auto pos = QPoint(CHIP_MARGIN, CHIP_MARGIN);  // Start a bit offset from the chip boundary borders
     for (const auto& c : stack) {
-        auto* g = getGraphic<ComponentGraphic*>(c);
-        g->setGridPos(pos);
-        // Add 4 grid spaces between each component
-        pos.rx() += g->adjustedMinGridRect(true, false).width() + 4;
+        auto* g = getSuper<GridComponent*>(c);
+        g->moveTo(pos);
+        // Add 4 grid spaces between each component. Ensure that width is a multiple of 2
+        int width = g->adjusted().width();
+        width = width % 2 == 0 ? 0 : 1;
+        pos.rx() += width + 4;
     }
 }
 
@@ -63,7 +65,7 @@ enum class CutlineDirection { Alternating, Repeating };
  *  |__|__|
  */
 
-class PartitioningTree : public BinTree<Component*, PartitioningTree> {
+class PartitioningTree : public BinTree<GridComponent*, PartitioningTree> {
 public:
     Direction cutlinedir;
     QRect cachedRect;
@@ -89,9 +91,9 @@ public:
             // Leaf node
             // Place the component based on the offset received. The component should be centered at the offset point.
             // GridPos() refers to the top-left corner of the component
-            auto* g = getGraphic<ComponentGraphic*>(value);
-            const auto componentRect = g->adjustedMinGridRect(false, false);
-            g->setGridPos(offset - QPoint(componentRect.width() / 2, componentRect.height() / 2));
+            auto* g = getSuper<GridComponent*>(value);
+            const auto componentRect = g->adjusted();
+            g->moveTo(offset - QPoint(componentRect.width() / 2, componentRect.height() / 2));
         }
     }
 
@@ -126,11 +128,12 @@ public:
             cachedRect = QRect(0, 0, width, height);
         } else if (value) {
             // Leaf node. Here we calculate the optimal rect size for a given component.
-            auto* g = getGraphic<ComponentGraphic*>(value);
+            auto* g = getSuper<GridComponent*>(value);
 
             /** @todo: A better estimation of the required padding around a component based on its number of IO ports */
-            auto rect = g->adjustedMinGridRect(true, false);
-            const int widthPadding = static_cast<int>(value->getInputs().size() + value->getOutputs().size());
+            auto rect = g->adjusted();
+            const int widthPadding =
+                static_cast<int>(value->component().getInputs().size() + value->component().getOutputs().size());
             const int heightPadding = static_cast<int>(widthPadding / 2);
             cachedRect = rect.adjusted(0, 0, widthPadding, heightPadding);
         }
@@ -138,7 +141,7 @@ public:
     }
 };
 
-void recursivePartitioning(PartitioningTree& node, std::set<Component*> components, CutlineDirection dir) {
+void recursivePartitioning(PartitioningTree& node, const std::set<Component*>& components, CutlineDirection dir) {
     // This function will recurse through a set of components, splitting the components into a binary tree. Within a
     // node in the tree, the left and right subtrees represents sets minimum cut sets, generated via. the Kernighan-Lin
     // algorithm.
@@ -170,20 +173,20 @@ void recursivePartitioning(PartitioningTree& node, std::set<Component*> componen
     node.b->cutlinedir = childrenCutlineDir;
     if (components.size() <= 2) {
         // Leaf nodes, assign components in the tree
-        node.a->value = *components.begin();
+        node.a->value = getSuper<GridComponent*>(*components.begin());
         if (components.size() == 2) {
-            node.b->value = *components.rbegin();
+            node.b->value = getSuper<GridComponent*>(*components.rbegin());
         }
     } else {
         // partition the graph into two disjoint sets
-        auto partitionedGraph = KernighanLin<Component>(components, &Component::connectedComponents);
+        auto partitionedGraph = KernighanLin(components, &Component::connectedComponents);
         // Run the cycle util with new nodes in the tree for each side of the partitioned graph
         recursivePartitioning(*node.a, partitionedGraph.first, dir);
         recursivePartitioning(*node.b, partitionedGraph.second, dir);
     }
 }
 
-void MinCutPlacement(const std::vector<ComponentGraphic*>& components) {
+void MinCutPlacement(const std::vector<GridComponent*>& components) {
     /**
       Min cut placement:
       1. Use a partitioning algorithm to divide the netlist as well as the layout region in progressively smaller
@@ -191,16 +194,16 @@ void MinCutPlacement(const std::vector<ComponentGraphic*>& components) {
       2. Each sub-region is assigned to a part of the sub-netlist.
       3. The layout is divided in binary,steps and may be explored as a binary tree
     */
-    // Create a set of components
-    std::set<Component*> c_set;
-    for (const auto& c : components) {
-        c_set.emplace(c->getComponent());
-    }
-
     // recursively partition the graph and routing regions. Initial cut is determined to be a vertical cut
     PartitioningTree rootPartitionNode;
     rootPartitionNode.cutlinedir = Direction::Vertical;
-    recursivePartitioning(rootPartitionNode, c_set, CutlineDirection::Alternating);
+
+    std::set<Component*> components_set;
+    for (const auto& c : components) {
+        components_set.emplace(&c->component());
+    }
+
+    recursivePartitioning(rootPartitionNode, components_set, CutlineDirection::Alternating);
 
     // With the circuit partitioned, call rect() on the top node, to propagate rect calculation and caching through the
     // tree
@@ -266,35 +269,29 @@ public:
 NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
     auto netlist = std::make_unique<Netlist>();
     for (const auto& routingComponent : placement.components) {
-        for (const auto& outputPort : routingComponent.componentGraphic->outputPorts()) {
+        for (const auto& outputPort : routingComponent.gridComponent->component().getOutputs()) {
             // Note: terminal position currently is fixed to right => output, left => input
             auto net = std::make_unique<Net>();
             NetNode source;
-            source.componentGraphic = routingComponent.componentGraphic;
-            source.edgeIndex = outputPort->gridIndex();
-            source.edgePos = Edge::Right;
-            source.port = outputPort;
+            source.gridComponent = routingComponent.gridComponent;
+            source.port = getSuper<GridPort*>(outputPort.get());
 
             // Get source port grid position
-            QPoint portPos = routingComponent.topRight();
-            portPos.ry() += source.edgeIndex;
-            source.region = regionMap.lookup(portPos, Edge::Right);
-            for (const auto& sinkPort : outputPort->getPort()->getOutputPorts()) {
+            QPoint portPos = routingComponent.rect.topRight();
+            source.region = regionMap.lookup(source.gridComponent->portPosition(source.port), Edge::Right);
+            Q_ASSERT(source.region != nullptr);
+            for (const auto& sinkPort : outputPort->getOutputPorts()) {
                 NetNode sink;
-                sink.port = getGraphic<PortGraphic*>(sinkPort);
-                sink.componentGraphic = getGraphic<ComponentGraphic*>(sinkPort->getParent());
+                sink.port = getSuper<GridPort*>(sinkPort);
+                sink.gridComponent = getSuper<GridComponent*>(sinkPort->getParent());
                 // Lookup routing component for sink component graphic
-                auto rc_i =
-                    std::find_if(placement.components.begin(), placement.components.end(),
-                                 [&sink](const auto& rc) { return rc.componentGraphic == sink.componentGraphic; });
+                auto rc_i = std::find_if(placement.components.begin(), placement.components.end(),
+                                         [&sink](const auto& rc) { return rc.gridComponent == sink.gridComponent; });
                 Q_ASSERT(rc_i != placement.components.end());
-                sink.edgeIndex = sink.port->gridIndex();
-                sink.edgePos = Edge::Left;
 
                 // Get sink port grid position
-                portPos = rc_i->topLeft();
-                portPos.ry() += sink.edgeIndex;
-                sink.region = regionMap.lookup(portPos, Edge::Left);
+                sink.region = regionMap.lookup(sink.gridComponent->portPosition(sink.port), Edge::Left);
+                Q_ASSERT(sink.region != nullptr);
                 net->push_back(std::make_unique<Route>(source, sink));
             }
             netlist->push_back(std::move(net));
@@ -324,29 +321,12 @@ void RegionGroup::setRegion(Corner c, RoutingRegion* region) {
     }
 }
 
-void RegionGroup::connectRegions() {
-    if (topleft != nullptr) {
-        topleft->setRegion(Edge::Bottom, bottomleft);
-        topleft->setRegion(Edge::Right, topright);
-    }
-
-    if (topright != nullptr) {
-        topright->setRegion(Edge::Left, topleft);
-        topright->setRegion(Edge::Bottom, bottomright);
-    }
-    if (bottomleft != nullptr) {
-        bottomleft->setRegion(Edge::Top, topleft);
-        bottomleft->setRegion(Edge::Right, bottomright);
-    }
-    if (bottomright != nullptr) {
-        bottomright->setRegion(Edge::Left, bottomleft);
-        bottomright->setRegion(Edge::Top, topright);
-    }
-}
-
 RoutingRegions createConnectivityGraph(Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
-    Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(placement.components)));
+    std::vector<QRect> rects;
+    std::transform(placement.components.begin(), placement.components.end(), std::back_inserter(rects),
+                   [](const auto& c) { return c.rect; });
+    Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(rects)));
     Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
 
     std::vector<std::unique_ptr<RoutingRegion>> regions;
@@ -356,8 +336,8 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
 
     // Get horizontal and vertical bounding rectangle lines for all components on chip
     for (const auto& r : placement.components) {
-        hz_bounding_lines << getEdge(r, Edge::Top) << getEdge(r, Edge::Bottom);
-        vt_bounding_lines << getEdge(r, Edge::Left) << getEdge(r, Edge::Right);
+        hz_bounding_lines << getEdge(r.rect, Edge::Top) << getEdge(r.rect, Edge::Bottom);
+        vt_bounding_lines << getEdge(r.rect, Edge::Left) << getEdge(r.rect, Edge::Right);
     }
 
     // ============== Component edge extrusion =================
@@ -490,10 +470,14 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
                 // expected format of the bottom-right corner
                 QRect newRegionRect = QRect(regionTopLeft, regionBottomRight);
 
-                if (std::find(placement.components.begin(), placement.components.end(), newRegionRect) ==
-                    placement.components.end()) {
-                    if (std::find_if(regions.begin(), regions.end(), [&newRegionRect](const auto& p) {
-                            return p.get()->rect() == newRegionRect;
+                // Check whether the new region is the same as one of the components
+                if (std::find_if(placement.components.begin(), placement.components.end(),
+                                 [&newRegionRect](const auto& routingComponent) {
+                                     return newRegionRect == routingComponent.rect;
+                                 }) == placement.components.end()) {
+                    // New region was not a component, check if new region has already been added
+                    if (std::find_if(regions.begin(), regions.end(), [&newRegionRect](const auto& region) {
+                            return region.get()->rect() == newRegionRect;
                         }) == regions.end())
 
                         // This is a new routing region
@@ -519,14 +503,14 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
     // ======================= Routing Region Association ======================= //
     for (auto& rc : placement.components) {
         // The algorithm have failed if regionGroups does not contain an entry for each corner of all routing components
-        Q_ASSERT(regionGroups.count(rc.topLeft()));
-        Q_ASSERT(regionGroups.count(rc.topRight()));
-        Q_ASSERT(regionGroups.count(rc.bottomRight()));
-        Q_ASSERT(regionGroups.count(rc.bottomLeft()));
-        rc.topRegion = regionGroups[rc.topLeft()].topright;
-        rc.leftRegion = regionGroups[rc.topLeft()].bottomleft;
-        rc.rightRegion = regionGroups[rc.topRight()].bottomright;
-        rc.bottomRegion = regionGroups[rc.bottomLeft()].bottomright;
+        Q_ASSERT(regionGroups.count(rc.rect.topLeft()));
+        Q_ASSERT(regionGroups.count(rc.rect.topRight()));
+        Q_ASSERT(regionGroups.count(rc.rect.bottomRight()));
+        Q_ASSERT(regionGroups.count(rc.rect.bottomLeft()));
+        rc.topRegion = regionGroups[rc.rect.topLeft()].topright;
+        rc.leftRegion = regionGroups[rc.rect.topLeft()].bottomleft;
+        rc.rightRegion = regionGroups[rc.rect.topRight()].bottomright;
+        rc.bottomRegion = regionGroups[rc.rect.bottomLeft()].bottomright;
     }
 
     return regions;
@@ -544,6 +528,7 @@ void RoutingRegion::registerRoute(Route* r, Direction d) {
     }
 }
 
+/*
 void RoutingRegion::assignRoutes() {
     const float hz_diff = static_cast<float>(h_cap) / (horizontalRoutes.size() + 1);
     const float vt_diff = static_cast<float>(v_cap) / (verticalRoutes.size() + 1);
@@ -559,6 +544,7 @@ void RoutingRegion::assignRoutes() {
         vt_pos += vt_diff;
     }
 }
+*/
 
 void RoutingRegion::setRegion(Edge e, RoutingRegion* region) {
     switch (e) {
@@ -587,7 +573,7 @@ QRect qrectToGridRect(const QRect& rect) {
     return QRect(rect.topLeft(), bottomRight);
 }
 
-void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components, RoutingRegions& regions) {
+void PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components, RoutingRegions& regions) {
     // Placement
     switch (m_placementAlgorithm) {
         case PlaceAlg::Topological1D: {
@@ -603,12 +589,13 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
     // graph
     Placement placement;
     for (const auto& c : components) {
-        RoutingComponent rc;
-        rc = (c->adjustedMinGridRect(true, true));
-        rc.componentGraphic = c;
-        placement.components << rc;
+        placement.components.push_back(RoutingComponent(c));
     }
-    placement.chipRect = boundingRectOfRects(placement.components);
+
+    std::vector<QRect> rects;
+    std::transform(components.begin(), components.end(), std::back_inserter(rects),
+                   [](const auto& c) { return static_cast<QRect>(*c); });
+    placement.chipRect = boundingRectOfRects(rects);
     // Add margins to chip rect to allow routing on right- and bottom borders
     placement.chipRect.adjust(0, 0, CHIP_MARGIN, CHIP_MARGIN);
     auto cGraph = createConnectivityGraph(placement);
@@ -641,9 +628,11 @@ void PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components,
 
     // During findRoute, all routes have registered to their routing regions. With knowledge of how many routes occupy
     // each routing region, a route is assigned a lane within the routing region
+    /*
     for (const auto& region : cGraph) {
         region->assignRoutes();
     }
+    */
 
     regions = std::move(cGraph);
 }

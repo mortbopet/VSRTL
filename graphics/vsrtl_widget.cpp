@@ -1,6 +1,7 @@
 #include "vsrtl_widget.h"
 #include "core/vsrtl_design.h"
 #include "core/vsrtl_traversal_util.h"
+#include "eda/componentshape.h"
 #include "ui_vsrtl_widget.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_scene.h"
@@ -61,11 +62,11 @@ void VSRTLWidget::handleSelectionChanged(const std::vector<Component*>& selected
     // Block signals from scene to disable selectionChange emission.
     m_scene->blockSignals(true);
     for (const auto& c : selected) {
-        auto* c_g = getGraphic<ComponentGraphic*>(c);
+        auto* c_g = getSuper<ComponentGraphic*>(c);
         c_g->setSelected(true);
     }
     for (const auto& c : deselected) {
-        auto* c_g = getGraphic<ComponentGraphic*>(c);
+        auto* c_g = getSuper<ComponentGraphic*>(c);
         c_g->setSelected(false);
     }
     m_scene->blockSignals(false);
@@ -74,16 +75,16 @@ void VSRTLWidget::handleSelectionChanged(const std::vector<Component*>& selected
 void VSRTLWidget::registerShapes() const {
     // Base component
 
-    ComponentGraphic::setComponentShape(std::type_index(typeid(Component)),
-                                        {[](QTransform t) {
-                                             QPainterPath shape;
-                                             shape.addRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))));
-                                             return shape;
-                                         },
-                                         QRect(QPoint(0, 0), QPoint(3, 3))});
+    eda::setComponentShape(std::type_index(typeid(Component)),
+                           {[](QTransform t) {
+                                QPainterPath shape;
+                                shape.addRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))));
+                                return shape;
+                            },
+                            QRect(QPoint(0, 0), QPoint(3, 3))});
 
     // Register
-    ComponentGraphic::setComponentShape(
+    eda::setComponentShape(
         std::type_index(typeid(Register)),
         {[](QTransform t) {
              QPainterPath shape;
@@ -95,43 +96,41 @@ void VSRTLWidget::registerShapes() const {
          QRect(QPoint(0, 0), QPoint(3, 4))});
 
     // Constant
-    ComponentGraphic::setComponentShape(std::type_index(typeid(Constant)),
-                                        {[](QTransform t) {
-                                             QPainterPath shape;
-                                             shape.addRoundRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))), 35);
-                                             return shape;
-                                         },
-                                         QRect(QPoint(0, 0), QPoint(2, 3))});
+    eda::setComponentShape(std::type_index(typeid(Constant)),
+                           {[](QTransform t) {
+                                QPainterPath shape;
+                                shape.addRoundRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))), 35);
+                                return shape;
+                            },
+                            QRect(QPoint(0, 0), QPoint(2, 3))});
 
     // Logic gates
-    ComponentGraphic::setComponentShape(std::type_index(typeid(And)),
-                                        {[](QTransform t) {
-                                             QPainterPath shape;
-                                             shape.cubicTo(QPointF(0, 0), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
-                                             shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1, 1)),
-                                                           t.map(QPointF(0, 1)));
-                                             shape.lineTo(QPointF(0, 0));
-                                             return shape;
-                                         },
-                                         QRect(QPoint(0, 0), QPoint(3, 3))});
+    eda::setComponentShape(std::type_index(typeid(And)),
+                           {[](QTransform t) {
+                                QPainterPath shape;
+                                shape.cubicTo(QPointF(0, 0), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
+                                shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1, 1)), t.map(QPointF(0, 1)));
+                                shape.lineTo(QPointF(0, 0));
+                                return shape;
+                            },
+                            QRect(QPoint(0, 0), QPoint(3, 3))});
 
-    ComponentGraphic::setComponentShape(
-        std::type_index(typeid(Xor)),
-        {[](QTransform t) {
-             QPainterPath shape;
-             shape.moveTo(t.map(QPointF(0.1, 0)));
-             shape.cubicTo(QPointF(0.1, 0), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
-             shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1, 1)), t.map(QPointF(0.1, 1)));
-             shape.cubicTo(t.map(QPointF(0.1, 1)), t.map(QPointF(0.5, 0.5)), t.map(QPointF(0.1, 0)));
-             shape.moveTo(0, 0);
-             shape.cubicTo(QPointF(0, 0), t.map(QPointF(0.4, 0.5)), t.map(QPointF(0, 1)));
-             shape.cubicTo(t.map(QPointF(0, 1)), t.map(QPointF(0.4, 0.5)), QPointF(0, 0));
-             shape.setFillRule(Qt::WindingFill);
-             return shape;
-         },
-         QRect(QPoint(0, 0), QPoint(3, 3))});
+    eda::setComponentShape(std::type_index(typeid(Xor)),
+                           {[](QTransform t) {
+                                QPainterPath shape;
+                                shape.moveTo(t.map(QPointF(0.1, 0)));
+                                shape.cubicTo(QPointF(0.1, 0), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
+                                shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1, 1)), t.map(QPointF(0.1, 1)));
+                                shape.cubicTo(t.map(QPointF(0.1, 1)), t.map(QPointF(0.5, 0.5)), t.map(QPointF(0.1, 0)));
+                                shape.moveTo(0, 0);
+                                shape.cubicTo(QPointF(0, 0), t.map(QPointF(0.4, 0.5)), t.map(QPointF(0, 1)));
+                                shape.cubicTo(t.map(QPointF(0, 1)), t.map(QPointF(0.4, 0.5)), QPointF(0, 0));
+                                shape.setFillRule(Qt::WindingFill);
+                                return shape;
+                            },
+                            QRect(QPoint(0, 0), QPoint(3, 3))});
 
-    ComponentGraphic::setComponentShape(
+    eda::setComponentShape(
         std::type_index(typeid(Or)),
         {[](QTransform t) {
              QPainterPath shape;
@@ -144,7 +143,7 @@ void VSRTLWidget::registerShapes() const {
          },
          QRect(QPoint(0, 0), QPoint(3, 3))});
 
-    ComponentGraphic::setComponentShape(
+    eda::setComponentShape(
         std::type_index(typeid(Not)),
         {[](QTransform t) {
              QPainterPath shape;
@@ -157,26 +156,24 @@ void VSRTLWidget::registerShapes() const {
          QRect(QPoint(0, 0), QPoint(3, 3))});
 
     // Multiplexer
-    ComponentGraphic::setComponentShape(
-        std::type_index(typeid(Multiplexer)),
-        {[](QTransform t) {
-             QPainterPath shape;
-             shape.addPolygon(
-                 t.map(QPolygonF({QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1), QPointF(0, 0)})));
-             return shape;
-         },
-         QRect(QPoint(0, 0), QPoint(2, 5))});
+    eda::setComponentShape(std::type_index(typeid(Multiplexer)),
+                           {[](QTransform t) {
+                                QPainterPath shape;
+                                shape.addPolygon(t.map(QPolygonF(
+                                    {QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1), QPointF(0, 0)})));
+                                return shape;
+                            },
+                            QRect(QPoint(0, 0), QPoint(2, 5))});
 
     // ALU
-    ComponentGraphic::setComponentShape(
-        std::type_index(typeid(ALU)),
-        {[](QTransform t) {
-             QPainterPath shape;
-             shape.addPolygon(
-                 t.map(QPolygonF({QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1), QPointF(0, 0)})));
-             return shape;
-         },
-         QRect(QPoint(0, 0), QPoint(2, 5))});
+    eda::setComponentShape(std::type_index(typeid(ALU)),
+                           {[](QTransform t) {
+                                QPainterPath shape;
+                                shape.addPolygon(t.map(QPolygonF(
+                                    {QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1), QPointF(0, 0)})));
+                                return shape;
+                            },
+                            QRect(QPoint(0, 0), QPoint(2, 5))});
 }
 
 void VSRTLWidget::initializeDesign(Design& arch) {

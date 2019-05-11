@@ -11,20 +11,18 @@
 
 namespace vsrtl {
 
-int PortGraphic::s_portGridWidth = 2;
-
-PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
-    port->registerGraphic(this);
+PortGraphic::PortGraphic(eda::GridPort& port, PortType type, QGraphicsItem* parent) : m_type(type), m_gridPort(port) {
+    port.registerSuper(this);
     setParentItem(parent);
-    m_widthText = QString::number(port->getWidth() - 1) + ":0";
+    m_widthText = QString::number(m_gridPort.port()->getWidth() - 1) + ":0";
     m_font = QFont("Monospace", 8);
     m_pen.setWidth(WIRE_WIDTH);
     m_pen.setCapStyle(Qt::RoundCap);
 
     // PortGraphic logic is build by revolving around the root source port in a port-wire connection. Only receive
     // update signals from root sources
-    if (port->getInputPort() == nullptr) {
-        port->changed.Connect(this, &PortGraphic::updateSlot);
+    if (m_gridPort.port()->getInputPort() == nullptr) {
+        m_gridPort.port()->changed.Connect(this, &PortGraphic::updateSlot);
     }
     m_colorAnimation = new QPropertyAnimation(this, "penColor");
     m_colorAnimation->setDuration(100);
@@ -37,7 +35,7 @@ PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_p
 
     updateGeometry();
 
-    m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), this);
+    m_outputWire = new WireGraphic(this, m_gridPort.port()->getOutputPorts(), this);
 }
 
 void PortGraphic::updateSlot() {
@@ -62,8 +60,8 @@ void PortGraphic::setNet(eda::NetPtr& net) {
 }
 
 void PortGraphic::propagateRedraw() {
-    m_port->traverseToSinks([=](Port* port) {
-        auto* portGraphic = getGraphic<PortGraphic*>(port);
+    m_gridPort.port()->traverseToSinks([=](Port* port) {
+        auto* portGraphic = getSuper<PortGraphic*>(getSuper<eda::GridPort*>(port));
         portGraphic->redraw();
     });
 }
@@ -94,7 +92,7 @@ QPointF PortGraphic::getInputPoint() const {
 }
 
 QPointF PortGraphic::getOutputPoint() const {
-    return QPointF(s_portGridWidth * GRID_SIZE, 0);
+    return QPointF(eda::GridPort::width() * GRID_SIZE, 0);
 }
 
 void PortGraphic::updatePenColor() {
@@ -102,8 +100,8 @@ void PortGraphic::updatePenColor() {
     // Selection check is based on whether item is currently selected or about to be selected (via itemChange())
     if (m_selected) {
         m_pen.setColor(WIRE_SELECTED_COLOR);
-    } else if (m_port->getWidth() == 1) {
-        if (static_cast<bool>(*m_port)) {
+    } else if (m_gridPort.port()->getWidth() == 1) {
+        if (static_cast<bool>(*m_gridPort.port())) {
             m_pen.setColor(WIRE_BOOLHIGH_COLOR);
         } else {
             m_pen.setColor(WIRE_DEFAULT_COLOR);
@@ -115,10 +113,10 @@ void PortGraphic::updatePenColor() {
 }
 
 void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
-    m_port->traverseToRoot([=](Port* node) {
+    m_gridPort.port()->traverseToRoot([=](Port* node) {
         // Traverse to root, and only execute when no input wire is present. This signifies that the root source port
         // has been reached
-        auto* portGraphic = getGraphic<PortGraphic*>(node);
+        auto* portGraphic = getSuper<PortGraphic*>(getSuper<eda::GridPort*>(node));
         if (!portGraphic->m_inputWire) {
             if (aboutToBeDeselected || aboutToBeSelected) {
                 portGraphic->m_selected = aboutToBeSelected;
@@ -126,7 +124,7 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
 
             /* If the port is anything other than a boolean port, a change in the signal is represented by starting the
              * color change animation. If it is a boolean signal, just update the pen color */
-            if (m_port->getWidth() != 1) {
+            if (m_gridPort.port()->getWidth() != 1) {
                 portGraphic->m_colorAnimation->start();
             } else {
                 portGraphic->updatePenColor();
@@ -177,12 +175,13 @@ const QPen& PortGraphic::getPen() {
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
     painter->save();
     painter->setFont(m_font);
-    const int offset = m_type == PortType::out ? PORT_INNER_MARGIN
-                                               : s_portGridWidth * GRID_SIZE - m_textRect.width() - PORT_INNER_MARGIN;
+    const int offset = m_type == PortType::out
+                           ? PORT_INNER_MARGIN
+                           : eda::GridPort::width() * GRID_SIZE - m_textRect.width() - PORT_INNER_MARGIN;
     painter->drawText(QPointF(offset, m_textRect.height() / 2 + PORT_INNER_MARGIN), m_widthText);
 
     painter->setPen(getPen());
-    painter->drawLine(QPointF(0, 0), QPointF(s_portGridWidth * GRID_SIZE, 0));
+    painter->drawLine(QPointF(0, 0), QPointF(eda::GridPort::width() * GRID_SIZE, 0));
 
     painter->restore();
 

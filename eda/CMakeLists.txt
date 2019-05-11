@@ -11,7 +11,7 @@ target_include_directories (${EDA_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 ######################################################################
 ## Linking
 ######################################################################
-target_link_libraries(${EDA_LIB} ${GRAPHICS_LIB} Qt5::Core)
+target_link_libraries(${EDA_LIB} Qt5::Core)
 
 if(COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_link_libraries(${EDA_LIB} ${COVERAGE_LIB})

@@ -66,7 +66,7 @@ int KLdValue(T* node, const std::set<T*>& A, const std::set<T*>& B, F connectedC
 }  // namespace
 
 template <typename T, typename F>
-std::pair<std::set<T*>, std::set<T*>> KernighanLin(std::set<T*>& graph, F connectedComponentsFunc) {
+std::pair<std::set<T*>, std::set<T*>> KernighanLin(const std::set<T*>& graph, F connectedComponentsFunc) {
     Q_ASSERT(graph.size() > 1);
     // Create an initial balanced distribution
     std::set<T*> A, B;

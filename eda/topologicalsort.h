@@ -10,7 +10,8 @@ namespace eda {
 
 namespace {
 template <typename T, typename F>
-void topologicalSortUtil(T* node, F adjacencyFunction, std::map<T*, bool>& visited, std::deque<T*>& stack) {
+void topologicalSortUtil(const T* node, F adjacencyFunction, std::map<const T*, bool>& visited,
+                         std::deque<const T*>& stack) {
     visited[node] = true;
 
     for (const auto& cc : (node->*adjacencyFunction)()) {
@@ -22,9 +23,9 @@ void topologicalSortUtil(T* node, F adjacencyFunction, std::map<T*, bool>& visit
 }
 
 template <typename T, typename F>
-std::deque<T*> topologicalSort(const std::vector<T*>& nodes, F adjacencyFunction) {
-    std::map<T*, bool> visited;
-    std::deque<T*> stack;
+std::deque<const T*> topologicalSort(const std::vector<const T*>& nodes, F adjacencyFunction) {
+    std::map<const T*, bool> visited;
+    std::deque<const T*> stack;
 
     for (const auto& n : nodes)
         visited[n] = false;

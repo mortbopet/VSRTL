@@ -9,26 +9,24 @@
 namespace vsrtl {
 
 template <typename T>
-T getGraphic(Base* b) {
-    return static_cast<T>(b->getGraphic());
+T getSuper(const Base* b) {
+    return static_cast<T>(b->getSuper());
 }
 
-template<typename T>
-T getInputPortGraphic(Port* p){
-    return getGraphic<T>(p->getInputPort());
+template <typename T>
+T getInputPortGraphic(Port* p) {
+    return getSuper<T>(p->getInputPort());
 }
 
-template<typename T>
-std::vector<T> getOutputPortGraphics(Port* p){
+template <typename T>
+std::vector<T> getOutputPortGraphics(Port* p) {
     std::vector<T> portGraphics;
-    for(const auto& out : p->getOutputPorts()){
-        portGraphics.push_back(getGraphic<T>(out));
+    for (const auto& out : p->getOutputPorts()) {
+        portGraphics.push_back(getSuper<T>(out));
     }
     return portGraphics;
 }
 
+}  // namespace vsrtl
 
-
-}
-
-#endif // VSRTL_TRAVERSAL_UTIL_H
+#endif  // VSRTL_TRAVERSAL_UTIL_H

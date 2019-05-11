@@ -1,6 +1,7 @@
 #ifndef VSRTL_PORTGRAPHIC_H
 #define VSRTL_PORTGRAPHIC_H
 
+#include "eda/gridport.h"
 #include "eda/vsrtl_placeroute.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphicsbase.h"
@@ -22,14 +23,15 @@ class PortGraphic : public GraphicsBase {
     Q_PROPERTY(QColor penColor MEMBER m_penColor)
 
 public:
-    PortGraphic(Port* port, PortType type, QGraphicsItem* parent = nullptr);
+    PortGraphic(eda::GridPort& port, PortType type, QGraphicsItem* parent = nullptr);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
     void postSceneConstructionInitialize2() override;
     void updateGeometry();
-    Port* getPort() const { return m_port; }
+    Port* getPort() { return m_gridPort.port(); }
+    eda::GridPort& getGridPort() { return m_gridPort; }
     void setInputWire(WireGraphic* wire);
     void updateInputWire();
     void updateWireGeometry();
@@ -40,10 +42,6 @@ public:
     QPointF getOutputPoint() const;
 
     const QPen& getPen();
-
-    static int portGridWidth() { return s_portGridWidth; }
-    unsigned int gridIndex() { return m_gridIndex; }
-    void setGridIndex(unsigned int i) { m_gridIndex = i; }
 
 private slots:
     void updatePenColor();
@@ -60,14 +58,11 @@ private:
     bool m_showValue = false;
     ValueDisplayFormat m_valueBase = ValueDisplayFormat::baseTen;
 
-    static int s_portGridWidth;
-    unsigned int m_gridIndex;
-
     QRectF m_boundingRect;
     QRectF m_textRect;
 
     PortType m_type;
-    Port* m_port = nullptr;
+    eda::GridPort& m_gridPort;
 
     WireGraphic* m_outputWire = nullptr;
     WireGraphic* m_inputWire = nullptr;

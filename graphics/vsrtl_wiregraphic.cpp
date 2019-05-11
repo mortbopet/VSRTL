@@ -1,5 +1,6 @@
 #include "vsrtl_wiregraphic.h"
 #include "core/vsrtl_port.h"
+#include "core/vsrtl_traversal_util.h"
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_portgraphic.h"
@@ -86,13 +87,14 @@ void WireGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
         auto inputPortParent = dynamic_cast<ComponentGraphic*>(m_fromPort->parentItem());
         auto subcomponentParent = dynamic_cast<ComponentGraphic*>(inputPortParent->parentItem());
         for (const auto& route : *m_net) {
-            Q_ASSERT(route->start.port == m_fromPort);
+            Q_ASSERT(getSuper<PortGraphic*>(route->start.port) == m_fromPort);
             // Find destination point - m_net.nodes contains #source node + #destination nodes, m_net.routes contains
             // #destination_nodes routes
-            const auto& toPort = route->end.port;
+            const auto& toPort = getSuper<PortGraphic*>(route->end.port);
             const QPointF end = mapFromItem(toPort, toPort->getInputPoint());
             QPointF intermediate;
-            QPointF from = mapFromItem(route->start.port, route->start.port->getOutputPoint());
+            QPointF from = mapFromItem(getSuper<PortGraphic*>(route->start.port),
+                                       getSuper<PortGraphic*>(route->start.port)->getOutputPoint());
             for (int i = 0; i < route->path.size(); i++) {
                 bool drawIntermediate = true;
                 // The following two statements looks like duplicate code. However, it is important that the code path
