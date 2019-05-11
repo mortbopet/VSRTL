@@ -27,10 +27,11 @@ target_link_libraries(${GRAPHICS_LIB} Qt5::Core Qt5::Widgets)
 target_include_directories(${GRAPHICS_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 include_directories("../core/")
+include_directories("../eda/")
 
 set_target_properties(${GRAPHICS_LIB} PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(${GRAPHICS_LIB} ${VSRTL_CORE})
+target_link_libraries(${GRAPHICS_LIB} ${VSRTL_CORE} ${EDA_LIB})
 
 if(COVERAGE)
     target_link_libraries(${GRAPHICS_LIB} ${COVERAGE_LIB})

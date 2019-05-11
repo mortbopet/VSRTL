@@ -1,8 +1,8 @@
 #include "vsrtl_placeroute.h"
+#include "graphics/vsrtl_componentgraphic.h"
+#include "graphics/vsrtl_graphics_defines.h"
+#include "graphics/vsrtl_portgraphic.h"
 #include "vsrtl_component.h"
-#include "vsrtl_componentgraphic.h"
-#include "vsrtl_graphics_defines.h"
-#include "vsrtl_portgraphic.h"
 #include "vsrtl_traversal_util.h"
 
 #include <QRect>

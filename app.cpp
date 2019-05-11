@@ -16,7 +16,7 @@ int main(int argc, char** argv) {
 
     Q_INIT_RESOURCE(icons);
 
-    vsrtl::Counter<8> design;
+    vsrtl::RanNumGen design;
     vsrtl::MainWindow w(design);
 
     w.show();

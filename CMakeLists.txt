@@ -49,17 +49,20 @@ set(CORE_LIB ${PROJECT_NAME}_core_lib)
 add_subdirectory(core)
 set(GRAPHICS_LIB ${PROJECT_NAME}_gfx_lib)
 add_subdirectory(graphics)
-set(TEST_LIB ${PROJECT_NAME}_test_lib)
-add_subdirectory(test)
 set(COMPONENTS_LIB ${PROJECT_NAME}_cmp_lib)
 add_subdirectory(components)
+set(EDA_LIB ${PROJECT_NAME}_eda_lib)
+add_subdirectory(eda)
+
+set(TEST_LIB ${PROJECT_NAME}_test_lib)
+add_subdirectory(test)
 
 
 set(APP_NAME app)
 
 add_executable(${APP_NAME} app.cpp)
 target_link_libraries(${APP_NAME} Qt5::Core Qt5::Widgets)
-target_link_libraries(${APP_NAME} ${CORE_LIB} ${GRAPHICS_LIB} ${COMPONENTS_LIB})
+target_link_libraries(${APP_NAME} ${CORE_LIB} ${GRAPHICS_LIB} ${COMPONENTS_LIB} ${EDA_LIB})
 
 # Final sanity check to verify that C++17 is available in the compiler
 set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 17)
