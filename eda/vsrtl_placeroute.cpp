@@ -10,6 +10,7 @@
 #include <deque>
 #include "astar.h"
 #include "kernighanlin.h"
+#include "topologicalsort.h"
 
 namespace vsrtl {
 namespace eda {
@@ -24,31 +25,13 @@ namespace eda {
  * be generated for each depth in the topological sort, wherein the components are finally layed out.
  * @param parent
  */
-void topologicalSortUtil(Component* c, std::map<Component*, bool>& visited, std::deque<Component*>& stack) {
-    visited[c] = true;
-
-    for (const auto& cc : c->getOutputComponents()) {
-        // The find call ensures that the output components are inside this subcomponent. OutputComponents are "parent"
-        // agnostic, and has no notion of enclosing components.
-        if (visited.find(cc.first) != visited.end() && !visited[cc.first]) {
-            topologicalSortUtil(cc.first, visited, stack);
-        }
-    }
-    stack.push_front(c);
-}
 
 void topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) {
-    std::map<Component*, bool> visited;
-    std::deque<Component*> stack;
+    std::vector<Component*> componentVector;
+    for (const auto& c : components)
+        componentVector.push_back(c->getComponent());
 
-    for (const auto& cpt : components)
-        visited[cpt->getComponent()] = false;
-
-    for (const auto& c : visited) {
-        if (!c.second) {
-            topologicalSortUtil(c.first, visited, stack);
-        }
-    }
+    std::deque<Component*> stack = topologicalSort(componentVector, &Component::getOutputComponents);
 
     // Position components
     auto pos = QPoint(CHIP_MARGIN, CHIP_MARGIN);  // Start a bit offset from the chip boundary borders

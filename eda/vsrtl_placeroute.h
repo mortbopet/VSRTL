@@ -159,7 +159,7 @@ public:
 private:
     PlaceRoute() {}
 
-    PlaceAlg m_placementAlgorithm = PlaceAlg::MinCut;
+    PlaceAlg m_placementAlgorithm = PlaceAlg::Topological1D;
     RouteAlg m_routingAlgorithm = RouteAlg::Direct;
 };
 }  // namespace eda
