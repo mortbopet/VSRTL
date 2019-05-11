@@ -181,6 +181,16 @@ public:
         return v;
     }
 
+    std::map<Component*, int> connectedComponents() const {
+        auto connectedComponents = getInputComponents();
+        for (const auto& c : getOutputComponents()) {
+            // If no entry exists for c.first in connectedComponents, the entry will be zero initialized, and the value
+            // from OutputComponents will be added to this zero.
+            connectedComponents[c.first] = connectedComponents[c.first] + c.second;
+        }
+        return connectedComponents;
+    }
+
     const Component* getParent() const { return m_parent; }
     const std::string& getName() const { return m_displayName; }
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
