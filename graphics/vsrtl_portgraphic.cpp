@@ -13,7 +13,8 @@ namespace vsrtl {
 
 int PortGraphic::s_portGridWidth = 2;
 
-PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
+PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent)
+    : m_port(port), m_type(type), m_portPoint(this) {
     port->registerGraphic(this);
     setParentItem(parent);
     m_widthText = QString::number(port->getWidth() - 1) + ":0";
@@ -34,6 +35,8 @@ PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_p
     connect(m_colorAnimation, &QPropertyAnimation::valueChanged, this, &PortGraphic::updatePenColor);
 
     setFlag(ItemIsSelectable);
+
+    m_portPoint.setPos(0, 0);
 
     updateGeometry();
 
