@@ -32,7 +32,7 @@ public:
     void setInputWire(WireGraphic* wire);
     void updateInputWire();
     void updateWireGeometry();
-    PointGraphic* getPointGraphic() { return &m_portPoint; }
+    PointGraphic* getPointGraphic() { return m_portPoint; }
 
     QPointF getInputPoint() const;
     QPointF getOutputPoint() const;
@@ -68,7 +68,7 @@ private:
     Port* m_port;
 
     // Used for allowing WireSegments to join up with a port
-    PointGraphic m_portPoint;
+    PointGraphic* m_portPoint = nullptr;
 
     WireGraphic* m_outputWire = nullptr;
     WireGraphic* m_inputWire = nullptr;

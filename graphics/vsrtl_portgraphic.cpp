@@ -1,4 +1,4 @@
-#include "vsrtl_portgraphic.h"
+﻿#include "vsrtl_portgraphic.h"
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_port.h"
 #include "vsrtl_traversal_util.h"
@@ -13,8 +13,7 @@ namespace vsrtl {
 
 int PortGraphic::s_portGridWidth = 2;
 
-PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent)
-    : m_port(port), m_type(type), m_portPoint(this) {
+PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
     port->registerGraphic(this);
     setParentItem(parent);
     m_widthText = QString::number(port->getWidth() - 1) + ":0";
@@ -36,9 +35,10 @@ PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent)
 
     setFlag(ItemIsSelectable);
 
-    m_portPoint.setPos(0, 0);
-
     updateGeometry();
+
+    m_portPoint = new PointGraphic(this);
+    m_portPoint->setPos(mapToItem(this, mapToScene(type == PortType::in ? getInputPoint() : getOutputPoint())));
 
     m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), this);
 }
@@ -181,7 +181,7 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* optio
     painter->drawText(QPointF(offset, m_textRect.height() / 2 + PORT_INNER_MARGIN), m_widthText);
 
     painter->setPen(getPen());
-    painter->drawLine(QPointF(0, 0), QPointF(s_portGridWidth * GRID_SIZE, 0));
+    painter->drawLine(getInputPoint(), getOutputPoint());
 
     painter->restore();
 

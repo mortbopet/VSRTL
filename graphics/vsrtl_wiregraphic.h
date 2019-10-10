@@ -12,6 +12,7 @@ class PortGraphic;
 class Port;
 class WireGraphic;
 class WireSegment;
+class ComponentGraphic;
 
 /**
  * @brief The PointGraphic class
@@ -20,8 +21,8 @@ class WireSegment;
 class PointGraphic : public GraphicsBase {
 public:
     PointGraphic(QGraphicsItem* parent);
-    QRectF boundingRect() const override { return QRectF(); }
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) {}
+    QRectF boundingRect() const override;
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
 };
 
 /**
@@ -30,36 +31,50 @@ public:
  */
 class WirePoint : public PointGraphic {
 public:
-    WirePoint(WireSegment& parent);
+    WirePoint(WireGraphic& parent, QGraphicsItem* sceneParent);
 
-    QRectF boundingRect() const override;
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
-
-    void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
-
-private:
-    WireSegment& m_parent;
-};
-
-class WireSegment : public GraphicsBase {
-public:
-    WireSegment(WireGraphic& parent);
-
-    void setStart(PointGraphic* start) { m_start = start; }
-    void setEnd(PointGraphic* end) { m_end = end; }
+    void addOutputWire(WireSegment* wire) { m_outputWires.push_back(wire); }
+    std::vector<WireSegment*>& getOutputWires() { return m_outputWires; }
+    void setInputWire(WireSegment* wire) { m_inputWire = wire; }
+    WireSegment* getInputWire() { return m_inputWire; }
 
     QPainterPath shape() const override;
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
+
+private:
+    WireGraphic& m_parent;
+    ComponentGraphic* m_sceneParent;
+    WireSegment* m_inputWire = nullptr;
+    std::vector<WireSegment*> m_outputWires;
+};
+
+class WireSegment : public GraphicsBase {
+public:
+    WireSegment(WireGraphic* parent);
+
+    void setStart(PointGraphic* start) { m_start = start; }
+    void setEnd(PointGraphic* end) { m_end = end; }
+    PointGraphic* getStart() const { return m_start; }
+    PointGraphic* getEnd() const { return m_end; }
+
+    QPainterPath shape() const override;
+    QRectF boundingRect() const override;
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
 
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
+
+    QString deleted = "False";
 
 private:
     QLineF getLine() const;
 
     PointGraphic* m_start = nullptr;
     PointGraphic* m_end = nullptr;
-    WireGraphic& m_parent;
+    WireGraphic* m_parent;
 };
 
 class WireGraphic : public GraphicsBase {
@@ -75,12 +90,15 @@ public:
 
     PortGraphic* getFromPort() const { return m_fromPort; }
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }
+    void addWirePoint(const QPointF scenePos, WireSegment* onSegment);
+    void removeWirePoint(WirePoint* point);
 
 private:
     PortGraphic* m_fromPort = nullptr;
     const std::vector<Port*>& m_toPorts;
     std::vector<PortGraphic*> m_toGraphicPorts;
-    std::vector<std::unique_ptr<WireSegment>> m_segments;
+    std::vector<WireSegment*> m_wires;
+    std::vector<WirePoint*> m_points;
 };
 }  // namespace vsrtl
 
