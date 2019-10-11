@@ -5,6 +5,7 @@
 #include "vsrtl_traversal_util.h"
 
 #include <deque>
+#include <map>
 
 namespace vsrtl {
 
@@ -31,8 +32,7 @@ void topologicalSortUtil(Component* c, std::map<Component*, bool>& visited, std:
     stack.push_front(c);
 }
 
-std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) {
-    std::map<ComponentGraphic*, QPointF> placements;
+std::deque<Component*> topologicalSort(const std::vector<ComponentGraphic*>& components) {
     std::map<Component*, bool> visited;
     std::deque<Component*> stack;
 
@@ -44,10 +44,18 @@ std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<
             topologicalSortUtil(c.first, visited, stack);
         }
     }
+    return stack;
+}
+
+std::multimap<int, Component*> ASAPSchedule(const std::vector<ComponentGraphic*>& components) {}
+
+std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) {
+    std::map<ComponentGraphic*, QPointF> placements;
+    std::deque<Component*> sortedComponents = topologicalSort(components);
 
     // Position components
     QPointF pos = QPointF(25, 25);  // Start a bit offset from the parent borders
-    for (const auto& c : stack) {
+    for (const auto& c : sortedComponents) {
         auto* g = getGraphic<ComponentGraphic*>(c);
         placements[g] = pos;
         pos.rx() += g->boundingRect().width() + COMPONENT_COLUMN_MARGIN;
