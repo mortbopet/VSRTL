@@ -10,7 +10,7 @@ namespace vsrtl {
 class ComponentGraphic;
 class Component;
 
-enum class PlaceAlg { TopologicalSort };
+enum class PlaceAlg { TopologicalSort, ASAP };
 enum class RouteAlg { Direct };
 /**
  * @brief The PlaceRoute class
@@ -35,7 +35,7 @@ public:
 private:
     PlaceRoute() {}
 
-    PlaceAlg m_placementAlgorithm = PlaceAlg::TopologicalSort;
+    PlaceAlg m_placementAlgorithm = PlaceAlg::ASAP;
     RouteAlg m_routingAlgorithm = RouteAlg::Direct;
 };
 }  // namespace vsrtl

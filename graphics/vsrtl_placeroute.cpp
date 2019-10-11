@@ -47,7 +47,63 @@ std::deque<Component*> topologicalSort(const std::vector<ComponentGraphic*>& com
     return stack;
 }
 
-std::multimap<int, Component*> ASAPSchedule(const std::vector<ComponentGraphic*>& components) {}
+std::map<int, std::set<Component*>> ASAPSchedule(const std::vector<ComponentGraphic*>& components) {
+    std::deque<Component*> sortedComponents = topologicalSort(components);
+    std::map<int, std::set<Component*>> schedule;
+    std::map<Component*, int> componentToDepth;
+
+    // 1. assign a depth to the components based on their depth in the topological sort, disregarding output edges
+    for (const auto& c : sortedComponents) {
+        int lastPredLayer = -1;
+        for (const auto& inC : c->getInputComponents()) {
+            if (componentToDepth.count(inC) != 0) {
+                int predDepth = componentToDepth.at(inC);
+                lastPredLayer = lastPredLayer < predDepth ? predDepth : lastPredLayer;
+            }
+        }
+        componentToDepth[c] = lastPredLayer + 1;
+    }
+
+    // 2. Create a map between depths and components
+    for (const auto& c : componentToDepth) {
+        schedule[c.second].insert(c.first);
+    }
+
+    return schedule;
+}
+
+std::map<ComponentGraphic*, QPointF> ASAPPlacement(const std::vector<ComponentGraphic*>& components) {
+    std::map<ComponentGraphic*, QPointF> placements;
+    const auto asapSchedule = ASAPSchedule(components);
+
+    // 1. create a width of each column
+    std::map<int, qreal> columnWidths;
+    for (const auto& iter : asapSchedule) {
+        qreal maxWidth = 0;
+        for (const auto& c : iter.second) {
+            qreal width = getGraphic<ComponentGraphic*>(c)->boundingRect().width();
+            maxWidth = maxWidth < width ? width : maxWidth;
+        }
+        columnWidths[iter.first] = maxWidth;
+    }
+
+    // Position components
+    // Start a bit offset from the parent borders
+    const QPointF start{50, 25};
+    qreal x = start.x();
+    qreal y = start.y();
+    for (const auto& iter : asapSchedule) {
+        for (const auto& c : iter.second) {
+            auto* g = getGraphic<ComponentGraphic*>(c);
+            placements[g] = QPointF(x, y);
+            y += g->boundingRect().height() + COMPONENT_COLUMN_MARGIN;
+        }
+        x += columnWidths[iter.first] + 2 * COMPONENT_COLUMN_MARGIN;
+        y = start.y();
+    }
+
+    return placements;
+}
 
 std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) {
     std::map<ComponentGraphic*, QPointF> placements;
@@ -68,6 +124,9 @@ std::map<ComponentGraphic*, QPointF> PlaceRoute::placeAndRoute(const std::vector
     switch (m_placementAlgorithm) {
         case PlaceAlg::TopologicalSort: {
             return topologicalSortPlacement(components);
+        }
+        case PlaceAlg::ASAP: {
+            return ASAPPlacement(components);
         }
         default:
             Q_ASSERT(false);
