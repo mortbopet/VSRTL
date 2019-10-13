@@ -5,6 +5,7 @@
 
 #include <QPen>
 #include <memory>
+#include <set>
 
 namespace vsrtl {
 
@@ -37,6 +38,7 @@ public:
     std::vector<WireSegment*>& getOutputWires() { return m_outputWires; }
     void setInputWire(WireSegment* wire) { m_inputWire = wire; }
     WireSegment* getInputWire() { return m_inputWire; }
+    void clearOutputWires() { m_outputWires.clear(); }
 
     QPainterPath shape() const override;
     QRectF boundingRect() const override;
@@ -44,11 +46,16 @@ public:
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
 
+    void pointDrop(WirePoint* point);
+    void pointDragEnter(WirePoint* point);
+    void pointDragLeave(WirePoint* point);
+
 private:
     WireGraphic& m_parent;
     ComponentGraphic* m_sceneParent;
     WireSegment* m_inputWire = nullptr;
     std::vector<WireSegment*> m_outputWires;
+    WirePoint* m_draggedOnThis = nullptr;
 };
 
 class WireSegment : public GraphicsBase {
@@ -81,6 +88,8 @@ class WireGraphic : public GraphicsBase {
     friend class PortGraphic;
 
 public:
+    enum class MergeType { CannotMerge, MergeSinkWithSource, MergeSourceWithSink, MergeParallelSinks };
+
     WireGraphic(PortGraphic* from, const std::vector<Port*>& to, QGraphicsItem* parent);
 
     QRectF boundingRect() const override;
@@ -93,12 +102,16 @@ public:
     void addWirePoint(const QPointF scenePos, WireSegment* onSegment);
     void removeWirePoint(WirePoint* point);
 
+    bool managesPoint(WirePoint* point) const;
+    void mergePoints(WirePoint* base, WirePoint* toMerge);
+    MergeType canMergePoints(WirePoint* base, WirePoint* toMerge) const;
+
 private:
     PortGraphic* m_fromPort = nullptr;
     const std::vector<Port*>& m_toPorts;
     std::vector<PortGraphic*> m_toGraphicPorts;
-    std::vector<WireSegment*> m_wires;
-    std::vector<WirePoint*> m_points;
+    std::set<WireSegment*> m_wires;
+    std::set<WirePoint*> m_points;
 };
 }  // namespace vsrtl
 

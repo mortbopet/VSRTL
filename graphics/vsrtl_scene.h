@@ -5,11 +5,25 @@
 #include <QPainter>
 #include "vsrtl_graphics_defines.h"
 
+#include "vsrtl_wiregraphic.h"
+
+#include <set>
+
 namespace vsrtl {
 
 class VSRTLScene : public QGraphicsScene {
 public:
-    VSRTLScene(QObject* parent = nullptr) : QGraphicsScene(parent) {}
+    VSRTLScene(QObject* parent = nullptr);
+
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+
+private:
+    void handleSelectionChanged();
+    void handleWirePointMove(QGraphicsSceneMouseEvent* event);
+
+    std::set<WirePoint*> m_currentDropTargets;
+    WirePoint* m_selectedPoint = nullptr;
 
 protected:
 #ifdef VSRTL_DEBUG_DRAW
