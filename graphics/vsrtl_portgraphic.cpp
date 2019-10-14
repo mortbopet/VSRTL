@@ -20,6 +20,7 @@ PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_p
     m_font = QFont("Monospace", 8);
     m_pen.setWidth(WIRE_WIDTH);
     m_pen.setCapStyle(Qt::RoundCap);
+    setAcceptHoverEvents(true);
 
     // PortGraphic logic is build by revolving around the root source port in a port-wire connection. Only receive
     // update signals from root sources
@@ -137,6 +138,10 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
     });
 }
 
+QString PortGraphic::getTooltipString() const {
+    return "0x" + QString::number(m_port->value<VSRTL_VT_U>(), 16);
+}
+
 QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (change == QGraphicsItem::ItemSelectedChange) {
         updatePen(value.toBool(), !value.toBool());
@@ -144,10 +149,11 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
     return QGraphicsItem::itemChange(change, value);
 }
 
-void PortGraphic::updateGeometry() {
-    if (m_showValue) {
-    }
+void PortGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
+    setToolTip(getTooltipString());
+}
 
+void PortGraphic::updateGeometry() {
     QFontMetrics fm(m_font);
     m_textRect = fm.boundingRect(m_widthText);
 

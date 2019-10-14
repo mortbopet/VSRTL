@@ -125,6 +125,7 @@ void WirePoint::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
 WireSegment::WireSegment(WireGraphic* parent) : m_parent(parent) {
     setParentItem(parent);
+    setAcceptHoverEvents(true);
 }
 
 QLineF WireSegment::getLine() const {
@@ -169,6 +170,10 @@ QRectF WireSegment::boundingRect() const {
     auto br = shape().boundingRect();
     br.adjust(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
     return br;
+}
+
+void WireSegment::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
+    setToolTip(m_parent->getFromPort()->getTooltipString());
 }
 
 void WireSegment::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {

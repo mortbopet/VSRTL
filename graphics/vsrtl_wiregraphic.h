@@ -73,7 +73,7 @@ public:
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
-
+    void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
 
     QString deleted = "False";
