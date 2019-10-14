@@ -25,6 +25,7 @@ public:
     ~VSRTLWidget();
 
     void addComponent(ComponentGraphic* g);
+    void expandAllComponents(ComponentGraphic* fromThis = nullptr);
 
 public slots:
     void clock();
@@ -52,6 +53,8 @@ private:
 
     void initializeDesign(Design& arch);
     Ui::VSRTLWidget* ui;
+
+    vsrtl::ComponentGraphic* m_topLevelComponent = nullptr;
 
     VSRTLView* m_view;
     VSRTLScene* m_scene;

@@ -118,6 +118,12 @@ void MainWindow::createToolbar() {
         }
     });
     simulatorToolBar->addAction(showNetlist);
+
+    const QIcon expandAllComponentsIcon = QIcon(":/icons/expandSquare.svg");
+    QAction* expandAllComponents = new QAction(expandAllComponentsIcon, "Expand all components", this);
+    connect(expandAllComponents, &QAction::triggered, [this] { m_vsrtlWidget->expandAllComponents(); });
+    simulatorToolBar->addAction(expandAllComponents);
+
 }  // namespace vsrtl
 
 }  // namespace vsrtl

@@ -32,10 +32,10 @@ public:
 
     void initialize();
     void setShape(const QPainterPath& shape);
-
+    void placeAndRouteSubcomponents();
     bool isExpanded() const { return m_isExpanded; }
-
     Component* getComponent() const { return &m_component; }
+    std::vector<ComponentGraphic*>& getGraphicSubcomponents() { return m_subcomponents; }
 
     void setExpanded(bool isExpanded);
     bool hasSubcomponents() const;
@@ -62,7 +62,6 @@ protected:
     QRectF sceneGridRect() const;
     bool rectContainsAllSubcomponents(const QRectF& r) const;
     bool snapToMinGridRect(QRect& r) const;
-    void placeAndRouteSubcomponents();
     QRect subcomponentBoundingGridRect() const;
     QRect adjustedMinGridRect(bool includePorts) const;
 

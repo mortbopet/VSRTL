@@ -186,17 +186,29 @@ void VSRTLWidget::initializeDesign(Design& arch) {
     // Create a ComponentGraphic for the top component. This will expand the component tree and create graphics for all
     // ports, wires etc. within the design. This is done through the initialize call, which must be called after the
     // item has been added to the scene.
-    vsrtl::ComponentGraphic* i = new vsrtl::ComponentGraphic(arch);
-    addComponent(i);
-    i->initialize();
+    m_topLevelComponent = new vsrtl::ComponentGraphic(arch);
+    addComponent(m_topLevelComponent);
+    m_topLevelComponent->initialize();
     // At this point, all graphic items have been created, and the post scene construction initialization may take
     // place. Similar to the initialize call, postSceneConstructionInitialization will recurse through the entire tree
     // which is the graphics items in the scene.
-    i->postSceneConstructionInitialize1();
-    i->postSceneConstructionInitialize2();
+    m_topLevelComponent->postSceneConstructionInitialize1();
+    m_topLevelComponent->postSceneConstructionInitialize2();
 
     // Expand top widget
-    i->setExpanded(true);
+    m_topLevelComponent->setExpanded(true);
+}
+
+void VSRTLWidget::expandAllComponents(ComponentGraphic* fromThis) {
+    if (fromThis == nullptr)
+        fromThis = m_topLevelComponent;
+
+    // Components are expanded and routed from leaf nodes and up
+    for (const auto& sub : fromThis->getGraphicSubcomponents())
+        expandAllComponents(sub);
+
+    fromThis->setExpanded(true);
+    fromThis->placeAndRouteSubcomponents();
 }
 
 void VSRTLWidget::checkCanRewind() {

@@ -12,5 +12,6 @@
         <file>rewind.svg</file>
         <file>output.svg</file>
         <file>input.svg</file>
+        <file>expandSquare.svg</file>
     </qresource>
 </RCC>
