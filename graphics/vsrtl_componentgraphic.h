@@ -34,6 +34,7 @@ public:
     void setShape(const QPainterPath& shape);
     void placeAndRouteSubcomponents();
     bool isExpanded() const { return m_isExpanded; }
+    bool restrictSubcomponentPositioning() const { return m_restrictSubcomponentPositioning; }
     Component* getComponent() const { return &m_component; }
     std::vector<ComponentGraphic*>& getGraphicSubcomponents() { return m_subcomponents; }
 
@@ -71,10 +72,12 @@ protected:
     void updateSlot() { update(); }
 
     bool m_isExpanded = false;
+    bool m_restrictSubcomponentPositioning = false;
     bool m_inResizeDragZone = false;
     bool m_resizeDragging = false;
 
     std::vector<ComponentGraphic*> m_subcomponents;
+    ComponentGraphic* m_parentComponentGraphic = nullptr;
 
     QMap<Port*, PortGraphic*> m_inputPorts;
     QMap<Port*, PortGraphic*> m_outputPorts;
@@ -89,9 +92,7 @@ protected:
     QFont m_font;
 
     QPointF m_expandButtonPos;  // Draw position of expand/collapse button in scene coordinates
-
     Component& m_component;
-
     ComponentButton* m_expandButton = nullptr;
 
 public:

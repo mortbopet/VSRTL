@@ -27,6 +27,10 @@ namespace vsrtl {
 
 namespace {
 
+static inline qreal snapToGrid(qreal v) {
+    return round(v / GRID_SIZE) * GRID_SIZE;
+}
+
 static inline QRectF gridToScene(const QRect& gridRect) {
     // Scales a rectangle in grid coordinates to scene coordinates
     QRectF sceneGridRect;
@@ -77,6 +81,7 @@ void ComponentGraphic::initialize() {
         m_outputPorts[c.get()] = new PortGraphic(c.get(), PortType::out, this);
     }
 
+    m_restrictSubcomponentPositioning = false;
     if (hasSubcomponents()) {
         // Setup expand button
         m_expandButton = new ComponentButton(this);
@@ -88,6 +93,7 @@ void ComponentGraphic::initialize() {
 
     // By default, a component is collapsed. This has no effect if a component does not have any subcomponents
     setExpanded(false);
+    m_restrictSubcomponentPositioning = true;
 }
 
 /**
@@ -107,6 +113,7 @@ void ComponentGraphic::createSubcomponents() {
         scene()->addItem(nc);
         nc->initialize();
         nc->setParentItem(this);
+        nc->m_parentComponentGraphic = this;
         m_subcomponents.push_back(nc);
         if (!m_isExpanded) {
             nc->hide();
@@ -293,22 +300,27 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
 
         // Snap to grid
         QPointF newPos = value.toPointF();
-        qreal x = round(newPos.x() / GRID_SIZE) * GRID_SIZE;
-        qreal y = round(newPos.y() / GRID_SIZE) * GRID_SIZE;
-        return QPointF(x, y);
-        /*
-        // Restrict position changes to inside parent item
-        const auto& parentRect = getParent()->sceneGridRect;
-        const auto& thisRect = boundingRect();
-        const auto& offset = thisRect.topLeft();
-        QPointF newPos = value.toPointF();
-        if (!parentRect.contains(thisRect.translated(newPos))) {
-            // Keep the item inside the scene rect.
-            newPos.setX(qMin(parentRect.right() - thisRect.width(), qMax(newPos.x(), parentRect.left())));
-            newPos.setY(qMin(parentRect.bottom() - thisRect.height(), qMax(newPos.y(), parentRect.top())));
-            return newPos - offset;
+        qreal x = snapToGrid(newPos.x());
+        qreal y = snapToGrid(newPos.y());
+        if (m_parentComponentGraphic == nullptr || !m_parentComponentGraphic->restrictSubcomponentPositioning()) {
+            // Parent has just expanded, and is expecting its children to position themselves, before it calculates its
+            // size. Do not restrict movement
+            return QPointF(x, y);
+        } else {
+            // Restrict position changes to inside parent item
+            const auto& parentRect = getParent()->sceneGridRect();
+            const auto& thisRect = boundingRect();
+            if (parentRect.contains(thisRect.translated(newPos))) {
+                return QPointF(x, y);
+            } else {
+                // Keep the item inside the scene rect.
+                newPos.setX(
+                    snapToGrid(qMin(parentRect.right() - thisRect.width(), qMax(newPos.x(), parentRect.left()))));
+                newPos.setY(
+                    snapToGrid(qMin(parentRect.bottom() - thisRect.height(), qMax(newPos.y(), parentRect.top()))));
+                return newPos;
+            }
         }
-        */
     }
 
     return QGraphicsItem::itemChange(change, value);
