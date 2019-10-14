@@ -78,9 +78,9 @@ QVariant WirePoint::itemChange(GraphicsItemChange change, const QVariant& value)
         return QPointF(x, y);
     } else if (change == QGraphicsItem::ItemPositionHasChanged) {
         // Propagate a redraw call to all segments connecting to this
-        m_inputWire->update();
+        m_inputWire->prepareGeometryChange();
         for (const auto& wire : m_outputWires)
-            wire->update();
+            wire->prepareGeometryChange();
     }
 
     return QGraphicsItem::itemChange(change, value);
@@ -297,6 +297,8 @@ void WireGraphic::mergePoints(WirePoint* base, WirePoint* toMerge) {
 
     // With all wires moved to their new positions, the merge point may be removed through the usual remove logic
     toMerge->clearOutputWires();
+    if (mergeType == MergeType::MergeSourceWithSink)
+        toMerge->addOutputWire(base->getInputWire());
     removeWirePoint(toMerge);
 }
 

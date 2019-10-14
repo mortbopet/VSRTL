@@ -59,6 +59,8 @@ private:
 };
 
 class WireSegment : public GraphicsBase {
+    friend class WirePoint;
+
 public:
     WireSegment(WireGraphic* parent);
 
