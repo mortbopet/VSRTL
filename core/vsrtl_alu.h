@@ -4,31 +4,13 @@
 #include "vsrtl_binutils.h"
 #include "vsrtl_component.h"
 #include "vsrtl_defines.h"
+#include "vsrtl_enum.h"
 #include "vsrtl_port.h"
 
 namespace vsrtl {
 
-enum ALU_OPCODE {
-    ADD = 0,
-    SUB = 1,
-    MUL = 2,
-    DIV = 3,
-    AND = 4,
-    OR = 5,
-    XOR = 6,
-    SL = 7,
-    SRA = 8,
-    SRL = 9,
-    LUI = 10,
-    LT = 11,
-    LTU = 12,
-    EQ = 13,
-    COUNT  // Used for calculating bitwidth for OPCODE signal
-};
-
-static constexpr unsigned int ALUctrlWidth() {
-    return ceillog2(ALU_OPCODE::COUNT);
-}
+VSRTLEnum(ALU_OPCODE, ADD = 0, SUB = 1, MUL = 2, DIV = 3, AND = 4, OR = 5, XOR = 6, SL = 7, SRA = 8, SRL = 9, LUI = 10,
+          LT = 11, LTU = 12, EQ = 13);
 
 class ALU : public Component {
 public:
@@ -39,7 +21,7 @@ public:
 
         op1.setWidth(m_width);
         op2.setWidth(m_width);
-        ctrl.setWidth(ALUctrlWidth());
+        ctrl.setWidth(ALU_OPCODE::width());
         out.setWidth(m_width);
     }
     void propagate() { calculateOutput(); }
@@ -56,7 +38,7 @@ private:
         const auto uop2 = op2.template value<VSRTL_VT_U>();
         const auto _op1 = op1.template value<VSRTL_VT_S>();
         const auto _op2 = op2.template value<VSRTL_VT_S>();
-        switch (ctrl.value<VSRTL_VT_U>()) {
+        VSRTLSwitch(ctrl, ALU_OPCODE) {
             case ALU_OPCODE::ADD:
                 return uop1 + uop2;
             case ALU_OPCODE::SUB:

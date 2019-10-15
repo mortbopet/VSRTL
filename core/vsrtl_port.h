@@ -83,6 +83,11 @@ public:
         return static_cast<T>(signextend<T>(m_value, m_width));
     }
 
+    template <typename T, unsigned int W>
+    T value() {
+        return static_cast<T>(signextend<T, W>(m_value));
+    }
+
     explicit operator VSRTL_VT_S() const { return signextend<VSRTL_VT_S>(m_value, m_width); }
 
     void setPortValue() {

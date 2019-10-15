@@ -28,7 +28,7 @@ public:
 
     SUBCOMPONENT(expReg, Register, 32);
     SUBCOMPONENT(mul, ALU, 32);
-    SUBCOMPONENT(aluOp, Constant, ALU_OPCODE::MUL, ALUctrlWidth());
+    SUBCOMPONENT(aluOp, Constant, ALU_OPCODE::MUL, ALU_OPCODE::width());
 };
 
 class NestedExponenter : public Design {
@@ -51,7 +51,7 @@ public:
     SUBCOMPONENT(adder, ALU, 32);
     SUBCOMPONENT(add2, ALU, 32);
     SUBCOMPONENT(c2, Constant, 2, 32);
-    SUBCOMPONENT(aluOp, Constant, ALU_OPCODE::ADD, ALUctrlWidth());
+    SUBCOMPONENT(aluOp, Constant, ALU_OPCODE::ADD, ALU_OPCODE::width());
 };
 }  // namespace vsrtl
 
