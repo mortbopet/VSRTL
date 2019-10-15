@@ -1,6 +1,9 @@
 #include <QApplication>
-#include "vsrtl_adderandreg.h"
-#include "vsrtl_counter.h"
+#include "components/vsrtl_adderandreg.h"
+#include "components/vsrtl_counter.h"
+#include "components/vsrtl_manynestedcomponents.h"
+#include "components/vsrtl_nestedexponenter.h"
+#include "components/vsrtl_rannumgen.h"
 #include "vsrtl_mainwindow.h"
 #include "vsrtl_manynestedcomponents.h"
 #include "vsrtl_nestedexponenter.h"
