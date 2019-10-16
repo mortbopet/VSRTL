@@ -1,12 +1,12 @@
 #include "vsrtl_widget.h"
 #include "ui_vsrtl_widget.h"
+#include "vsrtl_adder.h"
 #include "vsrtl_design.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_scene.h"
+#include "vsrtl_shape.h"
 #include "vsrtl_traversal_util.h"
 #include "vsrtl_view.h"
-
-#include "vsrtl_shape.h"
 
 #include "vsrtl_core.h"
 
@@ -175,6 +175,16 @@ void VSRTLWidget::registerShapes() const {
                                   return shape;
                               },
                               QRect(0, 0, 2, 5)});
+
+    // Adder
+    ComponentGraphic::setComponentShape(
+        GraphicsTypeID(Adder), {[](QTransform t) {
+                                    QPainterPath shape;
+                                    shape.addPolygon(t.map(QPolygonF({QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8),
+                                                                      QPointF(0, 1), QPointF(0, 0)})));
+                                    return shape;
+                                },
+                                QRect(0, 0, 2, 5)});
 }
 
 void VSRTLWidget::initializeDesign(Design& arch) {
