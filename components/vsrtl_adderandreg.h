@@ -19,10 +19,10 @@ public:
     static constexpr int m_cVal = 4;
 
     // Create objects
-    SUBCOMPONENT(alu_ctrl, Constant, ALU_OPCODE::ADD, ALU_OPCODE::width());
-    SUBCOMPONENT(c4, Constant, 4, 32);
-    SUBCOMPONENT(alu, ALU, 32);
-    SUBCOMPONENT(reg, Register, 32);
+    SUBCOMPONENT(alu_ctrl, Constant<ALU_OPCODE::width()>, ALU_OPCODE::ADD);
+    SUBCOMPONENT(c4, Constant<32>, 4);
+    SUBCOMPONENT(alu, ALU<32>);
+    SUBCOMPONENT(reg, Register<32>);
 };
 }  // namespace vsrtl
 #endif  // VSRTL_ADDERANDREG_H

@@ -28,18 +28,18 @@ public:
         xor2->out >> S;
     }
 
-    INPUTPORT_W(A, 1);
-    INPUTPORT_W(B, 1);
-    INPUTPORT_W(Cin, 1);
+    INPUTPORT(A, 1);
+    INPUTPORT(B, 1);
+    INPUTPORT(Cin, 1);
 
-    OUTPUTPORT_W(S, 1);
-    OUTPUTPORT_W(Cout, 1);
+    OUTPUTPORT(S, 1);
+    OUTPUTPORT(Cout, 1);
 
-    SUBCOMPONENT(xor1, Xor, 2, 1);
-    SUBCOMPONENT(xor2, Xor, 2, 1);
-    SUBCOMPONENT(and1, And, 2, 1);
-    SUBCOMPONENT(and2, And, 2, 1);
-    SUBCOMPONENT(or1, Or, 2, 1);
+    SUBCOMPONENT(xor1, Xor<1>, 2);
+    SUBCOMPONENT(xor2, Xor<1>, 2);
+    SUBCOMPONENT(and1, And<1>, 2);
+    SUBCOMPONENT(and2, And<1>, 2);
+    SUBCOMPONENT(or1, Or<1>, 2);
 };
 }  // namespace vsrtl
 

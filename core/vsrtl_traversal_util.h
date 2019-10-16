@@ -13,22 +13,20 @@ T getGraphic(Base* b) {
     return static_cast<T>(b->getGraphic());
 }
 
-template<typename T>
-T getInputPortGraphic(Port* p){
+template <typename T>
+T getInputPortGraphic(PortBase* p) {
     return getGraphic<T>(p->getInputPort());
 }
 
-template<typename T>
-std::vector<T> getOutputPortGraphics(Port* p){
+template <typename T>
+std::vector<T> getOutputPortGraphics(PortBase* p) {
     std::vector<T> portGraphics;
-    for(const auto& out : p->getOutputPorts()){
+    for (const auto& out : p->getOutputPorts()) {
         portGraphics.push_back(getGraphic<T>(out));
     }
     return portGraphics;
 }
 
+}  // namespace vsrtl
 
-
-}
-
-#endif // VSRTL_TRAVERSAL_UTIL_H
+#endif  // VSRTL_TRAVERSAL_UTIL_H

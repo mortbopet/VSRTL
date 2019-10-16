@@ -79,8 +79,8 @@ protected:
     std::vector<ComponentGraphic*> m_subcomponents;
     ComponentGraphic* m_parentComponentGraphic = nullptr;
 
-    QMap<Port*, PortGraphic*> m_inputPorts;
-    QMap<Port*, PortGraphic*> m_outputPorts;
+    QMap<PortBase*, PortGraphic*> m_inputPorts;
+    QMap<PortBase*, PortGraphic*> m_outputPorts;
 
     Label* m_label = nullptr;
 

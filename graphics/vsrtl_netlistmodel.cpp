@@ -26,7 +26,7 @@ QVariant NetlistTreeItem::data(int column, int role) const {
             }
             case NetlistModel::ValueColumn: {
                 if (m_port) {
-                    VSRTL_VT_U value = m_port->template value<VSRTL_VT_U>();
+                    VSRTL_VT_U value = m_port->uValue();
                     return encodeDisplayValue(value, m_port->getWidth(), m_displayType);
                 }
                 break;
@@ -76,7 +76,7 @@ Qt::ItemFlags NetlistModel::flags(const QModelIndex& index) const {
 
 bool NetlistModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     if (indexIsRegisterOutputPortValue(index)) {
-        Register* reg = dynamic_cast<Register*>(getParentComponent(index));
+        RegisterBase* reg = dynamic_cast<RegisterBase*>(getParentComponent(index));
         if (reg) {
             reg->forceValue(value.toInt());
             m_arch.propagateDesign();
@@ -101,7 +101,7 @@ QModelIndex NetlistModel::lookupIndexForComponent(Component* c) const {
     return QModelIndex();
 }
 
-void NetlistModel::addPortToComponent(Port* port, NetlistTreeItem* parent, PortDirection dir) {
+void NetlistModel::addPortToComponent(PortBase* port, NetlistTreeItem* parent, PortDirection dir) {
     auto* child = new NetlistTreeItem(parent);
     parent->insertChild(parent->childCount(), child);
 
@@ -116,7 +116,7 @@ bool NetlistModel::indexIsRegisterOutputPortValue(const QModelIndex& index) cons
         auto* parentItem = static_cast<NetlistTreeItem*>(item->parent());
         auto* parentComponent = parentItem->m_component;
         if (parentItem && parentComponent) {
-            if (dynamic_cast<Register*>(parentComponent)) {
+            if (dynamic_cast<RegisterBase*>(parentComponent)) {
                 // Parent is register, check if current index is an output port
                 if (item->m_port && item->m_direction == PortDirection::Output) {
                     return true;

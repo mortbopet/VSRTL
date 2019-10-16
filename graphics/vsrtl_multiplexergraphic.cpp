@@ -5,17 +5,17 @@
 
 namespace vsrtl {
 
-MultiplexerGraphic::MultiplexerGraphic(Multiplexer& c) : ComponentGraphic(c), m_multiplexer(c) {}
+MultiplexerGraphic::MultiplexerGraphic(MultiplexerBase& c) : ComponentGraphic(c), m_multiplexer(c) {}
 
 void MultiplexerGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
     // Mark input IO with circles, highlight selected input with green
     painter->save();
     for (const auto& ip : m_inputPorts) {
         const auto* p_base = ip->getPort();
-        if (p_base != &m_multiplexer.select) {
-            const unsigned int index = m_multiplexer.select.template value<unsigned int>();
-            Q_ASSERT(index < m_multiplexer.in.size());
-            if (p_base == m_multiplexer.in[index]) {
+        if (p_base != m_multiplexer.getSelect()) {
+            const unsigned int index = m_multiplexer.getSelect()->uValue();
+            Q_ASSERT(index < m_multiplexer.getIns().size());
+            if (p_base == m_multiplexer.getIns()[index]) {
                 painter->setBrush(Qt::green);
             } else {
                 painter->setBrush(Qt::white);

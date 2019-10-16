@@ -12,7 +12,7 @@ namespace vsrtl {
 
 class Design;
 class Component;
-class Port;
+class PortBase;
 
 enum class PortDirection { Input, Output };
 
@@ -24,7 +24,7 @@ public:
     QList<QMenu*> getActions() const override;
 
     Component* m_component = nullptr;
-    Port* m_port = nullptr;
+    PortBase* m_port = nullptr;
     PortDirection m_direction;
 };
 
@@ -45,7 +45,7 @@ public slots:
     void invalidate() override;
 
 private:
-    void addPortToComponent(Port* port, NetlistTreeItem* parent, PortDirection);
+    void addPortToComponent(PortBase* port, NetlistTreeItem* parent, PortDirection);
     void loadDesign(NetlistTreeItem* parent, const Design& design);
     void loadDesignRecursive(NetlistTreeItem* parent, const Component& component);
     Component* getParentComponent(const QModelIndex& index) const;

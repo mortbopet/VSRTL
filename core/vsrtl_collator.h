@@ -15,25 +15,21 @@ namespace vsrtl {
  * c[0:0] -> |   |
  * d[0:0] -> |___|
  */
+template <unsigned int W>
 class Collator : public Component {
 public:
-    Collator(std::string name, unsigned int width, Component* parent) : Component(name, parent), m_width(width) {
-        in = this->createInputPorts("in", width, 1);
-        out.setWidth(width);
-
+    Collator(std::string name, Component* parent) : Component(name, parent) {
+        in = this->createInputPorts<1>("in", W);
         out << [=] {
             VSRTL_VT_U value = 0;
-            for (int i = 0; i < width; i++) {
+            for (int i = 0; i < W; i++) {
                 value |= static_cast<bool>(*in[i]) << i;
             }
             return value;
         };
     }
-    OUTPUTPORT(out);
-    INPUTPORTS(in);
-
-protected:
-    unsigned int m_width;
+    OUTPUTPORT(out, W);
+    INPUTPORTS(in, 1);
 };
 
 }  // namespace vsrtl

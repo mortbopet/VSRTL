@@ -8,16 +8,13 @@ namespace vsrtl {
 class DoubleNestedExponenter : public Component {
 public:
     DoubleNestedExponenter(std::string name, Component* parent) : Component(name, parent) {
-        in.setWidth(32);
-        out.setWidth(32);
-
         in >> exp1->expIn;
         exp1->out >> exp2->expIn;
 
         exp2->out >> out;
     }
-    INPUTPORT(in);
-    OUTPUTPORT(out);
+    INPUTPORT(in, 32);
+    OUTPUTPORT(out, 32);
 
 private:
     SUBCOMPONENT(exp1, Exponenter);

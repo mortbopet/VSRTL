@@ -5,28 +5,22 @@
 
 namespace vsrtl {
 
+template <unsigned int W>
 class LogicGate : public Component {
 public:
-    LogicGate(std::string name, unsigned int nInputs, unsigned int width, Component* parent)
-        : Component(name, parent), m_width(width) {
-        in = this->createInputPorts("in", nInputs);
-        for (const auto& ip : in) {
-            ip->setWidth(width);
-        }
-        out.setWidth(width);
+    LogicGate(std::string name, Component* parent, unsigned int nInputs) : Component(name, parent) {
+        in = this->createInputPorts<W>("in", nInputs);
     }
-    OUTPUTPORT(out);
-    INPUTPORTS(in);
-
-protected:
-    unsigned int m_width;
+    OUTPUTPORT(out, W);
+    INPUTPORTS(in, W);
 };
 
-class And : public LogicGate {
+DefineGraphicsProxy(And);
+template <unsigned int W>
+class And : public LogicGate<W> {
 public:
-    std::type_index getTypeId() const override { return std::type_index(typeid(And)); }
-    And(std::string name, unsigned int nInputs, unsigned int width, Component* parent)
-        : LogicGate(name, nInputs, width, parent) {
+    DefineTypeID(And) And(std::string name, Component* parent, unsigned int nInputs)
+        : LogicGate<W>(name, parent, nInputs) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
             for (int i = 1; i < this->in.size(); i++) {
@@ -37,11 +31,12 @@ public:
     }
 };
 
-class Or : public LogicGate {
+DefineGraphicsProxy(Or);
+template <unsigned int W>
+class Or : public LogicGate<W> {
 public:
-    std::type_index getTypeId() const override { return std::type_index(typeid(Or)); }
-    Or(std::string name, unsigned int nInputs, unsigned int width, Component* parent)
-        : LogicGate(name, nInputs, width, parent) {
+    DefineTypeID(Or);
+    Or(std::string name, Component* parent, unsigned int nInputs) : LogicGate<W>(name, parent, nInputs) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
             for (int i = 1; i < this->in.size(); i++) {
@@ -52,11 +47,12 @@ public:
     }
 };
 
-class Xor : public LogicGate {
+DefineGraphicsProxy(Xor);
+template <unsigned int W>
+class Xor : public LogicGate<W> {
 public:
-    std::type_index getTypeId() const override { return std::type_index(typeid(Xor)); }
-    Xor(std::string name, unsigned int nInputs, unsigned int width, Component* parent)
-        : LogicGate(name, nInputs, width, parent) {
+    DefineTypeID(Xor);
+    Xor(std::string name, Component* parent, unsigned int nInputs) : LogicGate<W>(name, parent, nInputs) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
             for (int i = 1; i < this->in.size(); i++) {
@@ -67,11 +63,13 @@ public:
     }
 };
 
-class Not : public LogicGate {
+DefineGraphicsProxy(Not);
+template <unsigned int W>
+class Not : public LogicGate<W> {
 public:
-    std::type_index getTypeId() const override { return std::type_index(typeid(Not)); }
-    Not(std::string name, unsigned int width, Component* parent) : LogicGate(name, 1, width, parent) {
-        this->out << [=] { return signextend(~this->in[0]->template value<VSRTL_VT_U>(), width); };
+    DefineTypeID(Not);
+    Not(std::string name, Component* parent) : LogicGate<W>(name, parent, 1) {
+        this->out << [=] { return signextend(~this->in[0]->template value<VSRTL_VT_U>()); };
     }
 };
 

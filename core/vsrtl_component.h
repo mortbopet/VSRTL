@@ -22,15 +22,14 @@ namespace vsrtl {
 
 #define SUBCOMPONENTS(name, type) std::vector<type*> name;
 
-#define INPUTPORT(name) Port& name = this->createInputPort(#name)
-#define INPUTPORT_W(name, width) Port& name = this->createInputPort(#name, width)
-#define INPUTPORTS(name) std::vector<Port*> name
-#define OUTPUTPORT(name) Port& name = createOutputPort(#name)
-#define OUTPUTPORTS(name) std::vector<Port*> name
-#define OUTPUTPORT_W(name, width) Port& name = createOutputPort(#name, width)
+#define INPUTPORT(name, W) Port<W>& name = this->createInputPort<W>(#name)
+#define INPUTPORTS(name, W) std::vector<Port<W>*> name
+#define OUTPUTPORT(name, W) Port<W>& name = createOutputPort<W>(#name)
+#define OUTPUTPORTS(name, W) std::vector<Port<W>*> name
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
 
+DefineGraphicsProxy(Component);
 class Component : public Base {
 public:
     Component(std::string displayName, Component* parent) : m_displayName(displayName), m_parent(parent) {}
@@ -43,7 +42,7 @@ public:
      * @return String identifier for the component type
      */
 
-    virtual std::type_index getTypeId() const { return std::type_index(typeid(Component)); }
+    virtual std::type_index getTypeId() const { return GraphicsTypeID(Component); }
     virtual bool isRegister() const { return false; }
     virtual void resetPropagation() {
         if (m_propagationState == PropagationState::unpropagated) {
@@ -64,14 +63,30 @@ public:
      *        (this) takes ownership of the component*
      * @param subcomponent
      */
-    void addSubcomponent(Component* subcomponent);
-    Port& createInputPort(std::string name, unsigned int width = 0) { return createPort(name, m_inputports, width); }
-    Port& createOutputPort(std::string name, unsigned int width = 0) { return createPort(name, m_outputports, width); }
+    void addSubcomponent(Component* subcomponent) {
+        m_subcomponents.push_back(std::unique_ptr<Component>(subcomponent));
+    }
 
-    std::vector<Port*> createInputPorts(std::string name, unsigned int n, unsigned int width = 0);
-    std::vector<Port*> createOutputPorts(std::string name, unsigned int n, unsigned int width = 0);
+    template <unsigned int W>
+    Port<W>& createInputPort(std::string name) {
+        return createPort<W>(name, m_inputports);
+    }
+    template <unsigned int W>
+    Port<W>& createOutputPort(std::string name) {
+        return createPort<W>(name, m_outputports);
+    }
 
-    void propagateComponent(std::vector<Port*>& propagationStack) {
+    template <unsigned int W>
+    std::vector<Port<W>*> createInputPorts(std::string name, unsigned int n) {
+        return createPorts<W>(name, m_inputports, n);
+    }
+
+    template <unsigned int W>
+    std::vector<Port<W>*> createOutputPorts(std::string name, unsigned int n) {
+        return createPorts<W>(name, m_outputports, n);
+    }
+
+    void propagateComponent(std::vector<PortBase*>& propagationStack) {
         // Component has already been propagated
         if (m_propagationState == PropagationState::propagated)
             return;
@@ -146,19 +161,6 @@ public:
             if (!ip->isConnected()) {
                 throw std::runtime_error("A component has unconnected inputs");
             }
-            if (ip->getWidth() == 0) {
-                throw std::runtime_error(
-                    "A port did not have its width set. Parent component of port should set port width in its "
-                    "constructor");
-            }
-        }
-
-        for (const auto& op : m_outputports) {
-            if (op->getWidth() == 0) {
-                throw std::runtime_error(
-                    "A port did not have its width set. Parent component of port should set port width in its "
-                    "constructor");
-            }
         }
     }
     bool hasSubcomponents() const { return m_subcomponents.size() != 0; }
@@ -186,15 +188,32 @@ public:
     const Component* getParent() const { return m_parent; }
     const std::string& getName() const { return m_displayName; }
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
-    const std::vector<std::unique_ptr<Port>>& getOutputs() const { return m_outputports; }
-    const std::vector<std::unique_ptr<Port>>& getInputs() const { return m_inputports; }
+    const std::vector<std::unique_ptr<PortBase>>& getOutputs() const { return m_outputports; }
+    const std::vector<std::unique_ptr<PortBase>>& getInputs() const { return m_inputports; }
 
     Gallant::Signal0<> changed;
 
 protected:
-    Port& createPort(std::string name, std::vector<std::unique_ptr<Port>>& container, unsigned int width);
-    std::vector<Port*> createPorts(std::string name, std::vector<std::unique_ptr<Port>>& container, unsigned int n,
-                                   unsigned int width);
+    template <unsigned int W>
+    Port<W>& createPort(std::string name, std::vector<std::unique_ptr<PortBase>>& container) {
+        Port<W>* port = new Port<W>(name, this);
+        container.push_back(std::unique_ptr<Port<W>>(port));
+        return *port;
+    }
+
+    template <unsigned int W>
+    std::vector<Port<W>*> createPorts(std::string name, std::vector<std::unique_ptr<PortBase>>& container,
+                                      unsigned int n) {
+        std::vector<Port<W>*> ports;
+        for (unsigned int i = 0; i < n; i++) {
+            std::string i_name = name + "_" + std::to_string(i);
+            Port<W>* port = new Port<W>(i_name.c_str(), this);
+            container.push_back(std::unique_ptr<Port<W>>(port));
+            ports.push_back(port);
+        }
+        return ports;
+    }
+
     void getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
         // Register adjacent components (child components) in the graph, and add subcomponents to graph
         componentGraph[this];
@@ -208,15 +227,15 @@ protected:
     std::string m_displayName;
     PropagationState m_propagationState = PropagationState::unpropagated;
     Component* m_parent = nullptr;
-    std::vector<std::unique_ptr<Port>> m_outputports;
-    std::vector<std::unique_ptr<Port>> m_inputports;
+    std::vector<std::unique_ptr<PortBase>> m_outputports;
+    std::vector<std::unique_ptr<PortBase>> m_inputports;
     std::vector<std::unique_ptr<Component>> m_subcomponents;
 };
 
 // Component object generator that registers objects in parent upon creation
 template <typename T, typename... Args>
 T* create_component(Component* parent, std::string name, Args... args) {
-    T* ptr = new T(name, args..., parent);
+    T* ptr = new T(name, parent, args...);
     if (parent) {
         parent->addSubcomponent(static_cast<Component*>(ptr));
     }

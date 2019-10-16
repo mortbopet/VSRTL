@@ -5,18 +5,16 @@
 
 namespace vsrtl {
 
-#define CMP_COMPONENT(classname, cmptype, op)                                                          \
-    class classname : public Component {                                                               \
-    public:                                                                                            \
-        classname(std::string name, unsigned int width, Component* parent) : Component(name, parent) { \
-            out.setWidth(1);                                                                           \
-            op1.setWidth(width);                                                                       \
-            op2.setWidth(width);                                                                       \
-            out << [=] { return op1.template value<cmptype>() op op2.template value<cmptype>(); };     \
-        }                                                                                              \
-        OUTPUTPORT(out);                                                                               \
-        INPUTPORT(op1);                                                                                \
-        INPUTPORT(op2);                                                                                \
+#define CMP_COMPONENT(classname, cmptype, op)                                                      \
+    template <unsigned int W>                                                                      \
+    class classname : public Component {                                                           \
+    public:                                                                                        \
+        classname(std::string name, Component* parent) : Component(name, parent) {                 \
+            out << [=] { return op1.template value<cmptype>() op op2.template value<cmptype>(); }; \
+        }                                                                                          \
+        OUTPUTPORT(out, 1);                                                                        \
+        INPUTPORT(op1, W);                                                                         \
+        INPUTPORT(op2, W);                                                                         \
     };
 
 CMP_COMPONENT(Sge, VSRTL_VT_S, >=)

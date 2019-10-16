@@ -12,7 +12,7 @@ QT_FORWARD_DECLARE_CLASS(QPropertyAnimation)
 
 namespace vsrtl {
 
-class Port;
+class PortBase;
 
 enum class PortType { in, out };
 
@@ -21,7 +21,7 @@ class PortGraphic : public GraphicsBase {
     Q_PROPERTY(QColor penColor MEMBER m_penColor)
 
 public:
-    PortGraphic(Port* port, PortType type, QGraphicsItem* parent = nullptr);
+    PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent = nullptr);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
@@ -29,7 +29,7 @@ public:
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     void postSceneConstructionInitialize2() override;
     void updateGeometry();
-    Port* getPort() const { return m_port; }
+    PortBase* getPort() const { return m_port; }
     void setInputWire(WireGraphic* wire);
     void updateInputWire();
     void updateWireGeometry();
@@ -67,7 +67,7 @@ private:
     QRectF m_textRect;
 
     PortType m_type;
-    Port* m_port;
+    PortBase* m_port;
 
     // Used for allowing WireSegments to join up with a port
     PointGraphic* m_portPoint = nullptr;

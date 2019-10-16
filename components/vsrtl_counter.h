@@ -18,7 +18,7 @@ public:
     Counter() : Design(std::to_string(width) + " bit counter") {
         for (int i = 0; i < width; i++) {
             adders.push_back(create_component<FullAdder>(this, "adder_" + std::to_string(i)));
-            regs.push_back(create_component<Register>(this, "reg_" + std::to_string(i), 1));
+            regs.push_back(create_component<Register<1>>(this, "reg_" + std::to_string(i)));
         }
 
         // Connect
@@ -40,14 +40,14 @@ public:
     }
 
     std::vector<FullAdder*> adders;
-    std::vector<Register*> regs;
+    std::vector<Register<1>*> regs;
 
-    SUBCOMPONENT(outputReg, Register, width);
+    SUBCOMPONENT(outputReg, Register<width>);
 
-    SUBCOMPONENT(value, Collator, width);
+    SUBCOMPONENT(value, Collator<width>);
 
-    SUBCOMPONENT(c0, Constant, 0, 1);
-    SUBCOMPONENT(c1, Constant, 1, 1);
+    SUBCOMPONENT(c0, Constant<1>, 0);
+    SUBCOMPONENT(c1, Constant<1>, 1);
 };
 }  // namespace vsrtl
 

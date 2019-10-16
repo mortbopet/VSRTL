@@ -103,10 +103,11 @@ void ComponentGraphic::initialize() {
 void ComponentGraphic::createSubcomponents() {
     for (const auto& c : m_component.getSubComponents()) {
         ComponentGraphic* nc;
-        if (dynamic_cast<Multiplexer*>(c.get())) {
-            nc = new MultiplexerGraphic(*static_cast<Multiplexer*>(c.get()));
-        } else if (dynamic_cast<Register*>(c.get())) {
-            nc = new RegisterGraphic(*static_cast<Register*>(c.get()));
+        auto typeId = c.get()->getTypeId();
+        if (typeId == GraphicsTypeID(Multiplexer)) {
+            nc = new MultiplexerGraphic(*dynamic_cast<MultiplexerBase*>(c.get()));
+        } else if (typeId == GraphicsTypeID(Register)) {
+            nc = new RegisterGraphic(*dynamic_cast<RegisterBase*>(c.get()));
         } else {
             nc = new ComponentGraphic(*c);
         }
@@ -331,7 +332,7 @@ void ComponentGraphic::setShape(const QPainterPath& shape) {
 }
 
 namespace {
-qreal largestPortWidth(const QMap<Port*, PortGraphic*>& ports) {
+qreal largestPortWidth(const QMap<PortBase*, PortGraphic*>& ports) {
     qreal width = 0;
     for (const auto& port : ports) {
         width = port->boundingRect().width() > width ? port->boundingRect().width() : width;

@@ -12,25 +12,23 @@ namespace vsrtl {
 VSRTLEnum(ALU_OPCODE, ADD = 0, SUB = 1, MUL = 2, DIV = 3, AND = 4, OR = 5, XOR = 6, SL = 7, SRA = 8, SRL = 9, LUI = 10,
           LT = 11, LTU = 12, EQ = 13);
 
+DefineGraphicsProxy(ALU);
+template <unsigned int W>
 class ALU : public Component {
 public:
-    std::type_index getTypeId() const override { return std::type_index(typeid(ALU)); }
+    DefineTypeID(ALU);
     // clang-format off
-    ALU(std::string name, unsigned int width, Component* parent) : Component(name, parent), m_width(width){
+    ALU(std::string name, Component* parent) : Component(name, parent){
         out << ([=] { return calculateOutput(); });
-
-        op1.setWidth(m_width);
-        op2.setWidth(m_width);
-        ctrl.setWidth(ALU_OPCODE::width());
-        out.setWidth(m_width);
     }
+
     void propagate() { calculateOutput(); }
 
-    INPUTPORT(op1);
-    INPUTPORT(op2);
-    INPUTPORT(ctrl);
+    INPUTPORT(op1, W);
+    INPUTPORT(op2, W);
+    INPUTPORT(ctrl, ALU_OPCODE::width());
 
-    OUTPUTPORT(out);
+    OUTPUTPORT(out, W);
 
 private:
     VSRTL_VT_U calculateOutput() {
@@ -70,7 +68,5 @@ private:
 
         }
     }
-
-    unsigned int m_width;
 };
 }  // namespace vsrtl

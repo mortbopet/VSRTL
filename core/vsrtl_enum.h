@@ -14,7 +14,7 @@ namespace vsrtl {
         static constexpr unsigned int width() { return ceillog2(_##name::_COUNT); } \
     }
 
-#define VSRTLSwitch(signal, enumname) switch (signal.value<unsigned int, enumname::width()>())
+#define VSRTLSwitch(signal, enumname) switch (signal.value<unsigned int>())
 
 }  // namespace vsrtl
 

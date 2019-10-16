@@ -282,7 +282,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     pointToRemove->deleteLater();
 }
 
-WireGraphic::WireGraphic(PortGraphic* from, const std::vector<Port*>& to, QGraphicsItem* parent)
+WireGraphic::WireGraphic(PortGraphic* from, const std::vector<PortBase*>& to, QGraphicsItem* parent)
     : m_fromPort(from), m_toPorts(to) {
     setParentItem(parent);
 }

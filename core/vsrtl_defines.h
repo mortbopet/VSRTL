@@ -5,6 +5,19 @@
 
 namespace vsrtl {
 
+// @todo: describe why this is needed (graphical objects need not know about the templated versions of objects)
+#define DefineGraphicsProxy(name)                                                                        \
+    class name##GraphicsProxy {                                                                          \
+    public:                                                                                              \
+        name##GraphicsProxy() {}                                                                         \
+        static std::type_index getTypeIdProxy() { return std::type_index(typeid(name##GraphicsProxy)); } \
+    };
+
+#define GraphicsTypeID(name) (name##GraphicsProxy::getTypeIdProxy())
+
+#define DefineTypeID(name) \
+    std::type_index getTypeId() const override { return GraphicsTypeID(name); }
+
 #define DRAW_BOUNDING_RECT(painter)     \
     painter->save();                    \
     painter->setPen(QPen(Qt::red, 1));  \

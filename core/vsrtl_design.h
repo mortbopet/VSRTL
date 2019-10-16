@@ -38,7 +38,7 @@ public:
         }
 
         // Increment rewind-stack if possible
-        if (m_rewindstackCount < Register::rewindStackSize()) {
+        if (m_rewindstackCount < RegisterBase::rewindStackSize()) {
             m_rewindstackCount++;
         }
 
@@ -123,7 +123,7 @@ public:
     bool cycleUtil(Component* c, std::map<Component*, bool>& visited, std::map<Component*, bool>& recurseStack) {
         visited[c] = true;
         recurseStack[c] = true;
-        if (!dynamic_cast<Register*>(c))  // Graph is cut at registers
+        if (!dynamic_cast<RegisterBase*>(c))  // Graph is cut at registers
             return false;
 
         for (const auto& neighbour : m_componentGraph[c]) {
@@ -162,7 +162,7 @@ public:
         return m_componentGraph;
     }
 
-    const std::set<Register*>& getRegisters() const { return m_registers; }
+    const std::set<RegisterBase*>& getRegisters() const { return m_registers; }
 
 private:
     void createComponentGraph() {
@@ -171,17 +171,17 @@ private:
 
         // Gather all registers in the design
         for (const auto& c : m_componentGraph) {
-            if (dynamic_cast<Register*>(c.first)) {
-                m_registers.insert(dynamic_cast<Register*>(c.first));
+            if (dynamic_cast<RegisterBase*>(c.first)) {
+                m_registers.insert(dynamic_cast<RegisterBase*>(c.first));
             }
         }
     }
 
     unsigned int m_rewindstackCount = 0;
     std::map<Component*, std::vector<Component*>> m_componentGraph;
-    std::set<Register*> m_registers;
+    std::set<RegisterBase*> m_registers;
 
-    std::vector<Port*> m_propagationStack;
+    std::vector<PortBase*> m_propagationStack;
 };
 }  // namespace vsrtl
 

@@ -12,9 +12,6 @@ namespace vsrtl {
 class Exponenter : public Component {
 public:
     Exponenter(std::string name, Component* parent) : Component(name, parent) {
-        expIn.setWidth(32);
-        out.setWidth(32);
-
         mul->out >> expReg->in;
 
         expIn >> mul->op1;
@@ -23,12 +20,12 @@ public:
 
         expReg->out >> out;
     }
-    INPUTPORT(expIn);
-    OUTPUTPORT(out);
+    INPUTPORT(expIn, 32);
+    OUTPUTPORT(out, 32);
 
-    SUBCOMPONENT(expReg, Register, 32);
-    SUBCOMPONENT(mul, ALU, 32);
-    SUBCOMPONENT(aluOp, Constant, ALU_OPCODE::MUL, ALU_OPCODE::width());
+    SUBCOMPONENT(expReg, Register<32>);
+    SUBCOMPONENT(mul, ALU<32>);
+    SUBCOMPONENT(aluOp, Constant<ALU_OPCODE::width()>, ALU_OPCODE::MUL);
 };
 
 class NestedExponenter : public Design {
@@ -47,11 +44,11 @@ public:
     }
     // Create objects
     SUBCOMPONENT(exp, Exponenter);
-    SUBCOMPONENT(reg, Register, 32);
-    SUBCOMPONENT(adder, ALU, 32);
-    SUBCOMPONENT(add2, ALU, 32);
-    SUBCOMPONENT(c2, Constant, 2, 32);
-    SUBCOMPONENT(aluOp, Constant, ALU_OPCODE::ADD, ALU_OPCODE::width());
+    SUBCOMPONENT(reg, Register<32>);
+    SUBCOMPONENT(adder, ALU<32>);
+    SUBCOMPONENT(add2, ALU<32>);
+    SUBCOMPONENT(c2, Constant<32>, 2);
+    SUBCOMPONENT(aluOp, Constant<ALU_OPCODE::width()>, ALU_OPCODE::ADD);
 };
 }  // namespace vsrtl
 

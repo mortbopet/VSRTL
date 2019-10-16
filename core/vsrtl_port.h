@@ -21,11 +21,14 @@ class Component;
 
 enum class PropagationState { unpropagated, propagated, constant };
 
-class Port : public Base {
+/**
+ * @brief The PortBase class
+ * Base class for ports, does not have a bit width property
+ */
+class PortBase : public Base {
 public:
-    Port(std::string name, Component* parent, unsigned int width = 0)
-        : m_parent(parent), m_name(name), m_width(width) {}
-    bool isConnected() const { return m_inputPort != nullptr || m_propagationFunction != nullptr; }
+    PortBase(std::string name, Component* parent) : m_name(name), m_parent(parent) { assert(parent != nullptr); }
+
     std::string getName() const { return m_name; }
     Component* getParent() const { return m_parent; }
     bool isPropagated() const { return m_propagationState != PropagationState::unpropagated; }
@@ -34,68 +37,112 @@ public:
             m_propagationState == PropagationState::constant ? m_propagationState : PropagationState::unpropagated;
     }
 
-    unsigned int getWidth() const { return m_width; }
-    void setWidth(unsigned int width) {
-        assert(width <= sizeof(VSRTL_VT_U) * CHAR_BIT &&
-               "Port value can not be represented by the current VSRTL base value type");
-        m_width = width;
-    }
-
-    const std::vector<Port*>& getOutputPorts() const { return m_outputPorts; }
-    Port* getInputPort() const { return m_inputPort; }
-    std::vector<Port*> getPortsInConnection() {
-        std::vector<Port*> portsInConnection;
-        traverseConnection([=](Port* port, std::vector<Port*>& ports) { ports.push_back(port); }, portsInConnection);
-        return portsInConnection;
-    }
-
     /* traverse from any given port towards its root (source) port, while executing nodeFunc(args...) in each port which
     is visited along the way*/
     template <typename F, typename... Args>
-    void traverseToRoot(const F& nodeFunc, Args&... args);
+    void traverseToRoot(const F& nodeFunc, Args&... args) {
+        nodeFunc(this, args...);
+        if (getInputPort()) {
+            getInputPort()->traverseToRoot(nodeFunc, args...);
+        }
+    }
 
     /* From this port, visit all directly and implicitely connected port to this port, and execute nodeFunc(args...) in
     each visited port */
     template <typename F, typename... Args>
-    void traverseConnection(const F& nodeFunc, Args&... args);
+    void traverseConnection(const F& nodeFunc, Args&... args) {
+        if (m_traversingConnection)
+            return;
+        m_traversingConnection = true;
+
+        nodeFunc(this, args...);
+        if (getInputPort()) {
+            getInputPort()->traverseConnection(nodeFunc, args...);
+        }
+        for (const auto& p : getOutputPorts()) {
+            p->traverseConnection(nodeFunc, args...);
+        }
+
+        m_traversingConnection = false;
+    }
 
     /* Traverse from any given port towards its endpoint sinks, executing nodeFunc(args...) in each visited port */
     template <typename F, typename... Args>
-    void traverseToSinks(const F& nodeFunc, Args&... args);
+    void traverseToSinks(const F& nodeFunc, Args&... args) {
+        nodeFunc(this, args...);
+        for (const auto& p : getOutputPorts()) {
+            p->traverseToSinks(nodeFunc, args...);
+        }
+    }
+
+    std::vector<PortBase*> getPortsInConnection() {
+        std::vector<PortBase*> portsInConnection;
+        traverseConnection([=](PortBase* port, std::vector<PortBase*>& ports) { ports.push_back(port); },
+                           portsInConnection);
+        return portsInConnection;
+    }
+
+    virtual unsigned int getWidth() = 0;
+    virtual VSRTL_VT_U uValue() = 0;
+    virtual VSRTL_VT_S sValue() = 0;
+    virtual std::vector<PortBase*> getOutputPorts() = 0;
+    virtual PortBase* getInputPort() = 0;
+    virtual void propagate(std::vector<PortBase*>& propagationStack) = 0;
+    virtual void propagateConstant() = 0;
+    virtual void setPortValue() = 0;
+    virtual bool isConnected() const = 0;
+
+    Gallant::Signal0<> changed;
+
+protected:
+    PropagationState m_propagationState = PropagationState::unpropagated;
+    std::string m_name;
+    Component* m_parent;
+    bool m_traversingConnection = false;
+};
+
+template <unsigned int W>
+class Port : public PortBase {
+public:
+    Port(std::string name, Component* parent) : PortBase(name, parent) {}
+    bool isConnected() const override { return m_inputPort != nullptr || m_propagationFunction != nullptr; }
+
+    std::vector<PortBase*> getOutputPorts() override {
+        std::vector<PortBase*> ports;
+        for (const auto& port : m_outputPorts) {
+            ports.push_back(port);
+        }
+        return ports;
+    }
+
+    PortBase* getInputPort() { return m_inputPort; }
 
     // Port connections are doubly linked
-    void operator>>(Port& toThis) {
+    void operator>>(Port<W>& toThis) {
         m_outputPorts.push_back(&toThis);
         if (toThis.m_inputPort != nullptr) {
             throw std::runtime_error("Port input already connected");
-        }
-        if (m_width == 0) {
-            throw std::runtime_error("Port width not initialized");
-        }
-        if (m_width != toThis.getWidth()) {
-            throw std::runtime_error("Port width mismatch");
         }
         toThis.m_inputPort = this;
     }
 
     template <typename T>
     T value() {
-        return static_cast<T>(signextend<T>(m_value, m_width));
-    }
-
-    template <typename T, unsigned int W>
-    T value() {
         return static_cast<T>(signextend<T, W>(m_value));
     }
 
-    explicit operator VSRTL_VT_S() const { return signextend<VSRTL_VT_S>(m_value, m_width); }
+    VSRTL_VT_U uValue() override { return value<VSRTL_VT_U>(); }
+    VSRTL_VT_S sValue() override { return value<VSRTL_VT_S>(); }
+    unsigned int getWidth() override { return W; }
 
-    void setPortValue() {
+    explicit operator VSRTL_VT_S() const { return signextend<VSRTL_VT_S, W>(m_value); }
+
+    void setPortValue() override {
         auto prePropagateValue = m_value;
         if (m_propagationFunction != nullptr) {
             m_value = m_propagationFunction();
         } else {
-            m_value = static_cast<VSRTL_VT_U>(*m_inputPort);
+            m_value = m_inputPort->template value<VSRTL_VT_U>();
         }
         if (m_value != prePropagateValue) {
             // Signal all watcher of this port that the port value changed
@@ -103,8 +150,7 @@ public:
         }
     }
 
-    void operator<<(std::function<VSRTL_VT_U()>&& propagationFunction) { m_propagationFunction = propagationFunction; }
-    void propagate(std::vector<Port*>& propagationStack) {
+    void propagate(std::vector<PortBase*>& propagationStack) override {
         if (m_propagationState == PropagationState::unpropagated) {
             propagationStack.push_back(this);
             // Propagate the value to the ports which connect to this
@@ -114,14 +160,14 @@ public:
         }
     }
 
-    void propagateConstant() {
+    void propagateConstant() override {
         m_propagationState = PropagationState::constant;
         setPortValue();
         for (const auto& port : m_outputPorts)
             port->propagateConstant();
     }
 
-    Gallant::Signal0<> changed;
+    void operator<<(std::function<VSRTL_VT_U()>&& propagationFunction) { m_propagationFunction = propagationFunction; }
 
     // Value access operators
     explicit operator VSRTL_VT_U() const { return m_value; }
@@ -134,52 +180,12 @@ protected:
     VSRTL_VT_U m_value = 0xdeadbeef;
 
     // A port may only have a single input  ->[port]
-    Port* m_inputPort = nullptr;
+    Port<W>* m_inputPort = nullptr;
     // A port may have multiple outputs     [port]->...->
-    std::vector<Port*> m_outputPorts;
+    std::vector<Port<W>*> m_outputPorts;
 
     std::function<VSRTL_VT_U()> m_propagationFunction;
-    PropagationState m_propagationState = PropagationState::unpropagated;
-    Component* m_parent;
-    unsigned int m_width = 0;
-
-private:
-    std::string m_name;
-    bool m_traversingConnection = false;
 };
-
-template <typename F, typename... Args>
-void Port::traverseToRoot(const F& nodeFunc, Args&... args) {
-    nodeFunc(this, args...);
-    if (m_inputPort) {
-        m_inputPort->traverseToRoot(nodeFunc, args...);
-    }
-}
-
-template <typename F, typename... Args>
-void Port::traverseToSinks(const F& nodeFunc, Args&... args) {
-    nodeFunc(this, args...);
-    for (const auto& p : m_outputPorts) {
-        p->traverseToSinks(nodeFunc, args...);
-    }
-}
-
-template <typename F, typename... Args>
-void Port::traverseConnection(const F& nodeFunc, Args&... args) {
-    if (m_traversingConnection)
-        return;
-    m_traversingConnection = true;
-
-    nodeFunc(this, args...);
-    if (m_inputPort) {
-        m_inputPort->traverseConnection(nodeFunc, args...);
-    }
-    for (const auto& p : m_outputPorts) {
-        p->traverseConnection(nodeFunc, args...);
-    }
-
-    m_traversingConnection = false;
-}
 
 }  // namespace vsrtl
 

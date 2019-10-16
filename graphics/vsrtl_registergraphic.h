@@ -9,14 +9,13 @@ namespace vsrtl {
 
 class RegisterGraphic : public ComponentGraphic {
 public:
-    RegisterGraphic(Register& c);
+    RegisterGraphic(RegisterBase& c);
     void paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* w) override;
 
 private:
-    Register& m_register;
+    RegisterBase& m_register;
 };
 
 }  // namespace vsrtl
 
-
-#endif // VSRTL_REGISTERGRAPHIC_H
+#endif  // VSRTL_REGISTERGRAPHIC_H

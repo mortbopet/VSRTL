@@ -10,7 +10,7 @@
 
 namespace vsrtl {
 
-class Register;
+class RegisterBase;
 
 class RegisterTreeItem : public TreeItem {
 public:
@@ -21,7 +21,7 @@ public:
     bool setData(int column, const QVariant& value, int role = Qt::EditRole) override;
     QList<QMenu*> getActions() const override;
 
-    Register* m_register = nullptr;
+    RegisterBase* m_register = nullptr;
 };
 
 class RegisterModel : public NetlistModelBase<RegisterTreeItem> {

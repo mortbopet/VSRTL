@@ -13,7 +13,7 @@ namespace vsrtl {
 
 int PortGraphic::s_portGridWidth = 2;
 
-PortGraphic::PortGraphic(Port* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
+PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) : m_port(port), m_type(type) {
     port->registerGraphic(this);
     setParentItem(parent);
     m_widthText = QString::number(port->getWidth() - 1) + ":0";
@@ -62,7 +62,7 @@ void PortGraphic::redraw() {
 }
 
 void PortGraphic::propagateRedraw() {
-    m_port->traverseToSinks([=](Port* port) {
+    m_port->traverseToSinks([=](PortBase* port) {
         auto* portGraphic = getGraphic<PortGraphic*>(port);
         portGraphic->redraw();
     });
@@ -103,7 +103,7 @@ void PortGraphic::updatePenColor() {
     if (m_selected) {
         m_pen.setColor(WIRE_SELECTED_COLOR);
     } else if (m_port->getWidth() == 1) {
-        if (static_cast<bool>(*m_port)) {
+        if (static_cast<bool>(m_port->uValue())) {
             m_pen.setColor(WIRE_BOOLHIGH_COLOR);
         } else {
             m_pen.setColor(WIRE_DEFAULT_COLOR);
@@ -115,7 +115,7 @@ void PortGraphic::updatePenColor() {
 }
 
 void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
-    m_port->traverseToRoot([=](Port* node) {
+    m_port->traverseToRoot([=](PortBase* node) {
         // Traverse to root, and only execute when no input wire is present. This signifies that the root source port
         // has been reached
         auto* portGraphic = getGraphic<PortGraphic*>(node);
@@ -139,7 +139,7 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
 }
 
 QString PortGraphic::getTooltipString() const {
-    return "0x" + QString::number(m_port->value<VSRTL_VT_U>(), 16);
+    return "0x" + QString::number(m_port->uValue(), 16);
 }
 
 QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {

@@ -9,11 +9,11 @@ namespace vsrtl {
 
 class MultiplexerGraphic : public ComponentGraphic {
 public:
-    MultiplexerGraphic(Multiplexer& c);
+    MultiplexerGraphic(MultiplexerBase& c);
     void paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* w) override;
 
 private:
-    Multiplexer& m_multiplexer;
+    MultiplexerBase& m_multiplexer;
 };
 
 }  // namespace vsrtl

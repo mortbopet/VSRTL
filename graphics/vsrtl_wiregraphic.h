@@ -10,7 +10,7 @@
 namespace vsrtl {
 
 class PortGraphic;
-class Port;
+class PortBase;
 class WireGraphic;
 class WireSegment;
 class ComponentGraphic;
@@ -92,7 +92,7 @@ class WireGraphic : public GraphicsBase {
 public:
     enum class MergeType { CannotMerge, MergeSinkWithSource, MergeSourceWithSink, MergeParallelSinks };
 
-    WireGraphic(PortGraphic* from, const std::vector<Port*>& to, QGraphicsItem* parent);
+    WireGraphic(PortGraphic* from, const std::vector<PortBase*>& to, QGraphicsItem* parent);
 
     QRectF boundingRect() const override;
     const QPen& getPen();
@@ -110,7 +110,7 @@ public:
 
 private:
     PortGraphic* m_fromPort = nullptr;
-    const std::vector<Port*>& m_toPorts;
+    std::vector<PortBase*> m_toPorts;
     std::vector<PortGraphic*> m_toGraphicPorts;
     std::set<WireSegment*> m_wires;
     std::set<WirePoint*> m_points;

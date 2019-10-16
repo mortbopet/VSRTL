@@ -3,35 +3,43 @@
 
 #include <array>
 #include "vsrtl_component.h"
+#include "vsrtl_defines.h"
 
 namespace vsrtl {
 
-/**
- * @brief The Multiplexer class
- * Control signal for the multiplexer is always ins[0].
- */
-
-class Multiplexer : public Component {
+class MultiplexerBase : public Component {
 public:
-    std::type_index getTypeId() const override { return std::type_index(typeid(Multiplexer)); }
-    Multiplexer(std::string name, unsigned int nInputs, unsigned int width, Component* parent)
-        : Component(name, parent), m_nInputs(nInputs), m_width(width) {
-        select.setWidth(ceillog2(m_nInputs));
-        out.setWidth(width);
-        in = createInputPorts("in", m_nInputs);
-        for (const auto& i : in) {
-            i->setWidth(width);
-        }
+    MultiplexerBase(std::string name, Component* parent) : Component(name, parent) {}
 
-        out << [=] { return in[select.template value<VSRTL_VT_U>()]->template value<VSRTL_VT_U>(); };
+    virtual std::vector<PortBase*> getIns() = 0;
+    virtual PortBase* getSelect() = 0;
+    virtual PortBase* getOut() = 0;
+};
+
+DefineGraphicsProxy(Multiplexer);
+template <unsigned int N, unsigned int W>
+class Multiplexer : public MultiplexerBase {
+public:
+    DefineTypeID(Multiplexer);
+    Multiplexer(std::string name, Component* parent) : MultiplexerBase(name, parent) {
+        ins = createInputPorts<W>("in", N);
+
+        out << [=] { return ins[select.template value<VSRTL_VT_U>()]->template value<VSRTL_VT_U>(); };
     }
 
-    OUTPUTPORT(out);
-    INPUTPORT(select);
-    INPUTPORTS(in);
+    std::vector<PortBase*> getIns() override {
+        std::vector<PortBase*> ins_base;
+        for (const auto& in : ins)
+            ins_base.push_back(in);
+        return ins_base;
+    }
 
-private:
-    unsigned int m_width, m_nInputs;
+    PortBase* getSelect() override { return &select; }
+    PortBase* getOut() override { return &out; }
+
+    OUTPUTPORT(out, W);
+    INPUTPORT(select, ceillog2(N));
+    INPUTPORTS(ins, W);
 };
 }  // namespace vsrtl
 
