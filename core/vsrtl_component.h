@@ -25,7 +25,8 @@ namespace vsrtl {
 
 #define SUBCOMPONENT(name, type, ...) type* name = create_component<type>(this, #name, ##__VA_ARGS__)
 
-#define SUBCOMPONENTS(name, type) std::vector<type*> name;
+#define SUBCOMPONENTS(name, type, n, ...) \
+    std::vector<type*> name = create_components<type>(this, #name, n, ##__VA_ARGS__)
 
 #define INPUTPORT(name, W) Port<W>& name = this->createInputPort<W>(#name)
 #define INPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->createInputPorts<W>("in", N)
@@ -245,6 +246,16 @@ T* create_component(Component* parent, std::string name, Args... args) {
         parent->addSubcomponent(static_cast<Component*>(ptr));
     }
     return ptr;
+}
+
+template <typename T, typename... Args>
+std::vector<T*> create_components(Component* parent, std::string name, unsigned int n, Args... args) {
+    std::vector<T*> components;
+    for (unsigned int i = 0; i < n; i++) {
+        std::string i_name = name + "_" + std::to_string(i);
+        components.push_back(create_component<T, Args...>(parent, i_name, args...));
+    }
+    return components;
 }
 
 }  // namespace vsrtl

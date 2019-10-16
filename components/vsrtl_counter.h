@@ -16,11 +16,6 @@ class Counter : public Design {
 
 public:
     Counter() : Design(std::to_string(width) + " bit counter") {
-        for (int i = 0; i < width; i++) {
-            adders.push_back(create_component<FullAdder>(this, "adder_" + std::to_string(i)));
-            regs.push_back(create_component<Register<1>>(this, "reg_" + std::to_string(i)));
-        }
-
         // Connect
         c0->out >> adders[0]->Cin;
         c1->out >> adders[0]->A;
@@ -39,8 +34,8 @@ public:
         value->out >> outputReg->in;
     }
 
-    std::vector<FullAdder*> adders;
-    std::vector<Register<1>*> regs;
+    SUBCOMPONENTS(adders, FullAdder, width);
+    SUBCOMPONENTS(regs, Register<1>, width);
 
     SUBCOMPONENT(outputReg, Register<width>);
 
