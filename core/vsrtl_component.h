@@ -165,7 +165,7 @@ public:
     void verifyComponent() const {
         for (const auto& ip : m_inputports) {
             if (!ip->isConnected()) {
-                throw std::runtime_error("A component has unconnected inputs");
+                throw std::runtime_error("Component: '" + m_displayName + "' has unconnected inputs");
             }
         }
     }
