@@ -9,7 +9,7 @@
 
 namespace vsrtl {
 
-VSRTLEnum(ALU_OPCODE, ADD = 0, SUB = 1, MUL = 2, DIV = 3, AND = 4, OR = 5, XOR = 6, SL = 7, SRA = 8, SRL = 9, LUI = 10,
+Enum(ALU_OPCODE, ADD = 0, SUB = 1, MUL = 2, DIV = 3, AND = 4, OR = 5, XOR = 6, SL = 7, SRA = 8, SRL = 9, LUI = 10,
           LT = 11, LTU = 12, EQ = 13);
 
 DefineGraphicsProxy(ALU);
@@ -36,7 +36,7 @@ private:
         const auto uop2 = op2.template value<VSRTL_VT_U>();
         const auto _op1 = op1.template value<VSRTL_VT_S>();
         const auto _op2 = op2.template value<VSRTL_VT_S>();
-        VSRTLSwitch(ctrl, ALU_OPCODE) {
+        Switch(ctrl, ALU_OPCODE) {
             case ALU_OPCODE::ADD:
                 return uop1 + uop2;
             case ALU_OPCODE::SUB:
