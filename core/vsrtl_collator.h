@@ -19,7 +19,6 @@ template <unsigned int W>
 class Collator : public Component {
 public:
     Collator(std::string name, Component* parent) : Component(name, parent) {
-        in = this->createInputPorts<1>("in", W);
         out << [=] {
             VSRTL_VT_U value = 0;
             for (int i = 0; i < W; i++) {
@@ -29,7 +28,7 @@ public:
         };
     }
     OUTPUTPORT(out, W);
-    INPUTPORTS(in, 1);
+    INPUTPORTS(in, 1, W);
 };
 
 }  // namespace vsrtl

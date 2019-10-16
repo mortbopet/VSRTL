@@ -22,8 +22,6 @@ class Multiplexer : public MultiplexerBase {
 public:
     DefineTypeID(Multiplexer);
     Multiplexer(std::string name, Component* parent) : MultiplexerBase(name, parent) {
-        ins = createInputPorts<W>("in", N);
-
         out << [=] { return ins[select.template value<VSRTL_VT_U>()]->template value<VSRTL_VT_U>(); };
     }
 
@@ -39,7 +37,7 @@ public:
 
     OUTPUTPORT(out, W);
     INPUTPORT(select, ceillog2(N));
-    INPUTPORTS(ins, W);
+    INPUTPORTS(ins, W, N);
 };
 }  // namespace vsrtl
 

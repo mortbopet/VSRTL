@@ -18,14 +18,19 @@
 
 namespace vsrtl {
 
+/// To allow for invokations of subcomponents with types having more than one template parameter, it is necessary to be
+/// able to join the templated type, without having the preprocessor deduce the ',' in the type list as a separator in
+/// the actual macro. For these cases, we may say SUBCOMPONENT(xor1, TYPE(Xor<1,2>));
+#define TYPE(...) __VA_ARGS__
+
 #define SUBCOMPONENT(name, type, ...) type* name = create_component<type>(this, #name, ##__VA_ARGS__)
 
 #define SUBCOMPONENTS(name, type) std::vector<type*> name;
 
 #define INPUTPORT(name, W) Port<W>& name = this->createInputPort<W>(#name)
-#define INPUTPORTS(name, W) std::vector<Port<W>*> name
+#define INPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->createInputPorts<W>("in", N)
 #define OUTPUTPORT(name, W) Port<W>& name = createOutputPort<W>(#name)
-#define OUTPUTPORTS(name, W) std::vector<Port<W>*> name
+#define OUTPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->createOutputPorts<W>("in", N)
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
 

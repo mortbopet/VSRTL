@@ -46,9 +46,9 @@ public:
     SUBCOMPONENT(sh1, Shift<32>, ShiftType::sl, 13);
     SUBCOMPONENT(sh2, Shift<32>, ShiftType::srl, 17);
     SUBCOMPONENT(sh3, Shift<32>, ShiftType::sl, 5);
-    SUBCOMPONENT(xOr1, Xor<32>, 2);
-    SUBCOMPONENT(xOr2, Xor<32>, 2);
-    SUBCOMPONENT(xOr3, Xor<32>, 2);
+    SUBCOMPONENT(xOr1, TYPE(Xor<32, 2>));
+    SUBCOMPONENT(xOr2, TYPE(Xor<32, 2>));
+    SUBCOMPONENT(xOr3, TYPE(Xor<32, 2>));
     SUBCOMPONENT(rngResReg, Register<32>);
 
     // Initialization objects for first clock cycle
@@ -57,7 +57,7 @@ public:
     // SUBCOMPONENT(mux, Multiplexer<2, 32>);
     SUBCOMPONENT(init, Constant<32>, 0x13fb27a3);
     SUBCOMPONENT(c1, Constant<1>, 1);
-    SUBCOMPONENT(orr, Or<1>, 2);
+    SUBCOMPONENT(orr, TYPE(Or<1, 2>));
     SUBCOMPONENT(selReg, Register<1>);
 };
 }  // namespace vsrtl
