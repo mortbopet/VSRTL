@@ -18,13 +18,6 @@ namespace vsrtl {
 #define DefineTypeID(name) \
     std::type_index getTypeId() const override { return GraphicsTypeID(name); }
 
-#define DRAW_BOUNDING_RECT(painter)     \
-    painter->save();                    \
-    painter->setPen(QPen(Qt::red, 1));  \
-    painter->setBrush(Qt::transparent); \
-    painter->drawRect(boundingRect());  \
-    painter->restore();
-
 // Base value type of ports. Should be set according to the maximally representable number.
 using VSRTL_VT_U = unsigned int;
 using VSRTL_VT_S = int;

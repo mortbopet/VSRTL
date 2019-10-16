@@ -4,6 +4,13 @@
 #include <QMetaType>
 #include "vsrtl_defines.h"
 
+#define DRAW_BOUNDING_RECT(painter)     \
+    painter->save();                    \
+    painter->setPen(QPen(Qt::red, 1));  \
+    painter->setBrush(Qt::transparent); \
+    painter->drawRect(boundingRect());  \
+    painter->restore();
+
 // Allow vsrtl base value types to be used as a QVariant
 Q_DECLARE_METATYPE(vsrtl::VSRTL_VT_S)
 Q_DECLARE_METATYPE(vsrtl::VSRTL_VT_U)
