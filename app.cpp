@@ -5,9 +5,6 @@
 #include "components/vsrtl_nestedexponenter.h"
 #include "components/vsrtl_rannumgen.h"
 #include "vsrtl_mainwindow.h"
-#include "vsrtl_manynestedcomponents.h"
-#include "vsrtl_nestedexponenter.h"
-#include "vsrtl_rannumgen.h"
 
 #include <chrono>
 
