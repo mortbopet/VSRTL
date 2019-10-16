@@ -167,7 +167,12 @@ public:
             port->propagateConstant();
     }
 
-    void operator<<(std::function<VSRTL_VT_U()>&& propagationFunction) { m_propagationFunction = propagationFunction; }
+    void operator<<(std::function<VSRTL_VT_U()>&& propagationFunction) {
+        if (m_propagationFunction) {
+            throw std::runtime_error("Propagation function reassignment prohibited");
+        }
+        m_propagationFunction = propagationFunction;
+    }
 
     // Value access operators
     explicit operator VSRTL_VT_U() const { return m_value; }
