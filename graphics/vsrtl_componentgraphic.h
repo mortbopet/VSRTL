@@ -43,6 +43,9 @@ public:
 
     const auto& outputPorts() const { return m_outputPorts; }
 
+    // Called by vsrtl_core components linked via signal/slot mechanism
+    void updateSlot() { update(); }
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
@@ -67,9 +70,6 @@ protected:
     QRect adjustedMinGridRect(bool includePorts) const;
 
     ComponentGraphic* getParent() const;
-
-    // Called by vsrtl_core component linked via signal/slot mechanism
-    void updateSlot() { update(); }
 
     bool m_isExpanded = false;
     bool m_restrictSubcomponentPositioning = false;

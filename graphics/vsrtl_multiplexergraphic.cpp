@@ -5,7 +5,10 @@
 
 namespace vsrtl {
 
-MultiplexerGraphic::MultiplexerGraphic(MultiplexerBase& c) : ComponentGraphic(c), m_multiplexer(c) {}
+MultiplexerGraphic::MultiplexerGraphic(MultiplexerBase& c) : ComponentGraphic(c), m_multiplexer(c) {
+    // Make changes in the select signal trigger a redraw of the multiplexer (and its input signal markings)
+    c.getSelect()->changed.Connect(this, &ComponentGraphic::updateSlot);
+}
 
 void MultiplexerGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
     // Mark input IO with circles, highlight selected input with green
