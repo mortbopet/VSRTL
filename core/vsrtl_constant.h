@@ -24,18 +24,24 @@ template <unsigned int W>
 class Constant : public Component {
 public:
     DefineTypeID(Constant);
-    Constant(std::string name, Component* parent, VSRTL_VT_U value) : Component(name, parent) {
-        if (!valueFitsInBitWidth(W, value)) {
+    Constant(std::string name, Component* parent, VSRTL_VT_U value = 0) : Component(name, parent) {
+        m_value = value;
+        if (!valueFitsInBitWidth(W, m_value)) {
             throw std::runtime_error("Value does not fit inside provided bit-width");
         }
 
-        out << ([value] { return value; });
+        out << ([=] { return m_value; });
     }
 
     OUTPUTPORT(out, W);
 
+    // HACK HACK HACK
+    void changeConstant(VSRTL_VT_U value) { m_value = value; }
+    // HACK HACK HACK
+
 private:
     unsigned int m_width;
+    VSRTL_VT_U m_value;
 };
 
 }  // namespace vsrtl

@@ -1,67 +1,58 @@
 #ifndef REGISTERFILE_H
 #define REGISTERFILE_H
 
+#include "vsrtl_comparator.h"
 #include "vsrtl_component.h"
+#include "vsrtl_constant.h"
 #include "vsrtl_defines.h"
+#include "vsrtl_multiplexer.h"
 #include "vsrtl_port.h"
+#include "vsrtl_register.h"
 
 #include <memory>
 
 namespace vsrtl {
-/**
- * @brief The RegisterFile class
- * Inputs:
- *      1. Instruction : Instruction from which to decode register nOperands 1 and 2
- *
- * Additional inputs:
- *      1. writeRegister    : [1:31], register to write to
- *      2. writeEnable      : Triggers writing of input from writeData to writeRegister
- *      3. writeData        : Data to write to register
- *
- * Implementing architecture does not know about m_readData values in its Primitive container, so resetting,
- * propagating and verifying is done manually
- */
-template <int nOperands>
+
+template <int W, int N>
 class RegisterFile : public Component {
 public:
-    static_assert(nOperands > 0 && nOperands <= REGISTERCOUNT, "Register file invariant");
-
-    RegisterFile(std::string name) : Component(name) {
-        for (int i = 0; i < nOperands; i++) {
-            auto& op = createOutputPort<REGISTERWIDTH>("Operand");
-            operands.push_back(&op);
+    RegisterFile(std::string name, Component* parent) : Component(name, parent) {
+        // Hack: set values of constants
+        for (int i = 0; i < N; i++) {
+            cmpCs[i]->changeConstant(i);
         }
-    }
 
-    INPUTPORT(instruction);
-    INPUTPORT(writeRegister);
-    INPUTPORT(writeEnable);
-    INPUTPORT(writeData);
-
-    void reset() {
-        for (const auto& reg : m_reg) {
-            reg = 0;
+        // Connect write (source) muxes
+        for (int i = 0; i < N; i++) {
+            src_muxes[i]->out >> regs[i]->in;
+            wr_data >> *src_muxes[i]->ins[1];
+            regs[i]->out >> *src_muxes[i]->ins[0];
+            wr_idx >> cmps[i]->op1;
+            cmpCs[i]->out >> cmps[i]->op2;
+            cmps[i]->out >> src_muxes[i]->select;
         }
-    }
 
-    uint32_t value(uint32_t index) const {
-        if (index < 32) {
-            return m_reg[index];
-        } else {
-            return 0;
+        // Connect read (out) mux
+        for (int i = 0; i < N; i++) {
+            regs[i]->out >> *out_mux->ins[i];
         }
+        rd_idx >> out_mux->select;
+        out_mux->out >> rd_data;
     }
 
-    template <int operand>
-    Port<REGISTERWIDTH>& getOperand() {
-        static_assert(operand >= 0 && operand < nOperands, "Operand not available");
-        return *operands[operand];
-    }
-    std::vector<Port<REGISTERWIDTH>*> operands;
+    INPUTPORT(wr_idx, ceillog2(N));
+    INPUTPORT(wr_data, W);
+    INPUTPORT(wr_en, 1);
+    INPUTPORT(rd_idx, ceillog2(N));
+    OUTPUTPORT(rd_data, W);
 
-protected:
-    // Registers
-    std::vector<uint32_t> m_reg = std::vector<uint32_t>(REGISTERCOUNT, 0);
+    SUBCOMPONENTS(regs, Register<W>, N);
+    SUBCOMPONENTS(src_muxes, TYPE(Multiplexer<2, W>), N);
+    SUBCOMPONENTS(cmps, Eq<ceillog2(N)>, N);
+    SUBCOMPONENT(out_mux, TYPE(Multiplexer<N, W>));
+
+    // This is stupid - there should be a way to directly create a constant when wiring up the circuit!
+    SUBCOMPONENTS(cmpCs, Constant<ceillog2(N)>, N);
 };
 }  // namespace vsrtl
 
