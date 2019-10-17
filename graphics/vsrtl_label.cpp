@@ -22,7 +22,7 @@ void Label::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
 
     // Draw text
-    if (lod >= 0.35) {
+    if (lod >= 0.4) {
         QPointF offset(-m_textRect.width() / 2, -m_textRect.height() / 2);
         painter->setFont(s_font);
         painter->save();

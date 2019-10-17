@@ -184,7 +184,11 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* optio
     painter->setFont(m_font);
     const int offset = m_type == PortType::out ? PORT_INNER_MARGIN
                                                : s_portGridWidth * GRID_SIZE - m_textRect.width() - PORT_INNER_MARGIN;
-    painter->drawText(QPointF(offset, m_textRect.height() / 2 + PORT_INNER_MARGIN), m_widthText);
+
+    const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
+    if (lod >= 0.6) {
+        painter->drawText(QPointF(offset, m_textRect.height() / 2 + PORT_INNER_MARGIN), m_widthText);
+    }
 
     painter->setPen(getPen());
     painter->drawLine(getInputPoint(), getOutputPoint());
