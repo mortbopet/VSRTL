@@ -126,6 +126,11 @@ public:
         toThis.m_inputPort = this;
     }
 
+    void operator>>(const std::vector<Port<W>*>& toThis) {
+        for (auto& p : toThis)
+            *this >> *p;
+    }
+
     template <typename T>
     T value() {
         return static_cast<T>(signextend<T, W>(m_value));
