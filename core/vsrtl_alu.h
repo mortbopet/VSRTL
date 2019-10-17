@@ -9,16 +9,14 @@
 
 namespace vsrtl {
 
-Enum(ALU_OPCODE, ADD = 0, SUB = 1, MUL = 2, DIV = 3, AND = 4, OR = 5, XOR = 6, SL = 7, SRA = 8, SRL = 9, LUI = 10,
-          LT = 11, LTU = 12, EQ = 13);
+Enum(ALU_OPCODE, ADD, SUB, MUL, DIV, AND, OR, XOR, SL, SRA, SRL, LUI, LT, LTU, EQ);
 
 DefineGraphicsProxy(ALU);
 template <unsigned int W>
 class ALU : public Component {
 public:
     DefineTypeID(ALU);
-    // clang-format off
-    ALU(std::string name, Component* parent) : Component(name, parent){
+    ALU(std::string name, Component* parent) : Component(name, parent) {
         out << ([=] { return calculateOutput(); });
     }
 
@@ -65,7 +63,6 @@ private:
                 return uop1 < uop2 ? 1 : 0;
             default:
                 throw std::runtime_error("Invalid ALU opcode");
-
         }
     }
 };

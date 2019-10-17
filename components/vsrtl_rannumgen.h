@@ -50,11 +50,9 @@ public:
     SUBCOMPONENT(xOr2, TYPE(Xor<32, 2>));
     SUBCOMPONENT(xOr3, TYPE(Xor<32, 2>));
     SUBCOMPONENT(rngResReg, Register<32>);
+    SUBCOMPONENT(mux, TYPE(Multiplexer<2, 32>));
 
     // Initialization objects for first clock cycle
-    Multiplexer<2, 32>* mux = create_component<Multiplexer<2, 32>>(this, "mux");
-
-    // SUBCOMPONENT(mux, Multiplexer<2, 32>);
     SUBCOMPONENT(init, Constant<32>, 0x13fb27a3);
     SUBCOMPONENT(c1, Constant<1>, 1);
     SUBCOMPONENT(orr, TYPE(Or<1, 2>));
