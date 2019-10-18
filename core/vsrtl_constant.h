@@ -44,6 +44,21 @@ private:
     VSRTL_VT_U m_value;
 };
 
+template <unsigned int W>
+void operator>>(VSRTL_VT_S c, Port<W>& toThis) {
+    // A constant should be created as a child of the shared parent between the component to be connected and the newly
+    // created constant
+    auto* parent = toThis.getParent()->getParent();
+    auto* constant = create_component<Constant<W>>(parent, std::to_string(c), c);
+    constant->out >> toThis;
+}
+
+template <unsigned int W>
+void operator>>(VSRTL_VT_U c, std::vector<Port<W>*> toThis) {
+    for (auto& p : toThis)
+        c >> *p;
+}
+
 }  // namespace vsrtl
 
 #endif  // CONSTANT_H
