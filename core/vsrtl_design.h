@@ -33,12 +33,12 @@ public:
         }
 
         // Save register values (to correctly clock register -> register connections)
-        for (const auto& reg : m_registers) {
+        for (const auto& reg : m_clockedComponents) {
             reg->save();
         }
 
         // Increment rewind-stack if possible
-        if (m_rewindstackCount < RegisterBase::rewindStackSize()) {
+        if (m_rewindstackCount < ClockedComponent::rewindStackSize()) {
             m_rewindstackCount++;
         }
 
@@ -51,7 +51,7 @@ public:
                 throw std::runtime_error("Design was not verified and initialized before rewinding.");
             }
             // Clock registers
-            for (const auto& reg : m_registers) {
+            for (const auto& reg : m_clockedComponents) {
                 reg->rewind();
             }
             m_rewindstackCount--;
@@ -67,7 +67,7 @@ public:
     void reset() {
         // reset all registers
         // propagate everything combinational
-        for (const auto& reg : m_registers)
+        for (const auto& reg : m_clockedComponents)
             reg->reset();
         propagateDesign();
         m_rewindstackCount = 0;
@@ -79,7 +79,7 @@ public:
         // The circuit is traversed to find the sequence of which ports may be propagated, such that all input
         // dependencies for each component are met when a port is propagated. With this, propagateDesign() may
         // sequentially ierate through the propagation stack to propagate the value of each port
-        for (const auto& reg : m_registers)
+        for (const auto& reg : m_clockedComponents)
             reg->propagateComponent(m_propagationStack);
     }
 
@@ -123,7 +123,7 @@ public:
     bool cycleUtil(Component* c, std::map<Component*, bool>& visited, std::map<Component*, bool>& recurseStack) {
         visited[c] = true;
         recurseStack[c] = true;
-        if (!dynamic_cast<RegisterBase*>(c))  // Graph is cut at registers
+        if (!dynamic_cast<ClockedComponent*>(c))  // Graph is cut at registers
             return false;
 
         for (const auto& neighbour : m_componentGraph[c]) {
@@ -171,8 +171,11 @@ private:
 
         // Gather all registers in the design
         for (const auto& c : m_componentGraph) {
-            if (dynamic_cast<RegisterBase*>(c.first)) {
-                m_registers.insert(dynamic_cast<RegisterBase*>(c.first));
+            if (auto* cc = dynamic_cast<ClockedComponent*>(c.first)) {
+                m_clockedComponents.insert(cc);
+            }
+            if (auto* rb = dynamic_cast<RegisterBase*>(c.first)) {
+                m_registers.insert(rb);
             }
         }
     }
@@ -180,6 +183,7 @@ private:
     unsigned int m_rewindstackCount = 0;
     std::map<Component*, std::vector<Component*>> m_componentGraph;
     std::set<RegisterBase*> m_registers;
+    std::set<ClockedComponent*> m_clockedComponents;
 
     std::vector<PortBase*> m_propagationStack;
 };

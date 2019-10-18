@@ -11,22 +11,26 @@
 
 namespace vsrtl {
 
-class RegisterBase : public Component {
+class ClockedComponent : public Component {
 public:
-    RegisterBase(std::string name, Component* parent) : Component(name, parent) {}
-
+    ClockedComponent(std::string name, Component* parent) : Component(name, parent) {}
     virtual void reset() = 0;
     virtual void save() = 0;
-    virtual void forceValue(VSRTL_VT_U value) = 0;
     virtual void rewind() = 0;
-
-    virtual PortBase* getIn() = 0;
-    virtual PortBase* getOut() = 0;
 
     static unsigned int& rewindStackSize() {
         static unsigned int s_rewindstackSize = 100;
         return s_rewindstackSize;
     }
+};
+
+class RegisterBase : public ClockedComponent {
+public:
+    RegisterBase(std::string name, Component* parent) : ClockedComponent(name, parent) {}
+
+    virtual void forceValue(VSRTL_VT_U value) = 0;
+    virtual PortBase* getIn() = 0;
+    virtual PortBase* getOut() = 0;
 };
 
 DefineGraphicsProxy(Register);
@@ -69,11 +73,6 @@ public:
     OUTPUTPORT(out, W);
 
     bool isRegister() const override { return true; }
-
-    static unsigned int& rewindStackSize() {
-        static unsigned int s_rewindstackSize = 100;
-        return s_rewindstackSize;
-    }
 
 private:
     void saveToStack() {
