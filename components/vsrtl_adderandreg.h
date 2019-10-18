@@ -11,7 +11,7 @@ class AdderAndReg : public Design {
 public:
     AdderAndReg() : Design("Adder and Register") {
         // Connect objects
-        c4->out >> adder->op1;
+        4 >> adder->op1;
         reg->out >> adder->op2;
         adder->out >> reg->in;
     }
@@ -19,7 +19,6 @@ public:
 
     // Create objects
     SUBCOMPONENT(adder, Adder<32>);
-    SUBCOMPONENT(c4, Constant<32>, 4);
     SUBCOMPONENT(reg, Register<32>);
 };
 }  // namespace vsrtl

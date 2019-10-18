@@ -21,9 +21,9 @@ public:
         idx_reg->out >> mem->addr;
         mem->data_out >> acc_reg->in;
         inc_adder->out >> mem->data_in;
-        c1->out >> idx_adder->op1;
+        1 >> idx_adder->op1;
         idx_reg->out >> idx_adder->op2;
-        c1L->out >> inc_adder->op1;
+        1 >> inc_adder->op1;
         acc_reg->out >> inc_adder->op2;
 
         wr_en_reg->out >> idx_next_mux->select;
@@ -31,15 +31,15 @@ public:
         idx_reg->out >> *idx_next_mux->ins[1];
 
         idx_reg->out >> comp->op1;
-        cIdxMax->out >> comp->op2;
+        (regSize - 1) >> comp->op2;
         idx_next_mux->out >> idx_reg->in;
 
         // Write/Read state
         wr_en_mux->out >> wr_en_reg->in;
         wr_en_reg->out >> wr_en_mux->select;
         wr_en_reg->out >> mem->wr_en;
-        c0B->out >> *wr_en_mux->ins[1];
-        c1B->out >> *wr_en_mux->ins[0];
+        0 >> *wr_en_mux->ins[1];
+        1 >> *wr_en_mux->ins[0];
     }
     static constexpr unsigned int regSize = 32;
 
@@ -48,11 +48,6 @@ public:
 
     SUBCOMPONENT(idx_adder, Adder<regSize>);
     SUBCOMPONENT(inc_adder, Adder<regSize>);
-    SUBCOMPONENT(c1, Constant<regSize>, 1);
-    SUBCOMPONENT(c1L, Constant<regSize>, 1);
-    SUBCOMPONENT(c1B, Constant<1>, 1);
-    SUBCOMPONENT(c0B, Constant<1>, 0);
-    SUBCOMPONENT(cIdxMax, Constant<regSize>, regSize - 1);
     SUBCOMPONENT(wr_en_mux, TYPE(Multiplexer<2, 1>));
     SUBCOMPONENT(idx_next_mux, TYPE(Multiplexer<2, regSize>));
 

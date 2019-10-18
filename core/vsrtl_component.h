@@ -191,7 +191,7 @@ public:
         return v;
     }
 
-    const Component* getParent() const { return m_parent; }
+    Component* getParent() const { return m_parent; }
     const std::string& getName() const { return m_displayName; }
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
     const std::vector<std::unique_ptr<PortBase>>& getOutputs() const { return m_outputports; }

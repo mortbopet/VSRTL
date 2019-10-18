@@ -16,7 +16,7 @@ public:
 
         expIn >> mul->op1;
         expIn >> mul->op2;
-        aluOp->out >> mul->ctrl;
+        (ALU_OPCODE::MUL) >> mul->ctrl;
 
         expReg->out >> out;
     }
@@ -25,7 +25,6 @@ public:
 
     SUBCOMPONENT(expReg, Register<32>);
     SUBCOMPONENT(mul, ALU<32>);
-    SUBCOMPONENT(aluOp, Constant<ALU_OPCODE::width()>, ALU_OPCODE::MUL);
 };
 
 class NestedExponenter : public Design {
@@ -33,22 +32,20 @@ public:
     NestedExponenter() : Design("Nested Exponenter") {
         exp->out >> adder->op1;
         reg->out >> adder->op2;
-        aluOp->out >> adder->ctrl;
+        (ALU_OPCODE::ADD) >> adder->ctrl;
 
         add2->out >> reg->in;
         adder->out >> exp->expIn;
 
         adder->out >> add2->op1;
-        c2->out >> add2->op2;
-        aluOp->out >> add2->ctrl;
+        2 >> add2->op2;
+        (ALU_OPCODE::ADD) >> add2->ctrl;
     }
     // Create objects
     SUBCOMPONENT(exp, Exponenter);
     SUBCOMPONENT(reg, Register<32>);
     SUBCOMPONENT(adder, ALU<32>);
     SUBCOMPONENT(add2, ALU<32>);
-    SUBCOMPONENT(c2, Constant<32>, 2);
-    SUBCOMPONENT(aluOp, Constant<ALU_OPCODE::width()>, ALU_OPCODE::ADD);
 };
 }  // namespace vsrtl
 

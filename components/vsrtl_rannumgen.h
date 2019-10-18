@@ -34,10 +34,10 @@ public:
 
         // Initialization selection. The RNG must be supplied with a seed value - in this case, select 'init'
         // constant as the input of the rng register in the first clock cycle, and the RNG circuit for all others.
-        init->out >> *mux->ins[0];
+        0x13fb27a3 >> *mux->ins[0];
         orr->out >> selReg->in;
         selReg->out >> *orr->in[0];
-        c1->out >> *orr->in[1];
+        1 >> *orr->in[1];
         selReg->out >> mux->select;
     }
     static constexpr int m_cVal = 4;
@@ -53,8 +53,6 @@ public:
     SUBCOMPONENT(mux, TYPE(Multiplexer<2, 32>));
 
     // Initialization objects for first clock cycle
-    SUBCOMPONENT(init, Constant<32>, 0x13fb27a3);
-    SUBCOMPONENT(c1, Constant<1>, 1);
     SUBCOMPONENT(orr, TYPE(Or<1, 2>));
     SUBCOMPONENT(selReg, Register<1>);
 };

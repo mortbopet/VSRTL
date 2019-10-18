@@ -16,13 +16,13 @@ public:
             idx_reg->out >> regs[i]->rd_idx;
             idx_adder->out >> regs[i]->wr_idx;
             reg_adder->out >> regs[i]->wr_data;
-            c1B->out >> regs[i]->wr_en;
+            1 >> regs[i]->wr_en;
 
             if (i == 0) {
                 idx_adder->out >> idx_reg->in;
-                c1->out >> idx_adder->op1;
+                1 >> idx_adder->op1;
                 idx_reg->out >> idx_adder->op2;
-                c1L->out >> reg_adder->op1;
+                1 >> reg_adder->op1;
                 regs[i]->rd_data >> reg_adder->op2;
             }
         }
@@ -34,10 +34,6 @@ public:
 
     SUBCOMPONENT(idx_adder, Adder<ceillog2(regSize)>);
     SUBCOMPONENT(reg_adder, Adder<regSize>);
-    SUBCOMPONENT(c1, Constant<ceillog2(regSize)>, 1);
-    SUBCOMPONENT(c1L, Constant<regSize>, 1);
-    SUBCOMPONENT(c1B, Constant<1>, 1);
-
     SUBCOMPONENT(idx_reg, Register<ceillog2(regSize)>);
 };
 }  // namespace vsrtl
