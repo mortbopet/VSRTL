@@ -2,6 +2,7 @@
 #define VSRTL_VSRTLVIEW_H
 
 #include <QGraphicsView>
+#include <QOpenGLWidget>
 #include "vsrtl_componentgraphic.h"
 
 namespace vsrtl {
@@ -21,6 +22,7 @@ private slots:
     void zoomOut(int level = 1);
 
 private:
+    QOpenGLWidget* m_renderer;
     qreal m_zoom;
 };
 }  // namespace vsrtl

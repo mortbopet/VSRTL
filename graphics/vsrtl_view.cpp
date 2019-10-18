@@ -15,6 +15,13 @@ VSRTLView::VSRTLView(QWidget* parent) : QGraphicsView(parent) {
     setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setInteractive(true);
+
+    // Setup rendering widget
+    m_renderer = new QOpenGLWidget(this);
+    QSurfaceFormat f;
+    f.setSamples(5);
+    m_renderer->setFormat(f);
+    setViewport(m_renderer);
 }
 
 ComponentGraphic* VSRTLView::lookupGraphicForComponent(const Component* c) {
