@@ -24,7 +24,7 @@ public:
 
     INPUTPORT(op1, W);
     INPUTPORT(op2, W);
-    INPUTPORT(ctrl, ALU_OPCODE::_size());
+    INPUTPORT(ctrl, ALU_OPCODE::width());
 
     OUTPUTPORT(out, W);
 
