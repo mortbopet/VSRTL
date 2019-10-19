@@ -25,7 +25,7 @@ public:
         1 >> adder->op1;
         reg->out >> adder->op2;
 
-        (TestEnum::count() - 1) >> cmp->op1;
+        (TestEnum::_size() - 1) >> cmp->op1;
         reg->out >> cmp->op2;
 
         // Register next-state input mux

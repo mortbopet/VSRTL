@@ -92,6 +92,19 @@ public:
     virtual void setPortValue() = 0;
     virtual bool isConnected() const = 0;
 
+    /**
+     * @brief stringValue
+     * A port may define special string formatting to be displayed in the graphical library. If so, owning components
+     * should set the string value function to provide such values.
+     */
+    std::string stringValue() const {
+        if (m_stringValueFunction)
+            return m_stringValueFunction();
+        else
+            return std::string();
+    }
+
+    std::function<std::string()> m_stringValueFunction;
     Gallant::Signal0<> changed;
 
 protected:

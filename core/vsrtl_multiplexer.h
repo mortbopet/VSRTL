@@ -56,12 +56,18 @@ public:
 };
 
 template <typename E_t, unsigned int W>
-class EnumMultiplexer : public Multiplexer<E_t::count(), W> {
+class EnumMultiplexer : public Multiplexer<E_t::_size(), W> {
 public:
-    EnumMultiplexer(std::string name, Component* parent) : Multiplexer<E_t::count(), W>(name, parent) {
-        for (unsigned int v = E_t::get().begin(); v != E_t::get().count(); v++) {
+    EnumMultiplexer(std::string name, Component* parent) : Multiplexer<E_t::_size(), W>(name, parent) {
+        for (auto v : E_t::_values()) {
             m_enumToPort[v] = this->ins.at(v);
         }
+
+        // Let ports display underlying enum names through to the gui
+        this->out.m_stringValueFunction = [=] {
+            return std::string("Selecting: ") +
+                   E_t::_from_integral(this->select.template value<VSRTL_VT_U>())._to_string() + std::string("\n");
+        };
     }
 
     Port<W>& get(int enumIdx) {
