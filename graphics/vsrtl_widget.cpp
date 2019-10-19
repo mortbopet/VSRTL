@@ -219,6 +219,20 @@ void VSRTLWidget::expandAllComponents(ComponentGraphic* fromThis) {
     fromThis->placeAndRouteSubcomponents();
 }
 
+/**
+ * @brief VSRTLWidget::setPortValuesVisibleForType
+ * Will set all ports of type t in the design to show/hide their value label based on @p visible
+ */
+void VSRTLWidget::setPortValuesVisibleForType(PortType t, bool visible) {
+    for (auto* c : m_scene->items()) {
+        if (auto* pc = dynamic_cast<PortGraphic*>(c)) {
+            if (pc->getPortType() == t) {
+                pc->setLabelVisible(visible);
+            }
+        }
+    }
+}
+
 void VSRTLWidget::checkCanRewind() {
     if (m_designCanrewind != m_arch.canrewind()) {
         // Rewind state just changed, notify listeners

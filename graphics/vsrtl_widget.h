@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include "vsrtl_componentgraphic.h"
+#include "vsrtl_portgraphic.h"
 
 QT_FORWARD_DECLARE_CLASS(QGraphicsScene)
 
@@ -26,6 +27,8 @@ public:
 
     void addComponent(ComponentGraphic* g);
     void expandAllComponents(ComponentGraphic* fromThis = nullptr);
+
+    void setPortValuesVisibleForType(PortType t, bool visible);
 
 public slots:
     void clock();
