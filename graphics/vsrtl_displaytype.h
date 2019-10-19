@@ -68,7 +68,7 @@ static inline QString encodeDisplayValue(VSRTL_VT_U value, int width, DisplayTyp
 }
 
 static QMenu* createDisplayTypeMenu(DisplayType& type) {
-    QMenu* menu = new QMenu("Display type");
+    QMenu* menu = new QMenu("Set display type");
     QActionGroup* displayTypeActionGroup = new QActionGroup(menu);
 
     QAction* hexTypeAction = displayTypeActionGroup->addAction("Hex");
@@ -104,7 +104,26 @@ static QMenu* createDisplayTypeMenu(DisplayType& type) {
     menu->addAction(signedTypeAction);
 
     displayTypeActionGroup->setExclusive(true);
-    hexTypeAction->setChecked(true);
+
+    // Set the currently selected display type as checked
+    switch (type) {
+        case DisplayType::Hex: {
+            hexTypeAction->setChecked(true);
+            break;
+        }
+        case DisplayType::Binary: {
+            binTypeAction->setChecked(true);
+            break;
+        }
+        case DisplayType::Signed: {
+            signedTypeAction->setChecked(true);
+            break;
+        }
+        case DisplayType::Unsigned: {
+            unsignedTypeAction->setChecked(true);
+            break;
+        }
+    }
 
     return menu;
 }
