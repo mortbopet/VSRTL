@@ -4,6 +4,9 @@
 #include "vsrtl_binutils.h"
 #include "vsrtl_defines.h"
 
+#include <QAction>
+#include <QMenu>
+#include <QObject>
 #include <QString>
 
 namespace vsrtl {
@@ -62,6 +65,48 @@ static inline QString encodeDisplayValue(VSRTL_VT_U value, int width, DisplayTyp
             return QString::number(signextend<VSRTL_VT_S>(value, width), 10);
         }
     }
+}
+
+static QMenu* createDisplayTypeMenu(DisplayType& type) {
+    QMenu* menu = new QMenu("Display type");
+    QActionGroup* displayTypeActionGroup = new QActionGroup(menu);
+
+    QAction* hexTypeAction = displayTypeActionGroup->addAction("Hex");
+    hexTypeAction->setCheckable(true);
+    QObject::connect(hexTypeAction, &QAction::triggered, [&](bool checked) {
+        if (checked)
+            type = DisplayType::Hex;
+    });
+    menu->addAction(hexTypeAction);
+
+    QAction* binTypeAction = displayTypeActionGroup->addAction("Binary");
+    binTypeAction->setCheckable(true);
+    QObject::connect(binTypeAction, &QAction::triggered, [&](bool checked) {
+        if (checked)
+            type = DisplayType::Binary;
+    });
+    menu->addAction(binTypeAction);
+
+    QAction* unsignedTypeAction = displayTypeActionGroup->addAction("Unsigned");
+    unsignedTypeAction->setCheckable(true);
+    QObject::connect(unsignedTypeAction, &QAction::triggered, [&](bool checked) {
+        if (checked)
+            type = DisplayType::Unsigned;
+    });
+    menu->addAction(unsignedTypeAction);
+
+    QAction* signedTypeAction = displayTypeActionGroup->addAction("Signed");
+    signedTypeAction->setCheckable(true);
+    QObject::connect(signedTypeAction, &QAction::triggered, [&](bool checked) {
+        if (checked)
+            type = DisplayType::Signed;
+    });
+    menu->addAction(signedTypeAction);
+
+    displayTypeActionGroup->setExclusive(true);
+    hexTypeAction->setChecked(true);
+
+    return menu;
 }
 
 }  // namespace vsrtl

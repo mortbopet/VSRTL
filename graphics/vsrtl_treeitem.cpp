@@ -8,47 +8,7 @@ TreeItem::TreeItem(TreeItem* parent) {
     parentItem = parent;
 
     // Display type actions
-    QActionGroup* displayTypeActionGroup = new QActionGroup(this);
-    m_displayTypeMenu = new QMenu("Display type");
-
-    QAction* hexTypeAction = new QAction("Hex", this);
-    displayTypeActionGroup->addAction(hexTypeAction);
-    hexTypeAction->setCheckable(true);
-    connect(hexTypeAction, &QAction::triggered, [=](bool checked) {
-        if (checked)
-            m_displayType = DisplayType::Hex;
-    });
-    m_displayTypeMenu->addAction(hexTypeAction);
-
-    QAction* binTypeAction = new QAction("Binary", this);
-    displayTypeActionGroup->addAction(binTypeAction);
-    binTypeAction->setCheckable(true);
-    connect(binTypeAction, &QAction::triggered, [=](bool checked) {
-        if (checked)
-            m_displayType = DisplayType::Binary;
-    });
-    m_displayTypeMenu->addAction(binTypeAction);
-
-    QAction* unsignedTypeAction = new QAction("Unsigned", this);
-    displayTypeActionGroup->addAction(unsignedTypeAction);
-    unsignedTypeAction->setCheckable(true);
-    connect(unsignedTypeAction, &QAction::triggered, [=](bool checked) {
-        if (checked)
-            m_displayType = DisplayType::Unsigned;
-    });
-    m_displayTypeMenu->addAction(unsignedTypeAction);
-
-    QAction* signedTypeAction = new QAction("Signed", this);
-    displayTypeActionGroup->addAction(signedTypeAction);
-    signedTypeAction->setCheckable(true);
-    connect(signedTypeAction, &QAction::triggered, [=](bool checked) {
-        if (checked)
-            m_displayType = DisplayType::Signed;
-    });
-    m_displayTypeMenu->addAction(signedTypeAction);
-
-    displayTypeActionGroup->setExclusive(true);
-    hexTypeAction->setChecked(true);
+    m_displayTypeMenu = createDisplayTypeMenu(m_displayType);
 }
 
 TreeItem::~TreeItem() {
