@@ -2,6 +2,7 @@
 #define VSRTLDEFINES_H
 
 #include <limits.h>
+#include <type_traits>
 
 namespace vsrtl {
 
