@@ -1,3 +1,6 @@
 [submodule "external/Signals"]
 	path = external/Signals
 	url = https://github.com/pbhogan/Signals
+[submodule "external/better-enums"]
+	path = external/better-enums
+	url = https://github.com/mortbopet/better-enums
