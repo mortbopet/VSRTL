@@ -3,6 +3,7 @@
 
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphicsbase.h"
+#include "vsrtl_valuelabel.h"
 #include "vsrtl_wiregraphic.h"
 
 #include <QFont>
@@ -28,6 +29,8 @@ public:
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     void postSceneConstructionInitialize2() override;
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
+
     void updateGeometry();
     PortBase* getPort() const { return m_port; }
     void setInputWire(WireGraphic* wire);
@@ -38,6 +41,9 @@ public:
 
     QPointF getInputPoint() const;
     QPointF getOutputPoint() const;
+
+    PortType getPortType() const { return m_type; }
+    void setLabelVisible(bool visible);
 
     const QPen& getPen();
 
@@ -57,7 +63,6 @@ private:
     // m_selected: does not indicate visual selection (ie. isSelected()), but rather whether any port in the port/wire
     // connection of this port has been selected.
     bool m_selected = false;
-    bool m_showValue = false;
     ValueDisplayFormat m_valueBase = ValueDisplayFormat::baseTen;
 
     static int s_portGridWidth;
@@ -74,6 +79,10 @@ private:
 
     WireGraphic* m_outputWire = nullptr;
     WireGraphic* m_inputWire = nullptr;
+
+    ValueLabel* m_valueLabel = nullptr;
+
+    DisplayType m_displayType = DisplayType::Hex;
 
     QPropertyAnimation* m_colorAnimation;
 

@@ -22,6 +22,10 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) :
     m_pen.setCapStyle(Qt::RoundCap);
     setAcceptHoverEvents(true);
 
+    m_valueLabel = new ValueLabel(m_displayType, m_port->getWidth(), this);
+    m_valueLabel->setVisible(false);
+    m_valueLabel->moveBy(0, -10);  // start position (may be dragged)
+
     // PortGraphic logic is build by revolving around the root source port in a port-wire connection. Only receive
     // update signals from root sources
     if (port->getInputPort() == nullptr) {
@@ -45,8 +49,17 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) :
 }
 
 void PortGraphic::updateSlot() {
+    if (m_valueLabel->isVisible()) {
+        m_valueLabel->setValue(m_port->uValue());
+    }
+
     updatePen();
     update();
+}
+
+void PortGraphic::setLabelVisible(bool visible) {
+    m_valueLabel->setVisible(visible);
+    updateSlot();
 }
 
 void PortGraphic::updateWireGeometry() {
@@ -76,6 +89,24 @@ void PortGraphic::propagateRedraw() {
 void PortGraphic::postSceneConstructionInitialize2() {
     if (!m_inputWire)
         updatePen();
+}
+
+void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
+    QMenu menu;
+
+    QAction* showLabel = new QAction("Show value");
+    showLabel->setCheckable(true);
+    showLabel->setChecked(m_valueLabel->isVisible());
+    connect(showLabel, &QAction::triggered, [this](bool checked) {
+        setLabelVisible(checked);
+        updateSlot();
+    });
+    menu.addAction(showLabel);
+
+    menu.addMenu(createDisplayTypeMenu(m_displayType));
+
+    menu.exec(event->screenPos());
+    m_valueLabel->updateText();
 }
 
 void PortGraphic::setInputWire(WireGraphic* wire) {
@@ -139,7 +170,7 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
 }
 
 QString PortGraphic::getTooltipString() const {
-    return "0x" + QString::number(m_port->uValue(), 16);
+    return QString::fromStdString(m_port->stringValue()) + "0x" + QString::number(m_port->uValue(), 16);
 }
 
 QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
