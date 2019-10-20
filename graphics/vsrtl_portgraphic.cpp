@@ -22,7 +22,15 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) :
     m_pen.setCapStyle(Qt::RoundCap);
     setAcceptHoverEvents(true);
 
-    m_valueLabel = new ValueLabel(m_displayType, m_port->getWidth(), this);
+    PortBase* valuePortReference;
+    if (m_type == PortType::out || m_port->isConstant()) {
+        valuePortReference = m_port;
+    } else {
+        // Let the value monitor the source port
+        valuePortReference = m_port->getInputPort();
+    }
+    m_valueLabel = new ValueLabel(m_displayType, *valuePortReference, this);
+
     m_valueLabel->setVisible(false);
     m_valueLabel->moveBy(0, -10);  // start position (may be dragged)
 
@@ -49,12 +57,16 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) :
 }
 
 void PortGraphic::updateSlot() {
-    if (m_valueLabel->isVisible()) {
-        m_valueLabel->setValue(m_port->uValue());
-    }
-
     updatePen();
     update();
+
+    // Propagate any changes to current port value to this label, and all other connected ports which may have their
+    // labels visible
+    m_valueLabel->updateText();
+    m_port->traverseToSinks([=](PortBase* port) {
+        auto* portGraphic = getGraphic<PortGraphic*>(port);
+        portGraphic->m_valueLabel->updateText();
+    });
 }
 
 void PortGraphic::setLabelVisible(bool visible) {

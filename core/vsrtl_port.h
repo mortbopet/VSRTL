@@ -83,9 +83,9 @@ public:
         return portsInConnection;
     }
 
-    virtual unsigned int getWidth() = 0;
-    virtual VSRTL_VT_U uValue() = 0;
-    virtual VSRTL_VT_S sValue() = 0;
+    virtual unsigned int getWidth() const = 0;
+    virtual VSRTL_VT_U uValue() const = 0;
+    virtual VSRTL_VT_S sValue() const = 0;
     virtual std::vector<PortBase*> getOutputPorts() = 0;
     virtual PortBase* getInputPort() = 0;
     virtual void propagate(std::vector<PortBase*>& propagationStack) = 0;
@@ -146,13 +146,13 @@ public:
     }
 
     template <typename T>
-    T value() {
+    T value() const {
         return static_cast<T>(signextend<T, W>(m_value));
     }
 
-    VSRTL_VT_U uValue() override { return value<VSRTL_VT_U>(); }
-    VSRTL_VT_S sValue() override { return value<VSRTL_VT_S>(); }
-    unsigned int getWidth() override { return W; }
+    VSRTL_VT_U uValue() const override { return value<VSRTL_VT_U>(); }
+    VSRTL_VT_S sValue() const override { return value<VSRTL_VT_S>(); }
+    unsigned int getWidth() const override { return W; }
 
     explicit operator VSRTL_VT_S() const { return signextend<VSRTL_VT_S, W>(m_value); }
 

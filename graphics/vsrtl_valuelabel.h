@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vsrtl_displaytype.h"
+#include "vsrtl_port.h"
 
 #include <QGraphicsItem>
 
@@ -8,18 +9,17 @@ namespace vsrtl {
 
 class ValueLabel : public QGraphicsItem {
 public:
-    ValueLabel(DisplayType& type, unsigned int maxBitWidth, QGraphicsItem* parent);
+    ValueLabel(DisplayType& type, const PortBase& port, QGraphicsItem* parent);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
 
-    void setValue(VSRTL_VT_U v);
     void updateText();
 
 private:
     DisplayType& m_type;
-    VSRTL_VT_U m_value;
+    const PortBase& m_port;
     QString m_text;
     unsigned int m_maxBitWidth;
 };

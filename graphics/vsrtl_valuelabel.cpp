@@ -13,8 +13,8 @@ static QRectF getTextRect(const QString& text) {
     return metric.boundingRect(text);
 }
 
-ValueLabel::ValueLabel(DisplayType& type, unsigned int maxBitWidth, QGraphicsItem* parent)
-    : m_type(type), m_maxBitWidth(maxBitWidth), QGraphicsItem(parent) {
+ValueLabel::ValueLabel(DisplayType& type, const PortBase& port, QGraphicsItem* parent)
+    : m_type(type), m_port(port), QGraphicsItem(parent) {
     setFlags(ItemIsSelectable | ItemIsMovable);
 }
 
@@ -58,13 +58,8 @@ void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 }
 
 void ValueLabel::updateText() {
-    m_text = encodeDisplayValue(m_value, m_maxBitWidth, m_type);
+    m_text = encodeDisplayValue(m_port.uValue(), m_port.getWidth(), m_type);
     update();
-}
-
-void ValueLabel::setValue(VSRTL_VT_U v) {
-    m_value = v;
-    updateText();
 }
 
 }  // namespace vsrtl
