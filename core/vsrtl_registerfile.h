@@ -17,18 +17,13 @@ template <int W, int N>
 class RegisterFile : public Component {
 public:
     RegisterFile(std::string name, Component* parent) : Component(name, parent) {
-        // Hack: set values of constants
-        for (int i = 0; i < N; i++) {
-            cmpCs[i]->changeConstant(i);
-        }
-
         // Connect write (source) muxes
         for (int i = 0; i < N; i++) {
             src_muxes[i]->out >> regs[i]->in;
             wr_data >> *src_muxes[i]->ins[1];
             regs[i]->out >> *src_muxes[i]->ins[0];
             wr_idx >> cmps[i]->op1;
-            cmpCs[i]->out >> cmps[i]->op2;
+            i >> cmps[i]->op2;
             cmps[i]->out >> src_muxes[i]->select;
         }
 
@@ -50,9 +45,6 @@ public:
     SUBCOMPONENTS(src_muxes, TYPE(Multiplexer<2, W>), N);
     SUBCOMPONENTS(cmps, Eq<ceillog2(N)>, N);
     SUBCOMPONENT(out_mux, TYPE(Multiplexer<N, W>));
-
-    // This is stupid - there should be a way to directly create a constant when wiring up the circuit!
-    SUBCOMPONENTS(cmpCs, Constant<ceillog2(N)>, N);
 };
 }  // namespace vsrtl
 

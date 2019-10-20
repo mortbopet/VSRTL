@@ -35,10 +35,6 @@ public:
 
     OUTPUTPORT(out, W);
 
-    // HACK HACK HACK
-    void changeConstant(VSRTL_VT_U value) { m_value = value; }
-    // HACK HACK HACK
-
 private:
     unsigned int m_width;
     VSRTL_VT_U m_value;
