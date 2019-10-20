@@ -6,6 +6,7 @@
 
 #include "vsrtl_netlistmodel.h"
 
+#include "vsrtl_constant.h"
 #include "vsrtl_design.h"
 
 namespace vsrtl {
@@ -132,6 +133,11 @@ void NetlistModel::loadDesignRecursive(NetlistTreeItem* parent, const Component&
 
     // Subcomponents
     for (const auto& subcomponent : subComponents) {
+        if (subcomponent->getTypeId() == GraphicsTypeID(Constant)) {
+            // Do not display constants in the netlist
+            continue;
+        }
+
         auto* child = new NetlistTreeItem(parent);
         parent->insertChild(parent->childCount(), child);
 
