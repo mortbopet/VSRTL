@@ -32,6 +32,7 @@ public:
     std::string getName() const { return m_name; }
     Component* getParent() const { return m_parent; }
     bool isPropagated() const { return m_propagationState != PropagationState::unpropagated; }
+    bool isConstant() const { return m_propagationState == PropagationState::constant; }
     void resetPropagation() {
         m_propagationState =
             m_propagationState == PropagationState::constant ? m_propagationState : PropagationState::unpropagated;

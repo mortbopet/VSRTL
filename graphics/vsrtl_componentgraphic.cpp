@@ -1,6 +1,7 @@
 #include "vsrtl_componentgraphic.h"
 
 #include "vsrtl_componentbutton.h"
+#include "vsrtl_constant.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_label.h"
@@ -108,6 +109,10 @@ void ComponentGraphic::createSubcomponents() {
             nc = new MultiplexerGraphic(*dynamic_cast<MultiplexerBase*>(c.get()));
         } else if (typeId == GraphicsTypeID(Register)) {
             nc = new RegisterGraphic(*dynamic_cast<RegisterBase*>(c.get()));
+        } else if (typeId == GraphicsTypeID(Constant)) {
+            // Don't create a distinct ComponentGraphic for constants - these will be drawn next to the port connecting
+            // to it
+            continue;
         } else {
             nc = new ComponentGraphic(*c);
         }
@@ -295,7 +300,8 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
         // the wires going to the input ports of this component, to redraw
         if (m_initialized) {
             for (const auto& inputPort : m_inputPorts) {
-                getInputPortGraphic<PortGraphic*>(inputPort->getPort())->updateWireGeometry();
+                if (!inputPort->getPort()->isConstant())
+                    getInputPortGraphic<PortGraphic*>(inputPort->getPort())->updateWireGeometry();
             }
         }
 

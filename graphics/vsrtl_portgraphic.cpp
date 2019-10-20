@@ -89,6 +89,11 @@ void PortGraphic::propagateRedraw() {
 void PortGraphic::postSceneConstructionInitialize2() {
     if (!m_inputWire)
         updatePen();
+
+    if (m_port->isConstant()) {
+        // Initial port color is implicitely set by triggering the wire animation
+        m_colorAnimation->start();
+    }
 }
 
 void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
@@ -147,6 +152,10 @@ void PortGraphic::updatePenColor() {
 
 void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
     m_port->traverseToRoot([=](PortBase* node) {
+        if (node->isConstant()) {
+            return;
+        }
+
         // Traverse to root, and only execute when no input wire is present. This signifies that the root source port
         // has been reached
         auto* portGraphic = getGraphic<PortGraphic*>(node);

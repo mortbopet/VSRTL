@@ -94,15 +94,6 @@ void VSRTLWidget::registerShapes() const {
          },
          QRect(0, 0, 3, 4)});
 
-    // Constant
-    ComponentGraphic::setComponentShape(GraphicsTypeID(Constant),
-                                        {[](QTransform t) {
-                                             QPainterPath shape;
-                                             shape.addRoundRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))), 35);
-                                             return shape;
-                                         },
-                                         QRect(0, 0, 2, 2)});
-
     // Logic gates
     ComponentGraphic::setComponentShape(
         GraphicsTypeID(And), {[](QTransform t) {
