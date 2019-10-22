@@ -23,6 +23,8 @@ public:
 
     void setPortValuesVisibleForType(PortType t, bool visible);
 
+    bool isLocked() const { return m_isLocked; }
+
 private:
     void handleSelectionChanged();
     void handleWirePointMove(QGraphicsSceneMouseEvent* event);

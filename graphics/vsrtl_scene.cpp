@@ -74,10 +74,8 @@ void VSRTLScene::lockComponents(bool lock) {
     m_isLocked = lock;
 
     for (auto& i : items()) {
-        if (m_isLocked)
-            i->setFlags(i->flags() & ~QGraphicsItem::ItemIsMovable);
-        else
-            i->setFlag(QGraphicsItem::ItemIsMovable);
+        if (auto* gb = dynamic_cast<GraphicsBase*>(i))
+            gb->setLocked(lock);
     }
 }
 

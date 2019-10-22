@@ -19,6 +19,18 @@ public:
     virtual void postSceneConstructionInitialize1();
     virtual void postSceneConstructionInitialize2();
 
+    /**
+     * @brief setLocked
+     * Toggles any interaction with the object in the scene. Components may specialize, if further modifications to the
+     * components behaviour is required
+     */
+    virtual void setLocked(bool locked) {
+        if (locked)
+            setFlags(flags() & ~QGraphicsItem::ItemIsMovable);
+        else
+            setFlag(QGraphicsItem::ItemIsMovable);
+    }
+
 protected:
     bool m_initialized = false;
 };

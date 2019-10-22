@@ -9,6 +9,7 @@
 #include "vsrtl_placeroute.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_registergraphic.h"
+#include "vsrtl_scene.h"
 #include "vsrtl_traversal_util.h"
 
 #include <qmath.h>
@@ -291,6 +292,14 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     }
 }
 
+void ComponentGraphic::setLocked(bool locked) {
+    // No longer give the option of expand the component if the scene is locked
+    if (m_expandButton)
+        m_expandButton->setVisible(!locked);
+
+    GraphicsBase::setLocked(locked);
+}
+
 QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
     // @todo implement snapping inside parent component
     if (change == ItemPositionChange && scene()) {
@@ -367,7 +376,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
     painter->setPen(oldPen);
 
-    if (hasSubcomponents()) {
+    if (hasSubcomponents() && !isLocked()) {
         // Determine whether expand button should be shown
         if (lod >= 0.35) {
             m_expandButton->show();
@@ -424,6 +433,12 @@ QRectF ComponentGraphic::sceneGridRect() const {
     return gridToScene(m_gridRect);
 }
 
+bool ComponentGraphic::isLocked() const {
+    auto* p = dynamic_cast<VSRTLScene*>(scene());
+    Q_ASSERT(p);
+    return p->isLocked();
+}
+
 QRectF ComponentGraphic::boundingRect() const {
     QRectF boundingRect = sceneGridRect();
 
@@ -434,7 +449,7 @@ QRectF ComponentGraphic::boundingRect() const {
 }
 
 void ComponentGraphic::mousePressEvent(QGraphicsSceneMouseEvent* event) {
-    if (event->button() == Qt::LeftButton && m_inResizeDragZone) {
+    if (flags().testFlag(ItemIsMovable) && event->button() == Qt::LeftButton && m_inResizeDragZone) {
         // start resize drag
         setFlags(flags() & ~ItemIsMovable);
         m_resizeDragging = true;
@@ -456,21 +471,25 @@ void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 }
 
 void ComponentGraphic::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
-    setFlags(flags() | ItemIsMovable);
-    m_resizeDragging = false;
+    if (m_resizeDragging) {
+        setFlags(flags() | ItemIsMovable);
+        m_resizeDragging = false;
+    }
 
     QGraphicsItem::mouseReleaseEvent(event);
 }
 
 void ComponentGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
-    const auto& sceneRect = sceneGridRect();
-    if (sceneRect.width() - event->pos().x() <= c_resizeMargin &&
-        sceneRect.height() - event->pos().y() <= c_resizeMargin) {
-        this->setCursor(Qt::SizeFDiagCursor);
-        m_inResizeDragZone = true;
-    } else {
-        this->setCursor(Qt::ArrowCursor);
-        m_inResizeDragZone = false;
+    if (!isLocked()) {
+        const auto& sceneRect = sceneGridRect();
+        if (sceneRect.width() - event->pos().x() <= c_resizeMargin &&
+            sceneRect.height() - event->pos().y() <= c_resizeMargin) {
+            this->setCursor(Qt::SizeFDiagCursor);
+            m_inResizeDragZone = true;
+        } else {
+            this->setCursor(Qt::ArrowCursor);
+            m_inResizeDragZone = false;
+        }
     }
 }
 }  // namespace vsrtl

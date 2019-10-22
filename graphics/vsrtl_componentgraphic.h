@@ -39,6 +39,8 @@ public:
     std::vector<ComponentGraphic*>& getGraphicSubcomponents() { return m_subcomponents; }
     ComponentGraphic* getParent() const;
 
+    void setLocked(bool locked) override;
+
     void setExpanded(bool isExpanded);
     bool hasSubcomponents() const;
 
@@ -69,6 +71,7 @@ protected:
     bool snapToMinGridRect(QRect& r) const;
     QRect subcomponentBoundingGridRect() const;
     QRect adjustedMinGridRect(bool includePorts) const;
+    bool isLocked() const;
 
     bool m_isExpanded = false;
     bool m_restrictSubcomponentPositioning = false;
