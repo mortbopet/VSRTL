@@ -9,7 +9,6 @@
 #include "vsrtl_placeroute.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_registergraphic.h"
-#include "vsrtl_scene.h"
 #include "vsrtl_traversal_util.h"
 
 #include <qmath.h>
@@ -431,12 +430,6 @@ bool ComponentGraphic::snapToMinGridRect(QRect& r) const {
 
 QRectF ComponentGraphic::sceneGridRect() const {
     return gridToScene(m_gridRect);
-}
-
-bool ComponentGraphic::isLocked() const {
-    auto* p = dynamic_cast<VSRTLScene*>(scene());
-    Q_ASSERT(p);
-    return p->isLocked();
 }
 
 QRectF ComponentGraphic::boundingRect() const {

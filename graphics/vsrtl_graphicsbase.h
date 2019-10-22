@@ -31,6 +31,8 @@ public:
             setFlag(QGraphicsItem::ItemIsMovable);
     }
 
+    bool isLocked() const;
+
 protected:
     bool m_initialized = false;
 };

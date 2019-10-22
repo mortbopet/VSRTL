@@ -1,4 +1,5 @@
 #include "vsrtl_graphicsbase.h"
+#include "vsrtl_scene.h"
 
 namespace vsrtl {
 GraphicsBase::GraphicsBase() {}
@@ -22,4 +23,11 @@ void GraphicsBase::postSceneConstructionInitialize2() {
 
     m_initialized = true;
 }
+
+bool GraphicsBase::isLocked() const {
+    auto* p = dynamic_cast<VSRTLScene*>(scene());
+    Q_ASSERT(p);
+    return p->isLocked();
+}
+
 }  // namespace vsrtl

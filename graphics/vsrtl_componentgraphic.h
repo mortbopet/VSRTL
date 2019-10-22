@@ -71,7 +71,6 @@ protected:
     bool snapToMinGridRect(QRect& r) const;
     QRect subcomponentBoundingGridRect() const;
     QRect adjustedMinGridRect(bool includePorts) const;
-    bool isLocked() const;
 
     bool m_isExpanded = false;
     bool m_restrictSubcomponentPositioning = false;
