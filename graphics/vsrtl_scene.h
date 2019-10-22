@@ -25,7 +25,29 @@ private:
     std::set<WirePoint*> m_currentDropTargets;
     WirePoint* m_selectedPoint = nullptr;
 
-protected:
+
+    /* Applies T::F to all items in the scene of type F, using the supplied arguments */
+    template <typename T, typename F, typename... Args>
+    void execOnItems(F f, Args... args) {
+        for (auto* c : items()) {
+            if (auto* t_c = dynamic_cast<T*>(c)) {
+                (t_c->*f)(args...);
+            }
+        }
+    }
+
+    /* Applies T::F to all items in the scene of type F, using the supplied arguments, if predicate returns
+     * true */
+    template <typename T, typename F, typename... Args>
+    void predicatedExecOnItems(std::function<bool(const T*)> pred, F f, Args... args) {
+        for (auto* c : items()) {
+            if (auto* t_c = dynamic_cast<T*>(c)) {
+                if (pred(t_c)) {
+                    (t_c->*f)(args...);
+                }
+            }
+        }
+    }protected:
 #ifdef VSRTL_DEBUG_DRAW
     void drawBackground(QPainter* painter, const QRectF& rect) override {
         qreal left = int(rect.left()) - (int(rect.left()) % GRID_SIZE);
