@@ -3,8 +3,10 @@
 
 #include <QGraphicsScene>
 #include <QPainter>
-#include "vsrtl_graphics_defines.h"
 
+#include "vsrtl_componentgraphic.h"
+#include "vsrtl_graphics_defines.h"
+#include "vsrtl_portgraphic.h"
 #include "vsrtl_wiregraphic.h"
 
 #include <set>
@@ -17,6 +19,9 @@ public:
 
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
+
+    void setPortValuesVisibleForType(PortType t, bool visible);
 
 private:
     void handleSelectionChanged();
@@ -25,6 +30,12 @@ private:
     std::set<WirePoint*> m_currentDropTargets;
     WirePoint* m_selectedPoint = nullptr;
 
+    /**
+     * @brief m_isLocked
+     * When set, components all interaction with objects in the scene beyond changing the view style of signal values
+     * is disabled.
+     */
+    bool m_isLocked = false;
 
     /* Applies T::F to all items in the scene of type F, using the supplied arguments */
     template <typename T, typename F, typename... Args>
@@ -47,7 +58,12 @@ private:
                 }
             }
         }
-    }protected:
+    }
+
+private slots:
+    void lockComponents(bool locked);
+
+protected:
 #ifdef VSRTL_DEBUG_DRAW
     void drawBackground(QPainter* painter, const QRectF& rect) override {
         qreal left = int(rect.left()) - (int(rect.left()) % GRID_SIZE);

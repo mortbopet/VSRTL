@@ -39,6 +39,8 @@ public:
     PointGraphic* getPointGraphic() { return m_portPoint; }
     QString getTooltipString() const;
 
+    void setOutwireVisible(bool state);
+
     QPointF getInputPoint() const;
     QPointF getOutputPoint() const;
 

@@ -124,12 +124,6 @@ void MainWindow::createToolbar() {
     connect(expandAllComponents, &QAction::triggered, [this] { m_vsrtlWidget->expandAllComponents(); });
     simulatorToolBar->addAction(expandAllComponents);
 
-    QAction* showSignalValues = simulatorToolBar->addAction("Display signal values");
-    showSignalValues->setCheckable(true);
-    showSignalValues->setChecked(false);
-    connect(showSignalValues, &QAction::triggered,
-            [this](bool checked) { m_vsrtlWidget->setPortValuesVisibleForType(PortType::out, checked); });
-
 }  // namespace vsrtl
 
 }  // namespace vsrtl

@@ -1,9 +1,12 @@
-#include "vsrtl_scene.h"
+﻿#include "vsrtl_scene.h"
 
 #include <algorithm>
 #include <iterator>
 
+#include <QAction>
+#include <QGraphicsSceneContextMenuEvent>
 #include <QGraphicsSceneMouseEvent>
+#include <QMenu>
 
 namespace vsrtl {
 
@@ -65,6 +68,73 @@ void VSRTLScene::handleWirePointMove(QGraphicsSceneMouseEvent* event) {
         }
         m_currentDropTargets.clear();
     }
+}
+
+void VSRTLScene::lockComponents(bool lock) {
+    m_isLocked = lock;
+
+    for (auto& i : items()) {
+        if (m_isLocked)
+            i->setFlags(i->flags() & ~QGraphicsItem::ItemIsMovable);
+        else
+            i->setFlag(QGraphicsItem::ItemIsMovable);
+    }
+}
+
+void VSRTLScene::setPortValuesVisibleForType(PortType t, bool visible) {
+    predicatedExecOnItems<PortGraphic>([t](const PortGraphic* p) { return p->getPortType() == t; },
+                                       &PortGraphic::setLabelVisible, visible);
+}
+
+void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
+    // If there are any items at the click position, forward the context event to it
+    if (items(event->scenePos()).size() != 0)
+        return QGraphicsScene::contextMenuEvent(event);
+
+    QMenu menu;
+    // Component positioning locking
+    auto lockAction = menu.addAction(m_isLocked ? "Unlock" : "Lock");
+    lockAction->setCheckable(true);
+    lockAction->setChecked(m_isLocked);
+    connect(lockAction, &QAction::triggered, this, &VSRTLScene::lockComponents);
+
+    menu.addSeparator();
+
+    auto showValuesAction = menu.addAction("Show signal values");
+    connect(showValuesAction, &QAction::triggered, [=] { this->setPortValuesVisibleForType(PortType::out, true); });
+
+    auto hideValuesAction = menu.addAction("Hide signal values");
+    connect(hideValuesAction, &QAction::triggered, [=] { this->setPortValuesVisibleForType(PortType::out, false); });
+
+    // ==================== Scene modifying actions ====================
+    if (!m_isLocked) {
+        menu.addSeparator();
+
+        auto expandAction = menu.addAction("Expand all");
+
+        auto collapseAction = menu.addAction("Collapse all");
+
+        menu.addSeparator();
+
+        // Hidden components submenu
+        auto hiddenMenu = menu.addMenu("Hidden components");
+        for (const auto& i : items()) {
+            if (!i->isVisible()) {
+                if (auto* c = dynamic_cast<ComponentGraphic*>(i)) {
+                    // If a components parent is expanded but it itself is not visible, then it may be set to being
+                    // currently visible
+                    if (c->getParent()->isExpanded()) {
+                        auto* action = hiddenMenu->addAction(QString::fromStdString(c->getComponent()->getName()));
+                        connect(action, &QAction::triggered, [c] { c->setVisible(true); });
+                    }
+                }
+            }
+        }
+        // Disable the hidden components menu if there are no hidden components to be re-enabled
+        hiddenMenu->setDisabled(hiddenMenu->actions().size() == 0);
+    }
+
+    menu.exec(event->screenPos());
 }
 
 void VSRTLScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {

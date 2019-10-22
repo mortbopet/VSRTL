@@ -140,17 +140,15 @@ void ComponentGraphic::setExpanded(bool state) {
 
     if (m_expandButton != nullptr) {
         m_expandButton->setChecked(m_isExpanded);
-
-        if (!m_isExpanded) {
-            changeReason = GeometryChange::Collapse;
-            for (const auto& c : m_subcomponents) {
-                c->hide();
-            }
-        } else {
-            changeReason = GeometryChange::Expand;
-            for (const auto& c : m_subcomponents) {
-                c->show();
-            }
+        changeReason = m_isExpanded ? GeometryChange::Expand : GeometryChange::Collapse;
+        for (const auto& c : m_subcomponents) {
+            c->setVisible(m_isExpanded);
+        }
+        // We are not hiding the input ports of a component, because these should always be drawn. However, a input port
+        // of an expandable component has wires drawin inside the component, which must be hidden aswell, such that they
+        // do not accept mouse events nor are drawn.
+        for (const auto& p : m_inputPorts) {
+            p->setOutwireVisible(m_isExpanded);
         }
     }
 

@@ -29,8 +29,9 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) :
         // Let the value monitor the source port
         valuePortReference = m_port->getInputPort();
     }
-    m_valueLabel = new ValueLabel(m_displayType, *valuePortReference, this);
 
+    // Value label setup
+    m_valueLabel = new ValueLabel(m_displayType, *valuePortReference, this);
     m_valueLabel->setVisible(false);
     m_valueLabel->moveBy(0, -10);  // start position (may be dragged)
 
@@ -54,6 +55,10 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) :
     m_portPoint->setPos(mapToItem(this, mapToScene(type == PortType::in ? getInputPoint() : getOutputPoint())));
 
     m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), this);
+}
+
+void PortGraphic::setOutwireVisible(bool state) {
+    m_outputWire->setVisible(state);
 }
 
 void PortGraphic::updateSlot() {
