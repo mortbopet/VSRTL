@@ -115,6 +115,9 @@ void WirePoint::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidge
 }
 
 void WirePoint::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
+    if (isLocked())
+        return;
+
     QMenu menu;
     auto removePointAction = menu.addAction("Remove point");
     connect(removePointAction, &QAction::triggered, [this](bool) { m_parent.removeWirePoint(this); });
@@ -192,6 +195,9 @@ void WireSegment::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
 }
 
 void WireSegment::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
+    if (isLocked())
+        return;
+
     // Todo: allow adding points. Should possibly just be done by a click on the wire
     QMenu menu;
     auto createPointAction = menu.addAction("Add wire point");
