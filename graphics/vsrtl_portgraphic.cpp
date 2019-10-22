@@ -103,6 +103,11 @@ void PortGraphic::postSceneConstructionInitialize2() {
         updatePen();
 
     if (m_port->isConstant()) {
+        // For constant ports, we by default display the value of the port
+        m_valueLabel->show();
+        m_displayType = DisplayType::Signed;
+        updateSlot();
+
         // Initial port color is implicitely set by triggering the wire animation
         m_colorAnimation->start();
     }
