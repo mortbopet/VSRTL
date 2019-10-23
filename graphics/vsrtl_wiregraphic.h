@@ -1,7 +1,16 @@
 #ifndef VSRTL_WIREGRAPHIC_H
 #define VSRTL_WIREGRAPHIC_H
 
+#include "vsrtl_component.h"
+#include "vsrtl_graphics_util.h"
 #include "vsrtl_graphicsbase.h"
+#include "vsrtl_portgraphic.h"
+
+#include "cereal/cereal.hpp"
+#include "cereal/include/cereal/types/map.hpp"
+#include "cereal/include/cereal/types/string.hpp"
+#include "cereal/include/cereal/types/utility.hpp"
+#include "cereal/include/cereal/types/vector.hpp"
 
 #include <QPen>
 #include <memory>
@@ -14,6 +23,17 @@ class PortBase;
 class WireGraphic;
 class WireSegment;
 class ComponentGraphic;
+
+static inline std::vector<std::string> getPortParentNameSeq(PortBase* p) {
+    std::vector<std::string> seq;
+    seq.push_back(p->getName());
+    auto* parent = p->getParent();
+    while (parent) {
+        seq.push_back(parent->getName());
+        parent = parent->getParent();
+    }
+    return seq;
+}
 
 /**
  * @brief The PointGraphic class
@@ -108,6 +128,72 @@ public:
     void mergePoints(WirePoint* base, WirePoint* toMerge);
     MergeType canMergePoints(WirePoint* base, WirePoint* toMerge) const;
 
+    template <class Archive>
+    void save(Archive& archive) const {
+        Q_ASSERT(m_fromPort->getPortType() == PortType::out);
+
+        int i = 0;
+        // serialize the incoming port
+        std::pair<int, std::vector<std::string>> from(i++, getPortParentNameSeq(m_fromPort->getPort()));
+        archive(cereal::make_nvp("From port", from));
+
+        // serialize the outgoing, connecting ports
+        std::map<int, std::vector<std::string>> idxToOutportNameSeq;
+        std::map<PointGraphic*, int> outportToIdx;
+        for (const auto& p : m_toGraphicPorts) {
+            // @todo: this is not sufficient, ports may be named identically.
+            // It should be a hierarchical list including its parent components
+            idxToOutportNameSeq[i] = getPortParentNameSeq(p->getPort());
+            outportToIdx[p->getPointGraphic()] = i;
+            i++;
+        }
+        archive(cereal::make_nvp("To ports", idxToOutportNameSeq));
+
+        // Each point managed by this wire is enumerated and associated with its position
+        std::map<int, QPoint> idxToPos;
+        std::map<PointGraphic*, int> pointToIdx;
+        for (const auto& p : m_points) {
+            idxToPos[i] = p->pos().toPoint();
+            pointToIdx[p] = i;
+            i++;
+        }
+        archive(cereal::make_nvp("points", idxToPos));
+
+        // Each wire segment will connect to either a point or a port
+        std::vector<std::pair<int, int>> wires;
+        for (auto& w : m_wires) {
+            auto* start = w->getStart();
+            auto* end = w->getEnd();
+
+            int startIdx, endIdx;
+
+            if (m_fromPort->getPointGraphic() == start) {
+                startIdx = 0;
+            } else if (outportToIdx.count(start)) {
+                startIdx = outportToIdx[start];
+            } else if (pointToIdx.count(start)) {
+                startIdx = pointToIdx[start];
+            } else {
+                Q_ASSERT(false && "Could not serialize wire");
+            }
+
+            if (outportToIdx.count(end)) {
+                endIdx = outportToIdx[end];
+            } else if (pointToIdx.count(end)) {
+                endIdx = pointToIdx[end];
+            } else {
+                Q_ASSERT(false && "Could not serialize wire");
+            }
+            wires.push_back({startIdx, endIdx});
+        }
+        archive(cereal::make_nvp("wires", wires));
+    }
+
+    template <class Archive>
+    void load(Archive& archive) {
+        // @todo: only load if it is verified that it is a compatible layout
+    }
+
 private:
     PortGraphic* m_fromPort = nullptr;
     std::vector<PortBase*> m_toPorts;
@@ -116,5 +202,12 @@ private:
     std::set<WirePoint*> m_points;
 };
 }  // namespace vsrtl
+
+// QPointF serializer
+template <class Archive>
+void serialize(Archive& archive, QPoint& m) {
+    archive(cereal::make_nvp("x", m.rx()));
+    archive(cereal::make_nvp("y", m.ry()));
+}
 
 #endif  // VSRTL_WIREGRAPHIC_H

@@ -38,7 +38,7 @@ public:
     Component* getComponent() const { return &m_component; }
     std::vector<ComponentGraphic*>& getGraphicSubcomponents() { return m_subcomponents; }
     ComponentGraphic* getParent() const;
-
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
     void setLocked(bool locked) override;
 
     void setExpanded(bool isExpanded);

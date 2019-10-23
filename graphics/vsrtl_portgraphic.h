@@ -4,7 +4,6 @@
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphicsbase.h"
 #include "vsrtl_valuelabel.h"
-#include "vsrtl_wiregraphic.h"
 
 #include <QFont>
 #include <QPen>
@@ -14,6 +13,8 @@ QT_FORWARD_DECLARE_CLASS(QPropertyAnimation)
 namespace vsrtl {
 
 class PortBase;
+class WireGraphic;
+class PointGraphic;
 
 enum class PortType { in, out };
 

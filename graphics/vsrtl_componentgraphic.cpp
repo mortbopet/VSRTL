@@ -10,6 +10,9 @@
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_registergraphic.h"
 #include "vsrtl_traversal_util.h"
+#include "vsrtl_wiregraphic.h"
+
+#include <cereal/archives/json.hpp>
 
 #include <qmath.h>
 #include <deque>
@@ -132,6 +135,33 @@ void ComponentGraphic::placeAndRouteSubcomponents() {
     for (const auto& p : placements) {
         p.first->setPos(p.second);
     }
+}
+
+void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
+    if (isLocked())
+        return;
+
+    if (!hasSubcomponents())
+        return;
+
+    QMenu menu;
+    auto* importAction = menu.addAction("Import layout");
+    auto* exportAction = menu.addAction("Export layout");
+
+    connect(exportAction, &QAction::triggered, [this]() {
+        cereal::JSONOutputArchive archive(std::cout);
+        QList<QGraphicsItem*> children;
+        getAllChildren(this, children);
+
+        // Serealize any top-level WireGraphics within this
+        for (const auto& c : children) {
+            if (auto* c_wg = dynamic_cast<WireGraphic*>(c)) {
+                if (c_wg->getFromPort()->getPortType() == PortType::out)
+                    archive(*c_wg);
+            }
+        }
+    });
+    menu.exec(event->screenPos());
 }
 
 void ComponentGraphic::setExpanded(bool state) {

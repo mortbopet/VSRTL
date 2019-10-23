@@ -3,6 +3,8 @@
 
 #include <QRect>
 
+#include <QGraphicsItem>
+
 namespace vsrtl {
 
 // Round up v to nearest multiple of m
@@ -46,6 +48,18 @@ RectType normalizeRect(const RectType& r1) {
     r.setTopLeft(QPointF(0, 0));
     return r;
 }
+
+inline void getAllChildren(QGraphicsItem* p, QList<QGraphicsItem*>& acc) {
+    if (p->childItems().size() == 0) {
+        // Leaf
+        acc.push_back(p);
+    } else {
+        for (const auto& c : p->childItems())
+            getAllChildren(c, acc);
+        acc.push_back(p);
+    }
+}
+
 }  // namespace vsrtl
 
 #endif  // VSRTL_GRAPHICS_UTIL_H
