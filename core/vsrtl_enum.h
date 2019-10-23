@@ -3,7 +3,7 @@
 
 #include "vsrtl_binutils.h"
 
-#include "../external/better-enums/enum.h"
+#include "better-enums/enum.h"
 
 #include <string>
 

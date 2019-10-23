@@ -4,3 +4,6 @@
 [submodule "external/better-enums"]
 	path = external/better-enums
 	url = https://github.com/mortbopet/better-enums
+[submodule "external/cereal"]
+	path = external/cereal
+	url = https://github.com/USCiLab/cereal.git
