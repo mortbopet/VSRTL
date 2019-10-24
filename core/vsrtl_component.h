@@ -1,6 +1,7 @@
 #ifndef VSRTL_COMPONENT_H
 #define VSRTL_COMPONENT_H
 
+#include <algorithm>
 #include <functional>
 #include <iostream>
 #include <map>
@@ -202,6 +203,7 @@ public:
 protected:
     template <unsigned int W>
     Port<W>& createPort(std::string name, std::vector<std::unique_ptr<PortBase>>& container) {
+        verifyIsUniquePortName(name);
         Port<W>* port = new Port<W>(name, this);
         container.push_back(std::unique_ptr<Port<W>>(port));
         return *port;
@@ -213,6 +215,7 @@ protected:
         std::vector<Port<W>*> ports;
         for (unsigned int i = 0; i < n; i++) {
             std::string i_name = name + "_" + std::to_string(i);
+            verifyIsUniquePortName(i_name);
             Port<W>* port = new Port<W>(i_name.c_str(), this);
             container.push_back(std::unique_ptr<Port<W>>(port));
             ports.push_back(port);
@@ -226,6 +229,22 @@ protected:
         for (const auto& c : m_subcomponents) {
             componentGraph[this].push_back(c.get());
             c->getComponentGraph(componentGraph);
+        }
+    }
+
+    bool isUniquePortName(const std::string& name, std::vector<std::unique_ptr<PortBase>>& container) {
+        return std::find_if(container.begin(), container.end(),
+                            [name](const auto& p) { return p->getName() == name; }) == container.end();
+    }
+
+    bool isUniquePortName(const std::string& name) {
+        return isUniquePortName(name, m_outputports) && isUniquePortName(name, m_inputports);
+    }
+
+    void verifyIsUniquePortName(const std::string& name) {
+        if (!isUniquePortName(name)) {
+            throw std::runtime_error("Duplicate port name: '" + name + "' in component: '" + getName() +
+                                     "'. Port names must be unique.");
         }
     }
 
