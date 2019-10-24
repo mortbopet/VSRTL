@@ -1,6 +1,6 @@
 #include "vsrtl_netlistdelegate.h"
 #include "vsrtl_defines.h"
-#include "vsrtl_displaytype.h"
+#include "vsrtl_radix.h"
 #include "vsrtl_treeitem.h"
 
 #include "vsrtl_registermodel.h"
@@ -32,20 +32,20 @@ QWidget* NetlistDelegate::createEditor(QWidget* parent, const QStyleOptionViewIt
 void NetlistDelegate::setEditorData(QWidget* e, const QModelIndex& index) const {
     auto* treeItem = static_cast<TreeItem*>(index.internalPointer());
 
-    switch (treeItem->m_displayType) {
-        case DisplayType::Binary: {
+    switch (treeItem->m_Radix) {
+        case Radix::Binary: {
             m_validator->setRegExp(binRegex);
             break;
         }
-        case DisplayType::Hex: {
+        case Radix::Hex: {
             m_validator->setRegExp(hexRegex);
             break;
         }
-        case DisplayType::Unsigned: {
+        case Radix::Unsigned: {
             m_validator->setRegExp(unsignedRegex);
             break;
         }
-        case DisplayType::Signed: {
+        case Radix::Signed: {
             m_validator->setRegExp(signedRegex);
             break;
         }

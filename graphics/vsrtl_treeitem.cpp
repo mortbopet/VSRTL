@@ -8,7 +8,7 @@ TreeItem::TreeItem(TreeItem* parent) {
     parentItem = parent;
 
     // Display type actions
-    m_displayTypeMenu = createDisplayTypeMenu(m_displayType);
+    m_RadixMenu = createRadixMenu(m_Radix);
 }
 
 TreeItem::~TreeItem() {
@@ -31,7 +31,7 @@ int TreeItem::childNumber() const {
 }
 
 QList<QMenu*> TreeItem::getActions() const {
-    return {m_displayTypeMenu};
+    return {m_RadixMenu};
 }
 
 bool TreeItem::insertChild(int position, TreeItem* item) {

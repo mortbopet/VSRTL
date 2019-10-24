@@ -1,7 +1,7 @@
 #pragma once
 
-#include "vsrtl_displaytype.h"
 #include "vsrtl_port.h"
+#include "vsrtl_radix.h"
 
 #include <QGraphicsItem>
 
@@ -9,7 +9,7 @@ namespace vsrtl {
 
 class ValueLabel : public QGraphicsItem {
 public:
-    ValueLabel(DisplayType& type, const PortBase& port, QGraphicsItem* parent);
+    ValueLabel(Radix& type, const PortBase& port, QGraphicsItem* parent);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
@@ -18,7 +18,7 @@ public:
     void updateText();
 
 private:
-    DisplayType& m_type;
+    Radix& m_type;
     const PortBase& m_port;
     QString m_text;
     unsigned int m_maxBitWidth;

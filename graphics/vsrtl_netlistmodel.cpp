@@ -28,7 +28,7 @@ QVariant NetlistTreeItem::data(int column, int role) const {
             case NetlistModel::ValueColumn: {
                 if (m_port) {
                     VSRTL_VT_U value = m_port->uValue();
-                    return encodeDisplayValue(value, m_port->getWidth(), m_displayType);
+                    return encodeRadixValue(value, m_port->getWidth(), m_Radix);
                 }
                 break;
             }

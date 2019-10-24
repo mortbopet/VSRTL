@@ -13,7 +13,7 @@ static QRectF getTextRect(const QString& text) {
     return metric.boundingRect(text);
 }
 
-ValueLabel::ValueLabel(DisplayType& type, const PortBase& port, QGraphicsItem* parent)
+ValueLabel::ValueLabel(Radix& type, const PortBase& port, QGraphicsItem* parent)
     : m_type(type), m_port(port), QGraphicsItem(parent) {
     setFlags(ItemIsSelectable | ItemIsMovable);
 }
@@ -50,7 +50,7 @@ void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     showLabel->setChecked(isVisible());
     QObject::connect(showLabel, &QAction::triggered, [this](bool checked) { setVisible(checked); });
     menu.addAction(showLabel);
-    menu.addMenu(createDisplayTypeMenu(m_type));
+    menu.addMenu(createRadixMenu(m_type));
     menu.exec(event->screenPos());
 
     // Schedule an update of the label to register any change in the display type
@@ -58,7 +58,7 @@ void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 }
 
 void ValueLabel::updateText() {
-    m_text = encodeDisplayValue(m_port.uValue(), m_port.getWidth(), m_type);
+    m_text = encodeRadixValue(m_port.uValue(), m_port.getWidth(), m_type);
     update();
 }
 

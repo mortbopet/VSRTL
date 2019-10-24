@@ -7,7 +7,7 @@
 #include <QVariant>
 #include <QVector>
 
-#include "vsrtl_displaytype.h"
+#include "vsrtl_radix.h"
 
 QT_FORWARD_DECLARE_CLASS(QMenu)
 
@@ -36,12 +36,12 @@ public:
     QModelIndex index;
 
     QString m_name;
-    DisplayType m_displayType = DisplayType::Hex;
+    Radix m_Radix = Radix::Hex;
     QList<TreeItem*> childItems;
     TreeItem* parentItem;
 
 private:
-    QMenu* m_displayTypeMenu;
+    QMenu* m_RadixMenu;
 };
 
 }  // namespace vsrtl

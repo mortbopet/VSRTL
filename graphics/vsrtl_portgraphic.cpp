@@ -31,7 +31,7 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent) :
     }
 
     // Value label setup
-    m_valueLabel = new ValueLabel(m_displayType, *valuePortReference, this);
+    m_valueLabel = new ValueLabel(m_Radix, *valuePortReference, this);
     m_valueLabel->setVisible(false);
     m_valueLabel->moveBy(0, -10);  // start position (may be dragged)
 
@@ -110,7 +110,7 @@ void PortGraphic::postSceneConstructionInitialize2() {
     if (m_port->isConstant()) {
         // For constant ports, we by default display the value of the port
         m_valueLabel->show();
-        m_displayType = DisplayType::Signed;
+        m_Radix = Radix::Signed;
         updateSlot();
 
         // Initial port color is implicitely set by triggering the wire animation
@@ -130,7 +130,7 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     });
     menu.addAction(showLabel);
 
-    menu.addMenu(createDisplayTypeMenu(m_displayType));
+    menu.addMenu(createRadixMenu(m_Radix));
 
     menu.exec(event->screenPos());
     m_valueLabel->updateText();

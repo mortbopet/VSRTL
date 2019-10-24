@@ -1,7 +1,7 @@
 #include <QItemSelectionModel>
 #include <QWidget>
 
-#include "vsrtl_displaytype.h"
+#include "vsrtl_radix.h"
 #include "vsrtl_registermodel.h"
 #include "vsrtl_treeitem.h"
 
@@ -26,7 +26,7 @@ QVariant RegisterTreeItem::data(int column, int role) const {
             }
             case Qt::DisplayRole: {
                 VSRTL_VT_U value = m_register->getOut()->uValue();
-                return encodeDisplayValue(value, m_register->getOut()->getWidth(), m_displayType);
+                return encodeRadixValue(value, m_register->getOut()->getWidth(), m_Radix);
             }
         }
     }
@@ -92,8 +92,7 @@ Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
 bool RegisterModel::setData(const QModelIndex& index, const QVariant& var, int role) {
     auto* item = getTreeItem(index);
     if (item) {
-        VSRTL_VT_U value =
-            decodeDisplayValue(var.toString(), item->m_register->getOut()->getWidth(), item->m_displayType);
+        VSRTL_VT_U value = decodeRadixValue(var.toString(), item->m_register->getOut()->getWidth(), item->m_Radix);
         bool resval = item->setData(index.column(), value, role);
         if (resval) {
             m_arch.propagateDesign();

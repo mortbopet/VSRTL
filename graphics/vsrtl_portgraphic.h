@@ -92,7 +92,7 @@ private:
 
     ValueLabel* m_valueLabel = nullptr;
 
-    DisplayType m_displayType = DisplayType::Hex;
+    Radix m_Radix = Radix::Hex;
 
     QPropertyAnimation* m_colorAnimation;
 
