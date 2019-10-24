@@ -202,7 +202,7 @@ void WireSegment::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
     auto createPointAction = menu.addAction("Add wire point");
     connect(createPointAction, &QAction::triggered,
-            [this, &event](bool) { m_parent->addWirePoint(event->scenePos(), this); });
+            [this, &event](bool) { m_parent->createWirePointOnSeg(event->scenePos(), this); });
     menu.exec(event->screenPos());
 }
 
@@ -210,39 +210,54 @@ void WireSegment::mousePressEvent(QGraphicsSceneMouseEvent* event) {}
 
 // --------------------------------------------------------------------------------
 
-void WireGraphic::addWirePoint(const QPointF scenePos, WireSegment* onSegment) {
-    const auto& endPoint = onSegment->getEnd();
-
+WirePoint* WireGraphic::createWirePoint() {
     // Create new point managed by this graphic.
     // The parent structure is somewhat nested; a wireGraphic must be a graphical child of the graphics component
     // which this wire is nested inside. To reach this, we do: WireGraphic->parent = PortGraphic PortGraphic->parent
     // = ComponentGraphic ComponentGrahic -> parent = ComponentGraphic (with nested components)
     auto* topComponent = parentItem()->parentItem()->parentItem();
     Q_ASSERT(topComponent != nullptr);
-    auto* newPoint = new WirePoint(*this, topComponent);
+    auto* point = new WirePoint(*this, topComponent);
+    m_points.insert(point);
+    return point;
+}
+
+void WireGraphic::moveWirePoint(PointGraphic* point, const QPointF scenePos) {
+    auto* topComponent = parentItem()->parentItem()->parentItem();
+    Q_ASSERT(topComponent != nullptr);
+    // Move new point to its creation position
+    point->setPos(mapToItem(topComponent, mapFromScene(scenePos)));
+}
+
+WireSegment* WireGraphic::createSegment(PointGraphic* start, PointGraphic* end) {
+    auto* newSeg = new WireSegment(this);
+    newSeg->setStart(start);
+    newSeg->setEnd(end);
+    m_wires.insert(newSeg);
+    return newSeg;
+}
+
+void WireGraphic::createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment) {
+    const auto& endPoint = onSegment->getEnd();
+
+    auto* newPoint = createWirePoint();
 
     // Set the wire segment of which this point was created, to terminate at the new point
     onSegment->setEnd(newPoint);
 
     // Create wire segment between new point and previous end point
-    auto* newSeg = new WireSegment(this);
-    newSeg->setStart(newPoint);
-    newSeg->setEnd(endPoint);
+    auto* newSeg = createSegment(newPoint, endPoint);
 
     // Register the wire segments with the point
     newPoint->setInputWire(onSegment);
     newPoint->addOutputWire(newSeg);
 
+    // Move new point to its creation position
+    moveWirePoint(newPoint, scenePos);
+
     // Make the incoming wire to the end point the newly created wire
     if (auto* endPointWire = dynamic_cast<WirePoint*>(endPoint))
         endPointWire->setInputWire(newSeg);
-
-    // Move new point to its creation position
-    newPoint->setPos(mapToItem(topComponent, mapFromScene(scenePos)));
-
-    // Add newly created objects to objects managed by this wiregraphic
-    m_wires.insert(newSeg);
-    m_points.insert(newPoint);
 }
 
 void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
