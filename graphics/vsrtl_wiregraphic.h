@@ -286,11 +286,4 @@ private:
 };
 }  // namespace vsrtl
 
-// QPointF serializer
-template <class Archive>
-void serialize(Archive& archive, QPoint& m) {
-    archive(cereal::make_nvp("x", m.rx()));
-    archive(cereal::make_nvp("y", m.ry()));
-}
-
 #endif  // VSRTL_WIREGRAPHIC_H

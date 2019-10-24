@@ -5,6 +5,8 @@
 #include "vsrtl_graphicsbase.h"
 #include "vsrtl_valuelabel.h"
 
+#include "cereal/cereal.hpp"
+
 #include <QFont>
 #include <QPen>
 
@@ -53,6 +55,11 @@ public:
     static int portGridWidth() { return s_portGridWidth; }
     int gridIndex() { return m_gridIndex; }
     void setGridIndex(int i) { m_gridIndex = i; }
+
+    template <class Archive>
+    void serialize(Archive& archive) {
+        archive(cereal::make_nvp("wire", *m_outputWire));
+    }
 
 private slots:
     void updatePenColor();

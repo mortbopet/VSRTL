@@ -6,8 +6,12 @@
 
 #include "vsrtl_component.h"
 #include "vsrtl_graphics_defines.h"
+#include "vsrtl_graphics_serializers.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_graphicsbase.h"
+#include "vsrtl_portgraphic.h"
+
+#include "cereal/cereal.hpp"
 
 namespace vsrtl {
 
@@ -48,6 +52,26 @@ public:
 
     // Called by vsrtl_core components linked via signal/slot mechanism
     void updateSlot() { update(); }
+
+    template <class Archive>
+    void load(Archive& archive) {}
+
+    template <class Archive>
+    void save(Archive& archive) const {
+        // Serealize position
+        QPoint p = pos().toPoint();
+        archive(cereal::make_nvp("Pos", p));
+
+        // Serealize ports
+        for (auto& p : m_outputPorts) {
+            archive(cereal::make_nvp(p->getPort()->getName(), *p));
+        }
+
+        // Serealize subcomponents
+        for (const auto& c : m_subcomponents) {
+            archive(cereal::make_nvp(c->getComponent()->getName(), *c));
+        }
+    }
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;

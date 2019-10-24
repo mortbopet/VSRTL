@@ -5,6 +5,8 @@
 
 #include <QGraphicsItem>
 
+#include "vsrtl_graphics_serializers.h"
+
 namespace vsrtl {
 
 // Round up v to nearest multiple of m

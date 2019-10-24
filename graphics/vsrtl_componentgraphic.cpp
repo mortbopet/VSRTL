@@ -150,16 +150,7 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
     connect(exportAction, &QAction::triggered, [this]() {
         cereal::JSONOutputArchive archive(std::cout);
-        QList<QGraphicsItem*> children;
-        getAllChildren(this, children);
-
-        // Serealize any top-level WireGraphics within this
-        for (const auto& c : children) {
-            if (auto* c_wg = dynamic_cast<WireGraphic*>(c)) {
-                if (c_wg->getFromPort()->getPortType() == PortType::out)
-                    archive(*c_wg);
-            }
-        }
+        archive(cereal::make_nvp(getComponent()->getName(), *this));
     });
     menu.exec(event->screenPos());
 }
