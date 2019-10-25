@@ -53,7 +53,7 @@ public:
     const QPen& getPen();
 
     static int portGridWidth() { return s_portGridWidth; }
-    int gridIndex() { return m_gridIndex; }
+    int gridIndex() const { return m_gridIndex; }
     void setGridIndex(int i) { m_gridIndex = i; }
 
     template <class Archive>
