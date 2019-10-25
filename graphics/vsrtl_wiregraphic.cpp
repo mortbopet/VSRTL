@@ -135,8 +135,20 @@ QLineF WireSegment::getLine() const {
     if (m_start == nullptr || m_end == nullptr)
         return QLine();
 
-    const auto& startPos = mapFromItem(m_start->parentItem(), m_start->pos());
-    const auto& endPos = mapFromItem(m_end->parentItem(), m_end->pos());
+    QPointF startPos;
+    if (auto* p = dynamic_cast<PortGraphic*>(m_start->parentItem())) {
+        startPos = mapFromItem(p, p->getOutputPoint());
+    } else {
+        startPos = mapFromItem(m_start->parentItem(), m_start->pos());
+    }
+
+    QPointF endPos;
+    if (auto* p = dynamic_cast<PortGraphic*>(m_end->parentItem())) {
+        endPos = mapFromItem(p, p->getInputPoint());
+    } else {
+        endPos = mapFromItem(m_end->parentItem(), m_end->pos());
+    }
+
     return QLineF(startPos, endPos);
 }
 
@@ -223,6 +235,9 @@ WirePoint* WireGraphic::createWirePoint() {
 }
 
 void WireGraphic::moveWirePoint(PointGraphic* point, const QPointF scenePos) {
+    // The parent structure is somewhat nested; a wireGraphic must be a graphical child of the graphics component
+    // which this wire is nested inside. To reach this, we do: WireGraphic->parent = PortGraphic PortGraphic->parent
+    // = ComponentGraphic ComponentGrahic -> parent = ComponentGraphic (with nested components)
     auto* topComponent = parentItem()->parentItem()->parentItem();
     Q_ASSERT(topComponent != nullptr);
     // Move new point to its creation position
