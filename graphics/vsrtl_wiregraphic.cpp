@@ -224,10 +224,7 @@ void WireSegment::mousePressEvent(QGraphicsSceneMouseEvent* event) {}
 
 WirePoint* WireGraphic::createWirePoint() {
     // Create new point managed by this graphic.
-    // The parent structure is somewhat nested; a wireGraphic must be a graphical child of the graphics component
-    // which this wire is nested inside. To reach this, we do: WireGraphic->parent = PortGraphic PortGraphic->parent
-    // = ComponentGraphic ComponentGrahic -> parent = ComponentGraphic (with nested components)
-    auto* topComponent = parentItem()->parentItem()->parentItem();
+    auto* topComponent = getPointOwningComponent();
     Q_ASSERT(topComponent != nullptr);
     auto* point = new WirePoint(*this, topComponent);
     m_points.insert(point);
@@ -238,7 +235,7 @@ void WireGraphic::moveWirePoint(PointGraphic* point, const QPointF scenePos) {
     // The parent structure is somewhat nested; a wireGraphic must be a graphical child of the graphics component
     // which this wire is nested inside. To reach this, we do: WireGraphic->parent = PortGraphic PortGraphic->parent
     // = ComponentGraphic ComponentGrahic -> parent = ComponentGraphic (with nested components)
-    auto* topComponent = parentItem()->parentItem()->parentItem();
+    auto* topComponent = getPointOwningComponent();
     Q_ASSERT(topComponent != nullptr);
     // Move new point to its creation position
     point->setPos(mapToItem(topComponent, mapFromScene(scenePos)));
@@ -252,7 +249,7 @@ WireSegment* WireGraphic::createSegment(PointGraphic* start, PointGraphic* end) 
     return newSeg;
 }
 
-void WireGraphic::createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment) {
+std::pair<WirePoint*, WireSegment*> WireGraphic::createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment) {
     const auto& endPoint = onSegment->getEnd();
 
     auto* newPoint = createWirePoint();
@@ -273,6 +270,9 @@ void WireGraphic::createWirePointOnSeg(const QPointF scenePos, WireSegment* onSe
     // Make the incoming wire to the end point the newly created wire
     if (auto* endPointWire = dynamic_cast<WirePoint*>(endPoint))
         endPointWire->setInputWire(newSeg);
+
+    // Return a pointer to the newly created wire segment and point
+    return {newPoint, newSeg};
 }
 
 void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
@@ -390,6 +390,64 @@ QRectF WireGraphic::boundingRect() const {
 }
 
 /**
+ * @brief WireGraphic::getPointOwningComponent
+ * When creating new WireGraphic points, they must be the graphical children of some higher-level component, such
+ * that they move with the component. This function locates, based on the type of port which this WireGraphic is created
+ * with, the respective parent component to create a WirePoint as a child of.
+ * Returns the component which will be the graphical parent of points created and managed by this wireGraphic
+ */
+ComponentGraphic* WireGraphic::getPointOwningComponent() {
+    // Initial hierarchy: WireGraphic -> portGraphic -> ComponentGraphic
+    auto* portParent = dynamic_cast<PortGraphic*>(parentItem());
+    auto* componentParent = dynamic_cast<ComponentGraphic*>(portParent->parentItem());
+    Q_ASSERT(portParent && componentParent);
+    if (componentParent->hasSubcomponents() && portParent->getPortType() == PortType::in) {
+        // If this wire graphic is the graphic of a port which is on the I/O boundary of a component with subcomponents,
+        // return the parent component
+        return componentParent;
+    } else {
+        // Else, we are a subcomponent within a component
+        return componentParent->getParent();
+    }
+}
+
+void WireGraphic::createRectilinearSegments(PointGraphic* start, PointGraphic* end) {
+    // 1. Create the initial segment between the two terminating points
+    auto* seg = createSegment(start, end);
+
+    // 2. Determine intermediate rectilinear points
+    auto line = seg->getLine().toLine();
+    if (line.x1() == line.x2() || line.y1() == line.y2()) {
+        // Nothing to do, already linear
+        return;
+    }
+
+    QPoint intermediate1, intermediate2;
+
+    if (line.x1() < line.x2()) {
+        // left to right wire, route directly
+        intermediate1 = {line.x1() + line.dx() / 2, line.y1()};
+        intermediate2 = {line.x1() + line.dx() / 2, line.y2()};
+    } else {
+        // Route underneath the source and destination components
+        Q_ASSERT(dynamic_cast<PortGraphic*>(start->parentItem()));
+        Q_ASSERT(dynamic_cast<PortGraphic*>(end->parentItem()));
+        auto* compSource = dynamic_cast<ComponentGraphic*>(start->parentItem()->parentItem());
+        auto* compDst = dynamic_cast<ComponentGraphic*>(end->parentItem()->parentItem());
+
+        QRectF sourceRect = mapRectFromItem(compSource, compSource->boundingRect());
+        QRectF destRect = mapRectFromItem(compDst, compDst->boundingRect());
+
+        int y = sourceRect.bottom() < destRect.bottom() ? sourceRect.bottom() : destRect.bottom();
+        intermediate1 = QPoint{line.x1(), y};
+        intermediate2 = QPoint{line.x2(), y};
+    }
+    // 3. Create points on wire segments
+    auto pointAndSeg = createWirePointOnSeg(mapToScene(intermediate1), seg);
+    createWirePointOnSeg(mapToScene(intermediate2), pointAndSeg.second);
+}
+
+/**
  * @brief WireGraphic::postSceneConstructionInitialize1
  * With all ports and components created during circuit construction, wires may now register themselves with their
  * attached input- and output ports
@@ -413,12 +471,7 @@ void WireGraphic::postSceneConstructionInitialize1() {
     // Make the wire destination ports aware of this wire
     for (const auto& sink : m_toGraphicPorts) {
         sink->setInputWire(this);
-
-        // Create wire segment between source and sink port
-        auto* seg = new WireSegment(this);
-        seg->setStart(m_fromPort->getPointGraphic());
-        seg->setEnd(sink->getPointGraphic());
-        m_wires.insert(seg);
+        createRectilinearSegments(m_fromPort->getPointGraphic(), sink->getPointGraphic());
     }
 
     GraphicsBase::postSceneConstructionInitialize1();

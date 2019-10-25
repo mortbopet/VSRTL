@@ -89,6 +89,7 @@ public:
     PointGraphic* getStart() const { return m_start; }
     PointGraphic* getEnd() const { return m_end; }
 
+    QLineF getLine() const;
     QPainterPath shape() const override;
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
@@ -99,8 +100,6 @@ public:
     QString deleted = "False";
 
 private:
-    QLineF getLine() const;
-
     PointGraphic* m_start = nullptr;
     PointGraphic* m_end = nullptr;
     WireGraphic* m_parent;
@@ -121,7 +120,7 @@ public:
 
     PortGraphic* getFromPort() const { return m_fromPort; }
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }
-    void createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment);
+    std::pair<WirePoint*, WireSegment*> createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment);
     void removeWirePoint(WirePoint* point);
 
     bool managesPoint(WirePoint* point) const;
@@ -274,9 +273,11 @@ public:
     }
 
 private:
+    ComponentGraphic* getPointOwningComponent();
     WirePoint* createWirePoint();
     void moveWirePoint(PointGraphic* point, const QPointF scenePos);
     WireSegment* createSegment(PointGraphic* start, PointGraphic* end);
+    void createRectilinearSegments(PointGraphic* start, PointGraphic* end);
 
     PortGraphic* m_fromPort = nullptr;
     std::vector<PortBase*> m_toPorts;
