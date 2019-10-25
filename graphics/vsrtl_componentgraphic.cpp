@@ -16,7 +16,9 @@
 
 #include <qmath.h>
 #include <deque>
+#include <fstream>
 
+#include <QFileDialog>
 #include <QGraphicsProxyWidget>
 #include <QGraphicsScene>
 #include <QGraphicsSceneHoverEvent>
@@ -137,6 +139,31 @@ void ComponentGraphic::placeAndRouteSubcomponents() {
     }
 }
 
+void ComponentGraphic::loadLayout() {
+    QString fileName = QFileDialog::getOpenFileName(
+        nullptr, "Save Layout " + QString::fromStdString(m_component.getName()), QString(), tr("JSON (*.json)"));
+
+    if (fileName.isEmpty())
+        return;
+
+    std::ifstream file(fileName.toStdString());
+    cereal::JSONInputArchive archive(file);
+    archive(cereal::make_nvp(getComponent()->getName(), *this));
+}
+void ComponentGraphic::saveLayout() {
+    QString fileName = QFileDialog::getSaveFileName(
+        nullptr, "Save Layout " + QString::fromStdString(m_component.getName()), QString(), tr("JSON (*.json)"));
+
+    if (fileName.isEmpty())
+        return;
+    if (!fileName.endsWith(".json"))
+        fileName += ".json";
+
+    std::ofstream file(fileName.toStdString());
+    cereal::JSONOutputArchive archive(file);
+    archive(cereal::make_nvp(getComponent()->getName(), *this));
+}
+
 void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     if (isLocked())
         return;
@@ -145,13 +172,13 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         return;
 
     QMenu menu;
-    auto* importAction = menu.addAction("Import layout");
-    auto* exportAction = menu.addAction("Export layout");
 
-    connect(exportAction, &QAction::triggered, [this]() {
-        cereal::JSONOutputArchive archive(std::cout);
-        archive(cereal::make_nvp(getComponent()->getName(), *this));
-    });
+    auto* loadAction = menu.addAction("Load layout");
+    auto* saveAction = menu.addAction("Save layout");
+
+    connect(saveAction, &QAction::triggered, this, &ComponentGraphic::saveLayout);
+    connect(loadAction, &QAction::triggered, this, &ComponentGraphic::loadLayout);
+
     menu.exec(event->screenPos());
 }
 

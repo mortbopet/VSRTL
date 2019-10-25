@@ -54,13 +54,17 @@ public:
     void updateSlot() { update(); }
 
     template <class Archive>
-    void load(Archive& archive) {}
-
-    template <class Archive>
-    void save(Archive& archive) const {
+    void serialize(Archive& archive) {
         // Serealize position
         QPoint p = pos().toPoint();
         archive(cereal::make_nvp("Pos", p));
+        setPos(p);
+
+        bool expanded = isExpanded();
+        archive(cereal::make_nvp("Expanded", expanded));
+        if (expanded != isExpanded()) {
+            setExpanded(expanded);
+        }
 
         // Serealize ports
         for (auto& p : m_outputPorts) {
@@ -119,6 +123,10 @@ protected:
     QPointF m_expandButtonPos;  // Draw position of expand/collapse button in scene coordinates
     Component& m_component;
     ComponentButton* m_expandButton = nullptr;
+
+protected slots:
+    void loadLayout();
+    void saveLayout();
 
 public:
     /**
