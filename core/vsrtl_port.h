@@ -27,10 +27,8 @@ enum class PropagationState { unpropagated, propagated, constant };
  */
 class PortBase : public Base {
 public:
-    PortBase(std::string name, Component* parent) : m_name(name), m_parent(parent) { assert(parent != nullptr); }
+    PortBase(std::string name, Component* parent) : Base(name, parent) { assert(parent != nullptr); }
 
-    std::string getName() const { return m_name; }
-    Component* getParent() const { return m_parent; }
     bool isPropagated() const { return m_propagationState != PropagationState::unpropagated; }
     bool isConstant() const { return m_propagationState == PropagationState::constant; }
     void resetPropagation() {
@@ -110,8 +108,6 @@ public:
 
 protected:
     PropagationState m_propagationState = PropagationState::unpropagated;
-    std::string m_name;
-    Component* m_parent;
     bool m_traversingConnection = false;
 };
 

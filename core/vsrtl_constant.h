@@ -45,7 +45,8 @@ void operator>>(VSRTL_VT_S c, Port<W>& toThis) {
     // A constant should be created as a child of the shared parent between the component to be connected and the newly
     // created constant
     auto* parent = toThis.getParent()->getParent();
-    auto* constant = create_component<Constant<W>>(parent, std::to_string(c), c);
+    auto* constant = create_component<Constant<W>>(
+        parent, "constant #" + std::to_string(parent->reserveConstantId()) + "v:" + std::to_string(c), c);
     constant->out >> toThis;
 }
 

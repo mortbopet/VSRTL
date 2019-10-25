@@ -11,6 +11,7 @@
 #include <typeinfo>
 #include <vector>
 
+#include "vsrtl_base.h"
 #include "vsrtl_binutils.h"
 #include "vsrtl_defines.h"
 #include "vsrtl_port.h"
@@ -39,7 +40,7 @@ namespace vsrtl {
 DefineGraphicsProxy(Component);
 class Component : public Base {
 public:
-    Component(std::string displayName, Component* parent) : m_displayName(displayName), m_parent(parent) {}
+    Component(std::string displayName, Component* parent) : Base(displayName, parent) {}
 
     /**
      * @brief getBaseType
@@ -62,6 +63,7 @@ public:
                 o->resetPropagation();
         }
     }
+    unsigned reserveConstantId() { return m_constantCount++; }
     bool isPropagated() const { return m_propagationState == PropagationState::propagated; }
 
     /**
@@ -166,7 +168,7 @@ public:
     void verifyComponent() const {
         for (const auto& ip : m_inputports) {
             if (!ip->isConnected()) {
-                throw std::runtime_error("Component: '" + m_displayName + "' has unconnected inputs");
+                throw std::runtime_error("Component: '" + getName() + "' has unconnected inputs");
             }
         }
     }
@@ -192,8 +194,13 @@ public:
         return v;
     }
 
-    Component* getParent() const { return m_parent; }
-    const std::string& getName() const { return m_displayName; }
+    void verifyIsUniqueComponentName(const std::string& name) {
+        if (!isUniqueName(name, m_subcomponents)) {
+            throw std::runtime_error("Duplicate subcomponent name: '" + name + "' in component: '" + getName() +
+                                     "'. Subcomponent names must be unique.");
+        }
+    }
+
     const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
     const std::vector<std::unique_ptr<PortBase>>& getOutputs() const { return m_outputports; }
     const std::vector<std::unique_ptr<PortBase>>& getInputs() const { return m_inputports; }
@@ -232,26 +239,22 @@ protected:
         }
     }
 
-    bool isUniquePortName(const std::string& name, std::vector<std::unique_ptr<PortBase>>& container) {
+    template <typename T>
+    bool isUniqueName(const std::string& name, std::vector<std::unique_ptr<T>>& container) {
         return std::find_if(container.begin(), container.end(),
                             [name](const auto& p) { return p->getName() == name; }) == container.end();
     }
 
-    bool isUniquePortName(const std::string& name) {
-        return isUniquePortName(name, m_outputports) && isUniquePortName(name, m_inputports);
-    }
-
     void verifyIsUniquePortName(const std::string& name) {
-        if (!isUniquePortName(name)) {
+        if (!(isUniqueName(name, m_outputports) && isUniqueName(name, m_inputports))) {
             throw std::runtime_error("Duplicate port name: '" + name + "' in component: '" + getName() +
                                      "'. Port names must be unique.");
         }
     }
 
+    unsigned m_constantCount = 0;  // Number of constants currently initialized in the component
     mutable bool m_isVerifiedAndInitialized = false;
-    std::string m_displayName;
     PropagationState m_propagationState = PropagationState::unpropagated;
-    Component* m_parent = nullptr;
     std::vector<std::unique_ptr<PortBase>> m_outputports;
     std::vector<std::unique_ptr<PortBase>> m_inputports;
     std::vector<std::unique_ptr<Component>> m_subcomponents;
@@ -260,6 +263,7 @@ protected:
 // Component object generator that registers objects in parent upon creation
 template <typename T, typename... Args>
 T* create_component(Component* parent, std::string name, Args... args) {
+    parent->verifyIsUniqueComponentName(name);
     T* ptr = new T(name, parent, args...);
     if (parent) {
         parent->addSubcomponent(static_cast<Component*>(ptr));
