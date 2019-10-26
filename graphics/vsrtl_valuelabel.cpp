@@ -14,7 +14,8 @@ static QRectF getTextRect(const QString& text) {
 }
 
 ValueLabel::ValueLabel(Radix& type, const PortBase& port, QGraphicsItem* parent)
-    : m_type(type), m_port(port), QGraphicsItem(parent) {
+    : m_type(type), m_port(port), GraphicsBase() {
+    setParentItem(parent);
     setFlags(ItemIsSelectable | ItemIsMovable);
 }
 
@@ -45,12 +46,16 @@ void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* item, 
 
 void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
-    QAction* showLabel = new QAction("Show value");
-    showLabel->setCheckable(true);
-    showLabel->setChecked(isVisible());
-    QObject::connect(showLabel, &QAction::triggered, [this](bool checked) { setVisible(checked); });
-    menu.addAction(showLabel);
     menu.addMenu(createRadixMenu(m_type));
+
+    if (!isLocked()) {
+        QAction* showLabel = new QAction("Show value");
+        showLabel->setCheckable(true);
+        showLabel->setChecked(isVisible());
+        QObject::connect(showLabel, &QAction::triggered, [this](bool checked) { setVisible(checked); });
+        menu.addAction(showLabel);
+    }
+
     menu.exec(event->screenPos());
 
     // Schedule an update of the label to register any change in the display type

@@ -123,17 +123,18 @@ void PortGraphic::postSceneConstructionInitialize2() {
 
 void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
-
-    QAction* showLabel = new QAction("Show value");
-    showLabel->setCheckable(true);
-    showLabel->setChecked(m_valueLabel->isVisible());
-    connect(showLabel, &QAction::triggered, [this](bool checked) {
-        setLabelVisible(checked);
-        updateSlot();
-    });
-    menu.addAction(showLabel);
-
     menu.addMenu(createRadixMenu(m_Radix));
+
+    if (!isLocked()) {
+        QAction* showLabel = new QAction("Show value");
+        showLabel->setCheckable(true);
+        showLabel->setChecked(m_valueLabel->isVisible());
+        connect(showLabel, &QAction::triggered, [this](bool checked) {
+            setLabelVisible(checked);
+            updateSlot();
+        });
+        menu.addAction(showLabel);
+    }
 
     menu.exec(event->screenPos());
     m_valueLabel->updateText();
