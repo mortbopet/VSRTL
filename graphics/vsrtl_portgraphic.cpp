@@ -111,7 +111,10 @@ void PortGraphic::postSceneConstructionInitialize2() {
         // For constant ports, we by default display the value of the port
         m_valueLabel->show();
         m_Radix = Radix::Signed;
+        // Update the ValueLabel (Letting it resize to its final value) and position it next to the port
         updateSlot();
+        const auto br = m_valueLabel->boundingRect();
+        m_valueLabel->setPos({-br.width() + 5, (br.height() + br.y()) / 4});
 
         // Initial port color is implicitely set by triggering the wire animation
         m_colorAnimation->start();
