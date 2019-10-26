@@ -160,14 +160,18 @@ void PortGraphic::updatePenColor() {
     // Selection check is based on whether item is currently selected or about to be selected (via itemChange())
     if (m_selected) {
         m_pen.setColor(WIRE_SELECTED_COLOR);
-    } else if (m_port->getWidth() == 1) {
-        if (static_cast<bool>(m_port->uValue())) {
-            m_pen.setColor(WIRE_BOOLHIGH_COLOR);
-        } else {
-            m_pen.setColor(WIRE_DEFAULT_COLOR);
-        }
+        m_pen.setWidth(static_cast<int>(WIRE_WIDTH * 1.5));
     } else {
-        m_pen.setColor(m_penColor);
+        m_pen.setWidth(WIRE_WIDTH);
+        if (m_port->getWidth() == 1) {
+            if (static_cast<bool>(m_port->uValue())) {
+                m_pen.setColor(WIRE_BOOLHIGH_COLOR);
+            } else {
+                m_pen.setColor(WIRE_DEFAULT_COLOR);
+            }
+        } else {
+            m_pen.setColor(m_penColor);
+        }
     }
     propagateRedraw();
 }
@@ -178,16 +182,16 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
             return;
         }
 
-        // Traverse to root, and only execute when no input wire is present. This signifies that the root source port
-        // has been reached
+        // Traverse to root, and only execute when no input wire is present. This signifies that the root source
+        // port has been reached
         auto* portGraphic = getGraphic<PortGraphic*>(node);
         if (!portGraphic->m_inputWire) {
             if (aboutToBeDeselected || aboutToBeSelected) {
                 portGraphic->m_selected = aboutToBeSelected;
             }
 
-            /* If the port is anything other than a boolean port, a change in the signal is represented by starting the
-             * color change animation. If it is a boolean signal, just update the pen color */
+            /* If the port is anything other than a boolean port, a change in the signal is represented by starting
+             * the color change animation. If it is a boolean signal, just update the pen color */
             if (m_port->getWidth() != 1) {
                 portGraphic->m_colorAnimation->start();
             } else {
@@ -232,8 +236,8 @@ void PortGraphic::updateGeometry() {
 
 const QPen& PortGraphic::getPen() {
     // Only source ports (ports with no input wires) can provide a pen.
-    // Sink ports request their pens from their endpoint source port. This call might go through multiple port in/out
-    // combinations and component boundaries before reaching the pen.
+    // Sink ports request their pens from their endpoint source port. This call might go through multiple port
+    // in/out combinations and component boundaries before reaching the pen.
     if (m_inputWire) {
         return m_inputWire->getFromPort()->getPen();
     } else {
