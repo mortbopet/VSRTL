@@ -113,10 +113,12 @@ protected:
 
     Label* m_label = nullptr;
 
-    // Rectangels:
+    // Rectangles
     const QRect m_minGridRect;  // Minimum component size in grid-coordinates
     QRect m_gridRect;           // Current component size in grid-coordinates
     QPainterPath m_shape;
+
+    QPolygon m_gridPoints;
 
     QFont m_font;
 

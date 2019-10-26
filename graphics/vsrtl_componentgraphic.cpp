@@ -331,10 +331,26 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         }
     }
 
-    // 4. If we have a parent, it should now update its geometry based on new size of its subcomponent(s)
+    // 6. If we have a parent, it should now update its geometry based on new size of its subcomponent(s)
     if (parentItem() && (flag == GeometryChange::Expand || flag == GeometryChange::Collapse)) {
         getParent()->updateGeometry(QRect(), flag == GeometryChange::Expand ? GeometryChange::ChildJustExpanded
                                                                             : GeometryChange::ChildJustCollapsed);
+    }
+
+    // 7. Update the grid points within this component, if it has subcomponents
+    if (hasSubcomponents() && m_isExpanded) {
+        // Grid should only be drawing inside the component, so remove 1 gridsize from each edge of the
+        // component rect
+        auto rect = m_shape.boundingRect();
+        QPoint gridTopLeft = (rect.topLeft() / GRID_SIZE).toPoint() * GRID_SIZE;
+        gridTopLeft += QPoint(GRID_SIZE, GRID_SIZE);
+        QPoint gridBotRight = (rect.bottomRight() / GRID_SIZE).toPoint() * GRID_SIZE;
+        gridBotRight -= QPoint(GRID_SIZE, GRID_SIZE);
+
+        m_gridPoints.clear();
+        for (int x = gridTopLeft.x(); x <= gridBotRight.x(); x += GRID_SIZE)
+            for (int y = gridTopLeft.y(); y <= gridBotRight.y(); y += GRID_SIZE)
+                m_gridPoints << QPoint(x, y);
     }
 }
 
@@ -436,22 +452,12 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
                 // Draw grid
                 painter->save();
                 painter->setPen(QPen(Qt::lightGray, 1));
-
-                // Grid should only be drawing inside the component, so remove 1 gridsize from each edge of the
-                // component rect
-                auto rect = m_shape.boundingRect();
-                QPoint gridTopLeft = (rect.topLeft() / GRID_SIZE).toPoint() * GRID_SIZE;
-                gridTopLeft += QPoint(GRID_SIZE, GRID_SIZE);
-                QPoint gridBotRight = (rect.bottomRight() / GRID_SIZE).toPoint() * GRID_SIZE;
-                gridBotRight -= QPoint(GRID_SIZE, GRID_SIZE);
-
-                for (int x = gridTopLeft.x(); x <= gridBotRight.x(); x += GRID_SIZE)
-                    for (int y = gridTopLeft.y(); y <= gridBotRight.y(); y += GRID_SIZE)
-                        painter->drawPoint(x, y);
+                painter->drawPoints(m_gridPoints);
                 painter->restore();
             }
         }
     }
+out:
 
     paintOverlay(painter, option, w);
 
