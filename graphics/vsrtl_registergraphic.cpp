@@ -7,7 +7,7 @@
 #include <QFontMetrics>
 namespace vsrtl {
 
-RegisterGraphic::RegisterGraphic(RegisterBase& c) : ComponentGraphic(c), m_register(c) {}
+RegisterGraphic::RegisterGraphic(RegisterBase& c, QGraphicsItem* parent) : ComponentGraphic(c, parent), m_register(c) {}
 
 void RegisterGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());

@@ -7,7 +7,7 @@ namespace vsrtl {
 
 class GraphicsBase : public QObject, public QGraphicsItem {
 public:
-    GraphicsBase();
+    GraphicsBase(QGraphicsItem* parent);
 
     /**
      * @brief postSceneConstructionInitialize#

@@ -1,11 +1,11 @@
 #ifndef VSRTL_LABEL_H
 #define VSRTL_LABEL_H
 
-#include <QGraphicsItem>
+#include "vsrtl_graphicsbase.h"
 
 namespace vsrtl {
 
-class Label : public QGraphicsItem {
+class Label : public GraphicsBase {
 public:
     Label(QString text, QGraphicsItem* parent);
 

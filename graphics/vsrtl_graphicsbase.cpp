@@ -2,7 +2,7 @@
 #include "vsrtl_scene.h"
 
 namespace vsrtl {
-GraphicsBase::GraphicsBase() {}
+GraphicsBase::GraphicsBase(QGraphicsItem* parent) : QGraphicsItem(parent) {}
 
 template <typename F>
 void recurseToChildren(GraphicsBase* parent, const F& func) {

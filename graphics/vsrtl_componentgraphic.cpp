@@ -61,8 +61,8 @@ static constexpr qreal c_collapsedSideMargin = 15;
 
 QMap<std::type_index, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
 
-ComponentGraphic::ComponentGraphic(Component& c)
-    : m_component(c), m_minGridRect(ComponentGraphic::getComponentMinGridRect(c.getTypeId())) {
+ComponentGraphic::ComponentGraphic(Component& c, QGraphicsItem* parent)
+    : m_component(c), m_minGridRect(ComponentGraphic::getComponentMinGridRect(c.getTypeId())), GraphicsBase(parent) {
     c.changed.Connect(this, &ComponentGraphic::updateSlot);
     c.registerGraphic(this);
 }
@@ -111,17 +111,16 @@ void ComponentGraphic::createSubcomponents() {
         ComponentGraphic* nc;
         auto typeId = c.get()->getTypeId();
         if (typeId == GraphicsTypeID(Multiplexer)) {
-            nc = new MultiplexerGraphic(*dynamic_cast<MultiplexerBase*>(c.get()));
+            nc = new MultiplexerGraphic(*dynamic_cast<MultiplexerBase*>(c.get()), this);
         } else if (typeId == GraphicsTypeID(Register)) {
-            nc = new RegisterGraphic(*dynamic_cast<RegisterBase*>(c.get()));
+            nc = new RegisterGraphic(*dynamic_cast<RegisterBase*>(c.get()), this);
         } else if (typeId == GraphicsTypeID(Constant)) {
             // Don't create a distinct ComponentGraphic for constants - these will be drawn next to the port connecting
             // to it
             continue;
         } else {
-            nc = new ComponentGraphic(*c);
+            nc = new ComponentGraphic(*c, this);
         }
-        scene()->addItem(nc);
         nc->initialize();
         nc->setParentItem(this);
         nc->m_parentComponentGraphic = this;

@@ -16,9 +16,7 @@
 
 namespace vsrtl {
 
-PointGraphic::PointGraphic(QGraphicsItem* parent) {
-    setParentItem(parent);
-}
+PointGraphic::PointGraphic(QGraphicsItem* parent) : GraphicsBase(parent) {}
 
 QRectF PointGraphic::boundingRect() const {
 #ifdef VSRTL_DEBUG_DRAW
@@ -147,8 +145,7 @@ void WirePoint::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
 // --------------------------------------------------------------------------------
 
-WireSegment::WireSegment(WireGraphic* parent) : m_parent(parent) {
-    setParentItem(parent);
+WireSegment::WireSegment(WireGraphic* parent) : m_parent(parent), GraphicsBase(parent) {
     setAcceptHoverEvents(true);
 }
 
@@ -342,9 +339,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
 }
 
 WireGraphic::WireGraphic(PortGraphic* from, const std::vector<PortBase*>& to, QGraphicsItem* parent)
-    : m_fromPort(from), m_toPorts(to) {
-    setParentItem(parent);
-}
+    : m_fromPort(from), m_toPorts(to), GraphicsBase(parent) {}
 
 bool WireGraphic::managesPoint(WirePoint* point) const {
     return std::find(m_points.begin(), m_points.end(), point) != m_points.end();

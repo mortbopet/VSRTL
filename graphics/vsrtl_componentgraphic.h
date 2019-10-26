@@ -21,7 +21,7 @@ class ComponentButton;
 
 class ComponentGraphic : public GraphicsBase {
 public:
-    ComponentGraphic(Component& c);
+    ComponentGraphic(Component& c, QGraphicsItem* parent);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;

@@ -8,8 +8,7 @@ namespace vsrtl {
 
 const QFont Label::s_font = QFont("Monospace", 12);
 
-Label::Label(QString text, QGraphicsItem* parent) : m_text(text) {
-    setParentItem(parent);
+Label::Label(QString text, QGraphicsItem* parent) : m_text(text), GraphicsBase(parent) {
     QFontMetricsF fm(s_font);
     m_textRect = fm.boundingRect(m_text);
 }
