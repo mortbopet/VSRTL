@@ -10,6 +10,7 @@
 #include <QMenu>
 #include <QPainter>
 #include <QPolygon>
+#include <QStyleOptionGraphicsItem>
 
 #include <math.h>
 
@@ -69,6 +70,16 @@ QRectF WirePoint::boundingRect() const {
     return shape().boundingRect().adjusted(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
 }
 
+/**
+ * @brief WirePoint::invalidate
+ * Called before marking the point for deletion, ensuring that no calls are made to related wire segments, which may
+ * also be in the process of deletion
+ */
+void WirePoint::invalidate() {
+    m_outputWires.clear();
+    m_inputWire = nullptr;
+}
+
 QVariant WirePoint::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (change == QGraphicsItem::ItemPositionChange) {
         // Snap to grid
@@ -93,7 +104,7 @@ QPainterPath WirePoint::shape() const {
     return path;
 }
 
-void WirePoint::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
+void WirePoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
     // Given that WirePoints are graphical children of a component graphic (for them to be fixed on the component),
     // they will still be drawn when the component graphic is not expanded (given that it is still visible). Thus,
     // only paint if the parent componentgraphic is expanded.
@@ -102,8 +113,18 @@ void WirePoint::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidge
 
     painter->save();
     QPen pen = m_parent.getPen();
+
+    QColor fillColor = (option->state & QStyle::State_Selected) ? QColor(Qt::yellow) : pen.color();
+    if (option->state & QStyle::State_MouseOver)
+        fillColor = fillColor.lighter(125);
+
     painter->setPen(pen);
-    painter->drawPath(shape());
+    if (option->state & QStyle::State_Selected) {
+        pen.setWidth(1);
+        painter->drawPath(shape());
+    }
+    painter->fillPath(shape(), QBrush(fillColor.darker(option->state & QStyle::State_Sunken ? 120 : 100)));
+
     if (m_draggedOnThis != nullptr) {
         pen.setColor(Qt::red);
         painter->setPen(pen);
@@ -167,6 +188,11 @@ QPolygonF expandLine(const QLineF line, const qreal sideWidth) {
     const QPointF rp3 = norm2.pointAt(-lineWidthParam);
     const QPointF rp4 = norm1.pointAt(-lineWidthParam);
     return QPolygonF({rp1, rp2, rp3, rp4});
+}
+
+void WireSegment::invalidate() {
+    setEnd(nullptr);
+    setStart(nullptr);
 }
 
 QPainterPath WireSegment::shape() const {
@@ -291,13 +317,9 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     }
 
     // Delete the (now defunct) wire between the new start point and the point to be removed
-
     auto iter = std::find(m_wires.begin(), m_wires.end(), wireToRemove);
-    Q_ASSERT(std::find(pointToRemove->getOutputWires().begin(), pointToRemove->getOutputWires().end(), wireToRemove) ==
-             pointToRemove->getOutputWires().end());
     Q_ASSERT(iter != m_wires.end());
-    (*iter)->setEnd(nullptr);
-    (*iter)->setStart(nullptr);
+    (*iter)->invalidate();
     m_wires.erase(iter);
 
     // Deregister the wire to remove with its old starting point
@@ -315,6 +337,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     auto p_iter = std::find(m_points.begin(), m_points.end(), pointToRemove);
     Q_ASSERT(p_iter != m_points.end());
     m_points.erase(p_iter);
+    pointToRemove->invalidate();
     pointToRemove->deleteLater();
 }
 
@@ -417,8 +440,8 @@ void WireGraphic::createRectilinearSegments(PointGraphic* start, PointGraphic* e
 
     // 2. Determine intermediate rectilinear points
     auto line = seg->getLine().toLine();
-    if (line.x1() == line.x2() || line.y1() == line.y2()) {
-        // Nothing to do, already linear
+    if (line.x1() == line.x2() && line.x1() < line.x2()) {
+        // Nothing to do, already linear and going from left to right
         return;
     }
 
