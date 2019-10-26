@@ -423,12 +423,34 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
     painter->setPen(oldPen);
 
-    if (hasSubcomponents() && !isLocked()) {
-        // Determine whether expand button should be shown
+    if (hasSubcomponents()) {
         if (lod >= 0.35) {
-            m_expandButton->show();
-        } else {
-            m_expandButton->hide();
+            // Determine whether expand button should be shown. If we are in locked state, do not interfere with the
+            // view state of the expand button
+            if (!isLocked()) {
+                m_expandButton->show();
+            } else {
+                m_expandButton->hide();
+            }
+
+            if (m_isExpanded) {
+                // Draw grid
+                painter->save();
+                painter->setPen(QPen(Qt::lightGray, 1));
+
+                // Grid should only be drawing inside the component, so remove 1 gridsize from each edge of the
+                // component rect
+                auto rect = m_shape.boundingRect();
+                QPoint gridTopLeft = (rect.topLeft() / GRID_SIZE).toPoint() * GRID_SIZE;
+                gridTopLeft += QPoint(GRID_SIZE, GRID_SIZE);
+                QPoint gridBotRight = (rect.bottomRight() / GRID_SIZE).toPoint() * GRID_SIZE;
+                gridBotRight -= QPoint(GRID_SIZE, GRID_SIZE);
+
+                for (int x = gridTopLeft.x(); x <= gridBotRight.x(); x += GRID_SIZE)
+                    for (int y = gridTopLeft.y(); y <= gridBotRight.y(); y += GRID_SIZE)
+                        painter->drawPoint(x, y);
+                painter->restore();
+            }
         }
     }
 

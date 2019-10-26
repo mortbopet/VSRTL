@@ -70,6 +70,24 @@ void VSRTLScene::handleWirePointMove(QGraphicsSceneMouseEvent* event) {
     }
 }
 
+void VSRTLScene::drawBackground(QPainter* painter, const QRectF& rect) {
+    if (!m_showGrid)
+        return;
+
+    painter->save();
+    painter->setPen(QPen(Qt::lightGray, 1));
+
+    // Align rect with grid
+    const QPoint gridTopLeft = (rect.topLeft() / GRID_SIZE).toPoint() * GRID_SIZE;
+    const QPoint gridBotRight = (rect.bottomRight() / GRID_SIZE).toPoint() * GRID_SIZE;
+
+    for (int x = gridTopLeft.x(); x <= gridBotRight.x(); x += GRID_SIZE)
+        for (int y = gridTopLeft.y(); y <= gridBotRight.y(); y += GRID_SIZE)
+            painter->drawPoint(x, y);
+
+    painter->restore();
+}
+
 void VSRTLScene::lockComponents(bool lock) {
     m_isLocked = lock;
 
@@ -105,24 +123,24 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
     menu.addSeparator();
 
-    auto showValuesAction = menu.addAction("Show signal values");
+    auto* showValuesAction = menu.addAction("Show signal values");
     connect(showValuesAction, &QAction::triggered, [=] { this->setPortValuesVisibleForType(PortType::out, true); });
 
-    auto hideValuesAction = menu.addAction("Hide signal values");
+    auto* hideValuesAction = menu.addAction("Hide signal values");
     connect(hideValuesAction, &QAction::triggered, [=] { this->setPortValuesVisibleForType(PortType::out, false); });
 
     // ==================== Scene modifying actions ====================
     if (!m_isLocked) {
         menu.addSeparator();
 
-        auto expandAction = menu.addAction("Expand all");
+        auto* expandAction = menu.addAction("Expand all");
 
-        auto collapseAction = menu.addAction("Collapse all");
+        auto* collapseAction = menu.addAction("Collapse all");
 
         menu.addSeparator();
 
         // Hidden components submenu
-        auto hiddenMenu = menu.addMenu("Hidden components");
+        auto* hiddenMenu = menu.addMenu("Hidden components");
         for (const auto& i : items()) {
             if (!i->isVisible()) {
                 if (auto* c = dynamic_cast<ComponentGraphic*>(i)) {
@@ -137,6 +155,18 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         }
         // Disable the hidden components menu if there are no hidden components to be re-enabled
         hiddenMenu->setDisabled(hiddenMenu->actions().size() == 0);
+
+        menu.addSeparator();
+
+        // ============== Drawing options =============================
+        auto* drawMenu = menu.addMenu("Drawing");
+        auto* showGridAction = drawMenu->addAction("Show grid");
+        showGridAction->setCheckable(true);
+        showGridAction->setChecked(m_showGrid);
+        connect(showGridAction, &QAction::triggered, [=](bool checked) {
+            m_showGrid = checked;
+            this->update();
+        });
     }
 
     menu.exec(event->screenPos());

@@ -20,6 +20,7 @@ public:
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
+    void drawBackground(QPainter* painter, const QRectF& rect) override;
 
     void setPortValuesVisibleForType(PortType t, bool visible);
 
@@ -29,6 +30,7 @@ private:
     void handleSelectionChanged();
     void handleWirePointMove(QGraphicsSceneMouseEvent* event);
 
+    bool m_showGrid = true;
     std::set<WirePoint*> m_currentDropTargets;
     WirePoint* m_selectedPoint = nullptr;
 
