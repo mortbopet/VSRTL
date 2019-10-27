@@ -14,7 +14,6 @@ VSRTLView::VSRTLView(QWidget* parent) : QGraphicsView(parent) {
     setOptimizationFlag(QGraphicsView::DontSavePainterState);
     setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-    setCacheMode(QGraphicsView::CacheBackground);
     setInteractive(true);
 
     // Setup rendering widget
