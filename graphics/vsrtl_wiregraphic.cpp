@@ -435,7 +435,7 @@ void WireGraphic::createRectilinearSegments(PointGraphic* start, PointGraphic* e
 
     // 2. Determine intermediate rectilinear points
     auto line = seg->getLine().toLine();
-    if (line.x1() == line.x2() && line.x1() < line.x2()) {
+    if (line.y1() == line.y2() && line.x1() < line.x2()) {
         // Nothing to do, already linear and going from left to right
         return;
     }
