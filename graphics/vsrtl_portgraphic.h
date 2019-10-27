@@ -16,7 +16,7 @@ namespace vsrtl {
 
 class PortBase;
 class WireGraphic;
-class PointGraphic;
+class PortPoint;
 
 enum class PortType { in, out };
 
@@ -39,7 +39,7 @@ public:
     void setInputWire(WireGraphic* wire);
     void updateInputWire();
     void updateWireGeometry();
-    PointGraphic* getPointGraphic() { return m_portPoint; }
+    PortPoint* getPointGraphic() { return m_portPoint; }
     QString getTooltipString() const;
 
     void setOutwireVisible(bool state);
@@ -85,7 +85,7 @@ private:
     PortBase* m_port;
 
     // Used for allowing WireSegments to join up with a port
-    PointGraphic* m_portPoint = nullptr;
+    PortPoint* m_portPoint = nullptr;
 
     WireGraphic* m_outputWire = nullptr;
     WireGraphic* m_inputWire = nullptr;

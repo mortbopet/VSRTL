@@ -16,9 +16,9 @@
 
 namespace vsrtl {
 
-PointGraphic::PointGraphic(QGraphicsItem* parent) : GraphicsBase(parent) {}
+PortPoint::PortPoint(QGraphicsItem* parent) : GraphicsBase(parent) {}
 
-QRectF PointGraphic::boundingRect() const {
+QRectF PortPoint::boundingRect() const {
 #ifdef VSRTL_DEBUG_DRAW
     return QRectF(-WIRE_WIDTH / 2, -WIRE_WIDTH / 2, WIRE_WIDTH / 2, WIRE_WIDTH / 2);
 #else
@@ -26,7 +26,7 @@ QRectF PointGraphic::boundingRect() const {
 #endif
 }
 
-void PointGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) {
+void PortPoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) {
 #ifdef VSRTL_DEBUG_DRAW
     DRAW_BOUNDING_RECT(painter)
     painter->save();
@@ -57,7 +57,7 @@ void WirePoint::pointDragLeave(WirePoint*) {
     update();
 }
 
-WirePoint::WirePoint(WireGraphic& parent, QGraphicsItem* sceneParent) : PointGraphic(sceneParent), m_parent(parent) {
+WirePoint::WirePoint(WireGraphic& parent, QGraphicsItem* sceneParent) : PortPoint(sceneParent), m_parent(parent) {
     setFlags(ItemIsSelectable | ItemIsMovable | ItemSendsScenePositionChanges);
     setAcceptHoverEvents(true);
     m_sceneParent = dynamic_cast<ComponentGraphic*>(sceneParent);
@@ -155,7 +155,7 @@ WireSegment::WireSegment(WireGraphic* parent) : m_parent(parent), GraphicsBase(p
     setAcceptHoverEvents(true);
 }
 
-void WireSegment::setStart(PointGraphic* start) {
+void WireSegment::setStart(PortPoint* start) {
     if (auto* prevStart = dynamic_cast<WirePoint*>(m_start)) {
         prevStart->removeOutputWire(this);
     }
@@ -165,7 +165,7 @@ void WireSegment::setStart(PointGraphic* start) {
     }
 }
 
-void WireSegment::setEnd(PointGraphic* end) {
+void WireSegment::setEnd(PortPoint* end) {
     if (auto* prevEnd = dynamic_cast<WirePoint*>(m_end)) {
         prevEnd->clearInputWire();
     }
@@ -280,7 +280,7 @@ WirePoint* WireGraphic::createWirePoint() {
     return point;
 }
 
-void WireGraphic::moveWirePoint(PointGraphic* point, const QPointF scenePos) {
+void WireGraphic::moveWirePoint(PortPoint* point, const QPointF scenePos) {
     // The parent structure is somewhat nested; a wireGraphic must be a graphical child of the graphics component
     // which this wire is nested inside. To reach this, we do: WireGraphic->parent = PortGraphic PortGraphic->parent
     // = ComponentGraphic ComponentGrahic -> parent = ComponentGraphic (with nested components)
@@ -290,7 +290,7 @@ void WireGraphic::moveWirePoint(PointGraphic* point, const QPointF scenePos) {
     point->setPos(mapToItem(topComponent, mapFromScene(scenePos)));
 }
 
-WireSegment* WireGraphic::createSegment(PointGraphic* start, PointGraphic* end) {
+WireSegment* WireGraphic::createSegment(PortPoint* start, PortPoint* end) {
     auto* newSeg = new WireSegment(this);
     newSeg->setStart(start);
     newSeg->setEnd(end);
@@ -379,7 +379,7 @@ WireGraphic::MergeType WireGraphic::canMergePoints(WirePoint* base, WirePoint* t
     if (!managesPoint(base) || !managesPoint(toMerge))
         return MergeType::CannotMerge;
 
-    auto* baseptr = static_cast<PointGraphic*>(base);
+    auto* baseptr = static_cast<PortPoint*>(base);
 
     // is toMerge fed by base?
     if (baseptr == toMerge->getInputWire()->getStart())
@@ -438,7 +438,7 @@ ComponentGraphic* WireGraphic::getPointOwningComponent() {
     }
 }
 
-void WireGraphic::createRectilinearSegments(PointGraphic* start, PointGraphic* end) {
+void WireGraphic::createRectilinearSegments(PortPoint* start, PortPoint* end) {
     // 1. Create the initial segment between the two terminating points
     auto* seg = createSegment(start, end);
 
@@ -509,7 +509,7 @@ void WireGraphic::postSceneConstructionInitialize1() {
     for (const auto& sink : m_toGraphicPorts) {
         sink->setInputWire(this);
         // Create a rectilinear segment between the the closest point managed by this wire and the sink destination
-        std::pair<qreal, PointGraphic*> fromPoint;
+        std::pair<qreal, PortPoint*> fromPoint;
         const QPointF sinkPos = sink->getPointGraphic()->scenePos();
         fromPoint.first = (sinkPos - m_fromPort->getPointGraphic()->scenePos()).manhattanLength();
         fromPoint.second = m_fromPort->getPointGraphic();

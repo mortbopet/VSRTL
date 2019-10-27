@@ -36,12 +36,13 @@ static inline std::vector<std::string> getPortParentNameSeq(PortBase* p) {
 }
 
 /**
- * @brief The PointGraphic class
- * Base class for wire graphic points.
+ * @brief The PortPoint class
+ * Base class for wire graphic points. This is the point type which is assigned to PortGraphics. They are not moveable,
+ * but provide an interface between moveable WirePoints (on WireSegments) and immovable PortPoints, on ports.
  */
-class PointGraphic : public GraphicsBase {
+class PortPoint : public GraphicsBase {
 public:
-    PointGraphic(QGraphicsItem* parent);
+    PortPoint(QGraphicsItem* parent);
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
 };
@@ -50,7 +51,7 @@ public:
  * @brief The WirePoint class
  * A point on a wire. Shall display a context menu to delete. is select- and moveable.
  */
-class WirePoint : public PointGraphic {
+class WirePoint : public PortPoint {
 public:
     WirePoint(WireGraphic& parent, QGraphicsItem* sceneParent);
 
@@ -88,10 +89,10 @@ public:
     WireSegment(WireGraphic* parent);
 
     void invalidate();
-    void setStart(PointGraphic* start);
-    void setEnd(PointGraphic* end);
-    PointGraphic* getStart() const { return m_start; }
-    PointGraphic* getEnd() const { return m_end; }
+    void setStart(PortPoint* start);
+    void setEnd(PortPoint* end);
+    PortPoint* getStart() const { return m_start; }
+    PortPoint* getEnd() const { return m_end; }
     QLineF getLine() const;
 
     QPainterPath shape() const override;
@@ -104,8 +105,8 @@ public:
     QString deleted = "False";
 
 private:
-    PointGraphic* m_start = nullptr;
-    PointGraphic* m_end = nullptr;
+    PortPoint* m_start = nullptr;
+    PortPoint* m_end = nullptr;
     WireGraphic* m_parent;
 };
 
@@ -158,7 +159,7 @@ public:
         }
         m_wires.clear();
 
-        std::map<int, PointGraphic*> idxToPort;
+        std::map<int, PortPoint*> idxToPort;
 
         // Locate input port
         if (from.second != getPortParentNameSeq(m_fromPort->getPort())) {
@@ -169,7 +170,7 @@ public:
         // Locate output ports
         for (const auto& iter : idxToOutportNameSeq) {
             Q_ASSERT(idxToPort.count(iter.first) == 0);
-            PointGraphic* point = nullptr;
+            PortPoint* point = nullptr;
             for (const auto& p : m_toGraphicPorts) {
                 if (getPortParentNameSeq(p->getPort()) == iter.second) {
                     point = p->getPointGraphic();
@@ -226,7 +227,7 @@ public:
 
         // serialize the outgoing, connecting ports
         std::map<int, std::vector<std::string>> idxToOutportNameSeq;
-        std::map<PointGraphic*, int> outportToIdx;
+        std::map<PortPoint*, int> outportToIdx;
         for (const auto& p : m_toGraphicPorts) {
             // @todo: this is not sufficient, ports may be named identically.
             // It should be a hierarchical list including its parent components
@@ -238,7 +239,7 @@ public:
 
         // Each point managed by this wire is enumerated and associated with its position
         std::map<int, QPoint> idxToPos;
-        std::map<PointGraphic*, int> pointToIdx;
+        std::map<PortPoint*, int> pointToIdx;
         for (const auto& p : m_points) {
             idxToPos[i] = p->pos().toPoint();
             pointToIdx[p] = i;
@@ -279,9 +280,9 @@ public:
 private:
     ComponentGraphic* getPointOwningComponent();
     WirePoint* createWirePoint();
-    void moveWirePoint(PointGraphic* point, const QPointF scenePos);
-    WireSegment* createSegment(PointGraphic* start, PointGraphic* end);
-    void createRectilinearSegments(PointGraphic* start, PointGraphic* end);
+    void moveWirePoint(PortPoint* point, const QPointF scenePos);
+    WireSegment* createSegment(PortPoint* start, PortPoint* end);
+    void createRectilinearSegments(PortPoint* start, PortPoint* end);
 
     PortGraphic* m_fromPort = nullptr;
     std::vector<PortBase*> m_toPorts;

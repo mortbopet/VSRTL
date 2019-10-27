@@ -51,7 +51,7 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent)
 
     updateGeometry();
 
-    m_portPoint = new PointGraphic(this);
+    m_portPoint = new PortPoint(this);
     m_portPoint->setPos(mapToItem(this, mapToScene(type == PortType::in ? getInputPoint() : getOutputPoint())));
 
     m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), this);
