@@ -441,15 +441,15 @@ void WireGraphic::createRectilinearSegments(PointGraphic* start, PointGraphic* e
     }
 
     QPoint intermediate1, intermediate2;
+    bool createTwoPoints = true;
 
     if (line.x1() < line.x2()) {
         // left to right wire, route directly
         intermediate1 = {line.x1() + line.dx() / 2, line.y1()};
         intermediate2 = {line.x1() + line.dx() / 2, line.y2()};
-    } else {
+    } else if (dynamic_cast<PortGraphic*>(start->parentItem()) && dynamic_cast<PortGraphic*>(end->parentItem())) {
+        // Routing between two components
         // Route underneath the source and destination components
-        Q_ASSERT(dynamic_cast<PortGraphic*>(start->parentItem()));
-        Q_ASSERT(dynamic_cast<PortGraphic*>(end->parentItem()));
         auto* compSource = dynamic_cast<ComponentGraphic*>(start->parentItem()->parentItem());
         auto* compDst = dynamic_cast<ComponentGraphic*>(end->parentItem()->parentItem());
 
@@ -459,10 +459,19 @@ void WireGraphic::createRectilinearSegments(PointGraphic* start, PointGraphic* e
         int y = sourceRect.bottom() < destRect.bottom() ? sourceRect.bottom() : destRect.bottom();
         intermediate1 = QPoint{line.x1(), y};
         intermediate2 = QPoint{line.x2(), y};
+    } else {
+        // Routing between wire points, just create a single intermediate point
+        createTwoPoints = false;
+        if (line.x1() < line.x2()) {
+            intermediate1 = QPoint{line.x1(), line.y2()};
+        } else {
+            intermediate1 = QPoint{line.x2(), line.y1()};
+        }
     }
     // 3. Create points on wire segments
     auto pointAndSeg = createWirePointOnSeg(mapToScene(intermediate1), seg);
-    createWirePointOnSeg(mapToScene(intermediate2), pointAndSeg.second);
+    if (createTwoPoints)
+        createWirePointOnSeg(mapToScene(intermediate2), pointAndSeg.second);
 }
 
 /**
@@ -486,10 +495,22 @@ void WireGraphic::postSceneConstructionInitialize1() {
     // Assert that all ports were found in the scene
     Q_ASSERT(m_toGraphicPorts.size() == m_toPorts.size());
 
-    // Make the wire destination ports aware of this wire
+    // Make the wire destination ports aware of this WireGraphic, and create wire segments between all source and sink
+    // ports.
     for (const auto& sink : m_toGraphicPorts) {
         sink->setInputWire(this);
-        createRectilinearSegments(m_fromPort->getPointGraphic(), sink->getPointGraphic());
+        // Create a rectilinear segment between the the closest point managed by this wire and the sink destination
+        std::pair<qreal, PointGraphic*> fromPoint;
+        const QPointF sinkPos = sink->getPointGraphic()->scenePos();
+        fromPoint.first = (sinkPos - m_fromPort->getPointGraphic()->scenePos()).manhattanLength();
+        fromPoint.second = m_fromPort->getPointGraphic();
+        for (const auto& p : m_points) {
+            const qreal len = (sinkPos - p->scenePos()).manhattanLength();
+            if (len < fromPoint.first) {
+                fromPoint = {len, p};
+            }
+        }
+        createRectilinearSegments(fromPoint.second, sink->getPointGraphic());
     }
 
     GraphicsBase::postSceneConstructionInitialize1();
