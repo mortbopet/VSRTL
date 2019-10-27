@@ -50,13 +50,14 @@ static inline VSRTL_VT_U decodeRadixValue(const QString& valueString, int width,
     return value;
 }
 
-static inline QString encodeRadixValue(VSRTL_VT_U value, int width, Radix t) {
+static inline QString encodeRadixValue(const VSRTL_VT_U value, const unsigned width, const Radix t) {
     switch (t) {
         case Radix::Hex: {
-            return "0x" + QString::number(value, 16).rightJustified(8, '0');
+            const unsigned maxChars = (width / 4) + (width % 4 != 0 ? 1 : 0);
+            return "0x" + QString::number(value, 16).rightJustified(maxChars, '0');
         }
         case Radix::Binary: {
-            return "0b" + QString::number(value, 2).rightJustified(8, '0');
+            return "0b" + QString::number(value, 2).rightJustified(width, '0');
         }
         case Radix::Unsigned: {
             return QString::number(value, 10);
