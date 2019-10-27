@@ -56,9 +56,11 @@ public:
 
     void invalidate();
     void addOutputWire(WireSegment* wire) { m_outputWires.push_back(wire); }
+    void removeOutputWire(WireSegment* wire);
     void clearOutputWires() { m_outputWires.clear(); }
     void setInputWire(WireSegment* wire) { m_inputWire = wire; }
-    std::vector<WireSegment*>& getOutputWires() { return m_outputWires; }
+    void clearInputWire() { m_inputWire = nullptr; }
+    const std::vector<WireSegment*>& getOutputWires() { return m_outputWires; }
     WireSegment* getInputWire() { return m_inputWire; }
 
     QPainterPath shape() const override;
@@ -86,8 +88,8 @@ public:
     WireSegment(WireGraphic* parent);
 
     void invalidate();
-    void setStart(PointGraphic* start) { m_start = start; }
-    void setEnd(PointGraphic* end) { m_end = end; }
+    void setStart(PointGraphic* start);
+    void setEnd(PointGraphic* end);
     PointGraphic* getStart() const { return m_start; }
     PointGraphic* getEnd() const { return m_end; }
     QLineF getLine() const;

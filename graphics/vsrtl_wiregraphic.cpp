@@ -102,6 +102,12 @@ QPainterPath WirePoint::shape() const {
     return path;
 }
 
+void WirePoint::removeOutputWire(WireSegment* wire) {
+    auto iter = std::find(m_outputWires.begin(), m_outputWires.end(), wire);
+    Q_ASSERT(iter != m_outputWires.end());
+    m_outputWires.erase(iter);
+}
+
 void WirePoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
     // Given that WirePoints are graphical children of a component graphic (for them to be fixed on the component),
     // they will still be drawn when the component graphic is not expanded (given that it is still visible). Thus,
@@ -147,6 +153,26 @@ void WirePoint::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
 WireSegment::WireSegment(WireGraphic* parent) : m_parent(parent), GraphicsBase(parent) {
     setAcceptHoverEvents(true);
+}
+
+void WireSegment::setStart(PointGraphic* start) {
+    if (auto* prevStart = dynamic_cast<WirePoint*>(m_start)) {
+        prevStart->removeOutputWire(this);
+    }
+    m_start = start;
+    if (auto* newStart = dynamic_cast<WirePoint*>(start)) {
+        newStart->addOutputWire(this);
+    }
+}
+
+void WireSegment::setEnd(PointGraphic* end) {
+    if (auto* prevEnd = dynamic_cast<WirePoint*>(m_end)) {
+        prevEnd->clearInputWire();
+    }
+    m_end = end;
+    if (auto* newEnd = dynamic_cast<WirePoint*>(end)) {
+        newEnd->setInputWire(this);
+    }
 }
 
 QLineF WireSegment::getLine() const {
@@ -283,16 +309,8 @@ std::pair<WirePoint*, WireSegment*> WireGraphic::createWirePointOnSeg(const QPoi
     // Create wire segment between new point and previous end point
     auto* newSeg = createSegment(newPoint, endPoint);
 
-    // Register the wire segments with the point
-    newPoint->setInputWire(onSegment);
-    newPoint->addOutputWire(newSeg);
-
     // Move new point to its creation position
     moveWirePoint(newPoint, scenePos);
-
-    // Make the incoming wire to the end point the newly created wire
-    if (auto* endPointWire = dynamic_cast<WirePoint*>(endPoint))
-        endPointWire->setInputWire(newSeg);
 
     // Return a pointer to the newly created wire segment and point
     return {newPoint, newSeg};
@@ -304,13 +322,10 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     auto* newStartPoint = wireToRemove->getStart();
     Q_ASSERT(newStartPoint != nullptr);
     Q_ASSERT(newStartPoint != pointToRemove);
-    auto* newStartWirePoint = dynamic_cast<WirePoint*>(newStartPoint);
+
     // Set all wires previously connecting to the input wire to connect with the new start point
     for (auto& wire : pointToRemove->getOutputWires()) {
         wire->setStart(newStartPoint);
-        if (newStartWirePoint != nullptr) {
-            newStartWirePoint->addOutputWire(wire);
-        }
     }
 
     // Delete the (now defunct) wire between the new start point and the point to be removed
@@ -318,14 +333,6 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     Q_ASSERT(iter != m_wires.end());
     (*iter)->invalidate();
     m_wires.erase(iter);
-
-    // Deregister the wire to remove with its old starting point
-    if (newStartWirePoint != nullptr) {
-        auto& outputWires = newStartWirePoint->getOutputWires();
-        auto iter = std::find(outputWires.begin(), outputWires.end(), wireToRemove);
-        Q_ASSERT(iter != outputWires.end());
-        outputWires.erase(iter);
-    }
 
     // Mark the wire for deletion
     wireToRemove->deleteLater();
@@ -349,15 +356,17 @@ void WireGraphic::mergePoints(WirePoint* base, WirePoint* toMerge) {
     const auto mergeType = canMergePoints(base, toMerge);
     Q_ASSERT(mergeType != MergeType::CannotMerge);
 
-    for (const auto& wire : toMerge->getOutputWires()) {
-        wire->setStart(base);
-        base->addOutputWire(wire);
+    if (mergeType == MergeType::MergeSourceWithSink) {
+        auto* tmp = base;
+        base = toMerge;
+        toMerge = tmp;
     }
 
-    // With all wires moved to their new positions, the merge point may be removed through the usual remove logic
-    toMerge->clearOutputWires();
-    if (mergeType == MergeType::MergeSourceWithSink)
-        toMerge->addOutputWire(base->getInputWire());
+    // Move all output wires of the point to merge, to have their source being the base point
+    for (const auto& wire : toMerge->getOutputWires()) {
+        wire->setStart(base);
+    }
+
     removeWirePoint(toMerge);
 }
 
@@ -471,7 +480,7 @@ void WireGraphic::createRectilinearSegments(PointGraphic* start, PointGraphic* e
     // 3. Create points on wire segments
     auto pointAndSeg = createWirePointOnSeg(mapToScene(intermediate1), seg);
     if (createTwoPoints)
-        createWirePointOnSeg(mapToScene(intermediate2), pointAndSeg.second);
+        pointAndSeg = createWirePointOnSeg(mapToScene(intermediate2), pointAndSeg.second);
 }
 
 /**
