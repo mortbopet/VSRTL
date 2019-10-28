@@ -18,16 +18,15 @@
 #include <deque>
 #include <fstream>
 
+#include <QApplication>
 #include <QFileDialog>
 #include <QGraphicsProxyWidget>
 #include <QGraphicsScene>
 #include <QGraphicsSceneHoverEvent>
-#include <QPainter>
-#include <QStyleOptionGraphicsItem>
-
-#include <QDebug>
 #include <QMatrix>
+#include <QPainter>
 #include <QPushButton>
+#include <QStyleOptionGraphicsItem>
 
 namespace vsrtl {
 
@@ -139,8 +138,9 @@ void ComponentGraphic::placeAndRouteSubcomponents() {
 }
 
 void ComponentGraphic::loadLayout() {
-    QString fileName = QFileDialog::getOpenFileName(
-        nullptr, "Save Layout " + QString::fromStdString(m_component.getName()), QString(), tr("JSON (*.json)"));
+    QString fileName = QFileDialog::getOpenFileName(QApplication::activeWindow(),
+                                                    "Save Layout " + QString::fromStdString(m_component.getName()),
+                                                    QString(), tr("JSON (*.json)"));
 
     if (fileName.isEmpty())
         return;
@@ -150,8 +150,9 @@ void ComponentGraphic::loadLayout() {
     archive(cereal::make_nvp(getComponent()->getName(), *this));
 }
 void ComponentGraphic::saveLayout() {
-    QString fileName = QFileDialog::getSaveFileName(
-        nullptr, "Save Layout " + QString::fromStdString(m_component.getName()), QString(), tr("JSON (*.json)"));
+    QString fileName = QFileDialog::getSaveFileName(QApplication::activeWindow(),
+                                                    "Save Layout " + QString::fromStdString(m_component.getName()),
+                                                    QString(), tr("JSON (*.json)"));
 
     if (fileName.isEmpty())
         return;
