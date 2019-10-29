@@ -322,20 +322,24 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         // +2 to ensure a 1 grid margin at the top and bottom of the component
         int i = 0;
         const qreal in_seg_y = sceneRect.height() / (m_inputPorts.size());
-        for (const auto& p : m_inputPorts) {
+        // Iterate using the sorted ports of the Component
+        for (const auto& p : m_component.getInputs()) {
+            auto& graphicsPort = m_inputPorts[p.get()];
             int gridIndex = roundUp((i * in_seg_y + in_seg_y / 2), GRID_SIZE) / GRID_SIZE;
-            p->setGridIndex(gridIndex);
+            graphicsPort->setGridIndex(gridIndex);
             const qreal y = gridIndex * GRID_SIZE;
-            p->setPos(QPointF(sceneRect.left() - GRID_SIZE * PortGraphic::portGridWidth(), y));
+            graphicsPort->setPos(QPointF(sceneRect.left() - GRID_SIZE * PortGraphic::portGridWidth(), y));
             i++;
         }
         i = 0;
         const qreal out_seg_y = sceneRect.height() / (m_outputPorts.size());
-        for (const auto& p : m_outputPorts) {
+        // Iterate using the sorted ports of the Component
+        for (const auto& p : m_component.getOutputs()) {
+            auto& graphicsPort = m_outputPorts[p.get()];
             const int gridIndex = roundUp((i * out_seg_y + out_seg_y / 2), GRID_SIZE) / GRID_SIZE;
-            p->setGridIndex(gridIndex);
+            graphicsPort->setGridIndex(gridIndex);
             const qreal y = gridIndex * GRID_SIZE;
-            p->setPos(QPointF(sceneRect.right(), y));
+            graphicsPort->setPos(QPointF(sceneRect.right(), y));
             i++;
         }
     }

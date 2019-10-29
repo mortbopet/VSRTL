@@ -42,6 +42,12 @@ private:
     std::string m_name;
     void* m_graphicObject = nullptr;
 };
+
+template <typename T>
+struct BaseSorter {
+    bool operator()(const T& lhs, const T& rhs) const { lhs->getName() < rhs->getName(); }
+};
+
 }  // namespace vsrtl
 
 #endif  // VSRTL_BASE_H

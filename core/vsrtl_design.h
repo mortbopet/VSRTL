@@ -155,7 +155,9 @@ public:
         return false;
     }
 
-    const std::vector<std::unique_ptr<Component>>& getTopLevelComponents() const { return m_subcomponents; }
+    const std::set<std::unique_ptr<Component>, ComponentCompT>& getTopLevelComponents() const {
+        return m_subcomponents;
+    }
 
     const std::map<Component*, std::vector<Component*>> getDesignGraph() {
         assert(m_isVerifiedAndInitialized);

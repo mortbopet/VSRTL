@@ -41,6 +41,8 @@ DefineGraphicsProxy(Component);
 class Component : public Base {
 public:
     Component(std::string displayName, Component* parent) : Base(displayName, parent) {}
+    using PortBaseCompT = BaseSorter<std::unique_ptr<PortBase>>;
+    using ComponentCompT = BaseSorter<std::unique_ptr<Component>>;
 
     /**
      * @brief getBaseType
@@ -72,9 +74,7 @@ public:
      *        (this) takes ownership of the component*
      * @param subcomponent
      */
-    void addSubcomponent(Component* subcomponent) {
-        m_subcomponents.push_back(std::unique_ptr<Component>(subcomponent));
-    }
+    void addSubcomponent(Component* subcomponent) { m_subcomponents.insert(std::unique_ptr<Component>(subcomponent)); }
 
     template <unsigned int W>
     Port<W>& createInputPort(std::string name) {
@@ -201,30 +201,30 @@ public:
         }
     }
 
-    const std::vector<std::unique_ptr<Component>>& getSubComponents() const { return m_subcomponents; }
-    const std::vector<std::unique_ptr<PortBase>>& getOutputs() const { return m_outputports; }
-    const std::vector<std::unique_ptr<PortBase>>& getInputs() const { return m_inputports; }
+    const std::set<std::unique_ptr<Component>, ComponentCompT>& getSubComponents() const { return m_subcomponents; }
+    const std::set<std::unique_ptr<PortBase>, PortBaseCompT>& getOutputs() const { return m_outputports; }
+    const std::set<std::unique_ptr<PortBase>, PortBaseCompT>& getInputs() const { return m_inputports; }
 
     Gallant::Signal0<> changed;
 
 protected:
     template <unsigned int W>
-    Port<W>& createPort(std::string name, std::vector<std::unique_ptr<PortBase>>& container) {
+    Port<W>& createPort(std::string name, std::set<std::unique_ptr<PortBase>, PortBaseCompT>& container) {
         verifyIsUniquePortName(name);
         Port<W>* port = new Port<W>(name, this);
-        container.push_back(std::unique_ptr<Port<W>>(port));
+        container.insert(std::unique_ptr<Port<W>>(port));
         return *port;
     }
 
     template <unsigned int W>
-    std::vector<Port<W>*> createPorts(std::string name, std::vector<std::unique_ptr<PortBase>>& container,
+    std::vector<Port<W>*> createPorts(std::string name, std::set<std::unique_ptr<PortBase>, PortBaseCompT>& container,
                                       unsigned int n) {
         std::vector<Port<W>*> ports;
         for (unsigned int i = 0; i < n; i++) {
             std::string i_name = name + "_" + std::to_string(i);
             verifyIsUniquePortName(i_name);
             Port<W>* port = new Port<W>(i_name.c_str(), this);
-            container.push_back(std::unique_ptr<Port<W>>(port));
+            container.insert(std::unique_ptr<Port<W>>(port));
             ports.push_back(port);
         }
         return ports;
@@ -239,8 +239,8 @@ protected:
         }
     }
 
-    template <typename T>
-    bool isUniqueName(const std::string& name, std::vector<std::unique_ptr<T>>& container) {
+    template <typename T, typename C_T>
+    bool isUniqueName(const std::string& name, std::set<std::unique_ptr<T>, C_T>& container) {
         return std::find_if(container.begin(), container.end(),
                             [name](const auto& p) { return p->getName() == name; }) == container.end();
     }
@@ -255,9 +255,12 @@ protected:
     unsigned m_constantCount = 0;  // Number of constants currently initialized in the component
     mutable bool m_isVerifiedAndInitialized = false;
     PropagationState m_propagationState = PropagationState::unpropagated;
-    std::vector<std::unique_ptr<PortBase>> m_outputports;
-    std::vector<std::unique_ptr<PortBase>> m_inputports;
-    std::vector<std::unique_ptr<Component>> m_subcomponents;
+
+    // Ports and subcomponents should be maintained as sorted sets based on port and component names, ensuring
+    // consistent ordering between executions
+    std::set<std::unique_ptr<PortBase>, PortBaseCompT> m_outputports;
+    std::set<std::unique_ptr<PortBase>, PortBaseCompT> m_inputports;
+    std::set<std::unique_ptr<Component>, ComponentCompT> m_subcomponents;
 };
 
 // Component object generator that registers objects in parent upon creation
