@@ -209,7 +209,8 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
 }
 
 QString PortGraphic::getTooltipString() const {
-    return QString::fromStdString(m_port->stringValue()) + "0x" + QString::number(m_port->uValue(), 16);
+    return QString::fromStdString(m_port->getName() + ":\n" + m_port->stringValue()) + "0x" +
+           QString::number(m_port->uValue(), 16);
 }
 
 QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
