@@ -370,6 +370,13 @@ void WireGraphic::mergePoints(WirePoint* base, WirePoint* toMerge) {
     removeWirePoint(toMerge);
 }
 
+void WireGraphic::clearWirePoints() {
+    for (auto& p : m_points) {
+        removeWirePoint(p);
+    }
+    update();
+}
+
 /**
  * @brief WireGraphic::canMergePoints
  * Points which are adjacent may be merged.

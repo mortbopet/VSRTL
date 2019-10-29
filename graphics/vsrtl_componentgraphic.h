@@ -152,6 +152,7 @@ protected:
 protected slots:
     void loadLayout();
     void saveLayout();
+    void resetWires();
 
 public:
     /**

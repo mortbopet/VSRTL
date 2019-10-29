@@ -24,6 +24,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsSceneHoverEvent>
 #include <QMatrix>
+#include <QMessageBox>
 #include <QPainter>
 #include <QPushButton>
 #include <QStyleOptionGraphicsItem>
@@ -137,6 +138,24 @@ void ComponentGraphic::placeAndRouteSubcomponents() {
     }
 }
 
+void ComponentGraphic::resetWires() {
+    const QString text =
+        "Reset wires?\nThis will remove all interconnecting points for all wires within this subcomponent";
+
+    if (QMessageBox::Yes == QMessageBox::question(QApplication::activeWindow(), "Reset wires", text)) {
+        // Clear subcomponent wires
+        for (const auto& c : m_subcomponents) {
+            for (const auto& p : c->outputPorts()) {
+                p->getOutputWire()->clearWirePoints();
+            }
+        }
+        // Clear wires from this components input ports
+        for (const auto& p : m_inputPorts) {
+            p->getOutputWire()->clearWirePoints();
+        }
+    }
+}
+
 void ComponentGraphic::loadLayout() {
     QString fileName = QFileDialog::getOpenFileName(QApplication::activeWindow(),
                                                     "Save Layout " + QString::fromStdString(m_component.getName()),
@@ -151,6 +170,7 @@ void ComponentGraphic::loadLayout() {
     archive(cereal::make_nvp("ComponentGraphic", *this));
     m_isTopLevelSerializedComponent = false;
 }
+
 void ComponentGraphic::saveLayout() {
     QString fileName = QFileDialog::getSaveFileName(QApplication::activeWindow(),
                                                     "Save Layout " + QString::fromStdString(m_component.getName()),
@@ -181,9 +201,11 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
     auto* loadAction = menu.addAction("Load layout");
     auto* saveAction = menu.addAction("Save layout");
+    auto* resetWiresAction = menu.addAction("Reset wires");
 
     connect(saveAction, &QAction::triggered, this, &ComponentGraphic::saveLayout);
     connect(loadAction, &QAction::triggered, this, &ComponentGraphic::loadLayout);
+    connect(resetWiresAction, &QAction::triggered, this, &ComponentGraphic::resetWires);
 
     menu.exec(event->screenPos());
 }

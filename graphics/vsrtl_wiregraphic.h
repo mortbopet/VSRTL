@@ -123,6 +123,7 @@ public:
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }
     std::pair<WirePoint*, WireSegment*> createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment);
     void removeWirePoint(WirePoint* point);
+    void clearWirePoints();
 
     bool managesPoint(WirePoint* point) const;
     void mergePoints(WirePoint* base, WirePoint* toMerge);
