@@ -10,6 +10,7 @@
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_graphicsbase.h"
 #include "vsrtl_portgraphic.h"
+#include "vsrtl_wiregraphic.h"
 
 #include "cereal/cereal.hpp"
 
@@ -55,25 +56,46 @@ public:
 
     template <class Archive>
     void serialize(Archive& archive) {
-        // Serealize position
-        QPoint p = pos().toPoint();
-        archive(cereal::make_nvp("Pos", p));
-        setPos(p);
+        // Serialize the original component name. Wires within the component will reference this when describing parent
+        // components, but this component may have different names based on the design which instantiated it.
+        // Thus, we need to replace the stored name with the actual name of the component.
+        std::string storedName = getComponent()->getName();
+        archive(cereal::make_nvp("Top name", storedName));
 
-        bool expanded = isExpanded();
-        archive(cereal::make_nvp("Expanded", expanded));
-        if (expanded != isExpanded()) {
-            setExpanded(expanded);
+        if (hasSubcomponents()) {
+            bool expanded = isExpanded();
+            archive(cereal::make_nvp("Expanded", expanded));
+            if (expanded != isExpanded()) {
+                setExpanded(expanded);
+            }
+
+            // Serialize wires from input ports to subcomponents
+            for (auto& p : m_inputPorts) {
+                archive(cereal::make_nvp(p->getPort()->getName(), *p->getOutputWire()));
+            }
+
+            // Serealize subcomponents
+            for (const auto& c : m_subcomponents) {
+                archive(cereal::make_nvp(c->getComponent()->getName(), *c));
+            }
         }
 
-        // Serealize ports
-        for (auto& p : m_outputPorts) {
-            archive(cereal::make_nvp(p->getPort()->getName(), *p));
+        // If this is a top-level component, we should _not_ serialize the output wires. Layouts should be compatible
+        // between designs, and the output wire of a top-level component with subcomponents may connect to components
+        // which are present in óne design but not another.
+        if (!m_isTopLevelSerializedComponent) {
+            // Serialize output wire
+            for (auto& p : m_outputPorts) {
+                archive(cereal::make_nvp(p->getPort()->getName(), *p->getOutputWire()));
+            }
         }
 
-        // Serealize subcomponents
-        for (const auto& c : m_subcomponents) {
-            archive(cereal::make_nvp(c->getComponent()->getName(), *c));
+        // If this is not a top level component, we should serialize its position within its parent component
+        if (!m_isTopLevelSerializedComponent) {
+            // Serealize position within parent component
+            QPoint p = pos().toPoint();
+            archive(cereal::make_nvp("Pos", p));
+            setPos(p);
         }
     }
 
@@ -104,6 +126,7 @@ protected:
     bool m_restrictSubcomponentPositioning = false;
     bool m_inResizeDragZone = false;
     bool m_resizeDragging = false;
+    bool m_isTopLevelSerializedComponent = false;
 
     std::vector<ComponentGraphic*> m_subcomponents;
     ComponentGraphic* m_parentComponentGraphic = nullptr;

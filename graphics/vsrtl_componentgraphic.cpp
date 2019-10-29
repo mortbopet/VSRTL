@@ -147,7 +147,9 @@ void ComponentGraphic::loadLayout() {
 
     std::ifstream file(fileName.toStdString());
     cereal::JSONInputArchive archive(file);
-    archive(cereal::make_nvp(getComponent()->getName(), *this));
+    m_isTopLevelSerializedComponent = true;
+    archive(cereal::make_nvp("ComponentGraphic", *this));
+    m_isTopLevelSerializedComponent = false;
 }
 void ComponentGraphic::saveLayout() {
     QString fileName = QFileDialog::getSaveFileName(QApplication::activeWindow(),
@@ -158,10 +160,14 @@ void ComponentGraphic::saveLayout() {
         return;
     if (!fileName.endsWith(".json"))
         fileName += ".json";
-
     std::ofstream file(fileName.toStdString());
     cereal::JSONOutputArchive archive(file);
-    archive(cereal::make_nvp(getComponent()->getName(), *this));
+
+    /// @todo: Is it more applicable to do a typeid(getComponent()).name() ? this would not work accross separate
+    /// compilers, but would directly indicate the underlying type of which this layout is compatible with...
+    m_isTopLevelSerializedComponent = true;
+    archive(cereal::make_nvp("ComponentGraphic", *this));
+    m_isTopLevelSerializedComponent = false;
 }
 
 void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {

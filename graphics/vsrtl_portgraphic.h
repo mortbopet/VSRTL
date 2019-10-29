@@ -37,6 +37,7 @@ public:
     void updateGeometry();
     PortBase* getPort() const { return m_port; }
     void setInputWire(WireGraphic* wire);
+    WireGraphic* getOutputWire() { return m_outputWire; }
     void updateInputWire();
     void updateWireGeometry();
     PortPoint* getPointGraphic() { return m_portPoint; }
@@ -55,11 +56,6 @@ public:
     static int portGridWidth() { return s_portGridWidth; }
     int gridIndex() const { return m_gridIndex; }
     void setGridIndex(int i) { m_gridIndex = i; }
-
-    template <class Archive>
-    void serialize(Archive& archive) {
-        archive(cereal::make_nvp("wire", *m_outputWire));
-    }
 
 private slots:
     void updatePenColor();

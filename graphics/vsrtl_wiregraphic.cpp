@@ -273,7 +273,7 @@ void WireSegment::mousePressEvent(QGraphicsSceneMouseEvent* event) {}
 
 WirePoint* WireGraphic::createWirePoint() {
     // Create new point managed by this graphic.
-    auto* topComponent = getPointOwningComponent();
+    auto* topComponent = getPointOwningComponentGraphic();
     Q_ASSERT(topComponent != nullptr);
     auto* point = new WirePoint(*this, topComponent);
     m_points.insert(point);
@@ -284,7 +284,7 @@ void WireGraphic::moveWirePoint(PortPoint* point, const QPointF scenePos) {
     // The parent structure is somewhat nested; a wireGraphic must be a graphical child of the graphics component
     // which this wire is nested inside. To reach this, we do: WireGraphic->parent = PortGraphic PortGraphic->parent
     // = ComponentGraphic ComponentGrahic -> parent = ComponentGraphic (with nested components)
-    auto* topComponent = getPointOwningComponent();
+    auto* topComponent = getPointOwningComponentGraphic();
     Q_ASSERT(topComponent != nullptr);
     // Move new point to its creation position
     point->setPos(mapToItem(topComponent, mapFromScene(scenePos)));
@@ -423,12 +423,12 @@ QRectF WireGraphic::boundingRect() const {
  * with, the respective parent component to create a WirePoint as a child of.
  * Returns the component which will be the graphical parent of points created and managed by this wireGraphic
  */
-ComponentGraphic* WireGraphic::getPointOwningComponent() {
+ComponentGraphic* WireGraphic::getPointOwningComponentGraphic() const {
     // Initial hierarchy: WireGraphic -> portGraphic -> ComponentGraphic
     auto* portParent = dynamic_cast<PortGraphic*>(parentItem());
     auto* componentParent = dynamic_cast<ComponentGraphic*>(portParent->parentItem());
     Q_ASSERT(portParent && componentParent);
-    if (componentParent->hasSubcomponents() && portParent->getPortType() == PortType::in) {
+    if (componentParent->hasSubcomponents()) {
         // If this wire graphic is the graphic of a port which is on the I/O boundary of a component with subcomponents,
         // return the parent component
         return componentParent;
@@ -436,6 +436,10 @@ ComponentGraphic* WireGraphic::getPointOwningComponent() {
         // Else, we are a subcomponent within a component
         return componentParent->getParent();
     }
+}
+
+Component* WireGraphic::getPointOwningComponent() const {
+    return getPointOwningComponentGraphic()->getComponent();
 }
 
 void WireGraphic::createRectilinearSegments(PortPoint* start, PortPoint* end) {

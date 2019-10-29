@@ -27,11 +27,7 @@ class ComponentGraphic;
 static inline std::vector<std::string> getPortParentNameSeq(PortBase* p) {
     std::vector<std::string> seq;
     seq.push_back(p->getName());
-    auto* parent = p->getParent();
-    while (parent) {
-        seq.push_back(parent->getName());
-        parent = parent->getParent();
-    }
+    seq.push_back(p->getParent()->getName());
     return seq;
 }
 
@@ -137,11 +133,21 @@ public:
     template <class Archive>
     void load(Archive& archive) {
         // Deserialize the layout
+
+        // This layout might originate from a similar component, but with a different name. Get the serialized parent
+        // name as a reference for what must be exchanged with the current parent name
+        std::string inParent;
+        archive(cereal::make_nvp("Parent", inParent));
+
         std::pair<int, std::vector<std::string>> from;
         archive(cereal::make_nvp("From port", from));
+        std::replace(from.second.begin(), from.second.end(), inParent, getPointOwningComponent()->getName());
 
         std::map<int, std::vector<std::string>> idxToOutportNameSeq;
         archive(cereal::make_nvp("To ports", idxToOutportNameSeq));
+        for (auto& iter : idxToOutportNameSeq) {
+            std::replace(iter.second.begin(), iter.second.end(), inParent, getPointOwningComponent()->getName());
+        }
 
         std::map<int, QPoint> idxToPoints;
         archive(cereal::make_nvp("points", idxToPoints));
@@ -162,7 +168,8 @@ public:
         std::map<int, PortPoint*> idxToPort;
 
         // Locate input port
-        if (from.second != getPortParentNameSeq(m_fromPort->getPort())) {
+        const auto fromPortSeq = getPortParentNameSeq(m_fromPort->getPort());
+        if (from.second != fromPortSeq) {
             throw std::runtime_error("Incompatible layout");
         }
         idxToPort[from.first] = m_fromPort->getPointGraphic();
@@ -212,13 +219,14 @@ public:
 
         // Move wire points (must be done >after< the point has been associated with wires)
         for (const auto& p : idxToPort) {
-            moveWirePoint(p.second, idxToPoints[p.first]);
+            p.second->setPos(idxToPoints[p.first]);
         }
     }
 
     template <class Archive>
     void save(Archive& archive) const {
-        Q_ASSERT(m_fromPort->getPortType() == PortType::out);
+        std::string outParent;
+        archive(cereal::make_nvp("Parent", getPointOwningComponent()->getName()));
 
         int i = 0;
         // serialize the incoming port
@@ -278,7 +286,8 @@ public:
     }
 
 private:
-    ComponentGraphic* getPointOwningComponent();
+    ComponentGraphic* getPointOwningComponentGraphic() const;
+    Component* getPointOwningComponent() const;
     WirePoint* createWirePoint();
     void moveWirePoint(PortPoint* point, const QPointF scenePos);
     WireSegment* createSegment(PortPoint* start, PortPoint* end);
