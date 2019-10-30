@@ -194,18 +194,34 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     if (isLocked())
         return;
 
-    if (!hasSubcomponents())
-        return;
-
     QMenu menu;
 
-    auto* loadAction = menu.addAction("Load layout");
-    auto* saveAction = menu.addAction("Save layout");
-    auto* resetWiresAction = menu.addAction("Reset wires");
+    if (hasSubcomponents()) {
+        // ======================== Layout menu ============================ //
+        auto* layoutMenu = menu.addMenu("Layout");
+        auto* loadAction = layoutMenu->addAction("Load layout");
+        auto* saveAction = layoutMenu->addAction("Save layout");
+        auto* resetWiresAction = layoutMenu->addAction("Reset wires");
 
-    connect(saveAction, &QAction::triggered, this, &ComponentGraphic::saveLayout);
-    connect(loadAction, &QAction::triggered, this, &ComponentGraphic::loadLayout);
-    connect(resetWiresAction, &QAction::triggered, this, &ComponentGraphic::resetWires);
+        connect(saveAction, &QAction::triggered, this, &ComponentGraphic::saveLayout);
+        connect(loadAction, &QAction::triggered, this, &ComponentGraphic::loadLayout);
+        connect(resetWiresAction, &QAction::triggered, this, &ComponentGraphic::resetWires);
+    }
+
+    if (m_outputPorts.size() > 0) {
+        // ======================== Ports menu ============================ //
+        auto* portMenu = menu.addMenu("Ports");
+        auto* showOutputsAction = portMenu->addAction("Show output values");
+        auto* hideOutputsAction = portMenu->addAction("Hide output values");
+        connect(showOutputsAction, &QAction::triggered, [=] {
+            for (auto& c : m_outputPorts)
+                c->setLabelVisible(true);
+        });
+        connect(hideOutputsAction, &QAction::triggered, [=] {
+            for (auto& c : m_outputPorts)
+                c->setLabelVisible(false);
+        });
+    }
 
     menu.exec(event->screenPos());
 }
