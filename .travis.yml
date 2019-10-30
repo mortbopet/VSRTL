@@ -15,7 +15,7 @@ matrix:
       language: c++
 
     # Trustry release build
-    - env: VSRTL_PLATFORM='linux' CXX=g++-6 CC=gcc-6
+    - env: VSRTL_PLATFORM='linux' CXX=g++-7 CC=gcc-7
       os: linux
       dist: trusty
       addons:
@@ -26,12 +26,12 @@ matrix:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise
           packages: &packages
-            - g++-6
+            - g++-7
             - qt59-meta-minimal
             - qt59svg
 
     # Xenial release build
-    - env: VSRTL_PLATFORM='linux' CXX=g++-6 CC=gcc-6
+    - env: VSRTL_PLATFORM='linux' CXX=g++-7 CC=gcc-7
       os: linux
       dist: xenial
       addons:
@@ -46,7 +46,7 @@ matrix:
             - mesa-common-dev
 
     # Trusty unit test build
-    - env: VSRTL_PLATFORM='linux_test' CXX=g++-6 CC=gcc-6
+    - env: VSRTL_PLATFORM='linux_test' CXX=g++-7 CC=gcc-7
       os: linux
       dist: trusty
       addons:

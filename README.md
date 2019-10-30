@@ -24,7 +24,7 @@ make -j$(nproc)
 
 ## Dependencies:
 * **Core**
-  * C++14 toolchain
+  * C++17 toolchain
   * CMake
 * **Graphics**
   * Qt 5.9.3+: https://www.qt.io/download
