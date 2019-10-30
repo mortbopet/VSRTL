@@ -21,6 +21,8 @@ public:
     virtual void save() = 0;
     virtual void rewind() = 0;
 
+    bool isClockedComponent() const override { return true; }
+
     static unsigned int& rewindStackSize() {
         static unsigned int s_rewindstackSize = 100;
         return s_rewindstackSize;
@@ -74,8 +76,6 @@ public:
 
     INPUTPORT(in, W);
     OUTPUTPORT(out, W);
-
-    bool isRegister() const override { return true; }
 
 private:
     void saveToStack() {

@@ -56,7 +56,7 @@ public:
      */
 
     virtual std::type_index getTypeId() const { return GraphicsTypeFor(Component); }
-    virtual bool isRegister() const { return false; }
+    virtual bool isClockedComponent() const { return false; }
     virtual void resetPropagation() {
         if (m_propagationState == PropagationState::unpropagated) {
             // Constants (components with no inputs) are always propagated
@@ -103,7 +103,7 @@ public:
         if (m_propagationState == PropagationState::propagated)
             return;
 
-        if (isRegister()) {
+        if (isClockedComponent()) {
             // Registers are implicitely clocked by calling propagate() on its output ports.
             /** @remark register <must> be saved before propagateComponent reaches the register ! */
             m_propagationState = PropagationState::propagated;
