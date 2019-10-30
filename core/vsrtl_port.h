@@ -1,4 +1,4 @@
-#ifndef VSRTL_SIGNAL_H
+﻿#ifndef VSRTL_SIGNAL_H
 #define VSRTL_SIGNAL_H
 
 #include <limits.h>
@@ -96,14 +96,11 @@ public:
      * A port may define special string formatting to be displayed in the graphical library. If so, owning components
      * should set the string value function to provide such values.
      */
-    std::string stringValue() const {
-        if (m_stringValueFunction)
-            return m_stringValueFunction();
-        else
-            return std::string();
+    virtual bool isEnumPort() const { return false; }
+    virtual std::string valueToEnumString() const { throw std::runtime_error("This is not an enum port!"); }
+    virtual VSRTL_VT_U enumStringToValue(const char* str) const {
+        throw std::runtime_error("This is not an enum port!");
     }
-
-    std::function<std::string()> m_stringValueFunction;
     Gallant::Signal0<> changed;
 
 protected:
@@ -194,9 +191,9 @@ public:
     explicit operator bool() const { return m_value & 0b1; }
 
 protected:
-    // Port values are initialized to 0xdeadbeef for error detection reasons. In reality (in a circuit), this would not
-    // be the case - the entire circuit is reset when the registers are reset (to 0), and the circuit state is then
-    // propagated.
+    // Port values are initialized to 0xdeadbeef for error detection reasons. In reality (in a circuit), this would
+    // not be the case - the entire circuit is reset when the registers are reset (to 0), and the circuit state is
+    // then propagated.
     VSRTL_VT_U m_value = 0xdeadbeef;
 
     // A port may only have a single input  ->[port]
@@ -205,6 +202,18 @@ protected:
     std::vector<Port<W>*> m_outputPorts;
 
     std::function<VSRTL_VT_U()> m_propagationFunction;
+};
+
+template <unsigned int W, typename E_t>
+class EnumPort : public Port<W> {
+public:
+    EnumPort(std::string name, Component* parent) : Port<W>(name, parent) {}
+
+    bool isEnumPort() const override { return true; }
+    std::string valueToEnumString() const override {
+        return E_t::_from_integral(this->template value<VSRTL_VT_U>())._to_string();
+    }
+    VSRTL_VT_U enumStringToValue(const char* str) const override { return E_t::_from_string(str); }
 };
 
 }  // namespace vsrtl

@@ -11,41 +11,6 @@
 
 namespace vsrtl {
 
-QList<QMenu*> NetlistTreeItem::getActions() const {
-    // Only return actions for items which have a port (default actions from TreeItem displays display type actions,
-    // which are not applicable for Component items)
-    return m_port != nullptr ? TreeItem::getActions() : QList<QMenu*>();
-}
-
-QVariant NetlistTreeItem::data(int column, int role) const {
-    if (column == NetlistModel::IOColumn && role == Qt::DecorationRole && m_port != nullptr) {
-        return m_direction == PortDirection::Input ? QIcon(":/icons/input.svg") : QIcon(":/icons/output.svg");
-    } else if (role == Qt::DisplayRole || role == Qt::EditRole) {
-        switch (column) {
-            case NetlistModel::ComponentColumn: {
-                return m_name;
-            }
-            case NetlistModel::ValueColumn: {
-                if (m_port) {
-                    VSRTL_VT_U value = m_port->uValue();
-                    return encodeRadixValue(value, m_port->getWidth(), m_Radix);
-                }
-                break;
-            }
-            case NetlistModel::WidthColumn: {
-                if (m_port) {
-                    return m_port->getWidth();
-                }
-                break;
-            }
-        }
-    }
-    return QVariant();
-}
-bool NetlistTreeItem::setData(int column, const QVariant& value, int role) {
-    return false;
-}
-
 NetlistModel::NetlistModel(Design& arch, QObject* parent)
     : NetlistModelBase({"Component", "I/O", "Value", "Width"}, arch, parent) {
     rootItem = new NetlistTreeItem(nullptr);
@@ -104,11 +69,9 @@ QModelIndex NetlistModel::lookupIndexForComponent(Component* c) const {
 
 void NetlistModel::addPortToComponent(PortBase* port, NetlistTreeItem* parent, PortDirection dir) {
     auto* child = new NetlistTreeItem(parent);
+    child->setPort(port);
     parent->insertChild(parent->childCount(), child);
-
-    child->m_name = QString::fromStdString(port->getName());
     child->m_direction = dir;
-    child->m_port = port;
 }
 
 bool NetlistModel::indexIsRegisterOutputPortValue(const QModelIndex& index) const {

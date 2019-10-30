@@ -8,8 +8,10 @@
 
 namespace vsrtl {
 
+DefineGraphicsType(Multiplexer);
 class MultiplexerBase : public Component {
 public:
+    SetGraphicsType(Multiplexer);
     MultiplexerBase(std::string name, Component* parent) : Component(name, parent) {}
 
     virtual std::vector<PortBase*> getIns() = 0;
@@ -17,11 +19,9 @@ public:
     virtual PortBase* getOut() = 0;
 };
 
-DefineGraphicsType(Multiplexer);
 template <unsigned int N, unsigned int W>
 class Multiplexer : public MultiplexerBase {
 public:
-    SetGraphicsType(Multiplexer);
     Multiplexer(std::string name, Component* parent) : MultiplexerBase(name, parent) {
         out << [=] { return ins.at(select.template value<VSRTL_VT_U>())->template value<VSRTL_VT_U>(); };
     }
@@ -31,6 +31,13 @@ public:
         for (const auto& in : ins)
             ins_base.push_back(in);
         return ins_base;
+    }
+
+    virtual Port<W>& get(unsigned idx) {
+        if (idx >= ins.size()) {
+            throw std::runtime_error("Requested index out of multiplexer range");
+        }
+        return *ins[idx];
     }
 
     /**
@@ -55,22 +62,22 @@ public:
     INPUTPORTS(ins, W, N);
 };
 
-template <typename E_t, unsigned int W>
-class EnumMultiplexer : public Multiplexer<E_t::_size(), W> {
+/** @class EnumMultiplexer
+ * A multiplexer which may be initialized with a VSRTL Enum.
+ * The select signal and number of input ports will be inferred based on the enum type.
+ *
+ */
+template <typename E_t, unsigned W>
+class EnumMultiplexer : public MultiplexerBase {
 public:
-    EnumMultiplexer(std::string name, Component* parent) : Multiplexer<E_t::_size(), W>(name, parent) {
+    EnumMultiplexer(std::string name, Component* parent) : MultiplexerBase(name, parent) {
         for (auto v : E_t::_values()) {
             m_enumToPort[v] = this->ins.at(v);
         }
-
-        // Let ports display underlying enum names through to the gui
-        this->out.m_stringValueFunction = [=] {
-            return std::string("Selecting: ") +
-                   E_t::_from_integral(this->select.template value<VSRTL_VT_U>())._to_string() + std::string("\n");
-        };
+        out << [=] { return ins.at(select.uValue())->template value<VSRTL_VT_U>(); };
     }
 
-    Port<W>& get(int enumIdx) {
+    Port<W>& get(unsigned enumIdx) {
         if (m_enumToPort.count(enumIdx) != 1) {
             throw std::runtime_error("Requested index out of Enum range");
         }
@@ -79,6 +86,30 @@ public:
         }
         return *m_enumToPort[enumIdx];
     }
+
+    std::vector<PortBase*> getIns() override {
+        std::vector<PortBase*> ins_base;
+        for (const auto& in : ins)
+            ins_base.push_back(in);
+        return ins_base;
+    }
+
+    std::vector<Port<W>*> others() {
+        std::vector<Port<W>*> vec;
+        for (const auto& port : ins) {
+            if (!port->getInputPort()) {
+                vec.push_back(port);
+            }
+        }
+        return vec;
+    }
+
+    PortBase* getSelect() override { return &select; }
+    PortBase* getOut() override { return &out; }
+
+    OUTPUTPORT(out, W);
+    INPUTPORT_ENUM(select, E_t);
+    INPUTPORTS(ins, W, E_t::_size());
 
 private:
     std::map<int, Port<W>*> m_enumToPort;

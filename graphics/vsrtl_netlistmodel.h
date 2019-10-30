@@ -14,20 +14,6 @@ class Design;
 class Component;
 class PortBase;
 
-enum class PortDirection { Input, Output };
-
-class NetlistTreeItem : public TreeItem {
-public:
-    NetlistTreeItem(TreeItem* parent) : TreeItem(parent) {}
-    QVariant data(int column, int role = Qt::EditRole) const override;
-    bool setData(int column, const QVariant& value, int role = Qt::EditRole) override;
-    QList<QMenu*> getActions() const override;
-
-    Component* m_component = nullptr;
-    PortBase* m_port = nullptr;
-    PortDirection m_direction;
-};
-
 class NetlistModel : public NetlistModelBase<NetlistTreeItem> {
     Q_OBJECT
 

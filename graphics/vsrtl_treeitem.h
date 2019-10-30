@@ -22,7 +22,6 @@ public:
 
     virtual QVariant data(int column, int role = Qt::EditRole) const = 0;
     virtual bool setData(int column, const QVariant& value, int role = Qt::EditRole) = 0;
-    virtual QList<QMenu*> getActions() const;
 
     TreeItem* child(int number);
     int childCount() const;
@@ -36,12 +35,27 @@ public:
     QModelIndex index;
 
     QString m_name;
-    Radix m_Radix = Radix::Hex;
     QList<TreeItem*> childItems;
     TreeItem* parentItem;
 
 private:
-    QMenu* m_RadixMenu;
+};
+
+enum class PortDirection { Input, Output };
+
+class NetlistTreeItem : public TreeItem {
+public:
+    NetlistTreeItem(TreeItem* parent);
+    QVariant data(int column, int role = Qt::EditRole) const override;
+    bool setData(int column, const QVariant& value, int role = Qt::EditRole) override;
+    virtual QList<QMenu*> getActions() const;
+    void setPort(PortBase* port);
+
+    Component* m_component = nullptr;
+    PortBase* m_port = nullptr;
+    PortDirection m_direction;
+    QMenu* m_radixMenu = nullptr;
+    Radix m_radix = Radix::Hex;
 };
 
 }  // namespace vsrtl

@@ -10,7 +10,7 @@ namespace vsrtl {
 
 class ValueLabel : public GraphicsBase {
 public:
-    ValueLabel(Radix& type, const PortBase& port, QGraphicsItem* parent);
+    ValueLabel(Radix& type, const PortBase* port, QGraphicsItem* parent);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
@@ -20,7 +20,7 @@ public:
 
 private:
     Radix& m_type;
-    const PortBase& m_port;
+    const PortBase* m_port;
     QString m_text;
     unsigned int m_maxBitWidth;
 };

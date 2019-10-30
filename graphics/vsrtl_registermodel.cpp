@@ -12,7 +12,13 @@ namespace vsrtl {
 QList<QMenu*> RegisterTreeItem::getActions() const {
     // Only return actions for items which have a port (default actions from TreeItem displays display type actions,
     // which are not applicable for Component items)
-    return m_register != nullptr ? TreeItem::getActions() : QList<QMenu*>();
+    return m_register != nullptr ? NetlistTreeItem::getActions() : QList<QMenu*>();
+}
+
+void RegisterTreeItem::setRegister(RegisterBase* reg) {
+    m_name = QString::fromStdString(reg->getName());
+    m_register = reg;
+    setPort(reg->getOut());
 }
 
 QVariant RegisterTreeItem::data(int column, int role) const {
@@ -26,7 +32,7 @@ QVariant RegisterTreeItem::data(int column, int role) const {
             }
             case Qt::DisplayRole: {
                 VSRTL_VT_U value = m_register->getOut()->uValue();
-                return encodeRadixValue(value, m_register->getOut()->getWidth(), m_Radix);
+                return encodePortRadixValue(m_register->getOut(), m_radix);
             }
         }
     }
@@ -92,7 +98,7 @@ Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
 bool RegisterModel::setData(const QModelIndex& index, const QVariant& var, int role) {
     auto* item = getTreeItem(index);
     if (item) {
-        VSRTL_VT_U value = decodeRadixValue(var.toString(), item->m_register->getOut()->getWidth(), item->m_Radix);
+        VSRTL_VT_U value = decodePortRadixValue(*item->m_register->getOut(), item->m_radix, var.toString());
         bool resval = item->setData(index.column(), value, role);
         if (resval) {
             m_arch.propagateDesign();
@@ -144,11 +150,10 @@ void RegisterModel::loadDesign(RegisterTreeItem* parent, const Design& design) {
         // Add register to its parent tree item
 
         auto* child = new RegisterTreeItem(regParentNetlistItem);
+        child->setRegister(reg);
         regParentNetlistItem->insertChild(regParentNetlistItem->childCount(), child);
 
         // Set component data (component name and signal value)
-        child->m_register = reg;
-        child->m_name = QString::fromStdString(reg->getName());
     }
 }
 

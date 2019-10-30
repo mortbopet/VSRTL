@@ -13,7 +13,7 @@ static QRectF getTextRect(const QString& text) {
     return metric.boundingRect(text);
 }
 
-ValueLabel::ValueLabel(Radix& type, const PortBase& port, QGraphicsItem* parent)
+ValueLabel::ValueLabel(Radix& type, const PortBase* port, QGraphicsItem* parent)
     : m_type(type), m_port(port), GraphicsBase(parent) {
     setFlags(ItemIsSelectable | ItemIsMovable);
 }
@@ -45,7 +45,7 @@ void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* item, 
 
 void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
-    menu.addMenu(createRadixMenu(m_type));
+    menu.addMenu(createPortRadixMenu(m_port, m_type));
 
     if (!isLocked()) {
         QAction* showLabel = new QAction("Show value");
@@ -62,7 +62,7 @@ void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 }
 
 void ValueLabel::updateText() {
-    m_text = encodeRadixValue(m_port.uValue(), m_port.getWidth(), m_type);
+    m_text = encodePortRadixValue(m_port, m_type);
     update();
 }
 

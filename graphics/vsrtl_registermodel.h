@@ -6,20 +6,22 @@
 #include <QVariant>
 
 #include "vsrtl_netlistmodelbase.h"
+#include "vsrtl_register.h"
 #include "vsrtl_treeitem.h"
 
 namespace vsrtl {
 
 class RegisterBase;
 
-class RegisterTreeItem : public TreeItem {
+class RegisterTreeItem : public NetlistTreeItem {
 public:
-    RegisterTreeItem(TreeItem* parent) : TreeItem(parent) {}
+    RegisterTreeItem(TreeItem* parent) : NetlistTreeItem(parent) {}
 
     enum class PortDirection { Input, Output };
     QVariant data(int column, int role = Qt::EditRole) const override;
     bool setData(int column, const QVariant& value, int role = Qt::EditRole) override;
     QList<QMenu*> getActions() const override;
+    void setRegister(RegisterBase* reg);
 
     RegisterBase* m_register = nullptr;
 };

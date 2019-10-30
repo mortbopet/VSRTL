@@ -1,4 +1,5 @@
 #include "vsrtl_treeitem.h"
+#include "vsrtl_netlistmodel.h"
 
 #include <QMenu>
 
@@ -6,9 +7,6 @@ namespace vsrtl {
 
 TreeItem::TreeItem(TreeItem* parent) {
     parentItem = parent;
-
-    // Display type actions
-    m_RadixMenu = createRadixMenu(m_Radix);
 }
 
 TreeItem::~TreeItem() {
@@ -28,10 +26,6 @@ int TreeItem::childNumber() const {
         return parentItem->childItems.indexOf(const_cast<TreeItem*>(this));
 
     return 0;
-}
-
-QList<QMenu*> TreeItem::getActions() const {
-    return {m_RadixMenu};
 }
 
 bool TreeItem::insertChild(int position, TreeItem* item) {
@@ -55,6 +49,52 @@ bool TreeItem::removeChildren(int position, int count) {
         delete childItems.takeAt(position);
 
     return true;
+}
+
+NetlistTreeItem::NetlistTreeItem(TreeItem* parent) : TreeItem(parent) {}
+
+void NetlistTreeItem::setPort(PortBase* port) {
+    Q_ASSERT(port);
+    m_port = port;
+    m_name = QString::fromStdString(m_port->getName());
+    m_radixMenu = createPortRadixMenu(m_port, m_radix);
+}
+
+QList<QMenu*> NetlistTreeItem::getActions() const {
+    // Only return actions for items which have a port (default actions from TreeItem displays display type actions,
+    // which are not applicable for Component items)
+    if (m_radixMenu) {
+        return {m_radixMenu};
+    }
+    return QList<QMenu*>();
+}
+
+QVariant NetlistTreeItem::data(int column, int role) const {
+    if (column == NetlistModel::IOColumn && role == Qt::DecorationRole && m_port != nullptr) {
+        return m_direction == PortDirection::Input ? QIcon(":/icons/input.svg") : QIcon(":/icons/output.svg");
+    } else if (role == Qt::DisplayRole || role == Qt::EditRole) {
+        switch (column) {
+            case NetlistModel::ComponentColumn: {
+                return m_name;
+            }
+            case NetlistModel::ValueColumn: {
+                if (m_port) {
+                    return encodePortRadixValue(m_port, m_radix);
+                }
+                break;
+            }
+            case NetlistModel::WidthColumn: {
+                if (m_port) {
+                    return m_port->getWidth();
+                }
+                break;
+            }
+        }
+    }
+    return QVariant();
+}
+bool NetlistTreeItem::setData(int column, const QVariant& value, int role) {
+    return false;
 }
 
 }  // namespace vsrtl

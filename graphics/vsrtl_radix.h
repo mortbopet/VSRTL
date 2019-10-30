@@ -3,6 +3,7 @@
 
 #include "vsrtl_binutils.h"
 #include "vsrtl_defines.h"
+#include "vsrtl_port.h"
 
 #include <QAction>
 #include <QMenu>
@@ -11,17 +12,17 @@
 
 namespace vsrtl {
 
-enum class Radix { Hex, Unsigned, Signed, Binary };
+enum class Radix { Hex, Unsigned, Signed, Binary, Enum };
 
 static const auto hexRegex = QRegExp("0[xX][0-9a-fA-F]+");
 static const auto binRegex = QRegExp("0[bB][0-1]+");
 static const auto unsignedRegex = QRegExp("[0-9]+");
 static const auto signedRegex = QRegExp("[-]*[0-9]+");
 
-static inline VSRTL_VT_U decodeRadixValue(const QString& valueString, int width, Radix t) {
+static inline VSRTL_VT_U decodePortRadixValue(const PortBase& port, const Radix type, const QString& valueString) {
     bool ok = false;
     VSRTL_VT_U value;
-    switch (t) {
+    switch (type) {
         case Radix::Hex: {
             value = valueString.toULong(&ok, 16);
             break;
@@ -37,12 +38,19 @@ static inline VSRTL_VT_U decodeRadixValue(const QString& valueString, int width,
             break;
         }
         case Radix::Signed: {
-            // Zero extend the value, truncated at $width
+            // Zero extend the value, truncated at $port.getWidth()
             value = valueString.toLong(&ok, 10);
-            // set zero as sign bit at $width
-            value &= ~(0x1 << width);
-            // Sign extend from $width
-            value = signextend(value, width);
+            // set zero as sign bit at $port.getWidth()
+            value &= ~(0x1 << port.getWidth());
+            // Sign extend from $port.getWidth()
+            value = signextend(value, port.getWidth());
+            break;
+        }
+        case Radix::Enum: {
+            if (!port.isEnumPort()) {
+                throw std::runtime_error("Port is not an Enum port");
+            }
+            value = port.enumStringToValue(valueString.toStdString().c_str());
             break;
         }
     }
@@ -50,27 +58,46 @@ static inline VSRTL_VT_U decodeRadixValue(const QString& valueString, int width,
     return value;
 }
 
-static inline QString encodeRadixValue(const VSRTL_VT_U value, const unsigned width, const Radix t) {
-    switch (t) {
+static inline QString encodePortRadixValue(const PortBase* port, const Radix type) {
+    VSRTL_VT_U value = port->uValue();
+    switch (type) {
         case Radix::Hex: {
-            const unsigned maxChars = (width / 4) + (width % 4 != 0 ? 1 : 0);
+            const unsigned maxChars = (port->getWidth() / 4) + (port->getWidth() % 4 != 0 ? 1 : 0);
             return "0x" + QString::number(value, 16).rightJustified(maxChars, '0');
         }
         case Radix::Binary: {
-            return "0b" + QString::number(value, 2).rightJustified(width, '0');
+            return "0b" + QString::number(value, 2).rightJustified(port->getWidth(), '0');
         }
         case Radix::Unsigned: {
             return QString::number(value, 10);
         }
         case Radix::Signed: {
-            return QString::number(signextend<VSRTL_VT_S>(value, width), 10);
+            return QString::number(signextend<VSRTL_VT_S>(value, port->getWidth()), 10);
+        }
+        case Radix::Enum: {
+            if (!port->isEnumPort()) {
+                throw std::runtime_error("Port is not an Enum port");
+            }
+
+            return QString::fromStdString(port->valueToEnumString());
         }
     }
 }
 
-static QMenu* createRadixMenu(Radix& type) {
+static QMenu* createPortRadixMenu(const PortBase* port, Radix& type) {
     QMenu* menu = new QMenu("Radix");
     QActionGroup* RadixActionGroup = new QActionGroup(menu);
+
+    QAction* enumTypeAction = nullptr;
+    if (port->isEnumPort()) {
+        enumTypeAction = RadixActionGroup->addAction("Enum");
+        enumTypeAction->setCheckable(true);
+        QObject::connect(enumTypeAction, &QAction::triggered, [&](bool checked) {
+            if (checked)
+                type = Radix::Enum;
+        });
+        menu->addAction(enumTypeAction);
+    }
 
     QAction* hexTypeAction = RadixActionGroup->addAction("Hex");
     hexTypeAction->setCheckable(true);
@@ -122,6 +149,13 @@ static QMenu* createRadixMenu(Radix& type) {
         }
         case Radix::Unsigned: {
             unsignedTypeAction->setChecked(true);
+            break;
+        }
+        case Radix::Enum: {
+            if (!port->isEnumPort()) {
+                throw std::runtime_error("Port is not an Enum port");
+            }
+            enumTypeAction->setChecked(true);
             break;
         }
     }

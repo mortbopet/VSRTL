@@ -22,24 +22,12 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent)
     m_pen.setCapStyle(Qt::RoundCap);
     setAcceptHoverEvents(true);
 
-    PortBase* valuePortReference;
-    if (m_type == PortType::out || m_port->isConstant()) {
-        valuePortReference = m_port;
-    } else {
-        // Let the value monitor the source port
-        valuePortReference = m_port->getInputPort();
-    }
-
-    // Value label setup
-    m_valueLabel = new ValueLabel(m_Radix, *valuePortReference, this);
+    m_valueLabel = new ValueLabel(m_Radix, m_port, this);
     m_valueLabel->setVisible(false);
     m_valueLabel->moveBy(0, -10);  // start position (may be dragged)
 
-    // PortGraphic logic is build by revolving around the root source port in a port-wire connection. Only receive
-    // update signals from root sources
-    if (port->getInputPort() == nullptr) {
-        port->changed.Connect(this, &PortGraphic::updateSlot);
-    }
+    port->changed.Connect(this, &PortGraphic::updateSlot);
+
     m_colorAnimation = new QPropertyAnimation(this, "penColor");
     m_colorAnimation->setDuration(100);
     m_colorAnimation->setStartValue(WIRE_BOOLHIGH_COLOR);
@@ -68,10 +56,6 @@ void PortGraphic::updateSlot() {
     // Propagate any changes to current port value to this label, and all other connected ports which may have their
     // labels visible
     m_valueLabel->updateText();
-    m_port->traverseToSinks([=](PortBase* port) {
-        auto* portGraphic = getGraphic<PortGraphic*>(port);
-        portGraphic->m_valueLabel->updateText();
-    });
 }
 
 void PortGraphic::setLabelVisible(bool visible) {
@@ -123,7 +107,7 @@ void PortGraphic::postSceneConstructionInitialize2() {
 
 void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
-    menu.addMenu(createRadixMenu(m_Radix));
+    menu.addMenu(createPortRadixMenu(m_port, m_Radix));
 
     if (!isLocked()) {
         QAction* showLabel = new QAction("Show value");
@@ -209,8 +193,7 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
 }
 
 QString PortGraphic::getTooltipString() const {
-    return QString::fromStdString(m_port->getName() + ":\n" + m_port->stringValue()) + "0x" +
-           QString::number(m_port->uValue(), 16);
+    return QString::fromStdString(m_port->getName() + ":\n") + encodePortRadixValue(m_port, m_Radix);
 }
 
 QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {

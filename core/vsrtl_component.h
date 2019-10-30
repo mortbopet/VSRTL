@@ -31,8 +31,11 @@ namespace vsrtl {
     std::vector<type*> name = create_components<type>(this, #name, n, ##__VA_ARGS__)
 
 #define INPUTPORT(name, W) Port<W>& name = this->createInputPort<W>(#name)
+#define INPUTPORT_ENUM(name, E_t) Port<E_t::width()>& name = this->createInputPort<E_t::width(), E_t>(#name)
 #define INPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->createInputPorts<W>("in", N)
+
 #define OUTPUTPORT(name, W) Port<W>& name = createOutputPort<W>(#name)
+#define OUTPUTPORT_ENUM(name, E_t) Port<E_t::width()>& name = createOutputPort<E_t::width(), E_t>(#name)
 #define OUTPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->createOutputPorts<W>("in", N)
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
@@ -76,13 +79,13 @@ public:
      */
     void addSubcomponent(Component* subcomponent) { m_subcomponents.insert(std::unique_ptr<Component>(subcomponent)); }
 
-    template <unsigned int W>
+    template <unsigned int W, typename E_t = void>
     Port<W>& createInputPort(std::string name) {
-        return createPort<W>(name, m_inputports);
+        return createPort<W, E_t>(name, m_inputports);
     }
-    template <unsigned int W>
+    template <unsigned int W, typename E_t = void>
     Port<W>& createOutputPort(std::string name) {
-        return createPort<W>(name, m_outputports);
+        return createPort<W, E_t>(name, m_outputports);
     }
 
     template <unsigned int W>
@@ -208,10 +211,15 @@ public:
     Gallant::Signal0<> changed;
 
 protected:
-    template <unsigned int W>
+    template <unsigned int W, typename E_t = void>
     Port<W>& createPort(std::string name, std::set<std::unique_ptr<PortBase>, PortBaseCompT>& container) {
         verifyIsUniquePortName(name);
-        Port<W>* port = new Port<W>(name, this);
+        Port<W>* port;
+        if constexpr (std::is_void<E_t>::value) {
+            port = new Port<W>(name, this);
+        } else {
+            port = new EnumPort<W, E_t>(name, this);
+        }
         container.insert(std::unique_ptr<Port<W>>(port));
         return *port;
     }
