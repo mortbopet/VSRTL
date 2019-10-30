@@ -16,9 +16,9 @@ QList<QMenu*> RegisterTreeItem::getActions() const {
 }
 
 void RegisterTreeItem::setRegister(RegisterBase* reg) {
-    m_name = QString::fromStdString(reg->getName());
     m_register = reg;
     setPort(reg->getOut());
+    m_name = QString::fromStdString(reg->getName());
 }
 
 QVariant RegisterTreeItem::data(int column, int role) const {
