@@ -37,7 +37,7 @@ namespace vsrtl {
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
 
-DefineGraphicsProxy(Component);
+DefineGraphicsType(Component);
 class Component : public Base {
 public:
     Component(std::string displayName, Component* parent) : Base(displayName, parent) {}
@@ -52,7 +52,7 @@ public:
      * @return String identifier for the component type
      */
 
-    virtual std::type_index getTypeId() const { return GraphicsTypeID(Component); }
+    virtual std::type_index getTypeId() const { return GraphicsTypeFor(Component); }
     virtual bool isRegister() const { return false; }
     virtual void resetPropagation() {
         if (m_propagationState == PropagationState::unpropagated) {

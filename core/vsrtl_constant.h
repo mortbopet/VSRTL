@@ -19,11 +19,11 @@ constexpr bool valueFitsInBitWidth(unsigned int width, int value) {
  * @param width Must be able to contain the signed bitfield of value
  *
  */
-DefineGraphicsProxy(Constant);
+DefineGraphicsType(Constant);
 template <unsigned int W>
 class Constant : public Component {
 public:
-    DefineTypeID(Constant);
+    SetGraphicsType(Constant);
     Constant(std::string name, Component* parent, VSRTL_VT_U value = 0) : Component(name, parent) {
         m_value = value;
         if (!valueFitsInBitWidth(W, m_value)) {

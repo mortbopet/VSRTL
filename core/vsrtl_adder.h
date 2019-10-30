@@ -5,11 +5,11 @@
 
 namespace vsrtl {
 
-DefineGraphicsProxy(Adder);
+DefineGraphicsType(Adder);
 template <unsigned int W>
 class Adder : public Component {
 public:
-    DefineTypeID(Adder);
+    SetGraphicsType(Adder);
     Adder(std::string name, Component* parent) : Component(name, parent) {
         out << [=] { return op1.template value<VSRTL_VT_S>() + op2.template value<VSRTL_VT_S>(); };
     }

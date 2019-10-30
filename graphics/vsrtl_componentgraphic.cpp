@@ -110,11 +110,11 @@ void ComponentGraphic::createSubcomponents() {
     for (const auto& c : m_component.getSubComponents()) {
         ComponentGraphic* nc;
         auto typeId = c.get()->getTypeId();
-        if (typeId == GraphicsTypeID(Multiplexer)) {
+        if (typeId == GraphicsTypeFor(Multiplexer)) {
             nc = new MultiplexerGraphic(*dynamic_cast<MultiplexerBase*>(c.get()), this);
-        } else if (typeId == GraphicsTypeID(Register)) {
+        } else if (typeId == GraphicsTypeFor(Register)) {
             nc = new RegisterGraphic(*dynamic_cast<RegisterBase*>(c.get()), this);
-        } else if (typeId == GraphicsTypeID(Constant)) {
+        } else if (typeId == GraphicsTypeFor(Constant)) {
             // Don't create a distinct ComponentGraphic for constants - these will be drawn next to the port connecting
             // to it
             continue;

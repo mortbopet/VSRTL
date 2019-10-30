@@ -15,11 +15,11 @@ struct MemoryEviction {
     VSRTL_VT_U data;
 };
 
-// DefineGraphicsProxy(Memory);
+// DefineGraphicsType(Memory);
 template <unsigned int addrWidth, unsigned int dataWidth>
 class Memory : public ClockedComponent {
 public:
-    DefineTypeID(ClockedComponent);
+    SetGraphicsType(ClockedComponent);
     Memory(std::string name, Component* parent) : ClockedComponent(name, parent) {
         data_out << [=] { return read(addr.template value<VSRTL_VT_U>()); };
     }

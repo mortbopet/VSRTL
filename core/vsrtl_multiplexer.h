@@ -17,11 +17,11 @@ public:
     virtual PortBase* getOut() = 0;
 };
 
-DefineGraphicsProxy(Multiplexer);
+DefineGraphicsType(Multiplexer);
 template <unsigned int N, unsigned int W>
 class Multiplexer : public MultiplexerBase {
 public:
-    DefineTypeID(Multiplexer);
+    SetGraphicsType(Multiplexer);
     Multiplexer(std::string name, Component* parent) : MultiplexerBase(name, parent) {
         out << [=] { return ins.at(select.template value<VSRTL_VT_U>())->template value<VSRTL_VT_U>(); };
     }

@@ -11,11 +11,11 @@ namespace vsrtl {
 
 Enum(ALU_OPCODE, ADD, SUB, MUL, DIV, AND, OR, XOR, SL, SRA, SRL, LUI, LT, LTU, EQ);
 
-DefineGraphicsProxy(ALU);
+DefineGraphicsType(ALU);
 template <unsigned int W>
 class ALU : public Component {
 public:
-    DefineTypeID(ALU);
+    SetGraphicsType(ALU);
     ALU(std::string name, Component* parent) : Component(name, parent) {
         out << ([=] { return calculateOutput(); });
     }

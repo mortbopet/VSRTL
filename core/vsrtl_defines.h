@@ -7,17 +7,17 @@
 namespace vsrtl {
 
 // @todo: describe why this is needed (graphical objects need not know about the templated versions of objects)
-#define DefineGraphicsProxy(name)                                                                        \
+#define DefineGraphicsType(name)                                                                         \
     class name##GraphicsProxy {                                                                          \
     public:                                                                                              \
         name##GraphicsProxy() {}                                                                         \
         static std::type_index getTypeIdProxy() { return std::type_index(typeid(name##GraphicsProxy)); } \
     };
 
-#define GraphicsTypeID(name) (name##GraphicsProxy::getTypeIdProxy())
+#define GraphicsTypeFor(name) (name##GraphicsProxy::getTypeIdProxy())
 
-#define DefineTypeID(name) \
-    std::type_index getTypeId() const override { return GraphicsTypeID(name); }
+#define SetGraphicsType(name) \
+    std::type_index getTypeId() const override { return GraphicsTypeFor(name); }
 
 // Base value type of ports. Should be set according to the maximally representable number.
 using VSRTL_VT_U = unsigned int;

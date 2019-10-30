@@ -133,7 +133,7 @@ void NetlistModel::loadDesignRecursive(NetlistTreeItem* parent, const Component&
 
     // Subcomponents
     for (const auto& subcomponent : subComponents) {
-        if (subcomponent->getTypeId() == GraphicsTypeID(Constant)) {
+        if (subcomponent->getTypeId() == GraphicsTypeFor(Constant)) {
             // Do not display constants in the netlist
             continue;
         }

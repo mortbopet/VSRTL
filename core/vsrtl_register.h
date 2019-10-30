@@ -11,9 +11,9 @@
 
 namespace vsrtl {
 
-DefineGraphicsProxy(ClockedComponent);
+DefineGraphicsType(ClockedComponent);
 class ClockedComponent : public Component {
-    DefineTypeID(ClockedComponent);
+    SetGraphicsType(ClockedComponent);
 
 public:
     ClockedComponent(std::string name, Component* parent) : Component(name, parent) {}
@@ -36,11 +36,11 @@ public:
     virtual PortBase* getOut() = 0;
 };
 
-DefineGraphicsProxy(Register);
+DefineGraphicsType(Register);
 template <unsigned int W>
 class Register : public RegisterBase {
 public:
-    DefineTypeID(Register);
+    SetGraphicsType(Register);
 
     Register(std::string name, Component* parent) : RegisterBase(name, parent) {
         // Calling out.propagate() will clock the register the register
