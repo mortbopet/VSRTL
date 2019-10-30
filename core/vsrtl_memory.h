@@ -19,7 +19,7 @@ struct MemoryEviction {
 template <unsigned int addrWidth, unsigned int dataWidth>
 class Memory : public ClockedComponent {
 public:
-    DefineTypeID(Component);
+    DefineTypeID(ClockedComponent);
     Memory(std::string name, Component* parent) : ClockedComponent(name, parent) {
         data_out << [=] { return read(addr.template value<VSRTL_VT_U>()); };
     }

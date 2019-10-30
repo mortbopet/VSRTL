@@ -11,7 +11,10 @@
 
 namespace vsrtl {
 
+DefineGraphicsProxy(ClockedComponent);
 class ClockedComponent : public Component {
+    DefineTypeID(ClockedComponent);
+
 public:
     ClockedComponent(std::string name, Component* parent) : Component(name, parent) {}
     virtual void reset() = 0;
