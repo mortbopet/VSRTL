@@ -22,6 +22,10 @@ PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent)
     m_pen.setCapStyle(Qt::RoundCap);
     setAcceptHoverEvents(true);
 
+    if (m_port->isEnumPort()) {
+        // By default, display Enum value if underlying port is enum
+        m_Radix = Radix::Enum;
+    }
     m_valueLabel = new ValueLabel(m_Radix, m_port, this);
     m_valueLabel->setVisible(false);
     m_valueLabel->moveBy(0, -10);  // start position (may be dragged)
