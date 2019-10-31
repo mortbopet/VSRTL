@@ -335,6 +335,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     m_wires.erase(iter);
 
     // Mark the wire for deletion
+    wireToRemove->invalidate();
     wireToRemove->deleteLater();
 
     // Finally, delete the point
