@@ -101,6 +101,54 @@ private:
         }
     }
 };
+
+template <unsigned int addrWidth, unsigned int dataWidth>
+class ROM : public Component {
+public:
+    SetGraphicsType(ClockedComponent);
+    ROM(std::string name, Component* parent) : Component(name, parent) {
+        data_out << [=] { return read(m_memory, addr.template value<VSRTL_VT_U>()); };
+    }
+
+    /**
+     * @brief addInitializationMemory
+     * The specified program will be added as a memory segment which will be loaded into this memory once it is reset.
+     */
+    template <typename T>
+    void initializeMemory(const VSRTL_VT_U startAddr, T* program, size_t n) {
+        VSRTL_VT_U addr = startAddr;
+        for (size_t i = 0; i < n; i++) {
+            write(m_memory, addr, program[i], sizeof(T));
+            addr += sizeof(T);
+        }
+    }
+
+    INPUTPORT(addr, addrWidth);
+    OUTPUTPORT(data_out, dataWidth);
+
+private:
+    std::vector<std::unordered_map<VSRTL_VT_U, uint8_t>> m_initMemories;
+    std::unordered_map<VSRTL_VT_U, uint8_t> m_memory;
+
+    VSRTL_VT_U read(std::unordered_map<VSRTL_VT_U, uint8_t>& memory, VSRTL_VT_U address) {
+        // Note: If address is not found in memory map, a default constructed object
+        // will be created, and read. in our case uint8_t() = 0
+        VSRTL_VT_U read =
+            (memory[address] | (memory[address + 1] << 8) | (memory[address + 2] << 16) | (memory[address + 3] << 24));
+        return read;
+    }
+
+    void write(std::unordered_map<VSRTL_VT_U, uint8_t>& memory, VSRTL_VT_U address, VSRTL_VT_U value,
+               int size = sizeof(VSRTL_VT_U)) {
+        // writes value from the given address start, and up to $size bytes of
+        // $value
+        for (int i = 0; i < size; i++) {
+            memory[address + i] = value & 0xff;
+            value >>= 8;
+        }
+    }
+};
+
 }  // namespace vsrtl
 
 #endif  // MEMORY_H
