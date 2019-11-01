@@ -214,8 +214,8 @@ QPolygonF expandLine(const QLineF line, const qreal sideWidth) {
 }
 
 void WireSegment::invalidate() {
-    setEnd(nullptr);
-    setStart(nullptr);
+    m_end = nullptr;
+    m_start = nullptr;
 }
 
 QPainterPath WireSegment::shape() const {
