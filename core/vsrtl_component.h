@@ -111,6 +111,61 @@ public:
                 s->propagate(propagationStack);
             }
         } else {
+            /* A circuit should initially ask its subcomponents to propagate. Some subcomponents may be able to
+             * propagate and some may not. Furthermore, This subcomponent (X) may be dependent on some of its internal
+             * subcomponents to propagate.
+             * Example:
+             * Port Y is propagated, and now asks X to propagate.
+             * X contains two subcomponents, B and A. A has all of its inputs (Y) propagated. B is reliant on 'z' to be
+             * propagated. However, 'z' is dependent on A being propagated.
+             *
+             * 1.
+             * X is trying to propagate, will initially ask its subcomponents to propagate.
+             *
+             * 1.
+             * Asking A to propagate, will make port (h) propagated.
+             * Asking B to propagate is invalid, because 'z' is unpropagated.
+             *
+             * 2.
+             * Component X will then check whether all of its input ports are propagated (z, i). 'i' is propagated, but
+             * 'z' is not, so the propagation algorithm will ask the parent component of port 'z' to propagate (C).
+             *
+             * 3.
+             * C has one input which attaches to port 'h' of A - which is now propagated. So C may propagate, in turn
+             * making 'z' propagated.
+             *
+             * 4.
+             * All inputs have now been propagated to X. It will then again ask its subcomponents to try to
+             * propagate.
+             *
+             * 5.
+             *
+             *  y
+             *  +                 X
+             *  |          +--------------+
+             *  |          |   +------+   |
+             *  |          |   |      |   |
+             *  |          |   |  B   |   |
+             *  |      z   |   |      |   |        +------+
+             *  |    +---->---->      |   |        |      |
+             *  |    |     |   +------+   |        |      |
+             *  |    |     |              |    +--->  C   +----+
+             *  |    |     |   +------+   |    |   |      |    |
+             *  |    |  i  |   |      | h |    |   +------+    |
+             *  +--------->---->  A   +--------+               |
+             *       |     |   |      |   |                    |
+             *       |     |   |      |   |                    |
+             *       |     |   +------+   |                    |
+             *       |     |              |                    |
+             *       |     +--------------+                    |
+             *       |                                         |
+             *       +-----------------------------------------+
+             *
+             */
+
+            for (const auto& sc : m_subcomponents)
+                sc->propagateComponent(propagationStack);
+
             // All sequential logic must have their inputs propagated before they themselves can propagate. If this is
             // not the case, the function will return. Iff the circuit is correctly connected, this component will at a
             // later point be visited, given that the input port which is currently not yet propagated, will become
