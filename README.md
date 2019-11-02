@@ -12,7 +12,7 @@ If you would like to contribute, check the [issues](https://github.com/mortbopet
   <img src="https://github.com/mortbopet/vsrtl/blob/master/resources/gif1.gif?raw=true" width=75%/>
 </p>
 
-Figure: A simulation of a 8-bit counter using full adders. **Note**; placement and routing is being actively developed, and as such positioning of objects and wire routing are not final.
+Figure: A visualization of [VelonaCore](https://github.com/mortbopet/VelonaCore), a single cycle processor implementing the [Leros instruction set](https://leros-dev.github.io).
 
 # Building
 ```
