@@ -68,16 +68,6 @@ QRectF WirePoint::boundingRect() const {
     return shape().boundingRect().adjusted(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
 }
 
-/**
- * @brief WirePoint::invalidate
- * Called before marking the point for deletion, ensuring that no calls are made to related wire segments, which may
- * also be in the process of deletion
- */
-void WirePoint::invalidate() {
-    m_outputWires.clear();
-    m_inputWire = nullptr;
-}
-
 QVariant WirePoint::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (change == QGraphicsItem::ItemPositionChange) {
         // Snap to grid
@@ -214,8 +204,8 @@ QPolygonF expandLine(const QLineF line, const qreal sideWidth) {
 }
 
 void WireSegment::invalidate() {
-    m_end = nullptr;
-    m_start = nullptr;
+    setStart(nullptr);
+    setEnd(nullptr);
 }
 
 QPainterPath WireSegment::shape() const {
@@ -331,15 +321,14 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     // Delete the (now defunct) wire between the new start point and the point to be removed
     auto iter = std::find(m_wires.begin(), m_wires.end(), wireToRemove);
     Q_ASSERT(iter != m_wires.end());
-    (*iter)->invalidate();
     m_wires.erase(iter);
     wireToRemove->deleteLater();
 
-    // Finally, delete the point
+    // Finally, delete the point. At this point, no wires should be referencing the point
+    Q_ASSERT(pointToRemove->getInputWire() == nullptr && pointToRemove->getOutputWires().empty());
     auto p_iter = std::find(m_points.begin(), m_points.end(), pointToRemove);
     Q_ASSERT(p_iter != m_points.end());
     m_points.erase(p_iter);
-    pointToRemove->invalidate();
     pointToRemove->deleteLater();
 }
 

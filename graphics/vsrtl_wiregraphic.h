@@ -51,13 +51,15 @@ class WirePoint : public PortPoint {
 public:
     WirePoint(WireGraphic& parent, QGraphicsItem* sceneParent);
 
-    void invalidate();
     void addOutputWire(WireSegment* wire) { m_outputWires.push_back(wire); }
     void removeOutputWire(WireSegment* wire);
     void clearOutputWires() { m_outputWires.clear(); }
     void setInputWire(WireSegment* wire) { m_inputWire = wire; }
     void clearInputWire() { m_inputWire = nullptr; }
-    const std::vector<WireSegment*>& getOutputWires() { return m_outputWires; }
+
+    // Must be returned by copy; may get used to invalidate a wire, wherein each output wire will get dereferenced with
+    // this point (and hence modifying m_outputWires)
+    std::vector<WireSegment*> getOutputWires() { return m_outputWires; }
     WireSegment* getInputWire() { return m_inputWire; }
 
     QPainterPath shape() const override;
