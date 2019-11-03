@@ -77,7 +77,7 @@ void ComponentGraphic::initialize() {
     setFlags(ItemIsSelectable | ItemIsMovable | ItemSendsScenePositionChanges);
     setAcceptHoverEvents(true);
 
-    m_label = new Label(QString::fromStdString(m_component.getName()), this);
+    m_label = new Label(QString::fromStdString(m_component.getDisplayName()), this);
 
     // Create IO ports of Component
     for (const auto& c : m_component.getInputs()) {

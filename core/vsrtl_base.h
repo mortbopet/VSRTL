@@ -21,6 +21,7 @@ public:
 
     Component* getParent() const { return m_parent; }
     const std::string& getName() const { return m_name; }
+    const std::string& getDisplayName() const { return m_displayName.empty() ? m_name : m_displayName; }
 
     void registerGraphic(void* obj) {
         if (m_graphicObject != nullptr) {
@@ -35,11 +36,14 @@ public:
         return m_graphicObject;
     }
 
+    void setDisplayName(std::string name) { m_displayName = name; }
+
     virtual ~Base() {}
 
 private:
     Component* m_parent = nullptr;
     std::string m_name;
+    std::string m_displayName;
     void* m_graphicObject = nullptr;
 };
 
