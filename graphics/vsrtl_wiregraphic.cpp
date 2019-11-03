@@ -58,8 +58,9 @@ void WirePoint::pointDragLeave(WirePoint*) {
 }
 
 WirePoint::WirePoint(WireGraphic& parent, QGraphicsItem* sceneParent) : PortPoint(sceneParent), m_parent(parent) {
-    setFlags(ItemIsSelectable | ItemIsMovable | ItemSendsScenePositionChanges);
+    setFlags(ItemIsSelectable | ItemSendsScenePositionChanges);
     setAcceptHoverEvents(true);
+    setMoveable();
     m_sceneParent = dynamic_cast<ComponentGraphic*>(sceneParent);
     Q_ASSERT(m_sceneParent != nullptr);
 }

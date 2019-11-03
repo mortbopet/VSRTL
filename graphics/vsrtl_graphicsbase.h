@@ -25,16 +25,21 @@ public:
      * components behaviour is required
      */
     virtual void setLocked(bool locked) {
+        if (!m_isMoveable)
+            return;
+
         if (locked)
             setFlags(flags() & ~QGraphicsItem::ItemIsMovable);
         else
             setFlag(QGraphicsItem::ItemIsMovable);
     }
 
+    void setMoveable() { m_isMoveable = true; }
     bool isLocked() const;
 
 protected:
     bool m_initialized = false;
+    bool m_isMoveable = false;
 };
 }  // namespace vsrtl
 

@@ -94,13 +94,6 @@ void VSRTLScene::lockComponents(bool lock) {
     for (auto& i : items()) {
         if (auto* gb = dynamic_cast<GraphicsBase*>(i))
             gb->setLocked(lock);
-        else {
-            // Could be a label, wirepoint etc.; just toggle visibility
-            if (lock)
-                i->setFlags(i->flags() & ~QGraphicsItem::ItemIsMovable);
-            else
-                i->setFlag(QGraphicsItem::ItemIsMovable);
-        }
     }
 }
 

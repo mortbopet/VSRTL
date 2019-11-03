@@ -74,8 +74,9 @@ bool ComponentGraphic::hasSubcomponents() const {
 void ComponentGraphic::initialize() {
     Q_ASSERT(scene() != nullptr);
 
-    setFlags(ItemIsSelectable | ItemIsMovable | ItemSendsScenePositionChanges);
+    setFlags(ItemIsSelectable | ItemSendsScenePositionChanges);
     setAcceptHoverEvents(true);
+    setMoveable();
 
     m_label = new Label(QString::fromStdString(m_component.getDisplayName()), this);
 
