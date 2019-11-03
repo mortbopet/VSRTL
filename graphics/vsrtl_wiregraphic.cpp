@@ -307,6 +307,7 @@ std::pair<WirePoint*, WireSegment*> WireGraphic::createWirePointOnSeg(const QPoi
 }
 
 void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
+    prepareGeometryChange();
     Q_ASSERT(std::find(m_points.begin(), m_points.end(), pointToRemove) != m_points.end());
     auto* wireToRemove = pointToRemove->getInputWire();
     auto* newStartPoint = wireToRemove->getStart();
@@ -322,6 +323,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     auto iter = std::find(m_wires.begin(), m_wires.end(), wireToRemove);
     Q_ASSERT(iter != m_wires.end());
     m_wires.erase(iter);
+    wireToRemove->invalidate();
     wireToRemove->deleteLater();
 
     // Finally, delete the point. At this point, no wires should be referencing the point
@@ -361,7 +363,6 @@ void WireGraphic::clearWirePoints() {
     for (auto& p : m_points) {
         removeWirePoint(p);
     }
-    update();
 }
 
 /**
