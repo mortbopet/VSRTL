@@ -215,15 +215,12 @@ void PortGraphic::updateGeometry() {
     QFontMetrics fm(m_font);
     m_textRect = fm.boundingRect(m_widthText);
 
-    if (m_type == PortType::out) {
-        m_boundingRect = QRectF(0, 0, m_textRect.width() + PORT_INNER_MARGIN, m_textRect.height() + PORT_INNER_MARGIN);
-    } else {
-        m_boundingRect = QRectF(GRID_SIZE - m_textRect.width() - PORT_INNER_MARGIN, 0,
-                                m_textRect.width() + PORT_INNER_MARGIN, m_textRect.height() + PORT_INNER_MARGIN);
-    }
+    m_boundingRect = QRectF(getInputPoint(), m_textRect.size());
+    const qreal portLen = (getOutputPoint() - getInputPoint()).manhattanLength();
+    m_boundingRect.setWidth(m_boundingRect.width() < portLen ? portLen : m_boundingRect.width());
 
-    // Adjust for pen sizes etc.
-    m_boundingRect.adjust(-5, -5, 5, 5);
+    // Adjust for pen sizes etc. (set via. visual inspection of the bounding rect)
+    m_boundingRect.adjust(-3, -3, 3, 1);
 }
 
 const QPen& PortGraphic::getPen() {
