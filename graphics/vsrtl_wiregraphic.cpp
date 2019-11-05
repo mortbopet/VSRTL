@@ -2,6 +2,7 @@
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_port.h"
 #include "vsrtl_portgraphic.h"
+#include "vsrtl_traversal_util.h"
 
 #include "vsrtl_graphics_defines.h"
 
@@ -36,6 +37,12 @@ void PortPoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* item, Q
     painter->drawPoint(QPointF(0, 0));
     painter->restore();
 #endif
+}
+
+void PortPoint::removeOutputWire(WireSegment* wire) {
+    auto iter = std::find(m_outputWires.begin(), m_outputWires.end(), wire);
+    Q_ASSERT(iter != m_outputWires.end());
+    m_outputWires.erase(iter);
 }
 
 void WirePoint::pointDrop(WirePoint* point) {
@@ -93,17 +100,14 @@ QPainterPath WirePoint::shape() const {
     return path;
 }
 
-void WirePoint::removeOutputWire(WireSegment* wire) {
-    auto iter = std::find(m_outputWires.begin(), m_outputWires.end(), wire);
-    Q_ASSERT(iter != m_outputWires.end());
-    m_outputWires.erase(iter);
-}
-
 void WirePoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
     // Given that WirePoints are graphical children of a component graphic (for them to be fixed on the component),
     // they will still be drawn when the component graphic is not expanded (given that it is still visible). Thus,
     // only paint if the parent componentgraphic is expanded.
     if (!m_sceneParent->isExpanded())
+        return;
+    const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
+    if (lod < 0.35)
         return;
 
     painter->save();
@@ -147,23 +151,19 @@ WireSegment::WireSegment(WireGraphic* parent) : m_parent(parent), GraphicsBase(p
 }
 
 void WireSegment::setStart(PortPoint* start) {
-    if (auto* prevStart = dynamic_cast<WirePoint*>(m_start)) {
-        prevStart->removeOutputWire(this);
-    }
+    if (m_start)
+        m_start->removeOutputWire(this);
     m_start = start;
-    if (auto* newStart = dynamic_cast<WirePoint*>(start)) {
-        newStart->addOutputWire(this);
-    }
+    if (m_start)
+        m_start->addOutputWire(this);
 }
 
 void WireSegment::setEnd(PortPoint* end) {
-    if (auto* prevEnd = dynamic_cast<WirePoint*>(m_end)) {
-        prevEnd->clearInputWire();
-    }
+    if (m_end)
+        m_end->clearInputWire();
     m_end = end;
-    if (auto* newEnd = dynamic_cast<WirePoint*>(end)) {
-        newEnd->setInputWire(this);
-    }
+    if (m_end)
+        m_end->setInputWire(this);
 }
 
 QLineF WireSegment::getLine() const {
@@ -436,6 +436,11 @@ ComponentGraphic* WireGraphic::getPointOwningComponentGraphic() const {
 
 Component* WireGraphic::getPointOwningComponent() const {
     return getPointOwningComponentGraphic()->getComponent();
+}
+
+void WireGraphic::portMoved(const PortGraphic* port, const QPoint dP) {
+    if (port == getFromPort()) {
+    }
 }
 
 void WireGraphic::createRectilinearSegments(PortPoint* start, PortPoint* end) {

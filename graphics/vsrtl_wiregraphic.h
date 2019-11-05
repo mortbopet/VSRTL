@@ -41,6 +41,21 @@ public:
     PortPoint(QGraphicsItem* parent);
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
+
+    // Must be returned by copy; may get used to invalidate a wire, wherein each output wire will get dereferenced with
+    // this point (and hence modifying m_outputWires)
+    std::vector<WireSegment*> getOutputWires() { return m_outputWires; }
+    WireSegment* getInputWire() { return m_inputWire; }
+
+    void addOutputWire(WireSegment* wire) { m_outputWires.push_back(wire); }
+    void removeOutputWire(WireSegment* wire);
+    void clearOutputWires() { m_outputWires.clear(); }
+    void setInputWire(WireSegment* wire) { m_inputWire = wire; }
+    void clearInputWire() { m_inputWire = nullptr; }
+
+protected:
+    WireSegment* m_inputWire = nullptr;
+    std::vector<WireSegment*> m_outputWires;
 };
 
 /**
@@ -50,17 +65,6 @@ public:
 class WirePoint : public PortPoint {
 public:
     WirePoint(WireGraphic& parent, QGraphicsItem* sceneParent);
-
-    void addOutputWire(WireSegment* wire) { m_outputWires.push_back(wire); }
-    void removeOutputWire(WireSegment* wire);
-    void clearOutputWires() { m_outputWires.clear(); }
-    void setInputWire(WireSegment* wire) { m_inputWire = wire; }
-    void clearInputWire() { m_inputWire = nullptr; }
-
-    // Must be returned by copy; may get used to invalidate a wire, wherein each output wire will get dereferenced with
-    // this point (and hence modifying m_outputWires)
-    std::vector<WireSegment*> getOutputWires() { return m_outputWires; }
-    WireSegment* getInputWire() { return m_inputWire; }
 
     QPainterPath shape() const override;
     QRectF boundingRect() const override;
@@ -75,8 +79,6 @@ public:
 private:
     WireGraphic& m_parent;
     ComponentGraphic* m_sceneParent;
-    WireSegment* m_inputWire = nullptr;
-    std::vector<WireSegment*> m_outputWires;
     WirePoint* m_draggedOnThis = nullptr;
 };
 
@@ -121,6 +123,7 @@ public:
     void postSceneConstructionInitialize1() override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override {}
 
+    void portMoved(const PortGraphic* port, const QPoint dP);
     PortGraphic* getFromPort() const { return m_fromPort; }
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }
     std::pair<WirePoint*, WireSegment*> createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment);

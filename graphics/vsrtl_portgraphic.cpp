@@ -204,6 +204,16 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
     if (change == QGraphicsItem::ItemSelectedChange) {
         updatePen(value.toBool(), !value.toBool());
     }
+
+    if (change == QGraphicsItem::ItemPositionChange) {
+        QPoint dPos = value.toPoint() - pos().toPoint();
+        if (m_type == PortType::out) {
+            m_outputWire->portMoved(this, dPos);
+        } else {
+            m_inputWire->portMoved(this, dPos);
+        }
+    }
+
     return QGraphicsItem::itemChange(change, value);
 }
 
@@ -235,6 +245,7 @@ const QPen& PortGraphic::getPen() {
 }
 
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
+    return;
     painter->save();
     painter->setFont(m_font);
     const int offset = m_type == PortType::out ? PORT_INNER_MARGIN
