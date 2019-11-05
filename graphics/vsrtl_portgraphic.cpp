@@ -245,7 +245,6 @@ const QPen& PortGraphic::getPen() {
 }
 
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
-    return;
     painter->save();
     painter->setFont(m_font);
     const int offset = m_type == PortType::out ? PORT_INNER_MARGIN
