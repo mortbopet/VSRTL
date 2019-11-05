@@ -34,7 +34,10 @@ public:
             setFlag(QGraphicsItem::ItemIsMovable);
     }
 
-    void setMoveable() { m_isMoveable = true; }
+    void setMoveable() {
+        m_isMoveable = true;
+        setLocked(false);
+    }
     bool isLocked() const;
 
 protected:
