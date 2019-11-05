@@ -18,7 +18,6 @@ class Component;
 class Base {
 public:
     Base(std::string name, Component* parent) : m_name(name), m_parent(parent) {}
-
     Component* getParent() const { return m_parent; }
     const std::string& getName() const { return m_name; }
     const std::string& getDisplayName() const { return m_displayName.empty() ? m_name : m_displayName; }
@@ -38,7 +37,7 @@ public:
 
     void setDisplayName(std::string name) { m_displayName = name; }
 
-    virtual ~Base() {}
+    virtual ~Base() = default;
 
 private:
     Component* m_parent = nullptr;

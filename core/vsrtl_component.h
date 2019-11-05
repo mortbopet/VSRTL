@@ -25,10 +25,9 @@ namespace vsrtl {
 /// the actual macro. For these cases, we may say SUBCOMPONENT(xor1, TYPE(Xor<1,2>));
 #define TYPE(...) __VA_ARGS__
 
-#define SUBCOMPONENT(name, type, ...) type* name = create_component<type>(this, #name, ##__VA_ARGS__)
+#define SUBCOMPONENT(name, type, ...) type* name = create_component<type>(#name, ##__VA_ARGS__)
 
-#define SUBCOMPONENTS(name, type, n, ...) \
-    std::vector<type*> name = create_components<type>(this, #name, n, ##__VA_ARGS__)
+#define SUBCOMPONENTS(name, type, n, ...) std::vector<type*> name = create_components<type>(#name, n, ##__VA_ARGS__)
 
 #define INPUTPORT(name, W) Port<W>& name = this->createInputPort<W>(#name)
 #define INPUTPORT_ENUM(name, E_t) Port<E_t::width()>& name = this->createInputPort<E_t::width(), E_t>(#name)
@@ -78,6 +77,24 @@ public:
      * @param subcomponent
      */
     void addSubcomponent(Component* subcomponent) { m_subcomponents.insert(std::unique_ptr<Component>(subcomponent)); }
+
+    // Component object generator that registers objects in parent upon creation
+    template <typename T, typename... Args>
+    T* create_component(std::string name, Args... args) {
+        verifyIsUniqueComponentName(name);
+        auto* ptr = static_cast<T*>((*m_subcomponents.emplace(std::make_unique<T>(name, this, args...)).first).get());
+        return ptr;
+    }
+
+    template <typename T, typename... Args>
+    std::vector<T*> create_components(std::string name, unsigned int n, Args... args) {
+        std::vector<T*> components;
+        for (unsigned int i = 0; i < n; i++) {
+            std::string i_name = name + "_" + std::to_string(i);
+            components.push_back(create_component<T, Args...>(i_name, args...));
+        }
+        return components;
+    }
 
     template <unsigned int W, typename E_t = void>
     Port<W>& createInputPort(std::string name) {
@@ -271,11 +288,11 @@ protected:
         verifyIsUniquePortName(name);
         Port<W>* port;
         if constexpr (std::is_void<E_t>::value) {
-            port = new Port<W>(name, this);
+            port = static_cast<Port<W>*>((*container.emplace(std::make_unique<Port<W>>(name, this)).first).get());
         } else {
-            port = new EnumPort<W, E_t>(name, this);
+            port =
+                static_cast<Port<W>*>((*container.emplace(std::make_unique<EnumPort<W, E_t>>(name, this)).first).get());
         }
-        container.insert(std::unique_ptr<Port<W>>(port));
         return *port;
     }
 
@@ -283,11 +300,12 @@ protected:
     std::vector<Port<W>*> createPorts(std::string name, std::set<std::unique_ptr<PortBase>, PortBaseCompT>& container,
                                       unsigned int n) {
         std::vector<Port<W>*> ports;
+        Port<W>* port;
         for (unsigned int i = 0; i < n; i++) {
             std::string i_name = name + "_" + std::to_string(i);
             verifyIsUniquePortName(i_name);
-            Port<W>* port = new Port<W>(i_name.c_str(), this);
-            container.insert(std::unique_ptr<Port<W>>(port));
+            port = static_cast<Port<W>*>(
+                (*container.emplace(std::make_unique<Port<W>>(i_name.c_str(), this)).first).get());
             ports.push_back(port);
         }
         return ports;
@@ -325,27 +343,6 @@ protected:
     std::set<std::unique_ptr<PortBase>, PortBaseCompT> m_inputports;
     std::set<std::unique_ptr<Component>, ComponentCompT> m_subcomponents;
 };
-
-// Component object generator that registers objects in parent upon creation
-template <typename T, typename... Args>
-T* create_component(Component* parent, std::string name, Args... args) {
-    parent->verifyIsUniqueComponentName(name);
-    T* ptr = new T(name, parent, args...);
-    if (parent) {
-        parent->addSubcomponent(static_cast<Component*>(ptr));
-    }
-    return ptr;
-}
-
-template <typename T, typename... Args>
-std::vector<T*> create_components(Component* parent, std::string name, unsigned int n, Args... args) {
-    std::vector<T*> components;
-    for (unsigned int i = 0; i < n; i++) {
-        std::string i_name = name + "_" + std::to_string(i);
-        components.push_back(create_component<T, Args...>(parent, i_name, args...));
-    }
-    return components;
-}
 
 }  // namespace vsrtl
 
