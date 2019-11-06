@@ -48,7 +48,7 @@ private:
 
 template <typename T>
 struct BaseSorter {
-    bool operator()(const T& lhs, const T& rhs) const { lhs->getName() < rhs->getName(); }
+    bool operator()(const T& lhs, const T& rhs) const { return lhs->getName() < rhs->getName(); }
 };
 
 }  // namespace vsrtl
