@@ -488,6 +488,18 @@ void WireGraphic::createRectilinearSegments(PortPoint* start, PortPoint* end) {
         pointAndSeg = createWirePointOnSeg(mapToScene(intermediate2), pointAndSeg.second);
 }
 
+QVariant WireGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
+    if (change == QGraphicsItem::ItemVisibleChange) {
+        // When this WireGraphic is hidden, WireSegments (children of this) will be automatically hidden. However,
+        // WirePoints are children of a higher level parent component - so these must be hidden manually
+        for (auto& p : m_points) {
+            p->setVisible(value.toBool());
+        }
+    }
+
+    return QGraphicsItem::itemChange(change, value);
+}
+
 /**
  * @brief WireGraphic::postSceneConstructionInitialize1
  * With all ports and components created during circuit construction, wires may now register themselves with their

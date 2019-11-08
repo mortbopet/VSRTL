@@ -224,6 +224,9 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         });
     }
 
+    auto* hideAction = menu.addAction("Hide");
+    connect(hideAction, &QAction::triggered, [=] { this->hide(); });
+
     menu.exec(event->screenPos());
 }
 

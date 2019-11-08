@@ -122,6 +122,7 @@ public:
     const QPen& getPen();
     void postSceneConstructionInitialize1() override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override {}
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
     void portMoved(const PortGraphic* port, const QPoint dP);
     PortGraphic* getFromPort() const { return m_fromPort; }

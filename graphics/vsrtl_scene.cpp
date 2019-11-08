@@ -134,6 +134,8 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
         // Hidden components submenu
         auto* hiddenMenu = menu.addMenu("Hidden components");
+        std::vector<QAction*> showActions;
+
         for (const auto& i : items()) {
             if (!i->isVisible()) {
                 if (auto* c = dynamic_cast<ComponentGraphic*>(i)) {
@@ -142,12 +144,23 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
                     if (c->getParent()->isExpanded()) {
                         auto* action = hiddenMenu->addAction(QString::fromStdString(c->getComponent()->getName()));
                         connect(action, &QAction::triggered, [c] { c->setVisible(true); });
+                        showActions.push_back(action);
                     }
                 }
             }
         }
-        // Disable the hidden components menu if there are no hidden components to be re-enabled
-        hiddenMenu->setDisabled(hiddenMenu->actions().size() == 0);
+
+        if (hiddenMenu->actions().size() != 0) {
+            hiddenMenu->addSeparator();
+            auto* showAllAction = hiddenMenu->addAction("Show all");
+            connect(showAllAction, &QAction::triggered, [showActions] {
+                for (const auto& a : showActions)
+                    a->trigger();
+            });
+        } else {
+            // Disable the hidden components menu if there are no hidden components to be re-enabled
+            hiddenMenu->setDisabled(hiddenMenu->actions().size() == 0);
+        }
 
         menu.addSeparator();
 
