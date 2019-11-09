@@ -488,10 +488,55 @@ void WireGraphic::createRectilinearSegments(PortPoint* start, PortPoint* end) {
         pointAndSeg = createWirePointOnSeg(mapToScene(intermediate2), pointAndSeg.second);
 }
 
+static inline unsigned int visibleOutputWires(PortPoint* p) {
+    unsigned int visibleWires = 0;
+    for (const auto& w : p->getOutputWires()) {
+        visibleWires += w->isVisible() ? 1 : 0;
+    }
+    return visibleWires;
+}
+
+/**
+ * @brief WireGraphic::setWiresVisibleToPort
+ * Used when a component graphic toggles its visibility. In this case, wires and points which traverse towards at an
+ * input port to that component should be hidden
+ * @param p port
+ * @param visible
+ */
+void WireGraphic::setWiresVisibleToPort(const PortPoint* p, bool visible) {
+    /// Find segment which terminates in @param p
+    auto iter = std::find_if(m_wires.begin(), m_wires.end(), [p](WireSegment* wire) { return wire->getEnd() == p; });
+    Q_ASSERT(iter != m_wires.end());
+
+    WireSegment* seg = *iter;
+    PortPoint* start = seg->getStart();
+    while (seg->isVisible() ^ visible) {
+        seg->setVisible(visible);
+        // Recurse?
+        bool recurse = false;
+        if (visible) {
+            /// traverse the sequence of wires if the next start point is not visible (which it by now should be, since
+            /// we just enabled visibility of its output wire
+            recurse = dynamic_cast<WirePoint*>(start) && !start->isVisible();
+        } else {
+            /// Traverse the sequence of wires from @param p towards @this source port, until we encounter a WirePoint
+            /// which has more than 0 >visible< wire enabled
+            recurse = visibleOutputWires(start) == 0 && dynamic_cast<WirePoint*>(start);
+        }
+        if (recurse) {
+            start->setVisible(visible);
+            seg = start->getInputWire();
+            start = seg->getStart();
+        } else {
+            break;
+        }
+    }
+}
+
 QVariant WireGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (change == QGraphicsItem::ItemVisibleChange) {
-        // When this WireGraphic is hidden, WireSegments (children of this) will be automatically hidden. However,
-        // WirePoints are children of a higher level parent component - so these must be hidden manually
+        // When this WireGraphic is hidden, output wire WireSegments (children of this) will be automatically hidden.
+        // However, WirePoints are children of a higher level parent component - so these must be hidden manually
         for (auto& p : m_points) {
             p->setVisible(value.toBool());
         }

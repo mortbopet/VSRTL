@@ -124,6 +124,7 @@ public:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override {}
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
+    void setWiresVisibleToPort(const PortPoint* p, bool visible);
     void portMoved(const PortGraphic* port, const QPoint dP);
     PortGraphic* getFromPort() const { return m_fromPort; }
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }
