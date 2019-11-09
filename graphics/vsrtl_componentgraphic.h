@@ -59,24 +59,40 @@ public:
         // Serialize the original component name. Wires within the component will reference this when describing parent
         // components, but this component may have different names based on the design which instantiated it.
         // Thus, we need to replace the stored name with the actual name of the component.
-        std::string storedName = getComponent()->getName();
-        archive(cereal::make_nvp("Top name", storedName));
+        try {
+            std::string storedName = getComponent()->getName();
+            archive(cereal::make_nvp("Top name", storedName));
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
 
         if (hasSubcomponents()) {
-            bool expanded = isExpanded();
-            archive(cereal::make_nvp("Expanded", expanded));
-            if (expanded != isExpanded()) {
-                setExpanded(expanded);
+            try {
+                bool expanded = isExpanded();
+                archive(cereal::make_nvp("Expanded", expanded));
+                if (expanded != isExpanded()) {
+                    setExpanded(expanded);
+                }
+            } catch (cereal::Exception e) {
+                /// @todo: build an error report
             }
 
             // Serialize wires from input ports to subcomponents
             for (auto& p : m_inputPorts) {
-                archive(cereal::make_nvp(p->getPort()->getName(), *p->getOutputWire()));
+                try {
+                    archive(cereal::make_nvp(p->getPort()->getName(), *p->getOutputWire()));
+                } catch (cereal::Exception e) {
+                    /// @todo: build an error report
+                }
             }
 
             // Serealize subcomponents
             for (const auto& c : m_subcomponents) {
-                archive(cereal::make_nvp(c->getComponent()->getName(), *c));
+                try {
+                    archive(cereal::make_nvp(c->getComponent()->getName(), *c));
+                } catch (cereal::Exception e) {
+                    /// @todo: build an error report
+                }
             }
         }
 
@@ -86,16 +102,32 @@ public:
         if (!m_isTopLevelSerializedComponent) {
             // Serialize output wire
             for (auto& p : m_outputPorts) {
-                archive(cereal::make_nvp(p->getPort()->getName(), *p->getOutputWire()));
+                try {
+                    archive(cereal::make_nvp(p->getPort()->getName(), *p->getOutputWire()));
+                } catch (cereal::Exception e) {
+                    /// @todo: build an error report
+                }
             }
         }
 
         // If this is not a top level component, we should serialize its position within its parent component
         if (!m_isTopLevelSerializedComponent) {
             // Serealize position within parent component
-            QPoint p = pos().toPoint();
-            archive(cereal::make_nvp("Pos", p));
-            setPos(p);
+            try {
+                QPoint p = pos().toPoint();
+                archive(cereal::make_nvp("Pos", p));
+                setPos(p);
+            } catch (cereal::Exception e) {
+                /// @todo: build an error report
+            }
+
+            try {
+                bool v = isVisible();
+                archive(cereal::make_nvp("Visible", v));
+                setVisible(v);
+            } catch (cereal::Exception e) {
+                /// @todo: build an error report
+            }
         }
     }
 
