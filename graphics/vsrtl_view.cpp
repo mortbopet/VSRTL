@@ -12,7 +12,7 @@ VSRTLView::VSRTLView(QWidget* parent) : QGraphicsView(parent) {
 
     setDragMode(QGraphicsView::RubberBandDrag);
     setOptimizationFlag(QGraphicsView::DontSavePainterState);
-    setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
+    setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setRenderHint(QPainter::Antialiasing, false);
     setInteractive(true);
