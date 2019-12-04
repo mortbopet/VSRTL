@@ -5,6 +5,7 @@
 #include "vsrtl_port.h"
 
 namespace vsrtl {
+namespace core {
 
 /**
  * @brief The Decollator class
@@ -27,6 +28,7 @@ public:
     INPUTPORT(in, W);
 };
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_DECOLLATOR_H

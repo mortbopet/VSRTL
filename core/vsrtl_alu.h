@@ -8,6 +8,7 @@
 #include "vsrtl_port.h"
 
 namespace vsrtl {
+namespace core {
 
 Enum(ALU_OPCODE, ADD, SUB, MUL, DIV, AND, OR, XOR, SL, SRA, SRL, LUI, LT, LTU, EQ);
 
@@ -66,4 +67,5 @@ private:
         }
     }
 };
+}  // namespace core
 }  // namespace vsrtl

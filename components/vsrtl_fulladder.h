@@ -5,6 +5,7 @@
 #include "vsrtl_logicgate.h"
 
 namespace vsrtl {
+namespace core {
 
 class FullAdder : public Component {
 public:
@@ -41,6 +42,8 @@ public:
     SUBCOMPONENT(and2, TYPE(And<1, 2>));
     SUBCOMPONENT(or1, TYPE(Or<1, 2>));
 };
+
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_FULLADDER_H

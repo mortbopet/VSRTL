@@ -15,6 +15,7 @@
 #include "cereal/cereal.hpp"
 
 namespace vsrtl {
+using namespace core;
 
 class PortGraphic;
 class Label;

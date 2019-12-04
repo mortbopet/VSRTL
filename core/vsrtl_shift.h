@@ -4,6 +4,7 @@
 #include "vsrtl_component.h"
 
 namespace vsrtl {
+namespace core {
 
 enum class ShiftType { sl, sra, srl };
 
@@ -28,5 +29,6 @@ public:
     INPUTPORT(in, W);
 };
 
+}  // namespace core
 }  // namespace vsrtl
 #endif  // VSRTL_SHIFT_H

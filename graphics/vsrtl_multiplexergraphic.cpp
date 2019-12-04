@@ -4,6 +4,7 @@
 #include <QPainter>
 
 namespace vsrtl {
+using namespace core;
 
 MultiplexerGraphic::MultiplexerGraphic(MultiplexerBase& c, QGraphicsItem* parent)
     : ComponentGraphic(c, parent), m_multiplexer(c) {

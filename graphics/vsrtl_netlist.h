@@ -8,6 +8,7 @@
 #include "vsrtl_netlistview.h"
 
 namespace vsrtl {
+using namespace core;
 
 namespace Ui {
 class Netlist;

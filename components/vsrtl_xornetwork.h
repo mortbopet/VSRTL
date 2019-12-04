@@ -9,6 +9,7 @@
 #include "vsrtl_register.h"
 
 namespace vsrtl {
+namespace core {
 
 class XorNetwork : public Design {
 public:
@@ -52,4 +53,5 @@ public:
     SUBCOMPONENT(decol, Decollator<rows>);
     SUBCOMPONENT(adder, Adder<rows>);
 };
+}  // namespace core
 }  // namespace vsrtl

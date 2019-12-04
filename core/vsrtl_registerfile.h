@@ -12,6 +12,7 @@
 #include <memory>
 
 namespace vsrtl {
+namespace core {
 
 template <int W, int N>
 class RegisterFile : public Component {
@@ -46,6 +47,8 @@ public:
     SUBCOMPONENTS(cmps, Eq<ceillog2(N)>, N);
     SUBCOMPONENT(out_mux, TYPE(Multiplexer<N, W>));
 };
+
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // REGISTERFILE_H

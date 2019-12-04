@@ -7,7 +7,7 @@ class tst_registerfile : public QObject {
 };
 
 void tst_registerfile::functionalTest() {
-    vsrtl::RegisterFileTester a;
+    vsrtl::core::RegisterFileTester a;
 
     a.verifyAndInitialize();
 }

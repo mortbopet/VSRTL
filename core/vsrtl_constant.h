@@ -6,6 +6,7 @@
 #include "vsrtl_port.h"
 
 namespace vsrtl {
+namespace core {
 
 namespace {
 constexpr bool valueFitsInBitWidth(unsigned int width, int value) {
@@ -56,6 +57,7 @@ void operator>>(VSRTL_VT_U c, std::vector<Port<W>*> toThis) {
         c >> *p;
 }
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // CONSTANT_H

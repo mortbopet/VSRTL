@@ -12,6 +12,7 @@
 #include <utility>
 
 namespace vsrtl {
+namespace core {
 
 /**
  * @brief The Design class
@@ -189,6 +190,8 @@ private:
 
     std::vector<PortBase*> m_propagationStack;
 };
+
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_DESIGN_H

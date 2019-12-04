@@ -4,6 +4,7 @@
 #include "vsrtl_nestedexponenter.h"
 
 namespace vsrtl {
+namespace core {
 
 class DoubleNestedExponenter : public Component {
 public:
@@ -34,6 +35,8 @@ public:
     SUBCOMPONENT(exp1, DoubleNestedExponenter);
     SUBCOMPONENT(exp2, DoubleNestedExponenter);
 };
+
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_MANYNESTEDCOMPONENTS_H

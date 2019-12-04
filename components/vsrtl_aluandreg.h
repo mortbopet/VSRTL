@@ -9,6 +9,7 @@
 #include "vsrtl_design.h"
 #include "vsrtl_register.h"
 namespace vsrtl {
+namespace core {
 
 class ALUAndReg : public Design {
 public:
@@ -25,4 +26,6 @@ public:
     SUBCOMPONENT(alu, ALU<32>);
     SUBCOMPONENT(reg, Register<32>);
 };
+
+}  // namespace core
 }  // namespace vsrtl

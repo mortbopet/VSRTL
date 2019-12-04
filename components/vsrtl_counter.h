@@ -9,6 +9,7 @@
 #include <string>
 
 namespace vsrtl {
+namespace core {
 
 template <unsigned int width>
 class Counter : public Design {
@@ -39,6 +40,8 @@ public:
     SUBCOMPONENT(outputReg, Register<width>);
     SUBCOMPONENT(value, Collator<width>);
 };
+
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_NBITADDER_H

@@ -4,6 +4,7 @@
 #include "vsrtl_component.h"
 
 namespace vsrtl {
+namespace core {
 
 /**
  * @brief The Collator class
@@ -31,6 +32,7 @@ public:
     INPUTPORTS(in, 1, W);
 };
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_COLLATOR_H

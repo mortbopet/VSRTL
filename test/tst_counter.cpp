@@ -5,6 +5,7 @@
 #include <cmath>
 
 using namespace vsrtl;
+using namespace core;
 
 class tst_counter : public QObject {
     Q_OBJECT
@@ -14,7 +15,7 @@ private slots:
 
 template <int n>
 void testCounter() {
-    vsrtl::Counter<n> counter;
+    vsrtl::core::Counter<n> counter;
     counter.verifyAndInitialize();
 
     const VSRTL_VT_U powVal = std::pow(2, n);

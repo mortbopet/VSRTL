@@ -16,6 +16,7 @@
 #include "Signals/Signal.h"
 
 namespace vsrtl {
+namespace core {
 
 class Component;
 
@@ -216,6 +217,7 @@ public:
     VSRTL_VT_U enumStringToValue(const char* str) const override { return E_t::_from_string(str); }
 };
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_SIGNAL_H

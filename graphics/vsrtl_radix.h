@@ -11,6 +11,7 @@
 #include <QString>
 
 namespace vsrtl {
+using namespace core;
 
 enum class Radix { Hex, Unsigned, Signed, Binary, Enum };
 

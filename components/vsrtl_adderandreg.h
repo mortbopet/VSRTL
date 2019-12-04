@@ -5,7 +5,9 @@
 #include "vsrtl_constant.h"
 #include "vsrtl_design.h"
 #include "vsrtl_register.h"
+
 namespace vsrtl {
+namespace core {
 
 class AdderAndReg : public Design {
 public:
@@ -21,5 +23,7 @@ public:
     SUBCOMPONENT(adder, Adder<32>);
     SUBCOMPONENT(reg, Register<32>);
 };
+
+}  // namespace core
 }  // namespace vsrtl
 #endif  // VSRTL_ADDERANDREG_H

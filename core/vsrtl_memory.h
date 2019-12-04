@@ -9,6 +9,7 @@
 #include <unordered_map>
 
 namespace vsrtl {
+namespace core {
 
 struct MemoryEviction {
     VSRTL_VT_U addr;
@@ -205,6 +206,7 @@ private:
     }
 };
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // MEMORY_H

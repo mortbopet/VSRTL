@@ -3,6 +3,7 @@
 #include "vsrtl_rannumgen.h"
 
 using namespace vsrtl;
+using namespace core;
 
 class tst_rannumgen : public QObject {
     Q_OBJECT private slots : void functionalTest();
@@ -16,7 +17,7 @@ VSRTL_VT_U xorshift(VSRTL_VT_U x) {
 }
 
 void tst_rannumgen::functionalTest() {
-    vsrtl::RanNumGen a;
+    RanNumGen a;
     a.verifyAndInitialize();
 
     VSRTL_VT_U seed = 0x13fb27a3;

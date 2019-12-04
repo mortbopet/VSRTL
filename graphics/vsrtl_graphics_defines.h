@@ -12,8 +12,8 @@
     painter->restore();
 
 // Allow vsrtl base value types to be used as a QVariant
-Q_DECLARE_METATYPE(vsrtl::VSRTL_VT_S)
-Q_DECLARE_METATYPE(vsrtl::VSRTL_VT_U)
+Q_DECLARE_METATYPE(vsrtl::core::VSRTL_VT_S)
+Q_DECLARE_METATYPE(vsrtl::core::VSRTL_VT_U)
 
 namespace vsrtl {
 

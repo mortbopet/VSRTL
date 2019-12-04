@@ -7,7 +7,7 @@ class tst_NestedComponents : public QObject {
 };
 
 void tst_NestedComponents::functionalTest() {
-    vsrtl::NestedExponenter a;
+    vsrtl::core::NestedExponenter a;
 
     // Verify that all instantiated objects in the circuit have been connected as they require
     a.verifyAndInitialize();

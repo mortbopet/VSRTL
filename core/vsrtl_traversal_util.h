@@ -7,6 +7,7 @@
 #include "vsrtl_port.h"
 
 namespace vsrtl {
+namespace core {
 
 template <typename T>
 T getGraphic(Base* b) {
@@ -27,6 +28,7 @@ std::vector<T> getOutputPortGraphics(PortBase* p) {
     return portGraphics;
 }
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_TRAVERSAL_UTIL_H

@@ -30,6 +30,7 @@
 #include <QStyleOptionGraphicsItem>
 
 namespace vsrtl {
+using namespace core;
 
 namespace {
 

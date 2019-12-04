@@ -7,6 +7,7 @@
 #include "vsrtl_enum.h"
 
 namespace vsrtl {
+namespace core {
 
 DefineGraphicsType(Multiplexer);
 class MultiplexerBase : public Component {
@@ -115,6 +116,7 @@ private:
     std::map<int, Port<W>*> m_enumToPort;
 };
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_MULTIPLEXER_H

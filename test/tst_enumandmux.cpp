@@ -7,7 +7,7 @@ class tst_enumAndMux : public QObject {
 };
 
 void tst_enumAndMux::functionalTest() {
-    vsrtl::EnumAndMux a;
+    vsrtl::core::EnumAndMux a;
 }
 
 QTEST_APPLESS_MAIN(tst_enumAndMux)

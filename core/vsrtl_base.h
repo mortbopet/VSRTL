@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 namespace vsrtl {
+namespace core {
 
 /**
  * @brief The Base class
@@ -51,6 +52,7 @@ struct BaseSorter {
     bool operator()(const T& lhs, const T& rhs) const { return lhs->getName() < rhs->getName(); }
 };
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_BASE_H

@@ -6,6 +6,7 @@
 #include "vsrtl_register.h"
 
 namespace vsrtl {
+using namespace core;
 
 class RegisterGraphic : public ComponentGraphic {
 public:

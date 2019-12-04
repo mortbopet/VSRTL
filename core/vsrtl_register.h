@@ -10,6 +10,7 @@
 #include <vector>
 
 namespace vsrtl {
+namespace core {
 
 DefineGraphicsType(ClockedComponent);
 class ClockedComponent : public Component {
@@ -90,6 +91,7 @@ private:
     std::deque<VSRTL_VT_U> m_rewindstack;
 };
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // REGISTER_H

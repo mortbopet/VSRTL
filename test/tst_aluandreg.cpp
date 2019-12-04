@@ -7,7 +7,7 @@ class tst_ALUAndReg : public QObject {
 };
 
 void tst_ALUAndReg::functionalTest() {
-    vsrtl::ALUAndReg a;
+    vsrtl::core::ALUAndReg a;
 
     // Verify that all instantiated objects in the circuit have been connected as they require
     a.verifyAndInitialize();

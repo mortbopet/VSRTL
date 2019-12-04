@@ -7,7 +7,7 @@ class tst_adderAndReg : public QObject {
 };
 
 void tst_adderAndReg::functionalTest() {
-    vsrtl::AdderAndReg a;
+    vsrtl::core::AdderAndReg a;
 
     // Verify that all instantiated objects in the circuit have been connected as they require
     a.verifyAndInitialize();

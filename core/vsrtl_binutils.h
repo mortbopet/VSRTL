@@ -11,6 +11,7 @@
 #include "limits.h"
 
 namespace vsrtl {
+namespace core {
 
 // Sign extension of arbitrary bitfield size.
 // Courtesy of http://graphics.stanford.edu/~seander/bithacks.html#FixedSignExtend
@@ -69,4 +70,5 @@ constexpr unsigned ceillog2(unsigned x) {
     return x == 1 || x == 0 ? 1 : floorlog2(x - 1) + 1;
 }
 
+}  // namespace core
 }  // namespace vsrtl

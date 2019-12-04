@@ -17,9 +17,13 @@
 #include <set>
 
 namespace vsrtl {
+using namespace core;
+
+namespace core {
+class PortBase;
+}
 
 class PortGraphic;
-class PortBase;
 class WireGraphic;
 class WireSegment;
 class ComponentGraphic;

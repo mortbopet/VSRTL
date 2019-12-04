@@ -10,9 +10,12 @@
 
 namespace vsrtl {
 
+namespace core {
 class Design;
 class Component;
 class PortBase;
+}  // namespace core
+using namespace core;
 
 class NetlistModel : public NetlistModelBase<NetlistTreeItem> {
     Q_OBJECT

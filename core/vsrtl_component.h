@@ -19,6 +19,7 @@
 #include "Signals/Signal.h"
 
 namespace vsrtl {
+namespace core {
 
 /// To allow for invokations of subcomponents with types having more than one template parameter, it is necessary to be
 /// able to join the templated type, without having the preprocessor deduce the ',' in the type list as a separator in
@@ -344,6 +345,7 @@ protected:
     std::set<std::unique_ptr<Component>, ComponentCompT> m_subcomponents;
 };
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_COMPONENT_H

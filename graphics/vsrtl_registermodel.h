@@ -10,8 +10,11 @@
 #include "vsrtl_treeitem.h"
 
 namespace vsrtl {
-
+namespace core {
 class RegisterBase;
+class Design;
+}  // namespace core
+using namespace core;
 
 class RegisterTreeItem : public NetlistTreeItem {
 public:

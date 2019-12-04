@@ -16,7 +16,10 @@ namespace Ui {
 class VSRTLWidget;
 }
 
+namespace core {
 class Design;
+}
+using namespace core;
 
 class VSRTLWidget : public QWidget {
     Q_OBJECT

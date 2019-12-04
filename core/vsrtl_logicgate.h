@@ -4,6 +4,7 @@
 #include "vsrtl_component.h"
 
 namespace vsrtl {
+namespace core {
 
 template <unsigned int W, unsigned int nInputs>
 class LogicGate : public Component {
@@ -70,6 +71,7 @@ public:
     }
 };
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_LOGICGATE_H

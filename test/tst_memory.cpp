@@ -4,6 +4,7 @@
 #include "vsrtl_core.h"
 
 namespace vsrtl {
+using namespace core;
 /**
  * @brief The ContinuousIncrement design
  * A memory is instantiated wherein the following operation is executed:

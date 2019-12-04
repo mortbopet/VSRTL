@@ -9,13 +9,17 @@ QT_FORWARD_DECLARE_CLASS(QTreeView)
 namespace vsrtl {
 
 class VSRTLWidget;
-class Design;
 class NetlistModel;
 class Netlist;
 
 namespace Ui {
 class MainWindow;
 }
+
+namespace core {
+class Design;
+}
+using namespace core;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT

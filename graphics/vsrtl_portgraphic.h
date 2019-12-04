@@ -13,8 +13,11 @@
 QT_FORWARD_DECLARE_CLASS(QPropertyAnimation)
 
 namespace vsrtl {
+using namespace core;
 
+namespace core {
 class PortBase;
+}
 class WireGraphic;
 class PortPoint;
 

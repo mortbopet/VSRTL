@@ -8,6 +8,7 @@
 #include "vsrtl_register.h"
 
 namespace vsrtl {
+namespace core {
 
 class Exponenter : public Component {
 public:
@@ -47,6 +48,8 @@ public:
     SUBCOMPONENT(adder, ALU<32>);
     SUBCOMPONENT(add2, ALU<32>);
 };
+
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_NESTEDEXPONENTER_H

@@ -6,6 +6,7 @@
 #include "vsrtl_registerfile.h"
 
 namespace vsrtl {
+namespace core {
 
 class RegisterFileTester : public Design {
 public:
@@ -36,6 +37,8 @@ public:
     SUBCOMPONENT(reg_adder, Adder<regSize>);
     SUBCOMPONENT(idx_reg, Register<ceillog2(regSize)>);
 };
+
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_REGISTERFILECMP_H

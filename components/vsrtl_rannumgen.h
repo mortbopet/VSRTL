@@ -10,6 +10,7 @@
 #include "vsrtl_shift.h"
 
 namespace vsrtl {
+namespace core {
 
 class RanNumGen : public Design {
 public:
@@ -56,6 +57,8 @@ public:
     SUBCOMPONENT(orr, TYPE(Or<1, 2>));
     SUBCOMPONENT(selReg, Register<1>);
 };
+
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_RANNUMGEN_H

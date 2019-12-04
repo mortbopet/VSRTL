@@ -8,6 +8,7 @@
 #include "vsrtl_multiplexer.h"
 
 namespace vsrtl {
+namespace core {
 
 Enum(TestEnum, A, B, C, D, E, F);
 
@@ -43,4 +44,6 @@ public:
     SUBCOMPONENT(regIn_mux, TYPE(Multiplexer<2, TestEnum::width()>));
     SUBCOMPONENT(cmp, Eq<TestEnum::width()>);
 };
+
+}  // namespace core
 }  // namespace vsrtl

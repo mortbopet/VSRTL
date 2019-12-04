@@ -8,7 +8,10 @@
 
 namespace vsrtl {
 
+namespace core {
 class Design;
+}
+using namespace core;
 
 int getRootIndex(QModelIndex index);
 int getRootSelectedIndex(QItemSelectionModel* model);

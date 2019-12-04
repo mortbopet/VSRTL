@@ -4,6 +4,7 @@
 #include "vsrtl_defines.h"
 
 namespace vsrtl {
+namespace core {
 
 DefineGraphicsType(Adder);
 template <unsigned int W>
@@ -18,4 +19,5 @@ public:
     INPUTPORT(op2, W);
     OUTPUTPORT(out, W);
 };
+}  // namespace core
 }  // namespace vsrtl

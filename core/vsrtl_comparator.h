@@ -4,6 +4,7 @@
 #include "vsrtl_component.h"
 
 namespace vsrtl {
+namespace core {
 
 #define CMP_COMPONENT(classname, cmptype, op)                                                      \
     template <unsigned int W>                                                                      \
@@ -23,6 +24,7 @@ CMP_COMPONENT(Uge, VSRTL_VT_U, >=)
 CMP_COMPONENT(Ult, VSRTL_VT_U, <)
 CMP_COMPONENT(Eq, VSRTL_VT_U, ==)
 
+}  // namespace core
 }  // namespace vsrtl
 
 #endif  // VSRTL_COMPARATOR_H
