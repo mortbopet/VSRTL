@@ -5,10 +5,6 @@
 
 namespace vsrtl {
 
-namespace core {
-class Component;
-}
-
 /** Shape
  *  Class for storing the draw shape associated with a Component from the VSRTL library
  */

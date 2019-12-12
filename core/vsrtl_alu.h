@@ -7,17 +7,18 @@
 #include "vsrtl_enum.h"
 #include "vsrtl_port.h"
 
+#include "../interface/vsrtl_gfxobjecttypes.h"
+
 namespace vsrtl {
 namespace core {
 
 Enum(ALU_OPCODE, ADD, SUB, MUL, DIV, AND, OR, XOR, SL, SRA, SRL, LUI, LT, LTU, EQ);
 
-DefineGraphicsType(ALU);
 template <unsigned int W>
 class ALU : public Component {
 public:
     SetGraphicsType(ALU);
-    ALU(std::string name, Component* parent) : Component(name, parent) {
+    ALU(std::string name, SimComponent* parent) : Component(name, parent) {
         out << ([=] { return calculateOutput(); });
     }
 

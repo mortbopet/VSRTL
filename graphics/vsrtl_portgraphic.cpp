@@ -1,7 +1,6 @@
 ﻿#include "vsrtl_portgraphic.h"
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_port.h"
-#include "vsrtl_traversal_util.h"
 #include "vsrtl_wiregraphic.h"
 
 #include <QGraphicsSceneMouseEvent>
@@ -13,7 +12,7 @@ namespace vsrtl {
 
 int PortGraphic::s_portGridWidth = 2;
 
-PortGraphic::PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent)
+PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     : m_port(port), m_type(type), GraphicsBase(parent) {
     port->registerGraphic(this);
     m_widthText = QString::number(port->getWidth() - 1) + ":0";
@@ -80,8 +79,8 @@ void PortGraphic::redraw() {
 }
 
 void PortGraphic::propagateRedraw() {
-    m_port->traverseToSinks([=](PortBase* port) {
-        auto* portGraphic = getGraphic<PortGraphic*>(port);
+    m_port->traverseToSinks([=](SimPort* port) {
+        auto* portGraphic = port->getGraphic<PortGraphic>();
         portGraphic->redraw();
     });
 }
@@ -169,14 +168,14 @@ void PortGraphic::updatePenColor() {
 }
 
 void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
-    m_port->traverseToRoot([=](PortBase* node) {
+    m_port->traverseToRoot([=](SimPort* node) {
         if (node->isConstant()) {
             return;
         }
 
         // Traverse to root, and only execute when no input wire is present. This signifies that the root source
         // port has been reached
-        auto* portGraphic = getGraphic<PortGraphic*>(node);
+        auto* portGraphic = node->getGraphic<PortGraphic>();
         if (!portGraphic->m_inputWire) {
             if (aboutToBeDeselected || aboutToBeSelected) {
                 portGraphic->m_selected = aboutToBeSelected;

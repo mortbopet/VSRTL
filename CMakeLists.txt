@@ -51,6 +51,8 @@ endif(COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 ######################################################################
 ## Library setup
 ######################################################################
+set(INTERFACE_LIB ${PROJECT_NAME}_int_lib)
+add_subdirectory(interface)
 set(CORE_LIB ${PROJECT_NAME}_core_lib)
 add_subdirectory(core)
 set(GRAPHICS_LIB ${PROJECT_NAME}_gfx_lib)
@@ -59,6 +61,7 @@ set(TEST_LIB ${PROJECT_NAME}_test_lib)
 add_subdirectory(test)
 set(COMPONENTS_LIB ${PROJECT_NAME}_cmp_lib)
 add_subdirectory(components)
+
 
 
 set(APP_NAME app)

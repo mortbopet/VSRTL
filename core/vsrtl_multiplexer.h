@@ -9,11 +9,10 @@
 namespace vsrtl {
 namespace core {
 
-DefineGraphicsType(Multiplexer);
 class MultiplexerBase : public Component {
 public:
     SetGraphicsType(Multiplexer);
-    MultiplexerBase(std::string name, Component* parent) : Component(name, parent) {}
+    MultiplexerBase(std::string name, SimComponent* parent) : Component(name, parent) {}
 
     virtual std::vector<PortBase*> getIns() = 0;
     virtual PortBase* getSelect() = 0;
@@ -23,7 +22,7 @@ public:
 template <unsigned int N, unsigned int W>
 class Multiplexer : public MultiplexerBase {
 public:
-    Multiplexer(std::string name, Component* parent) : MultiplexerBase(name, parent) {
+    Multiplexer(std::string name, SimComponent* parent) : MultiplexerBase(name, parent) {
         out << [=] { return ins.at(select.template value<VSRTL_VT_U>())->template value<VSRTL_VT_U>(); };
     }
 
@@ -71,7 +70,7 @@ public:
 template <typename E_t, unsigned W>
 class EnumMultiplexer : public MultiplexerBase {
 public:
-    EnumMultiplexer(std::string name, Component* parent) : MultiplexerBase(name, parent) {
+    EnumMultiplexer(std::string name, SimComponent* parent) : MultiplexerBase(name, parent) {
         for (auto v : E_t::_values()) {
             m_enumToPort[v] = this->ins.at(v);
         }

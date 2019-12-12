@@ -11,12 +11,11 @@
 #include <typeinfo>
 #include <vector>
 
-#include "vsrtl_base.h"
 #include "vsrtl_binutils.h"
 #include "vsrtl_defines.h"
 #include "vsrtl_port.h"
 
-#include "Signals/Signal.h"
+#include "../interface/vsrtl_gfxobjecttypes.h"
 
 namespace vsrtl {
 namespace core {
@@ -25,10 +24,6 @@ namespace core {
 /// able to join the templated type, without having the preprocessor deduce the ',' in the type list as a separator in
 /// the actual macro. For these cases, we may say SUBCOMPONENT(xor1, TYPE(Xor<1,2>));
 #define TYPE(...) __VA_ARGS__
-
-#define SUBCOMPONENT(name, type, ...) type* name = create_component<type>(#name, ##__VA_ARGS__)
-
-#define SUBCOMPONENTS(name, type, n, ...) std::vector<type*> name = create_components<type>(#name, n, ##__VA_ARGS__)
 
 #define INPUTPORT(name, W) Port<W>& name = this->createInputPort<W>(#name)
 #define INPUTPORT_ENUM(name, E_t) Port<E_t::width()>& name = this->createInputPort<E_t::width(), E_t>(#name)
@@ -40,13 +35,9 @@ namespace core {
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
 
-DefineGraphicsType(Component);
-class Component : public Base {
+class Component : public SimComponent {
 public:
-    Component(std::string displayName, Component* parent) : Base(displayName, parent) {}
-    using PortBaseCompT = BaseSorter<std::unique_ptr<PortBase>>;
-    using ComponentCompT = BaseSorter<std::unique_ptr<Component>>;
-
+    Component(std::string displayName, SimComponent* parent) : SimComponent(displayName, parent) {}
     /**
      * @brief getBaseType
      * Used to identify the component type, which is used when determining how to draw a component. Introduced to avoid
@@ -55,65 +46,37 @@ public:
      * @return String identifier for the component type
      */
 
-    virtual std::type_index getTypeId() const { return GraphicsTypeFor(Component); }
-    virtual bool isClockedComponent() const { return false; }
+    std::type_index getTypeId() const override { return GraphicsTypeFor(Component); }
     virtual void resetPropagation() {
         if (m_propagationState == PropagationState::unpropagated) {
             // Constants (components with no inputs) are always propagated
         } else {
             m_propagationState = PropagationState::unpropagated;
-            for (const auto& i : m_inputports)
+            for (const auto& i : getPorts<SimPort::Direction::in, PortBase>())
                 i->resetPropagation();
-            for (const auto& o : m_outputports)
+            for (const auto& o : getPorts<SimPort::Direction::out, PortBase>())
                 o->resetPropagation();
         }
     }
-    unsigned reserveConstantId() { return m_constantCount++; }
     bool isPropagated() const { return m_propagationState == PropagationState::propagated; }
-
-    /**
-     * @brief addSubcomponent
-     *        Adds subcomponent to the current component (this).
-     *        (this) takes ownership of the component*
-     * @param subcomponent
-     */
-    void addSubcomponent(Component* subcomponent) { m_subcomponents.insert(std::unique_ptr<Component>(subcomponent)); }
-
-    // Component object generator that registers objects in parent upon creation
-    template <typename T, typename... Args>
-    T* create_component(std::string name, Args... args) {
-        verifyIsUniqueComponentName(name);
-        auto* ptr = static_cast<T*>((*m_subcomponents.emplace(std::make_unique<T>(name, this, args...)).first).get());
-        return ptr;
-    }
-
-    template <typename T, typename... Args>
-    std::vector<T*> create_components(std::string name, unsigned int n, Args... args) {
-        std::vector<T*> components;
-        for (unsigned int i = 0; i < n; i++) {
-            std::string i_name = name + "_" + std::to_string(i);
-            components.push_back(create_component<T, Args...>(i_name, args...));
-        }
-        return components;
-    }
 
     template <unsigned int W, typename E_t = void>
     Port<W>& createInputPort(std::string name) {
-        return createPort<W, E_t>(name, m_inputports);
+        return createPort<W, E_t>(name, m_inputPorts);
     }
     template <unsigned int W, typename E_t = void>
     Port<W>& createOutputPort(std::string name) {
-        return createPort<W, E_t>(name, m_outputports);
+        return createPort<W, E_t>(name, m_outputPorts);
     }
 
     template <unsigned int W>
     std::vector<Port<W>*> createInputPorts(std::string name, unsigned int n) {
-        return createPorts<W>(name, m_inputports, n);
+        return createPorts<W>(name, m_inputPorts, n);
     }
 
     template <unsigned int W>
     std::vector<Port<W>*> createOutputPorts(std::string name, unsigned int n) {
-        return createPorts<W>(name, m_outputports, n);
+        return createPorts<W>(name, m_outputPorts, n);
     }
 
     void propagateComponent(std::vector<PortBase*>& propagationStack) {
@@ -121,11 +84,11 @@ public:
         if (m_propagationState == PropagationState::propagated)
             return;
 
-        if (isClockedComponent()) {
+        if (isSynchronous()) {
             // Registers are implicitely clocked by calling propagate() on its output ports.
             /** @remark register <must> be saved before propagateComponent reaches the register ! */
             m_propagationState = PropagationState::propagated;
-            for (const auto& s : m_outputports) {
+            for (const auto& s : getPorts<SimPort::Direction::out, PortBase>()) {
                 s->propagate(propagationStack);
             }
         } else {
@@ -181,24 +144,24 @@ public:
              *
              */
 
-            for (const auto& sc : m_subcomponents)
+            for (const auto& sc : getSubComponents<Component>())
                 sc->propagateComponent(propagationStack);
 
             // All sequential logic must have their inputs propagated before they themselves can propagate. If this is
             // not the case, the function will return. Iff the circuit is correctly connected, this component will at a
             // later point be visited, given that the input port which is currently not yet propagated, will become
             // propagated at some point, signalling its connected components to propagate.
-            for (const auto& input : m_inputports) {
+            for (const auto& input : getPorts<SimPort::Direction::in, PortBase>()) {
                 if (!input->isPropagated())
                     return;
             }
 
-            for (const auto& sc : m_subcomponents)
+            for (const auto& sc : getSubComponents<Component>())
                 sc->propagateComponent(propagationStack);
 
             // At this point, all input ports are assured to be propagated. In this case, it is safe to propagate
             // the outputs of the component.
-            for (const auto& s : m_outputports) {
+            for (const auto& s : getPorts<SimPort::Direction::out, PortBase>()) {
                 s->propagate(propagationStack);
             }
             m_propagationState = PropagationState::propagated;
@@ -209,11 +172,11 @@ public:
         }
 
         // Signal all connected components of the current component to propagate
-        for (const auto& out : m_outputports) {
+        for (const auto& out : getPorts<SimPort::Direction::out, PortBase>()) {
             for (const auto& in : out->getOutputPorts()) {
                 // With the input port of the connected component propagated, the parent component may be propagated.
                 // This will succeed if all input components to the parent component has been propagated.
-                in->getParent()->propagateComponent(propagationStack);
+                in->getParent<Component>()->propagateComponent(propagationStack);
 
                 // To facilitate output -> output connections, we need to trigger propagation in the output's parent
                 // aswell
@@ -228,64 +191,31 @@ public:
                  *
                  */
                 for (const auto& inout : in->getOutputPorts())
-                    inout->getParent()->propagateComponent(propagationStack);
+                    inout->getParent<Component>()->propagateComponent(propagationStack);
             }
         }
     }
     void initialize() {
-        if (m_inputports.size() == 0 && !hasSubcomponents()) {
+        if (m_inputPorts.size() == 0 && !hasSubcomponents()) {
             // Component has no input ports - ie. component is a constant. propagate all output ports and set component
             // as propagated.
-            for (const auto& p : m_outputports)
+            for (const auto& p : getPorts<SimPort::Direction::out, PortBase>())
                 p->propagateConstant();
             m_propagationState = PropagationState::propagated;
         }
     }
+
     void verifyComponent() const {
-        for (const auto& ip : m_inputports) {
+        for (const auto& ip : getPorts<SimPort::Direction::out, PortBase>()) {
             if (!ip->isConnected()) {
                 throw std::runtime_error("Component: '" + getName() + "' has unconnected inputs");
             }
         }
     }
-    bool hasSubcomponents() const { return m_subcomponents.size() != 0; }
-
-    /**
-     * getInput&OutputComponents does not return a set, although it naturally should. In partitioning the circuit graph,
-     * it is beneficial to know whether two components have multiple edges between each other.
-     */
-    std::vector<Component*> getInputComponents() const {
-        std::vector<Component*> v;
-        for (const auto& s : m_inputports) {
-            v.push_back(s->getInputPort()->getParent());
-        }
-        return v;
-    }
-    std::vector<Component*> getOutputComponents() const {
-        std::vector<Component*> v;
-        for (const auto& p : m_outputports) {
-            for (const auto& pc : p->getOutputPorts())
-                v.push_back(pc->getParent());
-        }
-        return v;
-    }
-
-    void verifyIsUniqueComponentName(const std::string& name) {
-        if (!isUniqueName(name, m_subcomponents)) {
-            throw std::runtime_error("Duplicate subcomponent name: '" + name + "' in component: '" + getName() +
-                                     "'. Subcomponent names must be unique.");
-        }
-    }
-
-    const std::set<std::unique_ptr<Component>, ComponentCompT>& getSubComponents() const { return m_subcomponents; }
-    const std::set<std::unique_ptr<PortBase>, PortBaseCompT>& getOutputs() const { return m_outputports; }
-    const std::set<std::unique_ptr<PortBase>, PortBaseCompT>& getInputs() const { return m_inputports; }
-
-    Gallant::Signal0<> changed;
 
 protected:
     template <unsigned int W, typename E_t = void>
-    Port<W>& createPort(std::string name, std::set<std::unique_ptr<PortBase>, PortBaseCompT>& container) {
+    Port<W>& createPort(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container) {
         verifyIsUniquePortName(name);
         Port<W>* port;
         if constexpr (std::is_void<E_t>::value) {
@@ -298,7 +228,7 @@ protected:
     }
 
     template <unsigned int W>
-    std::vector<Port<W>*> createPorts(std::string name, std::set<std::unique_ptr<PortBase>, PortBaseCompT>& container,
+    std::vector<Port<W>*> createPorts(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container,
                                       unsigned int n) {
         std::vector<Port<W>*> ports;
         Port<W>* port;
@@ -312,37 +242,14 @@ protected:
         return ports;
     }
 
-    void getComponentGraph(std::map<Component*, std::vector<Component*>>& componentGraph) {
-        // Register adjacent components (child components) in the graph, and add subcomponents to graph
-        componentGraph[this];
-        for (const auto& c : m_subcomponents) {
-            componentGraph[this].push_back(c.get());
-            c->getComponentGraph(componentGraph);
-        }
-    }
-
-    template <typename T, typename C_T>
-    bool isUniqueName(const std::string& name, std::set<std::unique_ptr<T>, C_T>& container) {
-        return std::find_if(container.begin(), container.end(),
-                            [name](const auto& p) { return p->getName() == name; }) == container.end();
-    }
-
     void verifyIsUniquePortName(const std::string& name) {
-        if (!(isUniqueName(name, m_outputports) && isUniqueName(name, m_inputports))) {
+        if (!(isUniqueName(name, m_outputPorts) && isUniqueName(name, m_inputPorts))) {
             throw std::runtime_error("Duplicate port name: '" + name + "' in component: '" + getName() +
                                      "'. Port names must be unique.");
         }
     }
 
-    unsigned m_constantCount = 0;  // Number of constants currently initialized in the component
-    mutable bool m_isVerifiedAndInitialized = false;
     PropagationState m_propagationState = PropagationState::unpropagated;
-
-    // Ports and subcomponents should be maintained as sorted sets based on port and component names, ensuring
-    // consistent ordering between executions
-    std::set<std::unique_ptr<PortBase>, PortBaseCompT> m_outputports;
-    std::set<std::unique_ptr<PortBase>, PortBaseCompT> m_inputports;
-    std::set<std::unique_ptr<Component>, ComponentCompT> m_subcomponents;
 };
 
 }  // namespace core

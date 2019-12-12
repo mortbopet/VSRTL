@@ -13,7 +13,7 @@ static QRectF getTextRect(const QString& text) {
     return metric.boundingRect(text);
 }
 
-ValueLabel::ValueLabel(Radix& type, const PortBase* port, QGraphicsItem* parent)
+ValueLabel::ValueLabel(Radix& type, const SimPort* port, QGraphicsItem* parent)
     : m_type(type), m_port(port), GraphicsBase(parent) {
     setFlags(ItemIsSelectable);
     setMoveable();

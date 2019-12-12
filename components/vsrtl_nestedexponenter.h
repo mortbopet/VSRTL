@@ -12,7 +12,7 @@ namespace core {
 
 class Exponenter : public Component {
 public:
-    Exponenter(std::string name, Component* parent) : Component(name, parent) {
+    Exponenter(std::string name, SimComponent* parent) : Component(name, parent) {
         mul->out >> expReg->in;
 
         expIn >> mul->op1;

@@ -11,16 +11,16 @@
 
 namespace vsrtl {
 
-Netlist::Netlist(Design& design, QWidget* parent) : QWidget(parent), ui(new Ui::Netlist) {
+Netlist::Netlist(SimDesign& design, QWidget* parent) : QWidget(parent), ui(new Ui::Netlist) {
     ui->setupUi(this);
 
     m_netlistView = new NetlistView<NetlistTreeItem>(this);
-    m_netlistModel = new NetlistModel(design, this);
+    m_netlistModel = new NetlistModel(&design, this);
     m_netlistView->setModel(m_netlistModel);
     ui->netlistViews->addTab(m_netlistView, "Netlist");
     m_netlistModel->invalidate();
 
-    m_registerModel = new RegisterModel(design, this);
+    m_registerModel = new RegisterModel(&design, this);
     m_registerView = new NetlistView<RegisterTreeItem>(this);
     m_registerView->setModel(m_registerModel);
     ui->netlistViews->addTab(m_registerView, "Registers");
@@ -78,7 +78,7 @@ void Netlist::setCurrentViewExpandState(bool state) {
     }
 }
 
-void Netlist::updateSelection(const std::vector<Component*>& selected) {
+void Netlist::updateSelection(const std::vector<SimComponent*>& selected) {
     m_selectionModel->clearSelection();
     for (const auto& c : selected) {
         m_selectionModel->select(m_netlistModel->lookupIndexForComponent(c),
@@ -87,7 +87,7 @@ void Netlist::updateSelection(const std::vector<Component*>& selected) {
 }
 
 namespace {
-void getIndexComponentPtr(const QItemSelection& selected, std::vector<Component*>& c_v) {
+void getIndexComponentPtr(const QItemSelection& selected, std::vector<SimComponent*>& c_v) {
     for (const auto& sel : selected.indexes()) {
         auto* c = static_cast<NetlistTreeItem*>(sel.internalPointer())->m_component;
         if (c)
@@ -97,7 +97,7 @@ void getIndexComponentPtr(const QItemSelection& selected, std::vector<Component*
 }  // namespace
 
 void Netlist::handleViewSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected) {
-    std::vector<Component*> sel_components, desel_components;
+    std::vector<SimComponent*> sel_components, desel_components;
 
     getIndexComponentPtr(selected, sel_components);
     getIndexComponentPtr(deselected, desel_components);

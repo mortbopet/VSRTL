@@ -1,7 +1,6 @@
 #ifndef VSRTL_WIREGRAPHIC_H
 #define VSRTL_WIREGRAPHIC_H
 
-#include "vsrtl_component.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_graphicsbase.h"
 #include "vsrtl_portgraphic.h"
@@ -17,18 +16,13 @@
 #include <set>
 
 namespace vsrtl {
-using namespace core;
-
-namespace core {
-class PortBase;
-}
 
 class PortGraphic;
 class WireGraphic;
 class WireSegment;
 class ComponentGraphic;
 
-static inline std::vector<std::string> getPortParentNameSeq(PortBase* p) {
+static inline std::vector<std::string> getPortParentNameSeq(SimPort* p) {
     std::vector<std::string> seq;
     seq.push_back(p->getName());
     seq.push_back(p->getParent()->getName());
@@ -120,7 +114,7 @@ class WireGraphic : public GraphicsBase {
 public:
     enum class MergeType { CannotMerge, MergeSinkWithSource, MergeSourceWithSink, MergeParallelSinks };
 
-    WireGraphic(PortGraphic* from, const std::vector<PortBase*>& to, QGraphicsItem* parent);
+    WireGraphic(PortGraphic* from, const std::vector<SimPort*>& to, QGraphicsItem* parent);
 
     QRectF boundingRect() const override;
     const QPen& getPen();
@@ -299,14 +293,14 @@ public:
 
 private:
     ComponentGraphic* getPointOwningComponentGraphic() const;
-    Component* getPointOwningComponent() const;
+    SimComponent* getPointOwningComponent() const;
     WirePoint* createWirePoint();
     void moveWirePoint(PortPoint* point, const QPointF scenePos);
     WireSegment* createSegment(PortPoint* start, PortPoint* end);
     void createRectilinearSegments(PortPoint* start, PortPoint* end);
 
     PortGraphic* m_fromPort = nullptr;
-    std::vector<PortBase*> m_toPorts;
+    std::vector<SimPort*> m_toPorts;
     std::vector<PortGraphic*> m_toGraphicPorts;
     std::set<WireSegment*> m_wires;
     std::set<WirePoint*> m_points;

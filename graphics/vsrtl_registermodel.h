@@ -10,23 +10,19 @@
 #include "vsrtl_treeitem.h"
 
 namespace vsrtl {
-namespace core {
-class RegisterBase;
-class Design;
-}  // namespace core
-using namespace core;
 
 class RegisterTreeItem : public NetlistTreeItem {
 public:
-    RegisterTreeItem(TreeItem* parent) : NetlistTreeItem(parent) {}
+    RegisterTreeItem(TreeItem* parent, SimDesign* design) : NetlistTreeItem(parent), m_design(design) {}
 
     enum class PortDirection { Input, Output };
     QVariant data(int column, int role = Qt::EditRole) const override;
     bool setData(int column, const QVariant& value, int role = Qt::EditRole) override;
     QList<QMenu*> getActions() const override;
-    void setRegister(RegisterBase* reg);
+    void setRegister(SimComponent* reg);
 
-    RegisterBase* m_register = nullptr;
+    SimComponent* m_register = nullptr;
+    SimDesign* m_design = nullptr;
 };
 
 class RegisterModel : public NetlistModelBase<RegisterTreeItem> {
@@ -34,7 +30,7 @@ class RegisterModel : public NetlistModelBase<RegisterTreeItem> {
 
 public:
     enum columns { ComponentColumn, ValueColumn, WidthColumn, NUM_COLUMNS };
-    RegisterModel(Design& arch, QObject* parent = nullptr);
+    RegisterModel(SimDesign* arch, QObject* parent = nullptr);
 
     QVariant data(const QModelIndex& index, int role) const override;
     Qt::ItemFlags flags(const QModelIndex& index) const override;
@@ -44,7 +40,9 @@ public slots:
     void invalidate() override;
 
 private:
-    void loadDesign(RegisterTreeItem* parent, const Design& component);
+    void loadDesign(RegisterTreeItem* parent, SimDesign* component);
+
+    SimDesign* m_design = nullptr;
 };
 
 }  // namespace vsrtl

@@ -4,7 +4,7 @@
 #include <QFont>
 #include <QToolButton>
 
-#include "vsrtl_component.h"
+#include "../interface/vsrtl_gfxobjecttypes.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_serializers.h"
 #include "vsrtl_graphics_util.h"
@@ -15,7 +15,6 @@
 #include "cereal/cereal.hpp"
 
 namespace vsrtl {
-using namespace core;
 
 class PortGraphic;
 class Label;
@@ -23,7 +22,7 @@ class ComponentButton;
 
 class ComponentGraphic : public GraphicsBase {
 public:
-    ComponentGraphic(Component& c, QGraphicsItem* parent);
+    ComponentGraphic(SimComponent* c, QGraphicsItem* parent);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
@@ -41,7 +40,7 @@ public:
     void placeAndRouteSubcomponents();
     bool isExpanded() const { return m_isExpanded; }
     bool restrictSubcomponentPositioning() const { return m_restrictSubcomponentPositioning; }
-    Component* getComponent() const { return &m_component; }
+    SimComponent* getComponent() const { return m_component; }
     std::vector<ComponentGraphic*>& getGraphicSubcomponents() { return m_subcomponents; }
     ComponentGraphic* getParent() const;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
@@ -164,8 +163,8 @@ protected:
     std::vector<ComponentGraphic*> m_subcomponents;
     ComponentGraphic* m_parentComponentGraphic = nullptr;
 
-    QMap<PortBase*, PortGraphic*> m_inputPorts;
-    QMap<PortBase*, PortGraphic*> m_outputPorts;
+    QMap<SimPort*, PortGraphic*> m_inputPorts;
+    QMap<SimPort*, PortGraphic*> m_outputPorts;
 
     Label* m_label = nullptr;
 
@@ -179,7 +178,7 @@ protected:
     QFont m_font;
 
     QPointF m_expandButtonPos;  // Draw position of expand/collapse button in scene coordinates
-    Component& m_component;
+    SimComponent* m_component;
     ComponentButton* m_expandButton = nullptr;
 
 protected slots:
@@ -210,17 +209,17 @@ public:
     }
 
     static QPainterPath getComponentShape(std::type_index component, QTransform transform) {
-        // If no shape has been registered for the base component type, revert to displaying as a "Component"
+        // If no shape has been registered for the base component type, revert to displaying as a "SimComponent"
         if (!s_componentShapes.contains(component)) {
-            return s_componentShapes[typeid(Component)].shapeFunc(transform);
+            return s_componentShapes[GraphicsTypeFor(Component)].shapeFunc(transform);
         }
         return s_componentShapes[component].shapeFunc(transform);
     }
 
     static QRect getComponentMinGridRect(std::type_index component) {
-        // If no shape has been registered for the base component type, revert to displaying as a "Component"
+        // If no shape has been registered for the base component type, revert to displaying as a "SimComponent"
         if (!s_componentShapes.contains(component)) {
-            return s_componentShapes[typeid(Component)].min_rect;
+            return s_componentShapes[GraphicsTypeFor(Component)].min_rect;
         }
         return s_componentShapes[component].min_rect;
     }

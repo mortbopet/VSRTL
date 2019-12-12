@@ -9,11 +9,6 @@ namespace vsrtl {
 
 class ComponentGraphic;
 
-namespace core {
-class Component;
-}
-using namespace core;
-
 enum class PlaceAlg { TopologicalSort, ASAP };
 enum class RouteAlg { Direct };
 /**

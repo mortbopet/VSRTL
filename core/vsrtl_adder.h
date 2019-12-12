@@ -3,15 +3,16 @@
 #include "vsrtl_component.h"
 #include "vsrtl_defines.h"
 
+#include "../interface/vsrtl_gfxobjecttypes.h"
+
 namespace vsrtl {
 namespace core {
 
-DefineGraphicsType(Adder);
 template <unsigned int W>
 class Adder : public Component {
 public:
     SetGraphicsType(Adder);
-    Adder(std::string name, Component* parent) : Component(name, parent) {
+    Adder(std::string name, SimComponent* parent) : Component(name, parent) {
         out << [=] { return op1.template value<VSRTL_VT_S>() + op2.template value<VSRTL_VT_S>(); };
     }
 

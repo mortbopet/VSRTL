@@ -9,7 +9,7 @@ namespace core {
 
 class FullAdder : public Component {
 public:
-    FullAdder(std::string name, Component* parent) : Component(name, parent) {
+    FullAdder(std::string name, SimComponent* parent) : Component(name, parent) {
         A >> *xor1->in[0];
         B >> *xor1->in[1];
 

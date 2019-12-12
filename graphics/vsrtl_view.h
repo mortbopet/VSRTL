@@ -11,7 +11,7 @@ class VSRTLView : public QGraphicsView {
     Q_OBJECT
 public:
     VSRTLView(QWidget* parent);
-    ComponentGraphic* lookupGraphicForComponent(const Component* c);
+    ComponentGraphic* lookupGraphicForComponent(const SimComponent* c);
 
 protected:
     void wheelEvent(QWheelEvent*) override;

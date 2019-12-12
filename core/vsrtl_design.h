@@ -19,9 +19,9 @@ namespace core {
  * superclass for all Design descriptions
  */
 
-class Design : public Component {
+class Design : public SimDesign {
 public:
-    Design(std::string name) : Component(name, nullptr) {}
+    Design(std::string name) : SimDesign(name, nullptr) {}
 
     /**
      * @brief clock
@@ -89,6 +89,12 @@ public:
             p->setPortValue();
     }
 
+    void setSynchronousValue(SimSynchronous* c, VSRTL_VT_U addr, VSRTL_VT_U value) {
+        c->forceValue(addr, value);
+        // Given the new output value of the register, the circuit must be repropagated
+        propagateDesign();
+    }
+
     /**
      * @brief verifyAndInitialize
      * Calls verifyDesign() to ensure that all the required inputs for each initialized object have been set, and
@@ -101,10 +107,17 @@ public:
         createComponentGraph();
 
         for (const auto& c : m_componentGraph) {
+            auto* comp = c.first->cast<Component>();
+            if (!comp) {
+                if (c.first->cast<Design>())
+                    continue;
+                else
+                    assert(false && "Trying to verify unknown component");
+            }
             // Verify that all components has no undefined input signals
-            c.first->verifyComponent();
+            comp->verifyComponent();
             // Initialize the component
-            c.first->initialize();
+            comp->initialize();
         }
 
         if (detectCombinationalLoop()) {
@@ -121,7 +134,8 @@ public:
         m_isVerifiedAndInitialized = true;
     }
 
-    bool cycleUtil(Component* c, std::map<Component*, bool>& visited, std::map<Component*, bool>& recurseStack) {
+    bool cycleUtil(SimComponent* c, std::map<SimComponent*, bool>& visited,
+                   std::map<SimComponent*, bool>& recurseStack) {
         visited[c] = true;
         recurseStack[c] = true;
         if (!dynamic_cast<ClockedComponent*>(c))  // Graph is cut at registers
@@ -140,11 +154,11 @@ public:
     }
 
     bool detectCombinationalLoop() {
-        std::map<Component*, bool> visited;
+        std::map<SimComponent*, bool> visited;
         for (const auto& cptr : m_componentGraph) {
             visited[cptr.first] = false;
         }
-        std::map<Component*, bool> recurseStack;
+        std::map<SimComponent*, bool> recurseStack;
 
         for (const auto& c : m_componentGraph) {
             if (visited[c.first] == false) {
@@ -155,17 +169,6 @@ public:
         }
         return false;
     }
-
-    const std::set<std::unique_ptr<Component>, ComponentCompT>& getTopLevelComponents() const {
-        return m_subcomponents;
-    }
-
-    const std::map<Component*, std::vector<Component*>> getDesignGraph() {
-        assert(m_isVerifiedAndInitialized);
-        return m_componentGraph;
-    }
-
-    const std::set<RegisterBase*>& getRegisters() const { return m_registers; }
 
 private:
     void createComponentGraph() {
@@ -184,10 +187,10 @@ private:
     }
 
     unsigned int m_rewindstackCount = 0;
-    std::map<Component*, std::vector<Component*>> m_componentGraph;
+    std::map<SimComponent*, std::vector<SimComponent*>> m_componentGraph;
     std::set<RegisterBase*> m_registers;
     std::set<ClockedComponent*> m_clockedComponents;
-
+    bool m_isVerifiedAndInitialized = false;
     std::vector<PortBase*> m_propagationStack;
 };
 

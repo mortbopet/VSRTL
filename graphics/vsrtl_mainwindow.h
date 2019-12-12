@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <memory>
 
+#include "../interface/vsrtl_interface.h"
+
 QT_FORWARD_DECLARE_CLASS(QTreeView)
 
 namespace vsrtl {
@@ -16,16 +18,11 @@ namespace Ui {
 class MainWindow;
 }
 
-namespace core {
-class Design;
-}
-using namespace core;
-
 class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(Design& arch, QWidget* parent = nullptr);
+    explicit MainWindow(SimDesign& arch, QWidget* parent = nullptr);
     ~MainWindow();
 
 private:

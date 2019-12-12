@@ -12,17 +12,12 @@
 namespace vsrtl {
 namespace core {
 
-DefineGraphicsType(ClockedComponent);
-class ClockedComponent : public Component {
+class ClockedComponent : public Component, public SimSynchronous {
     SetGraphicsType(ClockedComponent);
 
 public:
-    ClockedComponent(std::string name, Component* parent) : Component(name, parent) {}
-    virtual void reset() = 0;
+    ClockedComponent(std::string name, SimComponent* parent) : Component(name, parent), SimSynchronous(this) {}
     virtual void save() = 0;
-    virtual void rewind() = 0;
-
-    bool isClockedComponent() const override { return true; }
 
     static unsigned int& rewindStackSize() {
         static unsigned int s_rewindstackSize = 100;
@@ -32,40 +27,38 @@ public:
 
 class RegisterBase : public ClockedComponent {
 public:
-    RegisterBase(std::string name, Component* parent) : ClockedComponent(name, parent) {}
+    RegisterBase(std::string name, SimComponent* parent) : ClockedComponent(name, parent) {}
 
-    virtual void forceValue(VSRTL_VT_U value) = 0;
     virtual PortBase* getIn() = 0;
     virtual PortBase* getOut() = 0;
 };
 
-DefineGraphicsType(Register);
 template <unsigned int W>
 class Register : public RegisterBase {
 public:
     SetGraphicsType(Register);
 
-    Register(std::string name, Component* parent) : RegisterBase(name, parent) {
+    Register(std::string name, SimComponent* parent) : RegisterBase(name, parent) {
         // Calling out.propagate() will clock the register the register
         out << ([=] { return m_savedValue; });
     }
 
-    void reset() {
+    void reset() override {
         m_savedValue = 0;
         m_rewindstack.clear();
     }
-    void save() {
+    void save() override {
         saveToStack();
         m_savedValue = in.template value<VSRTL_VT_U>();
     }
 
-    void forceValue(VSRTL_VT_U value) {
+    void forceValue(VSRTL_VT_U /* addr */, VSRTL_VT_U value) override {
         // Sign-extension with unsigned type forces width truncation to m_width bits
         m_savedValue = signextend<VSRTL_VT_U, W>(value);
         // Forced values are a modification of the current state and thus not pushed onto the rewind stack
     }
 
-    void rewind() {
+    void rewind() override {
         if (m_rewindstack.size() > 0) {
             m_savedValue = m_rewindstack.front();
             m_rewindstack.pop_front();

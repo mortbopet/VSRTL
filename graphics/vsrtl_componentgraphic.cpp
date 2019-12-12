@@ -1,7 +1,6 @@
 #include "vsrtl_componentgraphic.h"
 
 #include "vsrtl_componentbutton.h"
-#include "vsrtl_constant.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_label.h"
@@ -9,7 +8,6 @@
 #include "vsrtl_placeroute.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_registergraphic.h"
-#include "vsrtl_traversal_util.h"
 #include "vsrtl_wiregraphic.h"
 
 #include <cereal/archives/json.hpp>
@@ -30,7 +28,6 @@
 #include <QStyleOptionGraphicsItem>
 
 namespace vsrtl {
-using namespace core;
 
 namespace {
 
@@ -62,14 +59,14 @@ static constexpr qreal c_collapsedSideMargin = 15;
 
 QMap<std::type_index, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
 
-ComponentGraphic::ComponentGraphic(Component& c, QGraphicsItem* parent)
-    : m_component(c), m_minGridRect(ComponentGraphic::getComponentMinGridRect(c.getTypeId())), GraphicsBase(parent) {
-    c.changed.Connect(this, &ComponentGraphic::updateSlot);
-    c.registerGraphic(this);
+ComponentGraphic::ComponentGraphic(SimComponent* c, QGraphicsItem* parent)
+    : m_component(c), m_minGridRect(ComponentGraphic::getComponentMinGridRect(c->getTypeId())), GraphicsBase(parent) {
+    c->changed.Connect(this, &ComponentGraphic::updateSlot);
+    c->registerGraphic(this);
 }
 
 bool ComponentGraphic::hasSubcomponents() const {
-    return m_component.getSubComponents().size() != 0;
+    return m_component->getSubComponents().size() != 0;
 }
 
 void ComponentGraphic::initialize() {
@@ -79,14 +76,14 @@ void ComponentGraphic::initialize() {
     setAcceptHoverEvents(true);
     setMoveable();
 
-    m_label = new Label(QString::fromStdString(m_component.getDisplayName()), this);
+    m_label = new Label(QString::fromStdString(m_component->getDisplayName()), this);
 
     // Create IO ports of Component
-    for (const auto& c : m_component.getInputs()) {
-        m_inputPorts[c.get()] = new PortGraphic(c.get(), PortType::in, this);
+    for (const auto& c : m_component->getPorts<SimPort::Direction::in, SimPort>()) {
+        m_inputPorts[c] = new PortGraphic(c, PortType::in, this);
     }
-    for (const auto& c : m_component.getOutputs()) {
-        m_outputPorts[c.get()] = new PortGraphic(c.get(), PortType::out, this);
+    for (const auto& c : m_component->getPorts<SimPort::Direction::out, SimPort>()) {
+        m_outputPorts[c] = new PortGraphic(c, PortType::out, this);
     }
 
     m_restrictSubcomponentPositioning = false;
@@ -109,19 +106,19 @@ void ComponentGraphic::initialize() {
  * In charge of hide()ing subcomponents if the parent component (this) is not expanded
  */
 void ComponentGraphic::createSubcomponents() {
-    for (const auto& c : m_component.getSubComponents()) {
+    for (const auto& c : m_component->getSubComponents()) {
         ComponentGraphic* nc;
-        auto typeId = c.get()->getTypeId();
+        auto typeId = c->getTypeId();
         if (typeId == GraphicsTypeFor(Multiplexer)) {
-            nc = new MultiplexerGraphic(*dynamic_cast<MultiplexerBase*>(c.get()), this);
+            nc = new MultiplexerGraphic(c, this);
         } else if (typeId == GraphicsTypeFor(Register)) {
-            nc = new RegisterGraphic(*dynamic_cast<RegisterBase*>(c.get()), this);
+            nc = new RegisterGraphic(c, this);
         } else if (typeId == GraphicsTypeFor(Constant)) {
             // Don't create a distinct ComponentGraphic for constants - these will be drawn next to the port connecting
             // to it
             continue;
         } else {
-            nc = new ComponentGraphic(*c, this);
+            nc = new ComponentGraphic(c, this);
         }
         nc->initialize();
         nc->setParentItem(this);
@@ -160,7 +157,7 @@ void ComponentGraphic::resetWires() {
 
 void ComponentGraphic::loadLayout() {
     QString fileName = QFileDialog::getOpenFileName(QApplication::activeWindow(),
-                                                    "Save Layout " + QString::fromStdString(m_component.getName()),
+                                                    "Save Layout " + QString::fromStdString(m_component->getName()),
                                                     QString(), tr("JSON (*.json)"));
 
     if (fileName.isEmpty())
@@ -175,7 +172,7 @@ void ComponentGraphic::loadLayout() {
 
 void ComponentGraphic::saveLayout() {
     QString fileName = QFileDialog::getSaveFileName(QApplication::activeWindow(),
-                                                    "Save Layout " + QString::fromStdString(m_component.getName()),
+                                                    "Save Layout " + QString::fromStdString(m_component->getName()),
                                                     QString(), tr("JSON (*.json)"));
 
     if (fileName.isEmpty())
@@ -312,7 +309,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
 
             // Add width to the component based on the name of the component - we define that 2 characters is equal to 1
             // grid spacing : todo; this ratio should be configurable
-            m_gridRect.adjust(0, 0, m_component.getName().length() / GRID_SIZE, 0);
+            m_gridRect.adjust(0, 0, m_component->getName().length() / GRID_SIZE, 0);
             break;
         }
         case GeometryChange::Resize: {
@@ -344,8 +341,8 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         int i = 0;
         const qreal in_seg_y = sceneRect.height() / (m_inputPorts.size());
         // Iterate using the sorted ports of the Component
-        for (const auto& p : m_component.getInputs()) {
-            auto& graphicsPort = m_inputPorts[p.get()];
+        for (const auto& p : m_component->getPorts<SimPort::Direction::in, SimPort>()) {
+            auto& graphicsPort = m_inputPorts[p];
             int gridIndex = roundUp((i * in_seg_y + in_seg_y / 2), GRID_SIZE) / GRID_SIZE;
             graphicsPort->setGridIndex(gridIndex);
             const qreal y = gridIndex * GRID_SIZE;
@@ -355,8 +352,8 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         i = 0;
         const qreal out_seg_y = sceneRect.height() / (m_outputPorts.size());
         // Iterate using the sorted ports of the Component
-        for (const auto& p : m_component.getOutputs()) {
-            auto& graphicsPort = m_outputPorts[p.get()];
+        for (const auto& p : m_component->getPorts<SimPort::Direction::out, SimPort>()) {
+            auto& graphicsPort = m_outputPorts[p];
             const int gridIndex = roundUp((i * out_seg_y + out_seg_y / 2), GRID_SIZE) / GRID_SIZE;
             graphicsPort->setGridIndex(gridIndex);
             const qreal y = gridIndex * GRID_SIZE;
@@ -371,7 +368,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     // 3 .Update the draw shape, scaling it to the current scene size of the component
     QTransform t;
     t.scale(sceneRect.width(), sceneRect.height());
-    m_shape = ComponentGraphic::getComponentShape(m_component.getTypeId(), t);
+    m_shape = ComponentGraphic::getComponentShape(m_component->getTypeId(), t);
 
     // 5. Position the expand-button
     if (hasSubcomponents()) {
@@ -424,7 +421,7 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
         if (m_initialized) {
             for (const auto& inputPort : m_inputPorts) {
                 if (!inputPort->getPort()->isConstant())
-                    getInputPortGraphic<PortGraphic*>(inputPort->getPort())->updateWireGeometry();
+                    inputPort->getPort()->getInputPort()->getGraphic<PortGraphic>()->updateWireGeometry();
             }
         }
 
@@ -461,7 +458,7 @@ void ComponentGraphic::setShape(const QPainterPath& shape) {
 }
 
 namespace {
-qreal largestPortWidth(const QMap<PortBase*, PortGraphic*>& ports) {
+qreal largestPortWidth(const QMap<SimPort*, PortGraphic*>& ports) {
     qreal width = 0;
     for (const auto& port : ports) {
         width = port->boundingRect().width() > width ? port->boundingRect().width() : width;

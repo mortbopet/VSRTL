@@ -18,7 +18,7 @@
 
 namespace vsrtl {
 
-MainWindow::MainWindow(Design& arch, QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
+MainWindow::MainWindow(SimDesign& arch, QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     setWindowState(Qt::WindowMaximized);
     m_vsrtlWidget = new VSRTLWidget(arch, this);

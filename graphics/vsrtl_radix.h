@@ -3,7 +3,10 @@
 
 #include "vsrtl_binutils.h"
 #include "vsrtl_defines.h"
-#include "vsrtl_port.h"
+
+#include "../interface/vsrtl.h"
+#include "../interface/vsrtl_binutils.h"
+#include "../interface/vsrtl_interface.h"
 
 #include <QAction>
 #include <QMenu>
@@ -11,7 +14,6 @@
 #include <QString>
 
 namespace vsrtl {
-using namespace core;
 
 enum class Radix { Hex, Unsigned, Signed, Binary, Enum };
 
@@ -20,7 +22,7 @@ static const auto binRegex = QRegExp("0[bB][0-1]+");
 static const auto unsignedRegex = QRegExp("[0-9]+");
 static const auto signedRegex = QRegExp("[-]*[0-9]+");
 
-static inline VSRTL_VT_U decodePortRadixValue(const PortBase& port, const Radix type, const QString& valueString) {
+static inline VSRTL_VT_U decodePortRadixValue(const SimPort& port, const Radix type, const QString& valueString) {
     bool ok = false;
     VSRTL_VT_U value;
     switch (type) {
@@ -59,7 +61,7 @@ static inline VSRTL_VT_U decodePortRadixValue(const PortBase& port, const Radix 
     return value;
 }
 
-static inline QString encodePortRadixValue(const PortBase* port, const Radix type) {
+static inline QString encodePortRadixValue(const SimPort* port, const Radix type) {
     VSRTL_VT_U value = port->uValue();
     switch (type) {
         case Radix::Hex: {
@@ -85,7 +87,7 @@ static inline QString encodePortRadixValue(const PortBase* port, const Radix typ
     }
 }
 
-static QMenu* createPortRadixMenu(const PortBase* port, Radix& type) {
+static QMenu* createPortRadixMenu(const SimPort* port, Radix& type) {
     QMenu* menu = new QMenu("Radix");
     QActionGroup* RadixActionGroup = new QActionGroup(menu);
 

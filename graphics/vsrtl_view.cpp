@@ -18,7 +18,7 @@ VSRTLView::VSRTLView(QWidget* parent) : QGraphicsView(parent) {
     setInteractive(true);
 }
 
-ComponentGraphic* VSRTLView::lookupGraphicForComponent(const Component* c) {
+ComponentGraphic* VSRTLView::lookupGraphicForComponent(const SimComponent* c) {
     for (const auto& i : items()) {
         auto d = dynamic_cast<ComponentGraphic*>(i);
         if (d) {

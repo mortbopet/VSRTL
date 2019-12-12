@@ -7,7 +7,7 @@
 #include <QFontMetrics>
 namespace vsrtl {
 
-RegisterGraphic::RegisterGraphic(RegisterBase& c, QGraphicsItem* parent) : ComponentGraphic(c, parent), m_register(c) {}
+RegisterGraphic::RegisterGraphic(SimComponent* c, QGraphicsItem* parent) : ComponentGraphic(c, parent) {}
 
 void RegisterGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
@@ -26,14 +26,14 @@ void RegisterGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraphics
 
         QPointF drawPos;
         for (const auto& ip : m_inputPorts) {
-            if (ip->getPort() == m_register.getIn()) {
+            if (ip->getPort() == m_component->getPorts<SimPort::Direction::in>()[0]) {
                 drawPos = mapFromItem(ip, ip->getOutputPoint());
                 drawPos += QPointF(d_rect.width() / 2.5, -d_rect.height() / 2);
                 painter->drawText(drawPos.x(), drawPos.y(), d_rect.width(), d_rect.height(), Qt::AlignCenter, d_text);
             }
         }
         for (const auto& op : m_outputPorts) {
-            if (op->getPort() == m_register.getOut()) {
+            if (op->getPort() == m_component->getPorts<SimPort::Direction::out>()[0]) {
                 drawPos = mapFromItem(op, op->getInputPoint());
                 drawPos += QPointF(-q_rect.width() - q_rect.width() / 3, -q_rect.height() / 2);
                 painter->drawText(drawPos.x(), drawPos.y(), q_rect.width(), q_rect.height(), Qt::AlignCenter, q_text);

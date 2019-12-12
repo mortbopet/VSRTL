@@ -1,14 +1,10 @@
 #include "vsrtl_widget.h"
+#include "../interface/vsrtl_gfxobjecttypes.h"
 #include "ui_vsrtl_widget.h"
-#include "vsrtl_adder.h"
-#include "vsrtl_design.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_scene.h"
 #include "vsrtl_shape.h"
-#include "vsrtl_traversal_util.h"
 #include "vsrtl_view.h"
-
-#include "vsrtl_core.h"
 
 #include <memory>
 
@@ -16,7 +12,7 @@
 
 namespace vsrtl {
 
-VSRTLWidget::VSRTLWidget(Design& arch, QWidget* parent) : m_arch(arch), QWidget(parent), ui(new Ui::VSRTLWidget) {
+VSRTLWidget::VSRTLWidget(SimDesign& arch, QWidget* parent) : m_arch(arch), QWidget(parent), ui(new Ui::VSRTLWidget) {
     ui->setupUi(this);
 
     // Register shapes for vsrtl-core provided components;
@@ -38,8 +34,8 @@ VSRTLWidget::~VSRTLWidget() {
 }
 
 void VSRTLWidget::handleSceneSelectionChanged() {
-    std::vector<Component*> selectedComponents;
-    std::vector<PortBase*> selectedPorts;
+    std::vector<SimComponent*> selectedComponents;
+    std::vector<SimPort*> selectedPorts;
     for (const auto& i : m_scene->selectedItems()) {
         ComponentGraphic* i_c = dynamic_cast<ComponentGraphic*>(i);
         if (i_c) {
@@ -57,15 +53,16 @@ void VSRTLWidget::handleSceneSelectionChanged() {
     emit portSelectionChanged(selectedPorts);
 }  // namespace vsrtl
 
-void VSRTLWidget::handleSelectionChanged(const std::vector<Component*>& selected, std::vector<Component*>& deselected) {
+void VSRTLWidget::handleSelectionChanged(const std::vector<SimComponent*>& selected,
+                                         std::vector<SimComponent*>& deselected) {
     // Block signals from scene to disable selectionChange emission.
     m_scene->blockSignals(true);
     for (const auto& c : selected) {
-        auto* c_g = getGraphic<ComponentGraphic*>(c);
+        auto* c_g = c->getGraphic<ComponentGraphic>();
         c_g->setSelected(true);
     }
     for (const auto& c : deselected) {
-        auto* c_g = getGraphic<ComponentGraphic*>(c);
+        auto* c_g = c->getGraphic<ComponentGraphic>();
         c_g->setSelected(false);
     }
     m_scene->blockSignals(false);
@@ -189,14 +186,14 @@ void VSRTLWidget::registerShapes() const {
                                  QRect(0, 0, 2, 5)});
 }
 
-void VSRTLWidget::initializeDesign(Design& arch) {
+void VSRTLWidget::initializeDesign(SimDesign& arch) {
     // Verify the design in case user forgot to
     arch.verifyAndInitialize();
 
     // Create a ComponentGraphic for the top component. This will expand the component tree and create graphics for all
     // ports, wires etc. within the design. This is done through the initialize call, which must be called after the
     // item has been added to the scene.
-    m_topLevelComponent = new vsrtl::ComponentGraphic(arch, nullptr);
+    m_topLevelComponent = new ComponentGraphic(&arch, nullptr);
     addComponent(m_topLevelComponent);
     m_topLevelComponent->initialize();
     // At this point, all graphic items have been created, and the post scene construction initialization may take

@@ -53,7 +53,7 @@ bool TreeItem::removeChildren(int position, int count) {
 
 NetlistTreeItem::NetlistTreeItem(TreeItem* parent) : TreeItem(parent) {}
 
-void NetlistTreeItem::setPort(PortBase* port) {
+void NetlistTreeItem::setPort(SimPort* port) {
     Q_ASSERT(port);
     m_port = port;
     m_name = QString::fromStdString(m_port->getName());

@@ -3,18 +3,12 @@
 
 #include "vsrtl_componentgraphic.h"
 
-#include "vsrtl_register.h"
-
 namespace vsrtl {
-using namespace core;
 
 class RegisterGraphic : public ComponentGraphic {
 public:
-    RegisterGraphic(RegisterBase& c, QGraphicsItem* parent);
+    RegisterGraphic(SimComponent* c, QGraphicsItem* parent);
     void paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* w) override;
-
-private:
-    RegisterBase& m_register;
 };
 
 }  // namespace vsrtl

@@ -10,7 +10,7 @@ namespace core {
     template <unsigned int W>                                                                      \
     class classname : public Component {                                                           \
     public:                                                                                        \
-        classname(std::string name, Component* parent) : Component(name, parent) {                 \
+        classname(std::string name, SimComponent* parent) : Component(name, parent) {              \
             out << [=] { return op1.template value<cmptype>() op op2.template value<cmptype>(); }; \
         }                                                                                          \
         OUTPUTPORT(out, 1);                                                                        \

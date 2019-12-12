@@ -6,12 +6,12 @@
 
 #include "vsrtl_netlistmodel.h"
 
-#include "vsrtl_constant.h"
-#include "vsrtl_design.h"
+#include "../interface/vsrtl_gfxobjecttypes.h"
+#include "../interface/vsrtl_interface.h"
 
 namespace vsrtl {
 
-NetlistModel::NetlistModel(Design& arch, QObject* parent)
+NetlistModel::NetlistModel(SimDesign* arch, QObject* parent)
     : NetlistModelBase({"Component", "I/O", "Value", "Width"}, arch, parent) {
     rootItem = new NetlistTreeItem(nullptr);
 
@@ -42,10 +42,11 @@ Qt::ItemFlags NetlistModel::flags(const QModelIndex& index) const {
 
 bool NetlistModel::setData(const QModelIndex& index, const QVariant& value, int role) {
     if (indexIsRegisterOutputPortValue(index)) {
-        RegisterBase* reg = dynamic_cast<RegisterBase*>(getParentComponent(index));
+        SimSynchronous* reg = dynamic_cast<SimSynchronous*>(getParentComponent(index));
         if (reg) {
-            reg->forceValue(value.toInt());
-            m_arch.propagateDesign();
+            reg->forceValue(0, value.toInt());
+            assert(false && "Todo: No way to propagate design through interface");
+            // m_arch.propagateDesign();
             return true;
         }
     }
@@ -57,7 +58,7 @@ void NetlistModel::invalidate() {
     dataChanged(index(0, ValueColumn), index(rowCount(), ValueColumn), {Qt::DisplayRole});
 }
 
-QModelIndex NetlistModel::lookupIndexForComponent(Component* c) const {
+QModelIndex NetlistModel::lookupIndexForComponent(SimComponent* c) const {
     if (m_componentIndicies.find(c) != m_componentIndicies.end()) {
         NetlistTreeItem* item = m_componentIndicies.at(c);
         if (item->index.isValid()) {
@@ -67,7 +68,7 @@ QModelIndex NetlistModel::lookupIndexForComponent(Component* c) const {
     return QModelIndex();
 }
 
-void NetlistModel::addPortToComponent(PortBase* port, NetlistTreeItem* parent, PortDirection dir) {
+void NetlistModel::addPortToComponent(SimPort* port, NetlistTreeItem* parent, PortDirection dir) {
     auto* child = new NetlistTreeItem(parent);
     child->setPort(port);
     parent->insertChild(parent->childCount(), child);
@@ -80,7 +81,7 @@ bool NetlistModel::indexIsRegisterOutputPortValue(const QModelIndex& index) cons
         auto* parentItem = static_cast<NetlistTreeItem*>(item->parent());
         auto* parentComponent = parentItem->m_component;
         if (parentItem && parentComponent) {
-            if (dynamic_cast<RegisterBase*>(parentComponent)) {
+            if (dynamic_cast<SimSynchronous*>(parentComponent)) {
                 // Parent is register, check if current index is an output port
                 if (item->m_port && item->m_direction == PortDirection::Output) {
                     return true;
@@ -91,11 +92,9 @@ bool NetlistModel::indexIsRegisterOutputPortValue(const QModelIndex& index) cons
     return false;
 }
 
-void NetlistModel::loadDesignRecursive(NetlistTreeItem* parent, const Component& component) {
-    auto& subComponents = component.getSubComponents();
-
+void NetlistModel::loadDesignRecursive(NetlistTreeItem* parent, SimComponent* component) {
     // Subcomponents
-    for (const auto& subcomponent : subComponents) {
+    for (const auto& subcomponent : component->getSubComponents()) {
         if (subcomponent->getTypeId() == GraphicsTypeFor(Constant)) {
             // Do not display constants in the netlist
             continue;
@@ -105,25 +104,25 @@ void NetlistModel::loadDesignRecursive(NetlistTreeItem* parent, const Component&
         parent->insertChild(parent->childCount(), child);
 
         // Set component data (component pointer and name)
-        m_componentIndicies[subcomponent.get()] = child;
+        m_componentIndicies[subcomponent] = child;
 
-        child->m_component = subcomponent.get();
+        child->m_component = subcomponent;
         child->m_name = QString::fromStdString(subcomponent->getName());
 
         // Recurse into the child
-        loadDesignRecursive(child, *subcomponent);
+        loadDesignRecursive(child, subcomponent);
     }
 
     // I/O ports of component
-    for (const auto& input : component.getInputs()) {
-        addPortToComponent(input.get(), parent, PortDirection::Input);
+    for (const auto& input : component->getPorts<SimPort::Direction::in>()) {
+        addPortToComponent(input, parent, PortDirection::Input);
     }
-    for (const auto& output : component.getOutputs()) {
-        addPortToComponent(output.get(), parent, PortDirection::Output);
+    for (const auto& output : component->getPorts<SimPort::Direction::out>()) {
+        addPortToComponent(output, parent, PortDirection::Output);
     }
 }
 
-Component* NetlistModel::getParentComponent(const QModelIndex& index) const {
+SimComponent* NetlistModel::getParentComponent(const QModelIndex& index) const {
     auto* item = getTreeItem(index);
     if (item) {
         item = static_cast<NetlistTreeItem*>(item->parent());
@@ -134,7 +133,7 @@ Component* NetlistModel::getParentComponent(const QModelIndex& index) const {
     return nullptr;
 }
 
-void NetlistModel::loadDesign(NetlistTreeItem* parent, const Design& design) {
+void NetlistModel::loadDesign(NetlistTreeItem* parent, SimDesign* design) {
     loadDesignRecursive(parent, design);
 }
 }  // namespace vsrtl

@@ -5,6 +5,8 @@
 #include "vsrtl_defines.h"
 #include "vsrtl_register.h"
 
+#include "../interface/vsrtl_gfxobjecttypes.h"
+
 #include <cstdint>
 #include <unordered_map>
 
@@ -25,7 +27,7 @@ class WrMemory : public ClockedComponent {
 
 public:
     SetGraphicsType(Component);
-    WrMemory(std::string name, Component* parent) : ClockedComponent(name, parent) {}
+    WrMemory(std::string name, SimComponent* parent) : ClockedComponent(name, parent) {}
     void reset() override {
         m_memory->clear();
         m_rewindstack.clear();
@@ -52,6 +54,11 @@ public:
             write(*m_memory, lastEviction.addr, lastEviction.data);
             m_rewindstack.pop_front();
         }
+    }
+
+    void forceValue(VSRTL_VT_U addr, VSRTL_VT_U value) override {
+        assert(false && "todo: Forcing values on the rewind stack?");
+        write(*m_memory, addr, value);
     }
 
     INPUTPORT(addr, addrWidth);
@@ -98,7 +105,7 @@ class RdMemory : public Component {
 
 public:
     SetGraphicsType(ClockedComponent);
-    RdMemory(std::string name, Component* parent) : Component(name, parent) {
+    RdMemory(std::string name, SimComponent* parent) : Component(name, parent) {
         data_out << [=] { return read(addr.template value<VSRTL_VT_U>()); };
     }
 
@@ -122,7 +129,7 @@ template <unsigned int addrWidth, unsigned int dataWidth>
 class Memory : public Component {
 public:
     SetGraphicsType(ClockedComponent);
-    Memory(std::string name, Component* parent) : Component(name, parent) {
+    Memory(std::string name, SimComponent* parent) : Component(name, parent) {
         _wr_mem->setMemory(&m_memory);
         _rd_mem->setMemory(&m_memory);
         addr >> _wr_mem->addr;
@@ -163,7 +170,7 @@ template <unsigned int addrWidth, unsigned int dataWidth>
 class ROM : public Component {
 public:
     SetGraphicsType(ClockedComponent);
-    ROM(std::string name, Component* parent) : Component(name, parent) {
+    ROM(std::string name, SimComponent* parent) : Component(name, parent) {
         data_out << [=] { return read(m_memory, addr.template value<VSRTL_VT_U>()); };
     }
 

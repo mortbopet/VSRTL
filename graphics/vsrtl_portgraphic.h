@@ -5,6 +5,8 @@
 #include "vsrtl_graphicsbase.h"
 #include "vsrtl_valuelabel.h"
 
+#include "../interface/vsrtl_interface.h"
+
 #include "cereal/cereal.hpp"
 
 #include <QFont>
@@ -13,11 +15,7 @@
 QT_FORWARD_DECLARE_CLASS(QPropertyAnimation)
 
 namespace vsrtl {
-using namespace core;
 
-namespace core {
-class PortBase;
-}
 class WireGraphic;
 class PortPoint;
 
@@ -28,7 +26,7 @@ class PortGraphic : public GraphicsBase {
     Q_PROPERTY(QColor penColor MEMBER m_penColor)
 
 public:
-    PortGraphic(PortBase* port, PortType type, QGraphicsItem* parent = nullptr);
+    PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent = nullptr);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
@@ -38,7 +36,7 @@ public:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
 
     void updateGeometry();
-    PortBase* getPort() const { return m_port; }
+    SimPort* getPort() const { return m_port; }
     void setInputWire(WireGraphic* wire);
     WireGraphic* getOutputWire() { return m_outputWire; }
     void updateInputWire();
@@ -81,7 +79,7 @@ private:
     QRectF m_textRect;
 
     PortType m_type;
-    PortBase* m_port;
+    SimPort* m_port;
 
     // Used for allowing WireSegments to join up with a port
     PortPoint* m_portPoint = nullptr;

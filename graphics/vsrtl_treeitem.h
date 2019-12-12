@@ -49,10 +49,10 @@ public:
     QVariant data(int column, int role = Qt::EditRole) const override;
     bool setData(int column, const QVariant& value, int role = Qt::EditRole) override;
     virtual QList<QMenu*> getActions() const;
-    void setPort(PortBase* port);
+    void setPort(SimPort* port);
 
-    Component* m_component = nullptr;
-    PortBase* m_port = nullptr;
+    SimComponent* m_component = nullptr;
+    SimPort* m_port = nullptr;
     PortDirection m_direction;
     QMenu* m_radixMenu = nullptr;
     Radix m_radix = Radix::Hex;

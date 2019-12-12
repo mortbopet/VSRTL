@@ -19,7 +19,7 @@ namespace core {
 template <unsigned int W>
 class Collator : public Component {
 public:
-    Collator(std::string name, Component* parent) : Component(name, parent) {
+    Collator(std::string name, SimComponent* parent) : Component(name, parent) {
         out << [=] {
             VSRTL_VT_U value = 0;
             for (int i = 0; i < W; i++) {

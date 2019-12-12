@@ -4,11 +4,10 @@
 #include <QItemSelection>
 #include <QWidget>
 
-#include "vsrtl_design.h"
+#include "../interface/vsrtl_interface.h"
 #include "vsrtl_netlistview.h"
 
 namespace vsrtl {
-using namespace core;
 
 namespace Ui {
 class Netlist;
@@ -23,15 +22,15 @@ class Netlist : public QWidget {
     Q_OBJECT
 
 public:
-    explicit Netlist(Design& design, QWidget* parent = 0);
+    explicit Netlist(SimDesign& design, QWidget* parent = 0);
     ~Netlist();
 
 signals:
-    void selectionChanged(const std::vector<Component*>& selected, std::vector<Component*>& deselected);
+    void selectionChanged(const std::vector<SimComponent*>& selected, std::vector<SimComponent*>& deselected);
 
 public slots:
     void reloadNetlist();
-    void updateSelection(const std::vector<Component*>&);
+    void updateSelection(const std::vector<SimComponent*>&);
 
 private slots:
     void handleViewSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected);

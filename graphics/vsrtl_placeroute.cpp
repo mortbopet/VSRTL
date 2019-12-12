@@ -2,7 +2,6 @@
 #include "vsrtl_component.h"
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_graphics_defines.h"
-#include "vsrtl_traversal_util.h"
 
 #include <deque>
 #include <map>
@@ -19,7 +18,7 @@ namespace vsrtl {
  * be generated for each depth in the topological sort, wherein the components are finally layed out.
  * @param parent
  */
-void topologicalSortUtil(Component* c, std::map<Component*, bool>& visited, std::deque<Component*>& stack) {
+void topologicalSortUtil(SimComponent* c, std::map<SimComponent*, bool>& visited, std::deque<SimComponent*>& stack) {
     visited[c] = true;
 
     for (const auto& cc : c->getOutputComponents()) {
@@ -32,9 +31,9 @@ void topologicalSortUtil(Component* c, std::map<Component*, bool>& visited, std:
     stack.push_front(c);
 }
 
-std::deque<Component*> topologicalSort(const std::vector<ComponentGraphic*>& components) {
-    std::map<Component*, bool> visited;
-    std::deque<Component*> stack;
+std::deque<SimComponent*> topologicalSort(const std::vector<ComponentGraphic*>& components) {
+    std::map<SimComponent*, bool> visited;
+    std::deque<SimComponent*> stack;
 
     for (const auto& cpt : components)
         visited[cpt->getComponent()] = false;
@@ -47,10 +46,10 @@ std::deque<Component*> topologicalSort(const std::vector<ComponentGraphic*>& com
     return stack;
 }
 
-std::map<int, std::set<Component*>> ASAPSchedule(const std::vector<ComponentGraphic*>& components) {
-    std::deque<Component*> sortedComponents = topologicalSort(components);
-    std::map<int, std::set<Component*>> schedule;
-    std::map<Component*, int> componentToDepth;
+std::map<int, std::set<SimComponent*>> ASAPSchedule(const std::vector<ComponentGraphic*>& components) {
+    std::deque<SimComponent*> sortedComponents = topologicalSort(components);
+    std::map<int, std::set<SimComponent*>> schedule;
+    std::map<SimComponent*, int> componentToDepth;
 
     // 1. assign a depth to the components based on their depth in the topological sort, disregarding output edges
     for (const auto& c : sortedComponents) {
@@ -81,7 +80,7 @@ std::map<ComponentGraphic*, QPointF> ASAPPlacement(const std::vector<ComponentGr
     for (const auto& iter : asapSchedule) {
         qreal maxWidth = 0;
         for (const auto& c : iter.second) {
-            qreal width = getGraphic<ComponentGraphic*>(c)->boundingRect().width();
+            qreal width = c->getGraphic<ComponentGraphic>()->boundingRect().width();
             maxWidth = maxWidth < width ? width : maxWidth;
         }
         columnWidths[iter.first] = maxWidth;
@@ -94,7 +93,7 @@ std::map<ComponentGraphic*, QPointF> ASAPPlacement(const std::vector<ComponentGr
     qreal y = start.y();
     for (const auto& iter : asapSchedule) {
         for (const auto& c : iter.second) {
-            auto* g = getGraphic<ComponentGraphic*>(c);
+            auto* g = c->getGraphic<ComponentGraphic>();
             placements[g] = QPointF(x, y);
             y += g->boundingRect().height() + COMPONENT_COLUMN_MARGIN;
         }
@@ -107,12 +106,12 @@ std::map<ComponentGraphic*, QPointF> ASAPPlacement(const std::vector<ComponentGr
 
 std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) {
     std::map<ComponentGraphic*, QPointF> placements;
-    std::deque<Component*> sortedComponents = topologicalSort(components);
+    std::deque<SimComponent*> sortedComponents = topologicalSort(components);
 
     // Position components
     QPointF pos = QPointF(25, 25);  // Start a bit offset from the parent borders
     for (const auto& c : sortedComponents) {
-        auto* g = getGraphic<ComponentGraphic*>(c);
+        auto* g = c->getGraphic<ComponentGraphic>();
         placements[g] = pos;
         pos.rx() += g->boundingRect().width() + COMPONENT_COLUMN_MARGIN;
     }

@@ -9,11 +9,11 @@ namespace vsrtl {
 
 class MultiplexerGraphic : public ComponentGraphic {
 public:
-    MultiplexerGraphic(MultiplexerBase& c, QGraphicsItem* parent);
+    MultiplexerGraphic(SimComponent* c, QGraphicsItem* parent);
     void paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* w) override;
 
 private:
-    MultiplexerBase& m_multiplexer;
+    SimPort* getSelect();
 };
 
 }  // namespace vsrtl

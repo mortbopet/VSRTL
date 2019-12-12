@@ -1,8 +1,6 @@
 #include "vsrtl_wiregraphic.h"
 #include "vsrtl_componentgraphic.h"
-#include "vsrtl_port.h"
 #include "vsrtl_portgraphic.h"
-#include "vsrtl_traversal_util.h"
 
 #include "vsrtl_graphics_defines.h"
 
@@ -335,7 +333,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     pointToRemove->deleteLater();
 }
 
-WireGraphic::WireGraphic(PortGraphic* from, const std::vector<PortBase*>& to, QGraphicsItem* parent)
+WireGraphic::WireGraphic(PortGraphic* from, const std::vector<SimPort*>& to, QGraphicsItem* parent)
     : m_fromPort(from), m_toPorts(to), GraphicsBase(parent) {}
 
 bool WireGraphic::managesPoint(WirePoint* point) const {
@@ -434,7 +432,7 @@ ComponentGraphic* WireGraphic::getPointOwningComponentGraphic() const {
     }
 }
 
-Component* WireGraphic::getPointOwningComponent() const {
+SimComponent* WireGraphic::getPointOwningComponent() const {
     return getPointOwningComponentGraphic()->getComponent();
 }
 
@@ -552,7 +550,7 @@ QVariant WireGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
  */
 void WireGraphic::postSceneConstructionInitialize1() {
     for (const auto& toPort : m_toPorts) {
-        m_toGraphicPorts.push_back(getGraphic<PortGraphic*>(toPort));
+        m_toGraphicPorts.push_back(toPort->getGraphic<PortGraphic>());
     }
 
     // Assert that all ports were found in the scene

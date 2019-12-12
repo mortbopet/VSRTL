@@ -4,23 +4,30 @@
 #include <QPainter>
 
 namespace vsrtl {
-using namespace core;
 
-MultiplexerGraphic::MultiplexerGraphic(MultiplexerBase& c, QGraphicsItem* parent)
-    : ComponentGraphic(c, parent), m_multiplexer(c) {
+MultiplexerGraphic::MultiplexerGraphic(SimComponent* c, QGraphicsItem* parent) : ComponentGraphic(c, parent) {
     // Make changes in the select signal trigger a redraw of the multiplexer (and its input signal markings)
-    c.getSelect()->changed.Connect(this, &ComponentGraphic::updateSlot);
+    getSelect()->changed.Connect(this, &ComponentGraphic::updateSlot);
+}
+
+SimPort* MultiplexerGraphic::getSelect() {
+    // It is assumed that the first input is always the select signal
+    return m_component->getPorts<SimPort::Direction::in>()[0];
 }
 
 void MultiplexerGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
     // Mark input IO with circles, highlight selected input with green
     painter->save();
+
+    const auto inputPorts = m_component->getPorts<SimPort::Direction::in>();
+    const auto* select = getSelect();
+    const unsigned int index = select->uValue();
+    Q_ASSERT(index < m_inputPorts.size());
+
     for (const auto& ip : m_inputPorts) {
         const auto* p_base = ip->getPort();
-        if (p_base != m_multiplexer.getSelect()) {
-            const unsigned int index = m_multiplexer.getSelect()->uValue();
-            Q_ASSERT(index < m_multiplexer.getIns().size());
-            if (p_base == m_multiplexer.getIns()[index]) {
+        if (p_base != select) {
+            if (p_base == inputPorts[index]) {
                 painter->setBrush(Qt::green);
             } else {
                 painter->setBrush(Qt::white);

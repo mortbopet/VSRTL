@@ -6,12 +6,9 @@
 #include <QModelIndex>
 #include <QVariant>
 
-namespace vsrtl {
+#include "../interface/vsrtl_interface.h"
 
-namespace core {
-class Design;
-}
-using namespace core;
+namespace vsrtl {
 
 int getRootIndex(QModelIndex index);
 int getRootSelectedIndex(QItemSelectionModel* model);
@@ -19,7 +16,7 @@ int getRootSelectedIndex(QItemSelectionModel* model);
 template <typename T>
 class NetlistModelBase : public QAbstractItemModel {
 public:
-    NetlistModelBase(QStringList headers, Design& arch, QObject* parent = nullptr)
+    NetlistModelBase(QStringList headers, SimDesign* arch, QObject* parent = nullptr)
         : m_headers(headers), m_arch(arch), QAbstractItemModel(parent) {}
 
     ~NetlistModelBase() override { delete rootItem; }
@@ -89,7 +86,7 @@ protected:
     }
 
     T* rootItem = nullptr;
-    Design& m_arch;
+    SimDesign* m_arch;
     QStringList m_headers;
 };
 

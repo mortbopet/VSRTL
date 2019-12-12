@@ -16,16 +16,11 @@ namespace Ui {
 class VSRTLWidget;
 }
 
-namespace core {
-class Design;
-}
-using namespace core;
-
 class VSRTLWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit VSRTLWidget(Design& arch, QWidget* parent = nullptr);
+    explicit VSRTLWidget(SimDesign& arch, QWidget* parent = nullptr);
     ~VSRTLWidget();
 
     void addComponent(ComponentGraphic* g);
@@ -37,12 +32,12 @@ public slots:
     void rewind();
 
     // Selections which are imposed on the scene from external objects (ie. selecting items in the netlist)
-    void handleSelectionChanged(const std::vector<Component*>& selected, std::vector<Component*>& deselected);
+    void handleSelectionChanged(const std::vector<SimComponent*>& selected, std::vector<SimComponent*>& deselected);
 
 signals:
     void canrewind(bool);
-    void componentSelectionChanged(const std::vector<Component*>&);
-    void portSelectionChanged(const std::vector<PortBase*>&);
+    void componentSelectionChanged(const std::vector<SimComponent*>&);
+    void portSelectionChanged(const std::vector<SimPort*>&);
 
 private slots:
     void handleSceneSelectionChanged();
@@ -55,7 +50,7 @@ private:
 
     void registerShapes() const;
 
-    void initializeDesign(Design& arch);
+    void initializeDesign(SimDesign& arch);
     Ui::VSRTLWidget* ui;
 
     vsrtl::ComponentGraphic* m_topLevelComponent = nullptr;
@@ -63,7 +58,7 @@ private:
     VSRTLView* m_view;
     VSRTLScene* m_scene;
 
-    Design& m_arch;
+    SimDesign& m_arch;
 };
 
 }  // namespace vsrtl

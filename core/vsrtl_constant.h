@@ -5,6 +5,8 @@
 #include "vsrtl_component.h"
 #include "vsrtl_port.h"
 
+#include "../interface/vsrtl_gfxobjecttypes.h"
+
 namespace vsrtl {
 namespace core {
 
@@ -20,12 +22,11 @@ constexpr bool valueFitsInBitWidth(unsigned int width, int value) {
  * @param width Must be able to contain the signed bitfield of value
  *
  */
-DefineGraphicsType(Constant);
 template <unsigned int W>
 class Constant : public Component {
 public:
     SetGraphicsType(Constant);
-    Constant(std::string name, Component* parent, VSRTL_VT_U value = 0) : Component(name, parent) {
+    Constant(std::string name, SimComponent* parent, VSRTL_VT_U value = 0) : Component(name, parent) {
         m_value = value;
         if (!valueFitsInBitWidth(W, m_value)) {
             throw std::runtime_error("Value does not fit inside provided bit-width");
@@ -45,7 +46,7 @@ template <unsigned int W>
 void operator>>(VSRTL_VT_S c, Port<W>& toThis) {
     // A constant should be created as a child of the shared parent between the component to be connected and the newly
     // created constant
-    auto* parent = toThis.getParent()->getParent();
+    auto* parent = toThis.getParent()->template getParent<SimComponent>();
     auto* constant = parent->template create_component<Constant<W>>(
         "constant #" + std::to_string(parent->reserveConstantId()) + "v:" + std::to_string(c), c);
     constant->out >> toThis;

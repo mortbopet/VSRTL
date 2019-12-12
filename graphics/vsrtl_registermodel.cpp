@@ -15,9 +15,9 @@ QList<QMenu*> RegisterTreeItem::getActions() const {
     return m_register != nullptr ? NetlistTreeItem::getActions() : QList<QMenu*>();
 }
 
-void RegisterTreeItem::setRegister(RegisterBase* reg) {
+void RegisterTreeItem::setRegister(SimComponent* reg) {
     m_register = reg;
-    setPort(reg->getOut());
+    setPort(m_register->getPorts<SimPort::Direction::out>()[0]);
     m_name = QString::fromStdString(reg->getName());
 }
 
@@ -31,8 +31,8 @@ QVariant RegisterTreeItem::data(int column, int role) const {
                 return QBrush(Qt::blue);
             }
             case Qt::DisplayRole: {
-                VSRTL_VT_U value = m_register->getOut()->uValue();
-                return encodePortRadixValue(m_register->getOut(), m_radix);
+                VSRTL_VT_U value = m_port->uValue();
+                return encodePortRadixValue(m_port, m_radix);
             }
         }
     }
@@ -44,7 +44,7 @@ QVariant RegisterTreeItem::data(int column, int role) const {
             }
             case RegisterModel::WidthColumn: {
                 if (m_register) {
-                    return m_register->getOut()->getWidth();
+                    return m_port->getWidth();
                 }
                 break;
             }
@@ -56,7 +56,7 @@ QVariant RegisterTreeItem::data(int column, int role) const {
 bool RegisterTreeItem::setData(int column, const QVariant& value, int role) {
     if (index.column() == RegisterModel::ValueColumn) {
         if (m_register) {
-            m_register->forceValue(value.value<VSRTL_VT_U>());
+            m_design->setSynchronousValue(m_register->getSynchronous(), 0, value.value<VSRTL_VT_U>());
             return true;
         }
     }
@@ -68,9 +68,9 @@ void RegisterModel::invalidate() {
     dataChanged(index(0, ValueColumn), index(rowCount(), ValueColumn), {Qt::DisplayRole});
 }
 
-RegisterModel::RegisterModel(Design& arch, QObject* parent)
+RegisterModel::RegisterModel(SimDesign* arch, QObject* parent)
     : NetlistModelBase({"Component", "Value", "Width"}, arch, parent) {
-    rootItem = new RegisterTreeItem(nullptr);
+    rootItem = new RegisterTreeItem(nullptr, arch);
     loadDesign(rootItem, m_arch);
 }
 
@@ -98,43 +98,40 @@ Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
 bool RegisterModel::setData(const QModelIndex& index, const QVariant& var, int role) {
     auto* item = getTreeItem(index);
     if (item) {
-        VSRTL_VT_U value = decodePortRadixValue(*item->m_register->getOut(), item->m_radix, var.toString());
-        bool resval = item->setData(index.column(), value, role);
-        if (resval) {
-            m_arch.propagateDesign();
-        }
-        return resval;
+        VSRTL_VT_U value = decodePortRadixValue(*item->m_port, item->m_radix, var.toString());
+        return item->setData(index.column(), value, role);
     }
 
     return false;
 }
 
-void RegisterModel::loadDesign(RegisterTreeItem* parent, const Design& design) {
-    const auto& registers = design.getRegisters();
+void RegisterModel::loadDesign(RegisterTreeItem* parent, SimDesign* design) {
+    m_design = design;
+    const auto& registers = design->getRegisters();
 
-    std::map<const Component*, RegisterTreeItem*> parentMap;
+    std::map<const SimComponent*, RegisterTreeItem*> parentMap;
 
-    const Component* rootComponent = dynamic_cast<const Component*>(&design);
+    const auto* rootComponent = dynamic_cast<const SimComponent*>(design);
     parentMap[rootComponent] = parent;
 
     // Build a tree representing the hierarchy of components and subcomponents containing registers
     for (const auto& reg : registers) {
-        const Component* regParent = reg->getParent();
+        const auto* regParent = reg->getParent<SimComponent>();
         RegisterTreeItem* regParentNetlistItem = nullptr;
 
         if (parentMap.count(regParent) == 0) {
             // Create new parents in the tree until either the root component is detected, or a parent of a parent
             // is already in the tree
-            std::vector<const Component*> newParentsInTree;
+            std::vector<const SimComponent*> newParentsInTree;
             while (regParent != rootComponent && parentMap.count(regParent) == 0) {
                 newParentsInTree.insert(newParentsInTree.begin(), regParent);
-                regParent = regParent->getParent();
+                regParent = regParent->getParent<SimComponent>();
             }
             // At this point, the first value in newParentsInTree has its parent present in the tree. Extend the
             // tree from this index
             regParentNetlistItem = parentMap[regParent];
             for (const auto& p : newParentsInTree) {
-                auto* newParent = new RegisterTreeItem(regParentNetlistItem);
+                auto* newParent = new RegisterTreeItem(regParentNetlistItem, m_design);
                 regParentNetlistItem->insertChild(regParentNetlistItem->childCount(), newParent);
                 regParentNetlistItem = newParent;
                 regParentNetlistItem->m_name = QString::fromStdString(p->getName());
@@ -149,7 +146,7 @@ void RegisterModel::loadDesign(RegisterTreeItem* parent, const Design& design) {
 
         // Add register to its parent tree item
 
-        auto* child = new RegisterTreeItem(regParentNetlistItem);
+        auto* child = new RegisterTreeItem(regParentNetlistItem, m_design);
         child->setRegister(reg);
         regParentNetlistItem->insertChild(regParentNetlistItem->childCount(), child);
 
