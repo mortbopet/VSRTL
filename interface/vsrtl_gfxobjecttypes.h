@@ -46,10 +46,12 @@ public:
     std::type_index getGraphicsID() const override { return GraphicsIDFor(name); } \
     const GraphicsType* getGraphicsType() const override { return GraphycsTypeForComponent(name)::get(); }
 
+#define L(...) __VA_ARGS__
+
 // Supported graphical objects
 DefineGraphicsType(Component, {});
 
-DefineGraphicsType(Register, {});
+DefineGraphicsType(Register, L({"in", "out"}));
 
 DefineGraphicsType(Constant, {});
 

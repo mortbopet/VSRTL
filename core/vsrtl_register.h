@@ -39,6 +39,9 @@ public:
     SetGraphicsType(Register);
 
     Register(std::string name, SimComponent* parent) : RegisterBase(name, parent) {
+        setSpecialPort("in", getIn());
+        setSpecialPort("out", getOut());
+
         // Calling out.propagate() will clock the register the register
         out << ([=] { return m_savedValue; });
     }
