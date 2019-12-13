@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "vsrtl.h"
+#include "vsrtl_gfxobjecttypes.h"
 
 #include "Signals/Signal.h"
 
@@ -27,6 +28,11 @@ class SimBase {
 public:
     SimBase(std::string name, SimBase* parent) : m_name(name), m_parent(parent) {}
     virtual ~SimBase() {}
+
+    template <typename T = std::runtime_error>
+    void throwError(const std::string message) const {
+        throw T(getName() + ": " + message);
+    }
 
     const std::string& getName() const { return m_name; }
     const std::string& getDisplayName() const { return m_displayName.empty() ? m_name : m_displayName; }
@@ -198,7 +204,8 @@ public:
      * identify all instances of "Constant<...>" objects, but without introducing a "BaseConstant" class.
      * @return String identifier for the component type
      */
-    virtual std::type_index getTypeId() const { return std::type_index(typeid(SimComponent)); }
+    virtual std::type_index getGraphicsID() const { return GraphicsIDFor(Component); }
+    virtual const GraphicsType* getGraphicsType() const { return GraphycsTypeForComponent(Component)::get(); }
 
     /**
      * getInput&OutputComponents does not return a set, although it naturally should. In partitioning the circuit graph,
@@ -237,6 +244,28 @@ public:
                 ports.push_back(p->cast<T>());
         }
         return ports;
+    }
+
+    void verifyHasSpecialPortID(const std::string& id) const {
+        const auto* type = getGraphicsType();
+        if (!type->hasSpecialPortID(id)) {
+            throwError("Special port ID '" + id + "' is not a special port of the graphics type '" + type->getName() +
+                       "'");
+        }
+    }
+
+    SimPort* getSpecialPort(const std::string& id) {
+        verifyHasSpecialPortID(id);
+        if (m_specialPorts.count(id) != 0)
+            return m_specialPorts[id];
+        return nullptr;
+    }
+
+    void setSpecialPort(const std::string& id, SimPort* port) {
+        verifyHasSpecialPortID(id);
+        if (getSpecialPort(id) != nullptr)
+            throwError("Special port '" + id + "' already set");
+        m_specialPorts[id] = port;
     }
 
     template <typename T = SimComponent, typename P = NoPredicate>
@@ -326,6 +355,7 @@ protected:
     std::set<std::unique_ptr<SimPort>, PortBaseCompT> m_outputPorts;
     std::set<std::unique_ptr<SimPort>, PortBaseCompT> m_inputPorts;
     std::set<std::unique_ptr<SimComponent>, ComponentCompT> m_subcomponents;
+    std::map<std::string, SimPort*> m_specialPorts;
 
 private:
     unsigned m_constantCount = 0;  // Number of constants currently initialized in the component

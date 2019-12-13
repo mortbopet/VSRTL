@@ -60,9 +60,25 @@ static constexpr qreal c_collapsedSideMargin = 15;
 QMap<std::type_index, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
 
 ComponentGraphic::ComponentGraphic(SimComponent* c, QGraphicsItem* parent)
-    : m_component(c), m_minGridRect(ComponentGraphic::getComponentMinGridRect(c->getTypeId())), GraphicsBase(parent) {
+    : m_component(c),
+      m_minGridRect(ComponentGraphic::getComponentMinGridRect(c->getGraphicsID())),
+      GraphicsBase(parent) {
     c->changed.Connect(this, &ComponentGraphic::updateSlot);
     c->registerGraphic(this);
+    verifySpecialSignals();
+}
+
+void ComponentGraphic::verifySpecialSignals() const {
+    // Ensure that all special signals required by the graphics type of this component has been set by the simulator
+    // component
+    auto* type = m_component->getGraphicsType();
+    for (const auto& typeID : type->specialPortIDs()) {
+        if (m_component->getSpecialPort(typeID) == nullptr) {
+            m_component->throwError(
+                "Special port: '" + std::string(typeID) +
+                "' not assigned. A special port of this ID should be registered through SimComponent::setSpecialPort");
+        }
+    }
 }
 
 bool ComponentGraphic::hasSubcomponents() const {
@@ -108,12 +124,12 @@ void ComponentGraphic::initialize() {
 void ComponentGraphic::createSubcomponents() {
     for (const auto& c : m_component->getSubComponents()) {
         ComponentGraphic* nc;
-        auto typeId = c->getTypeId();
-        if (typeId == GraphicsTypeFor(Multiplexer)) {
+        auto typeId = c->getGraphicsID();
+        if (typeId == GraphicsIDFor(Multiplexer)) {
             nc = new MultiplexerGraphic(c, this);
-        } else if (typeId == GraphicsTypeFor(Register)) {
+        } else if (typeId == GraphicsIDFor(Register)) {
             nc = new RegisterGraphic(c, this);
-        } else if (typeId == GraphicsTypeFor(Constant)) {
+        } else if (typeId == GraphicsIDFor(Constant)) {
             // Don't create a distinct ComponentGraphic for constants - these will be drawn next to the port connecting
             // to it
             continue;
@@ -368,7 +384,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     // 3 .Update the draw shape, scaling it to the current scene size of the component
     QTransform t;
     t.scale(sceneRect.width(), sceneRect.height());
-    m_shape = ComponentGraphic::getComponentShape(m_component->getTypeId(), t);
+    m_shape = ComponentGraphic::getComponentShape(m_component->getGraphicsID(), t);
 
     // 5. Position the expand-button
     if (hasSubcomponents()) {

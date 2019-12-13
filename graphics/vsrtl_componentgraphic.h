@@ -131,6 +131,9 @@ public:
         }
     }
 
+private:
+    void verifySpecialSignals() const;
+
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
@@ -211,7 +214,7 @@ public:
     static QPainterPath getComponentShape(std::type_index component, QTransform transform) {
         // If no shape has been registered for the base component type, revert to displaying as a "SimComponent"
         if (!s_componentShapes.contains(component)) {
-            return s_componentShapes[GraphicsTypeFor(Component)].shapeFunc(transform);
+            return s_componentShapes[GraphicsIDFor(Component)].shapeFunc(transform);
         }
         return s_componentShapes[component].shapeFunc(transform);
     }
@@ -219,7 +222,7 @@ public:
     static QRect getComponentMinGridRect(std::type_index component) {
         // If no shape has been registered for the base component type, revert to displaying as a "SimComponent"
         if (!s_componentShapes.contains(component)) {
-            return s_componentShapes[GraphicsTypeFor(Component)].min_rect;
+            return s_componentShapes[GraphicsIDFor(Component)].min_rect;
         }
         return s_componentShapes[component].min_rect;
     }

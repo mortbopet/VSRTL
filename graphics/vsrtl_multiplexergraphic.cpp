@@ -11,8 +11,8 @@ MultiplexerGraphic::MultiplexerGraphic(SimComponent* c, QGraphicsItem* parent) :
 }
 
 SimPort* MultiplexerGraphic::getSelect() {
-    // It is assumed that the first input is always the select signal
-    return m_component->getPorts<SimPort::Direction::in>()[0];
+    // Simulator component must have set the select port to special port 0
+    return m_component->getSpecialPort("select");
 }
 
 void MultiplexerGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
