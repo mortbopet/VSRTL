@@ -57,12 +57,8 @@ static inline QRect sceneToGrid(QRectF sceneRect) {
 static constexpr qreal c_resizeMargin = GRID_SIZE;
 static constexpr qreal c_collapsedSideMargin = 15;
 
-QMap<std::type_index, ComponentGraphic::Shape> ComponentGraphic::s_componentShapes;
-
 ComponentGraphic::ComponentGraphic(SimComponent* c, QGraphicsItem* parent)
-    : m_component(c),
-      m_minGridRect(ComponentGraphic::getComponentMinGridRect(c->getGraphicsID())),
-      GraphicsBase(parent) {
+    : m_component(c), m_minGridRect(ShapeRegister::getComponentMinGridRect(c->getGraphicsID())), GraphicsBase(parent) {
     c->changed.Connect(this, &ComponentGraphic::updateSlot);
     c->registerGraphic(this);
     verifySpecialSignals();
@@ -384,7 +380,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     // 3 .Update the draw shape, scaling it to the current scene size of the component
     QTransform t;
     t.scale(sceneRect.width(), sceneRect.height());
-    m_shape = ComponentGraphic::getComponentShape(m_component->getGraphicsID(), t);
+    m_shape = ShapeRegister::getComponentShape(m_component->getGraphicsID(), t);
 
     // 5. Position the expand-button
     if (hasSubcomponents()) {
