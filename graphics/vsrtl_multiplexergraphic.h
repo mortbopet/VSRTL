@@ -9,7 +9,7 @@ namespace vsrtl {
 
 class MultiplexerGraphic : public ComponentGraphic {
 public:
-    MultiplexerGraphic(SimComponent* c, QGraphicsItem* parent);
+    MultiplexerGraphic(SimComponent& c, ComponentGraphic* parent);
     void paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* w) override;
 
 private:

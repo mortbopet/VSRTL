@@ -9,6 +9,7 @@
 #include "vsrtl_graphics_serializers.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_graphicsbase.h"
+#include "vsrtl_gridcomponent.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_shape.h"
 #include "vsrtl_wiregraphic.h"
@@ -21,9 +22,9 @@ class PortGraphic;
 class Label;
 class ComponentButton;
 
-class ComponentGraphic : public GraphicsBase {
+class ComponentGraphic : public GridComponent {
 public:
-    ComponentGraphic(SimComponent* c, QGraphicsItem* parent);
+    ComponentGraphic(SimComponent& c, ComponentGraphic* parent);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
@@ -41,7 +42,7 @@ public:
     void placeAndRouteSubcomponents();
     bool isExpanded() const { return m_isExpanded; }
     bool restrictSubcomponentPositioning() const { return m_restrictSubcomponentPositioning; }
-    SimComponent* getComponent() const { return m_component; }
+    SimComponent& getComponent() const { return m_component; }
     std::vector<ComponentGraphic*>& getGraphicSubcomponents() { return m_subcomponents; }
     ComponentGraphic* getParent() const;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
@@ -61,7 +62,7 @@ public:
         // components, but this component may have different names based on the design which instantiated it.
         // Thus, we need to replace the stored name with the actual name of the component.
         try {
-            std::string storedName = getComponent()->getName();
+            std::string storedName = getComponent().getName();
             archive(cereal::make_nvp("Top name", storedName));
         } catch (cereal::Exception e) {
             /// @todo: build an error report
@@ -90,7 +91,7 @@ public:
             // Serealize subcomponents
             for (const auto& c : m_subcomponents) {
                 try {
-                    archive(cereal::make_nvp(c->getComponent()->getName(), *c));
+                    archive(cereal::make_nvp(c->getComponent().getName(), *c));
                 } catch (cereal::Exception e) {
                     /// @todo: build an error report
                 }
@@ -182,7 +183,6 @@ protected:
     QFont m_font;
 
     QPointF m_expandButtonPos;  // Draw position of expand/collapse button in scene coordinates
-    SimComponent* m_component;
     ComponentButton* m_expandButton = nullptr;
 
 protected slots:

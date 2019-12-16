@@ -432,7 +432,7 @@ ComponentGraphic* WireGraphic::getPointOwningComponentGraphic() const {
     }
 }
 
-SimComponent* WireGraphic::getPointOwningComponent() const {
+SimComponent& WireGraphic::getPointOwningComponent() const {
     return getPointOwningComponentGraphic()->getComponent();
 }
 

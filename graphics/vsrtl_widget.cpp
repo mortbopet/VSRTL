@@ -39,7 +39,7 @@ void VSRTLWidget::handleSceneSelectionChanged() {
     for (const auto& i : m_scene->selectedItems()) {
         ComponentGraphic* i_c = dynamic_cast<ComponentGraphic*>(i);
         if (i_c) {
-            selectedComponents.push_back(i_c->getComponent());
+            selectedComponents.push_back(&i_c->getComponent());
             continue;
         }
         PortGraphic* i_p = dynamic_cast<PortGraphic*>(i);
@@ -193,7 +193,7 @@ void VSRTLWidget::initializeDesign(SimDesign& arch) {
     // Create a ComponentGraphic for the top component. This will expand the component tree and create graphics for all
     // ports, wires etc. within the design. This is done through the initialize call, which must be called after the
     // item has been added to the scene.
-    m_topLevelComponent = new ComponentGraphic(&arch, nullptr);
+    m_topLevelComponent = new ComponentGraphic(arch, nullptr);
     addComponent(m_topLevelComponent);
     m_topLevelComponent->initialize();
     // At this point, all graphic items have been created, and the post scene construction initialization may take

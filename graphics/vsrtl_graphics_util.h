@@ -33,6 +33,15 @@ inline void roundNear(QPointF& p, int m) {
     p.setY(roundNear(p.y(), m));
 }
 
+template <typename R, typename T, typename F>
+std::vector<R> collect(T list, F func) {
+    std::vector<R> r;
+    for (const auto& i : list) {
+        r.push_back((i->*func)());
+    }
+    return r;
+}
+
 template <typename RectType>
 RectType boundingRectOfRects(const RectType& r1, const RectType& r2) {
     qreal top, bottom, right, left;
@@ -42,6 +51,33 @@ RectType boundingRectOfRects(const RectType& r1, const RectType& r2) {
     bottom = r1.bottom() > r2.bottom() ? r1.bottom() : r2.bottom();
 
     return RectType(left, top, right, bottom);
+}
+
+template <typename RectType>
+bool snapRectToRect(const RectType& bound, RectType& snapping) {
+    bool snap_r, snap_b;
+    snap_r = false;
+    snap_b = false;
+
+    if (snapping.right() < bound.right()) {
+        snapping.setRight(bound.right());
+        snap_r = true;
+    }
+    if (snapping.bottom() < bound.bottom()) {
+        snapping.setBottom(bound.bottom());
+        snap_b = true;
+    }
+
+    return !(snap_r & snap_b);
+}
+
+template <typename RectType>
+RectType boundingRectOfRects(const std::vector<RectType>& rects) {
+    RectType boundingRect;
+    for (const auto& child : rects) {
+        boundingRect = boundingRectOfRects<RectType>(boundingRect, child);
+    }
+    return boundingRect;
 }
 
 template <typename RectType>

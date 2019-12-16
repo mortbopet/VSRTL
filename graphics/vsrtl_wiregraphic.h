@@ -147,12 +147,12 @@ public:
 
         std::pair<int, std::vector<std::string>> from;
         archive(cereal::make_nvp("From port", from));
-        std::replace(from.second.begin(), from.second.end(), inParent, getPointOwningComponent()->getName());
+        std::replace(from.second.begin(), from.second.end(), inParent, getPointOwningComponent().getName());
 
         std::map<int, std::vector<std::string>> idxToOutportNameSeq;
         archive(cereal::make_nvp("To ports", idxToOutportNameSeq));
         for (auto& iter : idxToOutportNameSeq) {
-            std::replace(iter.second.begin(), iter.second.end(), inParent, getPointOwningComponent()->getName());
+            std::replace(iter.second.begin(), iter.second.end(), inParent, getPointOwningComponent().getName());
         }
 
         std::map<int, QPoint> idxToPoints;
@@ -232,7 +232,7 @@ public:
     template <class Archive>
     void save(Archive& archive) const {
         std::string outParent;
-        archive(cereal::make_nvp("Parent", getPointOwningComponent()->getName()));
+        archive(cereal::make_nvp("Parent", getPointOwningComponent().getName()));
 
         int i = 0;
         // serialize the incoming port
@@ -293,7 +293,7 @@ public:
 
 private:
     ComponentGraphic* getPointOwningComponentGraphic() const;
-    SimComponent* getPointOwningComponent() const;
+    SimComponent& getPointOwningComponent() const;
     WirePoint* createWirePoint();
     void moveWirePoint(PortPoint* point, const QPointF scenePos);
     WireSegment* createSegment(PortPoint* start, PortPoint* end);

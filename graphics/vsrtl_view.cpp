@@ -23,7 +23,7 @@ ComponentGraphic* VSRTLView::lookupGraphicForComponent(const SimComponent* c) {
         auto d = dynamic_cast<ComponentGraphic*>(i);
         if (d) {
             // Equality is based on pointer equality
-            if (d->getComponent() == c)
+            if (&d->getComponent() == c)
                 return d;
         }
     }

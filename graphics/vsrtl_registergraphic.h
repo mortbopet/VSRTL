@@ -7,7 +7,7 @@ namespace vsrtl {
 
 class RegisterGraphic : public ComponentGraphic {
 public:
-    RegisterGraphic(SimComponent* c, QGraphicsItem* parent);
+    RegisterGraphic(SimComponent& c, ComponentGraphic* parent);
     void paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* w) override;
 };
 
