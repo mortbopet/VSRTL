@@ -32,6 +32,8 @@ public:
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
     void postSceneConstructionInitialize2() override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
 
@@ -70,6 +72,7 @@ private:
     // m_selected: does not indicate visual selection (ie. isSelected()), but rather whether any port in the port/wire
     // connection of this port has been selected.
     bool m_selected = false;
+    bool m_hoverActive = false;
     ValueDisplayFormat m_valueBase = ValueDisplayFormat::baseTen;
 
     static int s_portGridWidth;

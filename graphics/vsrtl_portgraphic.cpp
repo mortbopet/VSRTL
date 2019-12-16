@@ -3,6 +3,8 @@
 #include "vsrtl_port.h"
 #include "vsrtl_wiregraphic.h"
 
+#include "math.h"
+
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 #include <QPropertyAnimation>
@@ -221,6 +223,16 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
     return QGraphicsItem::itemChange(change, value);
 }
 
+void PortGraphic::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
+    m_hoverActive = true;
+    update();
+}
+
+void PortGraphic::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
+    m_hoverActive = false;
+    update();
+}
+
 void PortGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
     setToolTip(getTooltipString());
 }
@@ -261,6 +273,16 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* optio
 
     painter->setPen(getPen());
     painter->drawLine(getInputPoint(), getOutputPoint());
+
+    if (m_hoverActive) {
+        // Draw an arrow indicating the direction of the port
+        const auto d = std::sqrt(std::pow(GRID_SIZE / 2, 2) + std::pow(GRID_SIZE / 2, 2)) / 2;
+        const QPointF start = (getOutputPoint() - getInputPoint()) / 2;
+        const QPointF p1 = start - QPointF(d, d);
+        const QPointF p2 = start - QPointF(d, -d);
+        painter->drawLine(start, p1);
+        painter->drawLine(start, p2);
+    }
 
     painter->restore();
 
