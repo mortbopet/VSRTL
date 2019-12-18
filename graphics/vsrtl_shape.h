@@ -3,6 +3,7 @@
 
 #include <QPainterPath>
 #include <QTransform>
+#include <functional>
 #include <typeindex>
 #include <typeinfo>
 
