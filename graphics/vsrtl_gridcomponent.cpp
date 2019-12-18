@@ -13,9 +13,6 @@ GridComponent::GridComponent(SimComponent& c, GridComponent* parent) : GraphicsB
     updateSubcomponentBoundingRect();
     m_currentContractedRect = m_minimumGridRect;
     m_currentExpandedRect = m_currentSubcomponentBoundingRect;
-
-    // Initially, spread ports evenly over the component edges
-    spreadPorts();
 }
 
 void GridComponent::setExpanded(bool state) {
@@ -115,15 +112,21 @@ void GridComponent::updateCurrentComponentRect(int dx, int dy) {
     spreadPorts();
 }
 
+PortPos GridComponent::getPortPos(const SimPort* port) const {
+    return m_portPosMap->getPortPos(port);
+}
+
 void GridComponent::spreadPortsOnSide(const Side& side) {
+    assert(side != Side::Top && side != Side::Bottom && "Not implemented");
+
     auto& biMap = m_portPosMap->dirToMap(side);
     const auto n_ports = biMap.count();
     if (n_ports > 0) {
-        unsigned i = 0;
-        const unsigned in_seg_y = std::floor(getCurrentComponentRect().height() / n_ports);
-        assert(in_seg_y != 0);
+        int i = 0;
+        auto h = getCurrentComponentRect().height();
+        const double diff = getCurrentComponentRect().height() / n_ports;
         for (const auto& p : biMap.portToId) {
-            const unsigned gridIndex = i * in_seg_y;
+            const int gridIndex = std::ceil((i * diff + diff / 2));
             bool portMoved = m_portPosMap->movePort(p.first, PortPos{side, gridIndex});
             if (portMoved) {
                 emit portPosChanged(p.first);
@@ -136,8 +139,8 @@ void GridComponent::spreadPortsOnSide(const Side& side) {
 void GridComponent::spreadPorts() {
     spreadPortsOnSide(Side::Left);
     spreadPortsOnSide(Side::Right);
-    spreadPortsOnSide(Side::Top);
-    spreadPortsOnSide(Side::Bottom);
+    // spreadPortsOnSide(Side::Top);
+    // spreadPortsOnSide(Side::Bottom);
 }
 
 }  // namespace vsrtl

@@ -111,6 +111,9 @@ void ComponentGraphic::initialize() {
     // By default, a component is collapsed. This has no effect if a component does not have any subcomponents
     setExpanded(false);
     m_restrictSubcomponentPositioning = true;
+
+    connect(this, &GridComponent::portPosChanged, this, &ComponentGraphic::handlePortPosChanged);
+    spreadPorts();
 }
 
 /**
@@ -344,35 +347,7 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
     const QRectF sceneRect = sceneGridRect();
 
     // 1. Set Input/Output port positions
-    if (/*m_isExpanded*/ false) {
-        // Some fancy logic for positioning IO positions in the best way to facilitate nice signal lines between
-        // components
-    } else {
-        // Component is unexpanded - IO should be positionen in even positions.
-        // +2 to ensure a 1 grid margin at the top and bottom of the component
-        int i = 0;
-        const qreal in_seg_y = sceneRect.height() / (m_inputPorts.size());
-        // Iterate using the sorted ports of the Component
-        for (const auto& p : m_component.getPorts<SimPort::Direction::in, SimPort>()) {
-            auto& graphicsPort = m_inputPorts[p];
-            int gridIndex = roundUp((i * in_seg_y + in_seg_y / 2), GRID_SIZE) / GRID_SIZE;
-            graphicsPort->setGridIndex(gridIndex);
-            const qreal y = gridIndex * GRID_SIZE;
-            graphicsPort->setPos(QPointF(sceneRect.left() - GRID_SIZE * PortGraphic::portGridWidth(), y));
-            i++;
-        }
-        i = 0;
-        const qreal out_seg_y = sceneRect.height() / (m_outputPorts.size());
-        // Iterate using the sorted ports of the Component
-        for (const auto& p : m_component.getPorts<SimPort::Direction::out, SimPort>()) {
-            auto& graphicsPort = m_outputPorts[p];
-            const int gridIndex = roundUp((i * out_seg_y + out_seg_y / 2), GRID_SIZE) / GRID_SIZE;
-            graphicsPort->setGridIndex(gridIndex);
-            const qreal y = gridIndex * GRID_SIZE;
-            graphicsPort->setPos(QPointF(sceneRect.right(), y));
-            i++;
-        }
-    }
+    // Moved to gridcomponent
 
     // 2. Set label position
     m_label->setPos(sceneRect.width() / 2, 0);
@@ -414,6 +389,25 @@ void ComponentGraphic::updateGeometry(QRect newGridRect, GeometryChange flag) {
         for (int x = gridTopLeft.x(); x <= gridBotRight.x(); x += GRID_SIZE)
             for (int y = gridTopLeft.y(); y <= gridBotRight.y(); y += GRID_SIZE)
                 m_gridPoints << QPoint(x, y);
+    }
+}
+
+void ComponentGraphic::handlePortPosChanged(const SimPort* port) {
+    const auto pos = getPortPos(port);
+    auto* g = port->getGraphic<PortGraphic>();
+
+    switch (pos.dir) {
+        case Side::Left: {
+            g->setPos(
+                QPointF(sceneGridRect().left() - GRID_SIZE * PortGraphic::portGridWidth(), pos.index * GRID_SIZE));
+            break;
+        }
+        case Side::Right: {
+            g->setPos(QPointF(sceneGridRect().right(), pos.index * GRID_SIZE));
+            break;
+        }
+        default:
+            Q_UNREACHABLE();
     }
 }
 

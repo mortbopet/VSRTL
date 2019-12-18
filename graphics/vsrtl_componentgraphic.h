@@ -133,6 +133,9 @@ public:
         }
     }
 
+private slots:
+    void handlePortPosChanged(const SimPort* port);
+
 private:
     void verifySpecialSignals() const;
 

@@ -27,20 +27,23 @@ public:
 enum class Side { Left, Right, Top, Bottom };
 struct PortPos {
     Side dir;
-    unsigned index;
+    int index;
+    bool validIndex() const { return index != -1; }
+    bool uninitialized() const { return index < 0; }
 };
 
 class PortPosMap {
 public:
-    using IdToPortMap = std::map<unsigned, const SimPort*>;
-    using PortToIdMap = std::map<const SimPort*, unsigned>;
+    using IdToPortMap = std::map<int, const SimPort*>;
+    using PortToIdMap = std::map<const SimPort*, int>;
 
     PortPosMap(const SimComponent& c) {
+        // Input- and outputs are initialized to uninitialized (<0) indicies on the left- and right side
         for (const auto& p : c.getPorts<SimPort::Direction::in>()) {
-            addPort(PortPos{Side::Left, static_cast<unsigned>(m_left.count())}, p);
+            addPort(PortPos{Side::Left, int(-(m_left.count() + 1))}, p);
         }
         for (const auto& p : c.getPorts<SimPort::Direction::out>()) {
-            addPort(PortPos{Side::Right, static_cast<unsigned>(m_right.count())}, p);
+            addPort(PortPos{Side::Right, int(-(m_right.count() + 1))}, p);
         }
     }
 
@@ -50,7 +53,7 @@ public:
         IdToPortMap idToPort;
         PortToIdMap portToId;
 
-        size_t count() const {
+        unsigned count() const {
             assert(idToPort.size() == portToId.size());
             return idToPort.size();
         }
@@ -94,6 +97,8 @@ public:
     }
 
     void addPort(PortPos pos, const SimPort* port) {
+        assert((pos.validIndex() || pos.uninitialized()) &&
+               "Ports cannot be on the edge of a component & todo: also check for other edge bound");
         auto& map = dirToMap(pos.dir);
         if (map.idToPort.count(pos.index)) {
             assert(false && "Port already at index");
@@ -120,6 +125,9 @@ public:
 
     PortPos getPortPos(const SimPort* p) {
         auto& map = getPortMap(p);
+        if (map.portToId[p] == -1) {
+            throw std::runtime_error("Port has not been initialized");
+        }
         return {map.dir, map.portToId[p]};
     }
 
@@ -175,6 +183,8 @@ public:
      */
     bool adjustPort(SimPort* port, PortPos pos);
 
+    PortPos getPortPos(const SimPort* port) const;
+
     const PortPosMap& getPortPosMap() const { return *m_portPosMap; }
 
 signals:
@@ -183,8 +193,6 @@ signals:
 
 protected:
     SimComponent& m_component;
-
-private:
     /**
      * @brief spreadPorts
      * Adjust all ports of the component such that they are evenly spread on a given face of the gridcomponent. Ports'
@@ -192,6 +200,7 @@ private:
      */
     void spreadPorts();
 
+private:
     /**
      * @brief spreadPortsOnSide
      * Spread all ports currently located on @p side
