@@ -32,18 +32,20 @@ struct PortPos {
     bool uninitialized() const { return index < 0; }
 };
 
-class PortPosMap {
+class ComponentBorder {
 public:
     using IdToPortMap = std::map<int, const SimPort*>;
     using PortToIdMap = std::map<const SimPort*, int>;
 
-    PortPosMap(const SimComponent& c) {
+    ComponentBorder(const SimComponent& c) {
         // Input- and outputs are initialized to uninitialized (<0) indicies on the left- and right side
         for (const auto& p : c.getPorts<SimPort::Direction::in>()) {
-            addPort(PortPos{Side::Left, int(-(m_left.count() + 1))}, p);
+            m_portMap[p] = nullptr;
+            addPortToSide(PortPos{Side::Left, int(-(m_left.count() + 1))}, p);
         }
         for (const auto& p : c.getPorts<SimPort::Direction::out>()) {
-            addPort(PortPos{Side::Right, int(-(m_right.count() + 1))}, p);
+            m_portMap[p] = nullptr;
+            addPortToSide(PortPos{Side::Right, int(-(m_right.count() + 1))}, p);
         }
     }
 
@@ -80,8 +82,8 @@ public:
         if (portAtPos != nullptr) {
             swapPorts(getPortAt(pos), port);
         } else {
-            removePort(port);
-            addPort(pos, port);
+            removePortFromSide(port);
+            addPortToSide(pos, port);
         }
         return true;
     }
@@ -90,13 +92,14 @@ public:
         auto pos1 = getPortPos(port1);
         auto pos2 = getPortPos(port2);
 
-        removePort(port1);
-        removePort(port2);
-        addPort(pos1, port2);
-        addPort(pos2, port1);
+        removePortFromSide(port1);
+        removePortFromSide(port2);
+        addPortToSide(pos1, port2);
+        addPortToSide(pos2, port1);
     }
 
-    void addPort(PortPos pos, const SimPort* port) {
+    void addPortToSide(PortPos pos, const SimPort* port) {
+        assert(m_portMap.count(port) > 0);
         assert((pos.validIndex() || pos.uninitialized()) &&
                "Ports cannot be on the edge of a component & todo: also check for other edge bound");
         auto& map = dirToMap(pos.dir);
@@ -105,30 +108,20 @@ public:
         }
         map.idToPort[pos.index] = port;
         map.portToId[port] = pos.index;
+        m_portMap[port] = &map;
     }
 
-    void removePort(const SimPort* port) {
-        auto& map = getPortMap(port);
-        const unsigned id = map.portToId.at(port);
-        map.portToId.erase(port);
-        map.idToPort.erase(id);
-    }
-
-    PortIdBiMap& getPortMap(const SimPort* p) {
-        std::vector<PortIdBiMap*> maps = {&m_left, &m_right, &m_top, &m_bottom};
-        for (auto& m : maps) {
-            if (m->portToId.count(p))
-                return *m;
-        }
-        assert(false);
+    void removePortFromSide(const SimPort* port) {
+        auto* map = m_portMap.at(port);
+        const int id = map->portToId.at(port);
+        map->portToId.erase(port);
+        map->idToPort.erase(id);
+        m_portMap[port] = nullptr;
     }
 
     PortPos getPortPos(const SimPort* p) {
-        auto& map = getPortMap(p);
-        if (map.portToId[p] == -1) {
-            throw std::runtime_error("Port has not been initialized");
-        }
-        return {map.dir, map.portToId[p]};
+        auto* map = m_portMap.at(p);
+        return {map->dir, map->portToId[p]};
     }
 
     inline PortIdBiMap& dirToMap(Side d) {
@@ -145,6 +138,7 @@ public:
     }
 
 private:
+    std::map<const SimPort*, PortIdBiMap*> m_portMap;
     PortIdBiMap m_left = PortIdBiMap(Side::Left);
     PortIdBiMap m_right = PortIdBiMap(Side::Right);
     PortIdBiMap m_top = PortIdBiMap(Side::Top);
@@ -161,7 +155,8 @@ public:
      * Attempt to expand the currently visible grid rect. Bounded by current minimum rect size.
      * @return true if any change to the currently visible grid rect was performed
      */
-    bool adjust(int dx, int dy);
+    bool adjust(const QPoint&);
+    bool adjust(const QRect&);
 
     /**
      * @brief move
@@ -176,6 +171,8 @@ public:
      */
     void setExpanded(bool state);
 
+    bool isExpanded() const { return m_expanded; }
+
     /**
      * @brief adjustPort
      * Attempt to move the position of @p port to @p pos
@@ -185,10 +182,12 @@ public:
 
     PortPos getPortPos(const SimPort* port) const;
 
-    const PortPosMap& getPortPosMap() const { return *m_portPosMap; }
+    const ComponentBorder& getBorder() const { return *m_border; }
+    const QRect& getCurrentComponentRect() const;
+    const QRect& getCurrentMinRect() const;
 
 signals:
-    void expansionStateChanged(bool isExpanded);
+    void gridRectChanged();
     void portPosChanged(const SimPort* p);
 
 protected:
@@ -202,14 +201,28 @@ protected:
 
 private:
     /**
+     * @brief childExpanded
+     * Called by child components, signalling that they expanded which (may) require a rezing of the current minimum
+     * component rect
+     */
+    void childExpanded();
+
+private:
+    /**
      * @brief spreadPortsOnSide
      * Spread all ports currently located on @p side
      */
     void spreadPortsOnSide(const Side& side);
 
-    void updateCurrentComponentRect(int dx, int dy);
-    void updateMinimumGridRect();
-    void updateSubcomponentBoundingRect();
+    /**
+     * @brief Rect update functions
+     * @returns true if the given rect was modified
+     */
+    bool updateCurrentComponentRect(int dx, int dy);
+    bool updateMinimumGridRect();
+    bool updateSubcomponentBoundingRect();
+
+    QRect& getCurrentComponentRectRef();
 
     /**
      * @brief Coordinate transformation functions
@@ -225,13 +238,10 @@ private:
      */
     bool moveInsideParent(QPoint pos);
 
-    QRect& getCurrentComponentRect();
-    const QRect& getCurrentMinRect();
-
     bool parentContainsRect(const QRect& r) const;
     std::vector<GridComponent*> getGridSubcomponents() const;
 
-    std::unique_ptr<PortPosMap> m_portPosMap;
+    std::unique_ptr<ComponentBorder> m_border;
 
     /** current expansion state */
     bool m_expanded = false;

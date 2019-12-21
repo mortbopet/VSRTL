@@ -38,9 +38,7 @@ public:
     virtual void paintOverlay(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {}
 
     void initialize();
-    void setShape(const QPainterPath& shape);
     void placeAndRouteSubcomponents();
-    bool isExpanded() const { return m_isExpanded; }
     bool restrictSubcomponentPositioning() const { return m_restrictSubcomponentPositioning; }
     SimComponent& getComponent() const { return m_component; }
     std::vector<ComponentGraphic*>& getGraphicSubcomponents() { return m_subcomponents; }
@@ -135,6 +133,7 @@ public:
 
 private slots:
     void handlePortPosChanged(const SimPort* port);
+    void updateGeometry();
 
 private:
     void verifySpecialSignals() const;
@@ -155,14 +154,8 @@ protected:
         ChildJustCollapsed,
     };
     void createSubcomponents();
-    void updateGeometry(QRect newGridRect, GeometryChange flag);
     QRectF sceneGridRect() const;
-    bool rectContainsAllSubcomponents(const QRectF& r) const;
-    bool snapToMinGridRect(QRect& r) const;
-    QRect subcomponentBoundingGridRect() const;
-    QRect adjustedMinGridRect(bool includePorts) const;
 
-    bool m_isExpanded = false;
     bool m_restrictSubcomponentPositioning = false;
     bool m_inResizeDragZone = false;
     bool m_resizeDragging = false;
@@ -177,8 +170,6 @@ protected:
     Label* m_label = nullptr;
 
     // Rectangles
-    const QRect m_minGridRect;  // Minimum component size in grid-coordinates
-    QRect m_gridRect;           // Current component size in grid-coordinates
     QPainterPath m_shape;
 
     QPolygon m_gridPoints;

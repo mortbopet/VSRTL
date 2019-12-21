@@ -1,4 +1,4 @@
-#include "vsrtl_gridcomponent.h"
+﻿#include "vsrtl_gridcomponent.h"
 
 #include "vsrtl_graphics_util.h"
 
@@ -7,7 +7,7 @@
 namespace vsrtl {
 
 GridComponent::GridComponent(SimComponent& c, GridComponent* parent) : GraphicsBase(parent), m_component(c) {
-    m_portPosMap = std::make_unique<PortPosMap>(c);
+    m_border = std::make_unique<ComponentBorder>(c);
 
     updateMinimumGridRect();
     updateSubcomponentBoundingRect();
@@ -16,25 +16,46 @@ GridComponent::GridComponent(SimComponent& c, GridComponent* parent) : GraphicsB
 }
 
 void GridComponent::setExpanded(bool state) {
-    m_expanded = true;
-    emit(expansionStateChanged(state));
+    m_expanded = state;
+
+    // This component just expanded - this might require the parent component to expand its current bounding rect
+    auto* parent = dynamic_cast<GridComponent*>(parentItem());
+    if (parent)
+        parent->updateSubcomponentBoundingRect();
+
+    emit gridRectChanged();
 }
 
-bool GridComponent::adjust(int dx, int dy) {
+bool GridComponent::adjust(const QPoint& p) {
     const auto& minRect = getCurrentMinRect();
     auto newRect = getCurrentComponentRect();
-    newRect.adjust(0, 0, dx, dy);
+    newRect.adjust(0, 0, p.x(), p.y());
 
-    bool isMinRect = snapRectToRect(minRect, newRect);
-
-    if (isMinRect)
-        return false;
+    snapRectToRect(minRect, newRect);
 
     if (!parentContainsRect(newRect.translated(m_relPos.get())))
         return false;
 
-    updateCurrentComponentRect(dx, dy);
+    // Rect is now snapped, calculate difference between current and new rect
+    const QPoint diff = newRect.bottomRight() - getCurrentComponentRect().bottomRight();
+
+    updateCurrentComponentRect(diff.x(), diff.y());
     return true;
+}
+
+bool GridComponent::adjust(const QRect& newRect) {
+    auto r1 = getCurrentComponentRect();
+    auto r2 = newRect;
+    r2.setTopLeft({0, 0});
+    r1.setTopLeft({0, 0});
+    const QPoint diff = r2.bottomRight() - r1.bottomRight();
+    return adjust(diff);
+}
+
+void GridComponent::childExpanded() {
+    Q_ASSERT(m_expanded && "A child expanded while this component was collapsed");
+    if (updateSubcomponentBoundingRect())
+        emit gridRectChanged();
 }
 
 bool GridComponent::move(CPoint<CSys::Parent> pos) {
@@ -47,10 +68,10 @@ bool GridComponent::move(CPoint<CSys::Parent> pos) {
 }
 
 bool GridComponent::parentContainsRect(const QRect& r) const {
-    if (parentItem() == nullptr)
+    auto* gc_parent = dynamic_cast<GridComponent*>(parentItem());
+    if (gc_parent == nullptr)
         return true;
 
-    auto* gc_parent = dynamic_cast<GridComponent*>(parent());
     return gc_parent->getCurrentComponentRect().contains(r);
 }
 
@@ -82,20 +103,29 @@ std::vector<GridComponent*> GridComponent::getGridSubcomponents() const {
     return c;
 }
 
-QRect& GridComponent::getCurrentComponentRect() {
+QRect& GridComponent::getCurrentComponentRectRef() {
     return m_expanded ? m_currentExpandedRect : m_currentContractedRect;
 }
 
-const QRect& GridComponent::getCurrentMinRect() {
+const QRect& GridComponent::getCurrentComponentRect() const {
+    return m_expanded ? m_currentExpandedRect : m_currentContractedRect;
+}
+
+const QRect& GridComponent::getCurrentMinRect() const {
     return m_expanded ? m_currentSubcomponentBoundingRect : m_minimumGridRect;
 }
 
-void GridComponent::updateSubcomponentBoundingRect() {
-    auto tmp = collect<QRect>(getGridSubcomponents(), &GridComponent::getCurrentComponentRect);
-    m_currentSubcomponentBoundingRect = boundingRectOfRects<QRect>(tmp);
+bool GridComponent::updateSubcomponentBoundingRect() {
+    const auto rects = collect<QRect>(getGridSubcomponents(), &GridComponent::getCurrentComponentRect);
+    const auto br = boundingRectOfRects<QRect>(rects);
+    if (br != m_currentSubcomponentBoundingRect) {
+        m_currentExpandedRect = br;
+        return true;
+    }
+    return false;
 }
 
-void GridComponent::updateMinimumGridRect() {
+bool GridComponent::updateMinimumGridRect() {
     QRect shapeMinRect = ShapeRegister::getComponentMinGridRect(m_component.getGraphicsID());
     const auto n_inPorts = m_component.getPorts<SimPort::Direction::in>().size();
     const auto n_outPorts = m_component.getPorts<SimPort::Direction::out>().size();
@@ -104,32 +134,48 @@ void GridComponent::updateMinimumGridRect() {
     if (heightToAdd > 0) {
         shapeMinRect.adjust(0, 0, 0, heightToAdd);
     }
-    m_minimumGridRect = shapeMinRect;
+
+    if (shapeMinRect != m_minimumGridRect) {
+        m_minimumGridRect = shapeMinRect;
+        return true;
+    }
+    return false;
 }
 
-void GridComponent::updateCurrentComponentRect(int dx, int dy) {
-    getCurrentComponentRect().adjust(0, 0, dx, dy);
+bool GridComponent::updateCurrentComponentRect(int dx, int dy) {
+    getCurrentComponentRectRef().adjust(0, 0, dx, dy);
     spreadPorts();
+
+    // Port spreading only emits port positioning update signals when a port changes position logically on a given side.
+    // If dx !^ dy, the component is adjusted in only a single direction. As such, ports on the side in the given change
+    // direction will not move logically, but must be adjusted in terms of where they are drawn.
+    if (dx == 0 ^ dy == 0) {
+        auto axisMovedPorts = dx == 0 ? m_border->dirToMap(Side::Bottom) : m_border->dirToMap(Side::Right);
+        for (const auto& p : axisMovedPorts.portToId) {
+            emit portPosChanged(p.first);
+        }
+    }
 }
 
 PortPos GridComponent::getPortPos(const SimPort* port) const {
-    return m_portPosMap->getPortPos(port);
+    return m_border->getPortPos(port);
 }
 
 void GridComponent::spreadPortsOnSide(const Side& side) {
     assert(side != Side::Top && side != Side::Bottom && "Not implemented");
 
-    auto& biMap = m_portPosMap->dirToMap(side);
-    const auto n_ports = biMap.count();
+    auto biMapCopy = m_border->dirToMap(side);
+    const auto n_ports = biMapCopy.count();
     if (n_ports > 0) {
         int i = 0;
         auto h = getCurrentComponentRect().height();
         const double diff = getCurrentComponentRect().height() / n_ports;
-        for (const auto& p : biMap.portToId) {
+        for (const auto& p : biMapCopy.portToId) {
             const int gridIndex = std::ceil((i * diff + diff / 2));
-            bool portMoved = m_portPosMap->movePort(p.first, PortPos{side, gridIndex});
+            const auto* port = p.first;  // Store port pointer here; p reference may change during port moving
+            bool portMoved = m_border->movePort(port, PortPos{side, gridIndex});
             if (portMoved) {
-                emit portPosChanged(p.first);
+                emit portPosChanged(port);
             }
             i++;
         }
