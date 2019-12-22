@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QMetaType>
 #include <QRect>
 #include <map>
 
@@ -47,12 +48,21 @@ public:
 
     PortPos getPortPos(const SimPort* port) const;
 
+    bool parentIsPlacing() const;
+
     const ComponentBorder& getBorder() const { return *m_border; }
     const QRect& getCurrentComponentRect() const;
     const QRect& getCurrentMinRect() const;
 
+    QPoint getPos() { return m_relPos.get(); }
+
+    SimComponent& getComponent() const { return m_component; }
+
+    void placeAndRouteSubcomponents();
+
 signals:
     void gridRectChanged();
+    void gridPosChanged(QPoint);
     void portPosChanged(const SimPort* p);
 
 protected:
@@ -110,6 +120,10 @@ private:
 
     /** current expansion state */
     bool m_expanded = false;
+
+    /** Flag for indicating when placement/routing is active. If so, do not restrict subcomponent positioning inside the
+     * current minimum subcomponent bounding rect */
+    bool m_isPlacing = false;
 
     /// Managed rectangles
     QRect m_currentExpandedRect;

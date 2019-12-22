@@ -1,7 +1,7 @@
 #include "vsrtl_placeroute.h"
 #include "vsrtl_component.h"
-#include "vsrtl_componentgraphic.h"
 #include "vsrtl_graphics_defines.h"
+#include "vsrtl_gridcomponent.h"
 
 #include <deque>
 #include <map>
@@ -31,7 +31,7 @@ void topologicalSortUtil(SimComponent* c, std::map<SimComponent*, bool>& visited
     stack.push_front(c);
 }
 
-std::deque<SimComponent*> topologicalSort(const std::vector<ComponentGraphic*>& components) {
+std::deque<SimComponent*> topologicalSort(const std::vector<GridComponent*>& components) {
     std::map<SimComponent*, bool> visited;
     std::deque<SimComponent*> stack;
 
@@ -46,7 +46,7 @@ std::deque<SimComponent*> topologicalSort(const std::vector<ComponentGraphic*>& 
     return stack;
 }
 
-std::map<int, std::set<SimComponent*>> ASAPSchedule(const std::vector<ComponentGraphic*>& components) {
+std::map<int, std::set<SimComponent*>> ASAPSchedule(const std::vector<GridComponent*>& components) {
     std::deque<SimComponent*> sortedComponents = topologicalSort(components);
     std::map<int, std::set<SimComponent*>> schedule;
     std::map<SimComponent*, int> componentToDepth;
@@ -71,16 +71,16 @@ std::map<int, std::set<SimComponent*>> ASAPSchedule(const std::vector<ComponentG
     return schedule;
 }
 
-std::map<ComponentGraphic*, QPointF> ASAPPlacement(const std::vector<ComponentGraphic*>& components) {
-    std::map<ComponentGraphic*, QPointF> placements;
+std::map<GridComponent*, QPoint> ASAPPlacement(const std::vector<GridComponent*>& components) {
+    std::map<GridComponent*, QPoint> placements;
     const auto asapSchedule = ASAPSchedule(components);
 
     // 1. create a width of each column
-    std::map<int, qreal> columnWidths;
+    std::map<int, int> columnWidths;
     for (const auto& iter : asapSchedule) {
-        qreal maxWidth = 0;
+        int maxWidth = 0;
         for (const auto& c : iter.second) {
-            qreal width = c->getGraphic<ComponentGraphic>()->boundingRect().width();
+            int width = c->getGraphic<GridComponent>()->getCurrentComponentRect().width();
             maxWidth = maxWidth < width ? width : maxWidth;
         }
         columnWidths[iter.first] = maxWidth;
@@ -88,14 +88,14 @@ std::map<ComponentGraphic*, QPointF> ASAPPlacement(const std::vector<ComponentGr
 
     // Position components
     // Start a bit offset from the parent borders
-    const QPointF start{50, 25};
-    qreal x = start.x();
-    qreal y = start.y();
+    const QPoint start{SUBCOMPONENT_INDENT, SUBCOMPONENT_INDENT};
+    int x = start.x();
+    int y = start.y();
     for (const auto& iter : asapSchedule) {
         for (const auto& c : iter.second) {
-            auto* g = c->getGraphic<ComponentGraphic>();
-            placements[g] = QPointF(x, y);
-            y += g->boundingRect().height() + COMPONENT_COLUMN_MARGIN;
+            auto* g = c->getGraphic<GridComponent>();
+            placements[g] = QPoint(x, y);
+            y += g->getCurrentComponentRect().height() + COMPONENT_COLUMN_MARGIN;
         }
         x += columnWidths[iter.first] + 2 * COMPONENT_COLUMN_MARGIN;
         y = start.y();
@@ -104,22 +104,22 @@ std::map<ComponentGraphic*, QPointF> ASAPPlacement(const std::vector<ComponentGr
     return placements;
 }
 
-std::map<ComponentGraphic*, QPointF> topologicalSortPlacement(const std::vector<ComponentGraphic*>& components) {
-    std::map<ComponentGraphic*, QPointF> placements;
+std::map<GridComponent*, QPoint> topologicalSortPlacement(const std::vector<GridComponent*>& components) {
+    std::map<GridComponent*, QPoint> placements;
     std::deque<SimComponent*> sortedComponents = topologicalSort(components);
 
     // Position components
-    QPointF pos = QPointF(25, 25);  // Start a bit offset from the parent borders
+    QPoint pos = QPoint(SUBCOMPONENT_INDENT, SUBCOMPONENT_INDENT);  // Start a bit offset from the parent borders
     for (const auto& c : sortedComponents) {
-        auto* g = c->getGraphic<ComponentGraphic>();
+        auto* g = c->getGraphic<GridComponent>();
         placements[g] = pos;
-        pos.rx() += g->boundingRect().width() + COMPONENT_COLUMN_MARGIN;
+        pos.rx() += g->getCurrentComponentRect().width() + COMPONENT_COLUMN_MARGIN;
     }
 
     return placements;
 }
 
-std::map<ComponentGraphic*, QPointF> PlaceRoute::placeAndRoute(const std::vector<ComponentGraphic*>& components) const {
+std::map<GridComponent*, QPoint> PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) const {
     switch (m_placementAlgorithm) {
         case PlaceAlg::TopologicalSort: {
             return topologicalSortPlacement(components);

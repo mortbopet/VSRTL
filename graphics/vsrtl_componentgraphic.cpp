@@ -42,6 +42,15 @@ static inline QRectF gridToScene(QRect gridRect) {
     sceneGridRect.setHeight(gridRect.height() * GRID_SIZE);
     return sceneGridRect;
 }
+
+static inline QPoint sceneToGrid(QPointF p) {
+    return (p / GRID_SIZE).toPoint();
+}
+
+static inline QPointF gridToScene(QPoint p) {
+    return p * GRID_SIZE;
+}
+
 }  // namespace
 
 static constexpr qreal c_resizeMargin = GRID_SIZE;
@@ -103,6 +112,7 @@ void ComponentGraphic::initialize() {
 
     connect(this, &GridComponent::gridRectChanged, this, &ComponentGraphic::updateGeometry);
     connect(this, &GridComponent::portPosChanged, this, &ComponentGraphic::handlePortPosChanged);
+    connect(this, &GridComponent::gridPosChanged, this, &ComponentGraphic::handleGridPosChange);
     spreadPorts();
     updateGeometry();
 }
@@ -133,13 +143,6 @@ void ComponentGraphic::createSubcomponents() {
         if (!isExpanded()) {
             nc->hide();
         }
-    }
-}
-
-void ComponentGraphic::placeAndRouteSubcomponents() {
-    const auto& placements = PlaceRoute::get()->placeAndRoute(m_subcomponents);
-    for (const auto& p : placements) {
-        p.first->setPos(p.second);
     }
 }
 
@@ -297,6 +300,10 @@ void ComponentGraphic::updateGeometry() {
     }
 }
 
+void ComponentGraphic::handleGridPosChange(const QPoint p) {
+    setPos(gridToScene(p));
+}
+
 void ComponentGraphic::handlePortPosChanged(const SimPort* port) {
     const auto pos = getPortPos(port);
     auto* g = port->getGraphic<PortGraphic>();
@@ -336,6 +343,25 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
             }
         }
 
+        if (parentIsPlacing()) {
+            // New position has been validated (and set) through the grid layer, and the grid component has >already<
+            // been moved to its new position. This slot is called through the move signal of the gridComponent, emitted
+            // during place and route.
+            return value;
+        } else {
+            /// Parent is not placing, @p value represents a QPointF in parent scene coordinates. Go through
+            /// GridComponent to validate and attempt to place the component.
+            const QPoint newGridPos = sceneToGrid(value.toPoint());
+
+            if (move(CPoint<CSys::Parent>(newGridPos))) {
+                return gridToScene(newGridPos);
+            } else {
+                // Move was unsuccessfull, keep current positioning
+                return pos();
+            }
+        }
+
+        /*
         // Snap to grid
         QPointF newPos = value.toPointF();
         qreal x = snapToGrid(newPos.x());
@@ -345,6 +371,9 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
             // size. Do not restrict movement
             return QPointF(x, y);
         } else {
+            if (move(CPoint<CSys::Parent>(newPos))) {
+            }
+
             // Restrict position changes to inside parent item
             const auto& parentRect = getParent()->sceneGridRect();
             const auto& thisRect = boundingRect();
@@ -359,6 +388,7 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
                 return newPos;
             }
         }
+        */
     }
 
     return QGraphicsItem::itemChange(change, value);

@@ -73,9 +73,9 @@ bool snapRectToRect(const RectType& bound, RectType& snapping) {
 
 template <typename RectType>
 RectType boundingRectOfRects(const std::vector<RectType>& rects) {
-    RectType boundingRect;
-    for (const auto& child : rects) {
-        boundingRect = boundingRectOfRects<RectType>(boundingRect, child);
+    RectType boundingRect = rects.at(0);
+    for (int i = 1; i < rects.size(); i++) {
+        boundingRect = boundingRectOfRects<RectType>(boundingRect, rects.at(i));
     }
     return boundingRect;
 }

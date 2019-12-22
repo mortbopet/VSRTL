@@ -38,9 +38,7 @@ public:
     virtual void paintOverlay(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {}
 
     void initialize();
-    void placeAndRouteSubcomponents();
     bool restrictSubcomponentPositioning() const { return m_restrictSubcomponentPositioning; }
-    SimComponent& getComponent() const { return m_component; }
     std::vector<ComponentGraphic*>& getGraphicSubcomponents() { return m_subcomponents; }
     ComponentGraphic* getParent() const;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
@@ -132,6 +130,11 @@ public:
     }
 
 private slots:
+    /**
+     * @brief handleGridPosChange
+     * Slot called when position of grid component changed through the grid-layer (ie. through place and route).
+     */
+    void handleGridPosChange(const QPoint pos);
     void handlePortPosChanged(const SimPort* port);
     void updateGeometry();
 

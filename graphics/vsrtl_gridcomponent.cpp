@@ -1,6 +1,8 @@
 ﻿#include "vsrtl_gridcomponent.h"
 
+#include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
+#include "vsrtl_placeroute.h"
 
 #include <math.h>
 
@@ -10,17 +12,19 @@ GridComponent::GridComponent(SimComponent& c, GridComponent* parent) : GraphicsB
     m_border = std::make_unique<ComponentBorder>(c);
 
     updateMinimumGridRect();
-    updateSubcomponentBoundingRect();
     m_currentContractedRect = m_minimumGridRect;
     m_currentExpandedRect = m_currentSubcomponentBoundingRect;
 }
 
 void GridComponent::setExpanded(bool state) {
+    if (!m_component.hasSubcomponents())
+        return;
+
     m_expanded = state;
 
     // This component just expanded - this might require the parent component to expand its current bounding rect
     auto* parent = dynamic_cast<GridComponent*>(parentItem());
-    if (parent)
+    if (parent && m_component.hasSubcomponents())
         parent->updateSubcomponentBoundingRect();
 
     emit gridRectChanged();
@@ -59,12 +63,39 @@ void GridComponent::childExpanded() {
 }
 
 bool GridComponent::move(CPoint<CSys::Parent> pos) {
+    if (parentIsPlacing()) {
+        // Parent is placing components, do not try to snap inside parent
+        m_relPos = pos;
+        emit gridPosChanged(m_relPos.get());
+        return true;
+    }
+
     auto translatedRectInParentCS = getCurrentComponentRect().translated(pos.get());
-    if (!parentContainsRect(translatedRectInParentCS))
+    if (!parentIsPlacing() && !parentContainsRect(translatedRectInParentCS))
         return false;
 
     m_relPos = pos;
+    if (parentIsPlacing())
+        emit gridPosChanged(m_relPos.get());
+
     return true;
+}
+
+void GridComponent::placeAndRouteSubcomponents() {
+    m_isPlacing = true;
+    const auto& placements = PlaceRoute::get()->placeAndRoute(getGridSubcomponents());
+    for (const auto& p : placements) {
+        p.first->move(p.second);
+    }
+    m_isPlacing = false;
+    updateSubcomponentBoundingRect();
+}
+
+bool GridComponent::parentIsPlacing() const {
+    auto* p = dynamic_cast<GridComponent*>(parentItem());
+    if (p)
+        return p->m_isPlacing;
+    return false;
 }
 
 bool GridComponent::parentContainsRect(const QRect& r) const {
@@ -116,10 +147,18 @@ const QRect& GridComponent::getCurrentMinRect() const {
 }
 
 bool GridComponent::updateSubcomponentBoundingRect() {
-    const auto rects = collect<QRect>(getGridSubcomponents(), &GridComponent::getCurrentComponentRect);
-    const auto br = boundingRectOfRects<QRect>(rects);
-    if (br != m_currentSubcomponentBoundingRect) {
-        m_currentExpandedRect = br;
+    if (m_component.hasSubcomponents()) {
+        std::vector<QRect> rects;
+        for (const auto& c : getGridSubcomponents()) {
+            rects.push_back(c->getCurrentComponentRect().translated(c->getPos()));
+        }
+        const auto br = boundingRectOfRects<QRect>(rects);
+        m_currentSubcomponentBoundingRect = br;
+        // Update current expanded rect if it does not contain the subcomponent bounding rect
+        if (!m_currentExpandedRect.contains(m_currentSubcomponentBoundingRect)) {
+            m_currentExpandedRect = br;
+            m_currentExpandedRect.setTopLeft({0, 0});
+        }
         return true;
     }
     return false;
@@ -155,6 +194,7 @@ bool GridComponent::updateCurrentComponentRect(int dx, int dy) {
             emit portPosChanged(p.first);
         }
     }
+    emit gridRectChanged();
 }
 
 PortPos GridComponent::getPortPos(const SimPort* port) const {
