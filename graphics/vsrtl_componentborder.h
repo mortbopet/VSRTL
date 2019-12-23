@@ -6,21 +6,6 @@
 
 namespace vsrtl {
 
-enum class CSys { Local, Parent, Global, Scene };
-
-/** class CPoint
- * Typesafe QPoint based on coordinate system
- */
-template <CSys c>
-class CPoint : private QPoint {
-public:
-    CPoint(QPoint p) : QPoint(p) {}
-    CPoint() : QPoint() {}
-
-    // QPoint of this point may only explicitely be accessed through get()
-    QPoint& get() { return *this; }
-};
-
 enum class Side { Left, Right, Top, Bottom };
 struct PortPos {
     Side dir;

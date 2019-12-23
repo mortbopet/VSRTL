@@ -39,9 +39,9 @@ bool GridComponent::adjust(const QPoint& p) {
     auto* parent = dynamic_cast<GridComponent*>(parentItem());
     if (parent) {
         // Snap new rect to stay within parent
-        newRect.translate(m_relPos.get());
+        newRect.translate(m_relPos);
         snapRectToOuterRect(parent->getCurrentComponentRect(), newRect);
-        newRect.translate(-m_relPos.get());
+        newRect.translate(-m_relPos);
     }
 
     // Rect is now snapped, calculate difference between current and new rect
@@ -65,17 +65,17 @@ void GridComponent::childExpanded() {
     updateSubcomponentBoundingRect();
 }
 
-bool GridComponent::move(CPoint<CSys::Parent> pos) {
+bool GridComponent::move(const QPoint& pos) {
     if (parentIsPlacing()) {
         // Parent is placing components, do not try to snap inside parent
         m_relPos = pos;
-        emit gridPosChanged(m_relPos.get());
+        emit gridPosChanged(m_relPos);
         return true;
     }
 
     // Restrict positioning to inside parent rect
     const auto* parent = dynamic_cast<GridComponent*>(parentItem());
-    QPoint newPos = pos.get();
+    QPoint newPos = pos;
     if (parent) {
         newPos.setX(qMin(parent->getCurrentComponentRect().right() + 1 - getCurrentComponentRect().width(),
                          qMax(newPos.x(), 0)));
@@ -89,7 +89,7 @@ bool GridComponent::move(CPoint<CSys::Parent> pos) {
 
     m_relPos = newPos;
     if (parentIsPlacing())
-        emit gridPosChanged(m_relPos.get());
+        emit gridPosChanged(m_relPos);
 
     return true;
 }
@@ -117,24 +117,6 @@ bool GridComponent::parentContainsRect(const QRect& r) const {
         return true;
 
     return gc_parent->getCurrentComponentRect().contains(r);
-}
-
-CPoint<CSys::Parent> GridComponent::localToParentCoords(CPoint<CSys::Local> p) {
-    return CPoint<CSys::Parent>(p.get() + m_relPos.get());
-}
-
-CPoint<CSys::Global> GridComponent::parentToGlobalCoords(CPoint<CSys::Parent> p) {
-    auto* gc_parent = dynamic_cast<GridComponent*>(parent());
-    if (gc_parent) {
-        return localToGlobalCoords(CPoint<CSys::Local>(p.get()));
-    } else {
-        // This is the top level component (no parent) which represents global coordinates
-        return CPoint<CSys::Global>(p.get());
-    }
-}
-
-CPoint<CSys::Global> GridComponent::localToGlobalCoords(CPoint<CSys::Local> p) {
-    return parentToGlobalCoords(localToParentCoords(p));
 }
 
 std::vector<GridComponent*> GridComponent::getGridSubcomponents() const {

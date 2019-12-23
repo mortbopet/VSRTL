@@ -29,7 +29,7 @@ public:
      * Attempts to move this gridcomponent to the desired pos in the given coordinate basis.
      * @return true if move was successfull (ie. if move was within bounds)
      */
-    bool move(CPoint<CSys::Parent> pos);
+    bool move(const QPoint& pos);
 
     /**
      * @brief setExpanded
@@ -54,7 +54,7 @@ public:
     const QRect& getCurrentComponentRect() const;
     const QRect& getCurrentMinRect() const;
 
-    QPoint getGridPos() { return m_relPos.get(); }
+    QPoint getGridPos() const { return m_relPos; }
 
     SimComponent& getComponent() const { return m_component; }
 
@@ -100,13 +100,6 @@ private:
     QRect& getCurrentComponentRectRef();
 
     /**
-     * @brief Coordinate transformation functions
-     */
-    CPoint<CSys::Global> parentToGlobalCoords(CPoint<CSys::Parent> p);
-    CPoint<CSys::Global> localToGlobalCoords(CPoint<CSys::Local> p);
-    CPoint<CSys::Parent> localToParentCoords(CPoint<CSys::Local> p);
-
-    /**
      * @brief moveInsideParent
      * Attempts to move this gridcomponent to the desired @p pos inside the parent.
      * @return true if move was successfull (ie. if move was within the parent bounds)
@@ -131,7 +124,7 @@ private:
     QRect m_currentSubcomponentBoundingRect;
     QRect m_minimumGridRect;
 
-    CPoint<CSys::Parent> m_relPos;  // Position in parent coordinates
+    QPoint m_relPos;  // Position in parent coordinates
 };
 
 }  // namespace vsrtl

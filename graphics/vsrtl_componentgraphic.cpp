@@ -353,42 +353,13 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
             /// GridComponent to validate and attempt to place the component.
             const QPoint newGridPos = sceneToGrid(value.toPoint());
 
-            if (move(CPoint<CSys::Parent>(newGridPos))) {
+            if (move(newGridPos)) {
                 return gridToScene(getGridPos());
             } else {
                 // Move was unsuccessfull, keep current positioning
                 return pos();
             }
         }
-
-        /*
-        // Snap to grid
-        QPointF newPos = value.toPointF();
-        qreal x = snapToGrid(newPos.x());
-        qreal y = snapToGrid(newPos.y());
-        if (m_parentComponentGraphic == nullptr || !m_parentComponentGraphic->restrictSubcomponentPositioning()) {
-            // Parent has just expanded, and is expecting its children to position themselves, before it calculates its
-            // size. Do not restrict movement
-            return QPointF(x, y);
-        } else {
-            if (move(CPoint<CSys::Parent>(newPos))) {
-            }
-
-            // Restrict position changes to inside parent item
-            const auto& parentRect = getParent()->sceneGridRect();
-            const auto& thisRect = boundingRect();
-            if (parentRect.contains(thisRect.translated(newPos))) {
-                return QPointF(x, y);
-            } else {
-                // Keep the item inside the scene rect.
-                newPos.setX(
-                    snapToGrid(qMin(parentRect.right() - thisRect.width(), qMax(newPos.x(), parentRect.left()))));
-                newPos.setY(
-                    snapToGrid(qMin(parentRect.bottom() - thisRect.height(), qMax(newPos.y(), parentRect.top()))));
-                return newPos;
-            }
-        }
-        */
     }
 
     return QGraphicsItem::itemChange(change, value);
