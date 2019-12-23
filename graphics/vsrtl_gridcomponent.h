@@ -54,7 +54,7 @@ public:
     const QRect& getCurrentComponentRect() const;
     const QRect& getCurrentMinRect() const;
 
-    QPoint getPos() { return m_relPos.get(); }
+    QPoint getGridPos() { return m_relPos.get(); }
 
     SimComponent& getComponent() const { return m_component; }
 

@@ -43,28 +43,56 @@ std::vector<R> collect(T list, F func) {
 }
 
 template <typename RectType>
-RectType boundingRectOfRects(const RectType& r1, const RectType& r2) {
-    qreal top, bottom, right, left;
-    left = r1.left() < r2.left() ? r1.left() : r2.left();
-    right = r1.right() > r2.right() ? r1.right() : r2.right();
-    top = r1.top() < r2.top() ? r1.top() : r2.top();
-    bottom = r1.bottom() > r2.bottom() ? r1.bottom() : r2.bottom();
-
-    return RectType(left, top, right, bottom);
+auto trueRight(const RectType& r) {
+    return r.left() + r.width();
 }
 
 template <typename RectType>
-bool snapRectToRect(const RectType& bound, RectType& snapping) {
+auto trueBottom(const RectType& r) {
+    return r.top() + r.height();
+}
+
+template <typename RectType>
+RectType boundingRectOfRects(const RectType& r1, const RectType& r2) {
+    qreal top, bottom, right, left;
+    left = r1.left() < r2.left() ? r1.left() : r2.left();
+    right = trueRight(r1) > trueRight(r2) ? trueRight(r1) : trueRight(r2);
+    top = r1.top() < r2.top() ? r1.top() : r2.top();
+    bottom = trueBottom(r1) > trueBottom(r2) ? trueBottom(r1) : trueBottom(r2);
+
+    return RectType(left, top, right - left, bottom - top);
+}
+
+template <typename RectType>
+bool snapRectToInnerRect(const RectType& inner, RectType& snapping) {
     bool snap_r, snap_b;
     snap_r = false;
     snap_b = false;
 
-    if (snapping.right() < bound.right()) {
-        snapping.setRight(bound.right());
+    if (snapping.right() < inner.right()) {
+        snapping.setRight(inner.right());
         snap_r = true;
     }
-    if (snapping.bottom() < bound.bottom()) {
-        snapping.setBottom(bound.bottom());
+    if (snapping.bottom() < inner.bottom()) {
+        snapping.setBottom(inner.bottom());
+        snap_b = true;
+    }
+
+    return !(snap_r & snap_b);
+}
+
+template <typename RectType>
+bool snapRectToOuterRect(const RectType& outer, RectType& snapping) {
+    bool snap_r, snap_b;
+    snap_r = false;
+    snap_b = false;
+
+    if (snapping.right() > outer.right()) {
+        snapping.setRight(outer.right());
+        snap_r = true;
+    }
+    if (snapping.bottom() > outer.bottom()) {
+        snapping.setBottom(outer.bottom());
         snap_b = true;
     }
 

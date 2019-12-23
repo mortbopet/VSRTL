@@ -24,8 +24,8 @@ void GridComponent::setExpanded(bool state) {
 
     // This component just expanded - this might require the parent component to expand its current bounding rect
     auto* parent = dynamic_cast<GridComponent*>(parentItem());
-    if (parent && m_component.hasSubcomponents())
-        parent->updateSubcomponentBoundingRect();
+    if (state && parent && m_component.hasSubcomponents())
+        parent->childExpanded();
 
     emit gridRectChanged();
 }
@@ -35,10 +35,14 @@ bool GridComponent::adjust(const QPoint& p) {
     auto newRect = getCurrentComponentRect();
     newRect.adjust(0, 0, p.x(), p.y());
 
-    snapRectToRect(minRect, newRect);
-
-    if (!parentContainsRect(newRect.translated(m_relPos.get())))
-        return false;
+    snapRectToInnerRect(minRect, newRect);
+    auto* parent = dynamic_cast<GridComponent*>(parentItem());
+    if (parent) {
+        // Snap new rect to stay within parent
+        newRect.translate(m_relPos.get());
+        snapRectToOuterRect(parent->getCurrentComponentRect(), newRect);
+        newRect.translate(-m_relPos.get());
+    }
 
     // Rect is now snapped, calculate difference between current and new rect
     const QPoint diff = newRect.bottomRight() - getCurrentComponentRect().bottomRight();
@@ -58,8 +62,7 @@ bool GridComponent::adjust(const QRect& newRect) {
 
 void GridComponent::childExpanded() {
     Q_ASSERT(m_expanded && "A child expanded while this component was collapsed");
-    if (updateSubcomponentBoundingRect())
-        emit gridRectChanged();
+    updateSubcomponentBoundingRect();
 }
 
 bool GridComponent::move(CPoint<CSys::Parent> pos) {
@@ -70,11 +73,21 @@ bool GridComponent::move(CPoint<CSys::Parent> pos) {
         return true;
     }
 
-    auto translatedRectInParentCS = getCurrentComponentRect().translated(pos.get());
+    // Restrict positioning to inside parent rect
+    const auto* parent = dynamic_cast<GridComponent*>(parentItem());
+    QPoint newPos = pos.get();
+    if (parent) {
+        newPos.setX(qMin(parent->getCurrentComponentRect().right() + 1 - getCurrentComponentRect().width(),
+                         qMax(newPos.x(), 0)));
+        newPos.setY(qMin(parent->getCurrentComponentRect().bottom() + 1 - getCurrentComponentRect().height(),
+                         qMax(newPos.y(), 0)));
+    }
+
+    auto translatedRectInParentCS = getCurrentComponentRect().translated(newPos);
     if (!parentIsPlacing() && !parentContainsRect(translatedRectInParentCS))
         return false;
 
-    m_relPos = pos;
+    m_relPos = newPos;
     if (parentIsPlacing())
         emit gridPosChanged(m_relPos.get());
 
@@ -150,7 +163,7 @@ bool GridComponent::updateSubcomponentBoundingRect() {
     if (m_component.hasSubcomponents()) {
         std::vector<QRect> rects;
         for (const auto& c : getGridSubcomponents()) {
-            rects.push_back(c->getCurrentComponentRect().translated(c->getPos()));
+            rects.push_back(c->getCurrentComponentRect().translated(c->getGridPos()));
         }
         const auto br = boundingRectOfRects<QRect>(rects);
         m_currentSubcomponentBoundingRect = br;
@@ -158,6 +171,8 @@ bool GridComponent::updateSubcomponentBoundingRect() {
         if (!m_currentExpandedRect.contains(m_currentSubcomponentBoundingRect)) {
             m_currentExpandedRect = br;
             m_currentExpandedRect.setTopLeft({0, 0});
+            m_currentExpandedRect.adjust(0, 0, SUBCOMPONENT_INDENT, SUBCOMPONENT_INDENT);
+            emit gridRectChanged();
         }
         return true;
     }

@@ -354,7 +354,7 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
             const QPoint newGridPos = sceneToGrid(value.toPoint());
 
             if (move(CPoint<CSys::Parent>(newGridPos))) {
-                return gridToScene(newGridPos);
+                return gridToScene(getGridPos());
             } else {
                 // Move was unsuccessfull, keep current positioning
                 return pos();
