@@ -25,13 +25,13 @@ namespace core {
 /// the actual macro. For these cases, we may say SUBCOMPONENT(xor1, TYPE(Xor<1,2>));
 #define TYPE(...) __VA_ARGS__
 
-#define INPUTPORT(name, W) Port<W>& name = this->createInputPort<W>(#name)
-#define INPUTPORT_ENUM(name, E_t) Port<E_t::width()>& name = this->createInputPort<E_t::width(), E_t>(#name)
-#define INPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->createInputPorts<W>("in", N)
+#define INPUTPORT(name, W) Port<W>& name = this->template createInputPort<W>(#name)
+#define INPUTPORT_ENUM(name, E_t) Port<E_t::width()>& name = this->template createInputPort<E_t::width(), E_t>(#name)
+#define INPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->template createInputPorts<W>("in", N)
 
-#define OUTPUTPORT(name, W) Port<W>& name = createOutputPort<W>(#name)
-#define OUTPUTPORT_ENUM(name, E_t) Port<E_t::width()>& name = createOutputPort<E_t::width(), E_t>(#name)
-#define OUTPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->createOutputPorts<W>("in", N)
+#define OUTPUTPORT(name, W) Port<W>& name = this->template createOutputPort<W>(#name)
+#define OUTPUTPORT_ENUM(name, E_t) Port<E_t::width()>& name = this->template createOutputPort<E_t::width(), E_t>(#name)
+#define OUTPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->template createOutputPorts<W>("in", N)
 
 #define SIGNAL_VALUE(input, type) input.value<type>()
 
