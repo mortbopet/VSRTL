@@ -89,11 +89,11 @@ void ComponentGraphic::initialize() {
     m_label = new Label(QString::fromStdString(m_component.getDisplayName()), this);
 
     // Create IO ports of Component
-    for (const auto& c : m_component.getPorts<SimPort::Direction::in, SimPort>()) {
-        m_inputPorts[c] = new PortGraphic(c, PortType::in, this);
+    for (const auto& p_in : m_component.getPorts<SimPort::Direction::in, SimPort>()) {
+        m_inputPorts[p_in] = new PortGraphic(p_in, PortType::in, this);
     }
-    for (const auto& c : m_component.getPorts<SimPort::Direction::out, SimPort>()) {
-        m_outputPorts[c] = new PortGraphic(c, PortType::out, this);
+    for (const auto& p_out : m_component.getPorts<SimPort::Direction::out, SimPort>()) {
+        m_outputPorts[p_out] = new PortGraphic(p_out, PortType::out, this);
     }
 
     m_restrictSubcomponentPositioning = false;
@@ -231,7 +231,7 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         });
     }
 
-    if (getParent() != nullptr) {
+    if (m_component.getParent() != nullptr) {
         auto* hideAction = menu.addAction("Hide");
         connect(hideAction, &QAction::triggered, [=] { this->hide(); });
     }
@@ -359,6 +359,24 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
             } else {
                 // Move was unsuccessfull, keep current positioning
                 return pos();
+            }
+        }
+    }
+
+    if (change == ItemVisibleChange && scene()) {
+        // hide all input ports of other components which this component has output ports connecting to.
+        const bool visible = value.toBool();
+
+        for (const auto& p_out : m_component.getPorts<SimPort::Direction::out>()) {
+            for (const auto& p_conn : p_out->getOutputPorts()) {
+                auto* portParent = p_conn->getParent();
+                auto* portGraphic = p_conn->getGraphic<PortGraphic>();
+
+                const bool isNestedComponent = portParent == m_component.getParent();
+
+                if (!isNestedComponent && portParent && portGraphic) {
+                    portGraphic->setVisible(visible & portParent->getGraphic<ComponentGraphic>()->isVisible());
+                }
             }
         }
     }

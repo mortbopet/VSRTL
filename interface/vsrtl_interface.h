@@ -54,9 +54,6 @@ public:
 
     template <typename T>
     T* getGraphic() const {
-        if (m_graphicObject == nullptr) {
-            throw std::runtime_error("Graphic object not registered");
-        }
         return static_cast<T*>(m_graphicObject);
     }
 
