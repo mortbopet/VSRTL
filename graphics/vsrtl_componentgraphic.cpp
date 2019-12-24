@@ -231,8 +231,10 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         });
     }
 
-    auto* hideAction = menu.addAction("Hide");
-    connect(hideAction, &QAction::triggered, [=] { this->hide(); });
+    if (getParent() != nullptr) {
+        auto* hideAction = menu.addAction("Hide");
+        connect(hideAction, &QAction::triggered, [=] { this->hide(); });
+    }
 
     menu.exec(event->screenPos());
 }
@@ -255,8 +257,7 @@ void ComponentGraphic::setExpanded(bool state) {
 }
 
 ComponentGraphic* ComponentGraphic::getParent() const {
-    Q_ASSERT(parentItem() != nullptr);
-    return static_cast<ComponentGraphic*>(parentItem());
+    return dynamic_cast<ComponentGraphic*>(parentItem());
 }
 
 void ComponentGraphic::updateGeometry() {
