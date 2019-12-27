@@ -58,7 +58,7 @@ template <unsigned int W>
 class Port : public PortBase {
 public:
     Port(std::string name, SimComponent* parent) : PortBase(name, parent) {}
-    bool isConnected() const override { return m_inputPort != nullptr || m_propagationFunction != nullptr; }
+    bool isConnected() const override { return m_inputPort != nullptr || m_propagationFunction; }
 
     // Port connections are doubly linked
     void operator>>(Port<W>& toThis) {
@@ -87,7 +87,7 @@ public:
 
     void setPortValue() override {
         auto prePropagateValue = m_value;
-        if (m_propagationFunction != nullptr) {
+        if (m_propagationFunction) {
             m_value = m_propagationFunction();
         } else {
             m_value = getInputPort<Port<W>>()->template value<VSRTL_VT_U>();
@@ -132,7 +132,7 @@ protected:
     // then propagated.
     VSRTL_VT_U m_value = 0xdeadbeef;
 
-    std::function<VSRTL_VT_U()> m_propagationFunction;
+    std::function<VSRTL_VT_U()> m_propagationFunction = {};
 };
 
 template <unsigned int W, typename E_t>

@@ -211,6 +211,11 @@ public:
                 throw std::runtime_error("Component: '" + getName() + "' has unconnected inputs");
             }
         }
+        for (const auto& op : getPorts<SimPort::Direction::out, PortBase>()) {
+            if (!op->isConnected()) {
+                throw std::runtime_error("Component: '" + getName() + "' has unconnected output '" + op->getName());
+            }
+        }
     }
 
 protected:
