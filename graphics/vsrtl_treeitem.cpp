@@ -58,6 +58,10 @@ void NetlistTreeItem::setPort(SimPort* port) {
     m_port = port;
     m_name = QString::fromStdString(m_port->getName());
     m_radixMenu = createPortRadixMenu(m_port, m_radix);
+
+    if (m_port->isEnumPort()) {
+        m_radix = Radix::Enum;
+    }
 }
 
 QList<QMenu*> NetlistTreeItem::getActions() const {
