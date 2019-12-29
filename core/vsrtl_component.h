@@ -33,8 +33,6 @@ namespace core {
 #define OUTPUTPORT_ENUM(name, E_t) Port<E_t::width()>& name = this->template createOutputPort<E_t::width(), E_t>(#name)
 #define OUTPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->template createOutputPorts<W>("in", N)
 
-#define SIGNAL_VALUE(input, type) input.value<type>()
-
 class Component : public SimComponent {
 public:
     Component(std::string displayName, SimComponent* parent) : SimComponent(displayName, parent) {}
@@ -59,6 +57,8 @@ public:
         }
     }
     bool isPropagated() const { return m_propagationState == PropagationState::propagated; }
+    void setSensitiveTo(const PortBase* p) { m_sensitivityList.push_back(p); }
+    void setSensitiveTo(const PortBase& p) { setSensitiveTo(&p); }
 
     template <unsigned int W, typename E_t = void>
     Port<W>& createInputPort(std::string name) {
@@ -155,6 +155,11 @@ public:
                 if (!input->isPropagated())
                     return;
             }
+            // Furthermore, we check whether any additional signals added to the sensitivity list are propagated.
+            for (const auto& sens : m_sensitivityList) {
+                if (!sens->isPropagated())
+                    return;
+            }
 
             for (const auto& sc : getSubComponents<Component>())
                 sc->propagateComponent(propagationStack);
@@ -196,7 +201,7 @@ public:
         }
     }
     void initialize() {
-        if (m_inputPorts.size() == 0 && !hasSubcomponents()) {
+        if (m_inputPorts.size() == 0 && !hasSubcomponents() && m_sensitivityList.empty()) {
             // Component has no input ports - ie. component is a constant. propagate all output ports and set component
             // as propagated.
             for (const auto& p : getPorts<SimPort::Direction::out, PortBase>())
@@ -205,7 +210,7 @@ public:
         }
     }
 
-    void verifyComponent() const {
+    virtual void verifyComponent() const {
         for (const auto& ip : getPorts<SimPort::Direction::in, PortBase>()) {
             if (!ip->isConnected()) {
                 throw std::runtime_error("Component: '" + getName() + "' has unconnected input '" + ip->getName());
@@ -254,6 +259,7 @@ protected:
         }
     }
 
+    std::vector<const PortBase*> m_sensitivityList;
     PropagationState m_propagationState = PropagationState::unpropagated;
 };
 
