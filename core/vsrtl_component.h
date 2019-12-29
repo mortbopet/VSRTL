@@ -206,9 +206,9 @@ public:
     }
 
     void verifyComponent() const {
-        for (const auto& ip : getPorts<SimPort::Direction::out, PortBase>()) {
+        for (const auto& ip : getPorts<SimPort::Direction::in, PortBase>()) {
             if (!ip->isConnected()) {
-                throw std::runtime_error("Component: '" + getName() + "' has unconnected inputs");
+                throw std::runtime_error("Component: '" + getName() + "' has unconnected input '" + ip->getName());
             }
         }
         for (const auto& op : getPorts<SimPort::Direction::out, PortBase>()) {
