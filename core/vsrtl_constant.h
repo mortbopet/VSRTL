@@ -13,8 +13,8 @@ namespace core {
 namespace {
 constexpr bool valueFitsInBitWidth(unsigned int width, int value) {
     const int v = value < 0 ? -value : value;
-    // -1 to verify that there is space for the sign bit
-    return ceillog2(v) <= width;
+    int v_width = ceillog2(v) + 1;
+    return v_width <= width;
 }
 }  // namespace
 
@@ -38,7 +38,6 @@ public:
     OUTPUTPORT(out, W);
 
 private:
-    unsigned int m_width;
     VSRTL_VT_U m_value;
 };
 

@@ -63,6 +63,7 @@ public:
         ctrl_comp->dm_op >> mem_out_data_mux->select;
         acc_reg->out >> mem_out_data_mux->get(mem_op::wr);
         0 >> mem_out_data_mux->others();
+        ceillog2(LEROS_REG_WIDTH / 8) >> data_mem->wr_width;
 
         ctrl_comp->dm_op >> mem_out_addr_mux->select;
         alu_comp->res >> mem_out_addr_mux->get(mem_op::wr);
@@ -80,6 +81,7 @@ public:
         // -----------------------------------------------------------------------
         // Registers
         decode_comp->lowByte >> regs->addr;
+        ceillog2(LEROS_REG_WIDTH / 8) >> regs->wr_width;
 
         alu_comp->res >> reg_out_data_mux->get(reg_data_src::alu);
         acc_reg->out >> reg_out_data_mux->get(reg_data_src::acc);

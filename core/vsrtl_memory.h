@@ -16,6 +16,7 @@ namespace core {
 struct MemoryEviction {
     VSRTL_VT_U addr;
     VSRTL_VT_U data;
+    VSRTL_VT_U width;
 };
 
 using SparseArrayMemory = std::unordered_map<VSRTL_VT_U, uint8_t>;
@@ -96,16 +97,16 @@ public:
         const VSRTL_VT_U addr_v = addr.template value<VSRTL_VT_U>();
         const VSRTL_VT_U data_in_v = data_in.template value<VSRTL_VT_U>();
         const VSRTL_VT_U data_out_v = this->read(addr_v);
-        auto ev = MemoryEviction({addr_v, data_out_v});
+        auto ev = MemoryEviction({addr_v, data_out_v, wr_width.uValue()});
         saveToStack(ev);
         if (static_cast<bool>(wr_en))
-            this->write(addr_v, data_in_v);
+            this->write(addr_v, data_in_v, wr_width.uValue());
     }
 
     void rewind() override {
         if (m_rewindstack.size() > 0) {
             auto lastEviction = m_rewindstack.front();
-            this->write(lastEviction.addr, lastEviction.data);
+            this->write(lastEviction.addr, lastEviction.data, lastEviction.width);
             m_rewindstack.pop_front();
         }
     }
@@ -117,6 +118,7 @@ public:
 
     INPUTPORT(addr, addrWidth);
     INPUTPORT(data_in, dataWidth);
+    INPUTPORT(wr_width, ceillog2(dataWidth / 8 + 1));  // # bytes
     INPUTPORT(wr_en, 1);
 
     void saveToStack(MemoryEviction v) {
@@ -154,6 +156,7 @@ public:
         addr >> _wr_mem->addr;
         wr_en >> _wr_mem->wr_en;
         data_in >> _wr_mem->data_in;
+        wr_width >> _wr_mem->wr_width;
 
         addr >> _rd_mem->addr;
         _rd_mem->data_out >> data_out;
@@ -165,6 +168,7 @@ public:
     INPUTPORT(addr, addrWidth);
     INPUTPORT(data_in, dataWidth);
     INPUTPORT(wr_en, 1);
+    INPUTPORT(wr_width, ceillog2(dataWidth / 8 + 1));  // # bytes
     OUTPUTPORT(data_out, dataWidth);
 
 private:
