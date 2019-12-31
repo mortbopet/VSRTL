@@ -21,6 +21,29 @@ struct MemoryEviction {
 
 using SparseArrayMemory = std::unordered_map<VSRTL_VT_U, uint8_t>;
 
+static inline void writeMem(SparseArrayMemory* mem, VSRTL_VT_U address, VSRTL_VT_U value,
+                            int size = sizeof(VSRTL_VT_U)) {
+    // writes value from the given address start, and up to $size bytes of
+    // $value
+    for (int i = 0; i < size; i++) {
+        (*mem)[address + i] = value & 0xff;
+        value >>= 8;
+    }
+}
+
+template <bool byteIndexed = true>
+VSRTL_VT_U readMem(SparseArrayMemory* mem, VSRTL_VT_U address) {
+    // Note: If address is not found in memory map, a default constructed object
+    // will be created, and read. in our case uint8_t() = 0
+    if constexpr (byteIndexed) {
+        return ((*mem)[address] | ((*mem)[address + 1] << 8) | ((*mem)[address + 2] << 16) |
+                ((*mem)[address + 3] << 24));
+    } else {
+        return ((*mem)[(address << 2)] | ((*mem)[(address << 2) + 1] << 8) | ((*mem)[(address << 2) + 2] << 16) |
+                ((*mem)[(address << 2) + 3] << 24));
+    }
+}
+
 template <unsigned addrWidth, unsigned dataWidth, bool byteIndexed = true>
 class BaseMemory {
 public:
@@ -28,17 +51,7 @@ public:
 
     void setMemory(SparseArrayMemory* mem) { m_memory = mem; }
 
-    VSRTL_VT_U read(VSRTL_VT_U address) {
-        // Note: If address is not found in memory map, a default constructed object
-        // will be created, and read. in our case uint8_t() = 0
-        if constexpr (byteIndexed) {
-            return ((*m_memory)[address] | ((*m_memory)[address + 1] << 8) | ((*m_memory)[address + 2] << 16) |
-                    ((*m_memory)[address + 3] << 24));
-        } else {
-            return ((*m_memory)[(address << 2)] | ((*m_memory)[(address << 2) + 1] << 8) |
-                    ((*m_memory)[(address << 2) + 2] << 16) | ((*m_memory)[(address << 2) + 3] << 24));
-        }
-    }
+    VSRTL_VT_U read(VSRTL_VT_U address) { return readMem<byteIndexed>(m_memory, address); }
 
     void write(VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
         if constexpr (byteIndexed) {
@@ -58,7 +71,7 @@ public:
         VSRTL_VT_U addr = startAddr;
         for (size_t i = 0; i < n; i++) {
             // Add to initialization memories for future rewriting upon reset
-            this->writeMem(&mem, addr, program[i], sizeof(T));
+            writeMem(&mem, addr, program[i], sizeof(T));
             // Write to active memory
             write(addr, program[i], sizeof(T));
             addr += sizeof(T);
@@ -68,14 +81,6 @@ public:
 protected:
     SparseArrayMemory* m_memory = nullptr;
     std::vector<SparseArrayMemory> m_initMemories;
-    void writeMem(SparseArrayMemory* mem, VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
-        // writes value from the given address start, and up to $size bytes of
-        // $value
-        for (int i = 0; i < size; i++) {
-            (*mem)[address + i] = value & 0xff;
-            value >>= 8;
-        }
-    }
 };
 
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
