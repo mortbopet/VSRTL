@@ -74,7 +74,7 @@ public:
     INPUTPORT(in, W);
     OUTPUTPORT(out, W);
 
-private:
+protected:
     void saveToStack() {
         m_rewindstack.push_front(m_savedValue);
         if (m_rewindstack.size() > rewindStackSize()) {
@@ -85,6 +85,30 @@ private:
     VSRTL_VT_U m_savedValue = 0;
 
     std::deque<VSRTL_VT_U> m_rewindstack;
+};
+
+template <unsigned int W>
+class RegisterEn : public Register<W> {
+public:
+    RegisterEn(std::string name, SimComponent* parent) : Register<W>(name, parent) {}
+
+    void save() override {
+        this->saveToStack();
+        if (enable.uValue()) {
+            this->m_savedValue = this->in.template value<VSRTL_VT_U>();
+        }
+    }
+
+    INPUTPORT(enable, 1);
+};
+
+class RegisterBank : public Component {
+public:
+    SetGraphicsType(RegisterBank);
+    RegisterBank(std::string name, SimComponent* parent) : Component(name, parent) {}
+
+    INPUTPORT(clear, 1);
+    INPUTPORT(enable, 1);
 };
 
 }  // namespace core
