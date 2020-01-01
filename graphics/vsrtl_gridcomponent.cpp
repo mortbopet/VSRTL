@@ -61,7 +61,6 @@ bool GridComponent::adjust(const QRect& newRect) {
 }
 
 void GridComponent::childExpanded() {
-    Q_ASSERT(m_expanded && "A child expanded while this component was collapsed");
     updateSubcomponentBoundingRect();
 }
 
