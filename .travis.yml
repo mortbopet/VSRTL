@@ -45,20 +45,24 @@ matrix:
             - *packages
             - mesa-common-dev
 
-    # Trusty unit test build
+    # Bionic unit test build
     - env: VSRTL_PLATFORM='linux_test' CXX=g++-7 CC=gcc-7
       os: linux
-      dist: trusty
+      dist: bionic
       addons:
         apt:
           sources: 
-            - sourceline: 'ppa:beineri/opt-qt593-trusty'
+            - sourceline: 'ppa:beineri/opt-qt-5.12.0-bionic'
               key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x10C56D0DE9977759'
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise
-          packages: 
-            - *packages
+          packages:
+            - gcc-7-riscv64-linux-gnu # RV32I unit tests
+            - g++-7
+            - qt512-meta-minimal
+            - qt512svg
             - lcov # CodeCov
+            - mesa-common-dev
 
 
 before_install:
