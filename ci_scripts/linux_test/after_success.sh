@@ -1,5 +1,8 @@
 # /bin/sh
 
+# Fail on failing QTest execution
+set -e
+
 # Execute unit tests
 find . -executable -type f -name "tst_*" | while read line; do
     ($line)
