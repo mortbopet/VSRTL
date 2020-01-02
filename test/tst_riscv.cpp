@@ -72,7 +72,14 @@ private:
 
 private slots:
     void runTests();
+
+    void cleanupTestCase();
 };
+
+void tst_RISCV::cleanupTestCase() {
+    auto buildDir = QDir(s_outdir);
+    buildDir.removeRecursively();
+}
 
 bool tst_RISCV::skipTest(const QString& test) {
     for (const auto& t : s_excludedTests) {
