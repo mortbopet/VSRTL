@@ -33,13 +33,14 @@ public:
         wr_en_mux->out >> wr_en_reg->in;
         wr_en_reg->out >> wr_en_mux->select;
         wr_en_reg->out >> mem->wr_en;
+        4 >> mem->wr_width;
         0 >> *wr_en_mux->ins[1];
         1 >> *wr_en_mux->ins[0];
     }
     static constexpr unsigned int regSize = 32;
 
     // Create objects
-    SUBCOMPONENT(mem, TYPE(Memory<regSize, regSize>));
+    SUBCOMPONENT(mem, TYPE(MemoryAsyncRd<regSize, regSize>));
 
     SUBCOMPONENT(idx_adder, Adder<regSize>);
     SUBCOMPONENT(inc_adder, Adder<regSize>);
@@ -60,21 +61,25 @@ public:
         1 >> inc_adder->op2;
         inc_adder->out >> mem->data_in;
         1 >> mem->wr_en;
+        4 >> mem->wr_width;
         0x0 >> mem->addr;
     }
     static constexpr unsigned int regs = 32;
     static constexpr unsigned int regWidth = CHAR_BIT * sizeof(VSRTL_VT_U);
 
     // Create objects
-    SUBCOMPONENT(mem, TYPE(Memory<ceillog2(regs), regWidth>));
+    SUBCOMPONENT(mem, TYPE(MemorySyncRd<ceillog2(regs), regWidth>));
     SUBCOMPONENT(inc_adder, Adder<regWidth>);
 };
 
 }  // namespace vsrtl
 
 class tst_memory : public QObject {
-    Q_OBJECT private slots : void functionalTest();
-    void repeatedWriteSameIdx();
+    Q_OBJECT;
+private slots:
+
+    void repeatedWriteSameIdxSync();
+    void functionalTest();
 };
 
 void tst_memory::functionalTest() {
@@ -90,7 +95,7 @@ void tst_memory::functionalTest() {
     QVERIFY(a.mem->data_out.template value<uint32_t>() == n / 2);
 }
 
-void tst_memory::repeatedWriteSameIdx() {
+void tst_memory::repeatedWriteSameIdxSync() {
     vsrtl::WriteSameIdx a;
 
     a.verifyAndInitialize();

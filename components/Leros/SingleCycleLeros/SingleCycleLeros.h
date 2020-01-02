@@ -140,8 +140,8 @@ public:
 
     // Memories
     SUBCOMPONENT(instr_mem, TYPE(ROM<LEROS_REG_WIDTH, LEROS_INSTR_WIDTH>));
-    SUBCOMPONENT(data_mem, TYPE(Memory<LEROS_REG_WIDTH, LEROS_REG_WIDTH>));
-    SUBCOMPONENT(regs, TYPE(Memory<ceillog2(LEROS_REGS), LEROS_REG_WIDTH>));
+    SUBCOMPONENT(data_mem, TYPE(MemoryAsyncRd<LEROS_REG_WIDTH, LEROS_REG_WIDTH>));
+    SUBCOMPONENT(regs, TYPE(MemoryAsyncRd<ceillog2(LEROS_REGS), LEROS_REG_WIDTH>));
 
     // Multiplexers
     SUBCOMPONENT(reg_out_data_mux, TYPE(EnumMultiplexer<reg_data_src, LEROS_REG_WIDTH>));

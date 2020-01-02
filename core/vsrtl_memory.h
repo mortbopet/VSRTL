@@ -137,6 +137,20 @@ public:
 };
 
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
+class MemorySyncRd : public WrMemory<addrWidth, dataWidth, byteIndexed> {
+public:
+    MemorySyncRd(std::string name, SimComponent* parent) : WrMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {
+        this->setMemory(&m_memory);
+        data_out << [=] { return this->read(this->addr.template value<VSRTL_VT_U>()); };
+    }
+
+    OUTPUTPORT(data_out, dataWidth);
+
+private:
+    std::unordered_map<VSRTL_VT_U, uint8_t> m_memory;
+};
+
+template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
 class RdMemory : public Component, public BaseMemory<addrWidth, dataWidth, byteIndexed> {
     template <unsigned int, unsigned int>
     friend class Memory;
@@ -152,10 +166,10 @@ public:
 };
 
 template <unsigned int addrWidth, unsigned int dataWidth>
-class Memory : public Component {
+class MemoryAsyncRd : public Component {
 public:
     SetGraphicsType(ClockedComponent);
-    Memory(std::string name, SimComponent* parent) : Component(name, parent) {
+    MemoryAsyncRd(std::string name, SimComponent* parent) : Component(name, parent) {
         _wr_mem->setMemory(&m_memory);
         _rd_mem->setMemory(&m_memory);
         addr >> _wr_mem->addr;

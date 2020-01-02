@@ -48,7 +48,7 @@ public:
         };
     }
 
-    SUBCOMPONENT(mem, TYPE(Memory<RV_REG_WIDTH, RV_REG_WIDTH>));
+    SUBCOMPONENT(mem, TYPE(MemoryAsyncRd<RV_REG_WIDTH, RV_REG_WIDTH>));
 
     SIGNAL(wr_width, ceillog2(RV_REG_WIDTH / 8 + 1));
 
