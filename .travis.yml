@@ -4,10 +4,10 @@ cache:
  
 matrix:
   include:
-
-    # - env: VSRTL_PLATFORM='win'
-    #   os: windows
-    #   language: c++
+    - os: windows
+      language: cpp
+      env:
+        - VSRTL_PLATFORM: 'windows'
 
     - env: VSRTL_PLATFORM='mac'
       os: osx
