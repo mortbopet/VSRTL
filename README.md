@@ -1,12 +1,16 @@
 # VSRTL
-[![Build Status](https://travis-ci.org/mortbopet/VSRTL.svg?branch=master)](https://travis-ci.org/mortbopet/VSRTL) [![codecov](https://codecov.io/gh/mortbopet/VSRTL/branch/master/graph/badge.svg)](https://codecov.io/gh/mortbopet/VSRTL)  
+[![Build Status](https://travis-ci.org/mortbopet/VSRTL.svg?branch=master)](https://travis-ci.org/mortbopet/VSRTL)
+[![codecov](https://codecov.io/gh/mortbopet/VSRTL/branch/master/graph/badge.svg)](https://codecov.io/gh/mortbopet/VSRTL)
+[![Gitter](https://badges.gitter.im/Ripes-VSRTL/VSRTL.svg)](https://gitter.im/Ripes-VSRTL/)
+
 ***V**isual **S**imulation of **R**egister **T**ransfer **L**ogic*
 
 VSRTL is a collection of libraries and applications for visualizing simulations of digital circuits.
 VSRTL is intended to be an intuitive HDL simulator which may be used for teaching digital circuits and boolean logic. 
 
 Refer to the [reference section](docs/README.md) for implementation and usage documentation.  
-If you would like to contribute, check the [issues](https://github.com/mortbopet/vsrtl/issues) section - There's plenty of work to be done!
+If you would like to contribute, check the [issues](https://github.com/mortbopet/vsrtl/issues) section - There's plenty of work to be done!  
+Got questions or comments? Head over to the VSRTL [Gitter chat](https://gitter.im/Ripes-VSRTL/).  
 
 <p align="center">
   <img src="https://github.com/mortbopet/vsrtl/blob/master/resources/gif1.gif?raw=true" width=75%/>
