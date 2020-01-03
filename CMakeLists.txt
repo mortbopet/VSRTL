@@ -31,8 +31,8 @@ include_directories(external/cereal/include)
 ## Code Coverage Configuration
 ######################################################################
 
-option(COVERAGE "Enable coverage reporting" OFF)
-if(COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+option(VSRTL_COVERAGE "Enable coverage reporting" OFF)
+if(VSRTL_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   add_library(coverage_config INTERFACE)
   # Add required flags (GCC & LLVM/Clang)
   set(COVERAGE_LIB coverage_config)
@@ -46,30 +46,30 @@ if(COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   else()
     target_link_libraries(coverage_config INTERFACE --coverage)
   endif()
-endif(COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+endif(VSRTL_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 
 ######################################################################
 ## Library setup
 ######################################################################
-set(INTERFACE_LIB ${PROJECT_NAME}_int_lib)
+set(VSRTL_INTERFACE_LIB ${PROJECT_NAME}_int_lib CACHE INTERNAL "")
 add_subdirectory(interface)
-set(CORE_LIB ${PROJECT_NAME}_core_lib)
+set(VSRTL_CORE_LIB ${PROJECT_NAME}_core_lib CACHE INTERNAL "")
 add_subdirectory(core)
-set(GRAPHICS_LIB ${PROJECT_NAME}_gfx_lib)
+set(VSRTL_GRAPHICS_LIB ${PROJECT_NAME}_gfx_lib CACHE INTERNAL "")
 add_subdirectory(graphics)
-set(TEST_LIB ${PROJECT_NAME}_test_lib)
-add_subdirectory(test)
-set(COMPONENTS_LIB ${PROJECT_NAME}_cmp_lib)
+set(VSRTL_COMPONENTS_LIB ${PROJECT_NAME}_cmp_lib CACHE INTERNAL "")
 add_subdirectory(components)
 
+option(VSRTL_BUILD_TESTS "Build the VSRTL test suite" ON)
+if(VSRTL_BUILD_TESTS)
+    set(VSRTL_TEST_LIB ${PROJECT_NAME}_test_lib CACHE INTERNAL "")
+    add_subdirectory(test)
+endif()
 
-
-set(APP_NAME app)
-
-add_executable(${APP_NAME} app.cpp)
-target_link_libraries(${APP_NAME} Qt5::Core Qt5::Widgets)
-target_link_libraries(${APP_NAME} ${CORE_LIB} ${GRAPHICS_LIB} ${COMPONENTS_LIB})
-
-# Final sanity check to verify that C++17 is available in the compiler
-set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 17)
-set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+option(VSRTL_BUILD_APP "Build the VSRTL standalone application" ON)
+if(VSRTL_BUILD_APP)
+    set(APP_NAME VSRTL)
+    add_executable(${APP_NAME} app.cpp)
+    target_link_libraries(${APP_NAME} Qt5::Core Qt5::Widgets)
+    target_link_libraries(${APP_NAME} ${VSRTL_CORE_LIB} ${VSRTL_GRAPHICS_LIB} ${VSRTL_COMPONENTS_LIB})
+endif()
