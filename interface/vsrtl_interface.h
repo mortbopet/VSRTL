@@ -13,7 +13,7 @@
 #include "vsrtl.h"
 #include "vsrtl_gfxobjecttypes.h"
 
-#include "Signals/Signal.h"
+#include "../external/Signals/Signal.h"
 
 namespace vsrtl {
 
