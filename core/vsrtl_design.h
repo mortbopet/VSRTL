@@ -65,7 +65,7 @@ public:
      * Resets the circuit, setting all registers to 0 and propagates the circuit. Constants might have an affect on the
      * circuit in terms of not all component values being 0.
      */
-    void reset() {
+    void reset() override {
         // reset all registers
         // propagate everything combinational
         for (const auto& reg : m_clockedComponents)
