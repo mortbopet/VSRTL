@@ -14,11 +14,14 @@
 namespace vsrtl {
 namespace core {
 
+// An ADDRESSSPACE instance defines a distinct address space, implemented by a sparse array. Multiple memory
+// components may be linked to the same sparse array to provide separate access ports to a shared address space.
+#define ADDRESSSPACE(name) SparseArray* name = this->createMemory()
+
 /**
  * @brief The Design class
  * superclass for all Design descriptions
  */
-
 class Design : public SimDesign {
 public:
     Design(std::string name) : SimDesign(name, nullptr) {}
@@ -60,12 +63,19 @@ public:
         }
     }
 
+    void propagate() override { propagateDesign(); }
+
     /**
      * @brief reset
      * Resets the circuit, setting all registers to 0 and propagates the circuit. Constants might have an affect on the
      * circuit in terms of not all component values being 0.
      */
     void reset() override {
+        // Reset all memories, clearing the sparse arrays and rewriting any initialization data
+        for (const auto& memory : m_memories) {
+            memory->reset();
+        }
+
         // reset all registers
         // propagate everything combinational
         for (const auto& reg : m_clockedComponents)
@@ -170,6 +180,13 @@ public:
         return false;
     }
 
+    SparseArray* createMemory() {
+        auto sptr = std::make_unique<SparseArray>();
+        auto* ptr = sptr.get();
+        m_memories.push_back(std::move(sptr));
+        return ptr;
+    }
+
 private:
     void createComponentGraph() {
         m_componentGraph.clear();
@@ -190,6 +207,8 @@ private:
     std::map<SimComponent*, std::vector<SimComponent*>> m_componentGraph;
     std::set<RegisterBase*> m_registers;
     std::set<ClockedComponent*> m_clockedComponents;
+    std::vector<std::unique_ptr<SparseArray>> m_memories;
+
     bool m_isVerifiedAndInitialized = false;
     std::vector<PortBase*> m_propagationStack;
 };

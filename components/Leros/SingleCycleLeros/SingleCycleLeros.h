@@ -28,6 +28,7 @@ public:
         // Decode
         decode_comp->op >> ctrl_comp->instr_op;
         instr_mem->data_out >> decode_comp->instr;
+        instr_mem->setMemory(m_memory);
 
         // -----------------------------------------------------------------------
         // Control signals
@@ -70,6 +71,8 @@ public:
         alu_comp->res >> mem_out_addr_mux->get(mem_op::rd);
         0 >> mem_out_addr_mux->others();
 
+        data_mem->setMemory(m_memory);
+
         // -----------------------------------------------------------------------
         // Set write-enable of DM to high when the data operation is equal to wr
         mem_out_data_mux->out >> data_mem->data_in;
@@ -92,6 +95,8 @@ public:
         reg_wr_en->out >> regs->wr_en;
         ctrl_comp->reg_op >> reg_wr_en->op1;
         mem_op::wr >> reg_wr_en->op2;
+
+        regs->setMemory(m_regMemory);
 
         // -----------------------------------------------------------------------
         // Instruction memory
@@ -156,6 +161,9 @@ public:
     // Comparators
     SUBCOMPONENT(dm_wr_en, Eq<mem_op::width()>);
     SUBCOMPONENT(reg_wr_en, Eq<mem_op::width()>);
+
+    ADDRESSSPACE(m_memory);
+    ADDRESSSPACE(m_regMemory);
 };
 
 }  // namespace leros

@@ -13,6 +13,8 @@ using namespace core;
 class ContinuousIncrement : public Design {
 public:
     ContinuousIncrement() : Design("Registerfile Tester") {
+        mem->setMemory(m_memory);
+
         idx_reg->out >> mem->addr;
         mem->data_out >> acc_reg->in;
         inc_adder->out >> mem->data_in;
@@ -52,6 +54,8 @@ public:
     SUBCOMPONENT(wr_en_reg, Register<1>);
     SUBCOMPONENT(idx_reg, Register<regSize>);
     SUBCOMPONENT(acc_reg, Register<regSize>);
+
+    ADDRESSSPACE(m_memory);
 };
 
 class WriteSameIdx : public Design {
@@ -63,6 +67,8 @@ public:
         1 >> mem->wr_en;
         4 >> mem->wr_width;
         0x0 >> mem->addr;
+
+        mem->setMemory(m_memory);
     }
     static constexpr unsigned int regs = 32;
     static constexpr unsigned int regWidth = CHAR_BIT * sizeof(VSRTL_VT_U);
@@ -70,6 +76,8 @@ public:
     // Create objects
     SUBCOMPONENT(mem, TYPE(MemorySyncRd<ceillog2(regs), regWidth>));
     SUBCOMPONENT(inc_adder, Adder<regWidth>);
+
+    ADDRESSSPACE(m_memory);
 };
 
 }  // namespace vsrtl

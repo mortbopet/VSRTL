@@ -4,6 +4,7 @@
 #include "vsrtl_component.h"
 #include "vsrtl_defines.h"
 #include "vsrtl_register.h"
+#include "vsrtl_sparsearray.h"
 
 #include "../interface/vsrtl_gfxobjecttypes.h"
 
@@ -19,68 +20,25 @@ struct MemoryEviction {
     VSRTL_VT_U width;
 };
 
-using SparseArrayMemory = std::unordered_map<VSRTL_VT_U, uint8_t>;
-
-static inline void writeMem(SparseArrayMemory* mem, VSRTL_VT_U address, VSRTL_VT_U value,
-                            int size = sizeof(VSRTL_VT_U)) {
-    // writes value from the given address start, and up to $size bytes of
-    // $value
-    for (int i = 0; i < size; i++) {
-        (*mem)[address + i] = value & 0xff;
-        value >>= 8;
-    }
-}
-
-template <bool byteIndexed = true>
-VSRTL_VT_U readMem(SparseArrayMemory* mem, VSRTL_VT_U address) {
-    // Note: If address is not found in memory map, a default constructed object
-    // will be created, and read. in our case uint8_t() = 0
-    if constexpr (byteIndexed) {
-        return ((*mem)[address] | ((*mem)[address + 1] << 8) | ((*mem)[address + 2] << 16) |
-                ((*mem)[address + 3] << 24));
-    } else {
-        return ((*mem)[(address << 2)] | ((*mem)[(address << 2) + 1] << 8) | ((*mem)[(address << 2) + 2] << 16) |
-                ((*mem)[(address << 2) + 3] << 24));
-    }
-}
-
 template <unsigned addrWidth, unsigned dataWidth, bool byteIndexed = true>
 class BaseMemory {
 public:
     BaseMemory() {}
 
-    void setMemory(SparseArrayMemory* mem) { m_memory = mem; }
+    void setMemory(SparseArray* mem) { m_memory = mem; }
 
-    VSRTL_VT_U read(VSRTL_VT_U address) { return readMem<byteIndexed>(m_memory, address); }
+    VSRTL_VT_U read(VSRTL_VT_U address) { return m_memory->readMem<byteIndexed>(address); }
 
     void write(VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
         if constexpr (byteIndexed) {
-            writeMem(m_memory, address, value, size);
+            m_memory->writeMem(address, value, size);
         } else {
-            writeMem(m_memory, address << 2, value, size);
-        }
-    }
-
-    /**
-     * @brief addInitializationMemory
-     * The specified program will be added as a memory segment which will be loaded into this memory once it is reset.
-     */
-    template <typename T>
-    void addInitializationMemory(const VSRTL_VT_U startAddr, T* program, size_t n) {
-        auto& mem = m_initMemories.emplace_back();
-        VSRTL_VT_U addr = startAddr;
-        for (size_t i = 0; i < n; i++) {
-            // Add to initialization memories for future rewriting upon reset
-            writeMem(&mem, addr, program[i], sizeof(T));
-            // Write to active memory
-            write(addr, program[i], sizeof(T));
-            addr += sizeof(T);
+            m_memory->writeMem(address << 2, value, size);
         }
     }
 
 protected:
-    SparseArrayMemory* m_memory = nullptr;
-    std::vector<SparseArrayMemory> m_initMemories;
+    SparseArray* m_memory = nullptr;
 };
 
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
@@ -88,15 +46,7 @@ class WrMemory : public ClockedComponent, public BaseMemory<addrWidth, dataWidth
 public:
     SetGraphicsType(Component);
     WrMemory(std::string name, SimComponent* parent) : ClockedComponent(name, parent) {}
-    void reset() override {
-        this->m_memory->clear();
-        m_rewindstack.clear();
-
-        // Rewrite all initializations to memory
-        for (const auto& m : this->m_initMemories) {
-            this->m_memory->insert(m.begin(), m.end());
-        }
-    }
+    void reset() override { m_rewindstack.clear(); }
 
     void save() override {
         const VSRTL_VT_U addr_v = addr.template value<VSRTL_VT_U>();
@@ -140,7 +90,6 @@ template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = tru
 class MemorySyncRd : public WrMemory<addrWidth, dataWidth, byteIndexed> {
 public:
     MemorySyncRd(std::string name, SimComponent* parent) : WrMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {
-        this->setMemory(&m_memory);
         data_out << [=] { return this->read(this->addr.template value<VSRTL_VT_U>()); };
     }
 
@@ -170,8 +119,6 @@ class MemoryAsyncRd : public Component {
 public:
     SetGraphicsType(ClockedComponent);
     MemoryAsyncRd(std::string name, SimComponent* parent) : Component(name, parent) {
-        _wr_mem->setMemory(&m_memory);
-        _rd_mem->setMemory(&m_memory);
         addr >> _wr_mem->addr;
         wr_en >> _wr_mem->wr_en;
         data_in >> _wr_mem->data_in;
@@ -181,28 +128,25 @@ public:
         _rd_mem->data_out >> data_out;
     }
 
-    SUBCOMPONENT(_wr_mem, TYPE(WrMemory<addrWidth, dataWidth>));
+    void setMemory(SparseArray* mem) {
+        _wr_mem->setMemory(mem);
+        _rd_mem->setMemory(mem);
+    }
+
     SUBCOMPONENT(_rd_mem, TYPE(RdMemory<addrWidth, dataWidth>));
+    SUBCOMPONENT(_wr_mem, TYPE(WrMemory<addrWidth, dataWidth>));
 
     INPUTPORT(addr, addrWidth);
     INPUTPORT(data_in, dataWidth);
     INPUTPORT(wr_en, 1);
     INPUTPORT(wr_width, ceillog2(dataWidth / 8 + 1));  // # bytes
     OUTPUTPORT(data_out, dataWidth);
-
-private:
-    std::unordered_map<VSRTL_VT_U, uint8_t> m_memory;
 };
 
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
 class ROM : public RdMemory<addrWidth, dataWidth, byteIndexed> {
 public:
-    ROM(std::string name, SimComponent* parent) : RdMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {
-        this->setMemory(&m_memory);
-    }
-
-private:
-    std::unordered_map<VSRTL_VT_U, uint8_t> m_memory;
+    ROM(std::string name, SimComponent* parent) : RdMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {}
 };
 
 }  // namespace core

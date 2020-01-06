@@ -401,6 +401,12 @@ public:
     virtual void rewind() = 0;
 
     /**
+     * @brief propagate
+     * Propagate the circuit.
+     */
+    virtual void propagate() = 0;
+
+    /**
      * @brief reset
      * Resets the circuit, setting all registers to 0 and propagates the circuit. Constants might have an affect on the
      * circuit in terms of not all component values being 0.

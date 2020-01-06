@@ -41,7 +41,7 @@ void tst_Leros::incInRegister() {
      * br       -6
      */
     std::vector<unsigned short> program = {0x2000, 0x0901, 0x3000, 0x8FFD};
-    design.instr_mem->addInitializationMemory(0x0, program.data(), program.size());
+    design.m_memory->addInitializationMemory(0x0, program.data(), program.size());
     design.verifyAndInitialize();
 }
 void tst_Leros::incInMemory() {
@@ -63,7 +63,7 @@ void tst_Leros::incInMemory() {
     std::vector<unsigned short> program = {0x2901, 0x3000, 0x5000, 0x2100, 0x7000,
                                            0x6000, 0x0901, 0x7000, 0x2100, 0x8FFC};
 
-    design.instr_mem->addInitializationMemory(0x0, program.data(), program.size());
+    design.m_memory->addInitializationMemory(0x0, program.data(), program.size());
     design.verifyAndInitialize();
 
     constexpr int accTarget = 10;
@@ -101,7 +101,7 @@ void tst_Leros::incInAccumulator() {
      * br -2
      */
     std::vector<unsigned short> program = {0x0901, 0x8FFF};
-    design.instr_mem->addInitializationMemory(0x0, program.data(), program.size());
+    design.m_memory->addInitializationMemory(0x0, program.data(), program.size());
     design.verifyAndInitialize();
 
     constexpr int accTarget = 10;
