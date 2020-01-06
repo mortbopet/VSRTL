@@ -16,4 +16,3 @@ set_target_properties(${VSRTL_COMPONENTS_LIB} PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(${VSRTL_COMPONENTS_LIB} ${VSRTL_CORE})
 
 add_subdirectory(Leros)
-add_subdirectory(RISC-V)
