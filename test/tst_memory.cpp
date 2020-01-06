@@ -1,6 +1,6 @@
 #include <QtTest/QTest>
 
-#include "vsrtl_binutils.h"
+#include "../interface/vsrtl_binutils.h"
 #include "vsrtl_core.h"
 
 namespace vsrtl {
