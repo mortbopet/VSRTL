@@ -87,7 +87,7 @@ void VSRTLWidget::registerShapes() const {
                                            QRect(0, 0, 3, 3)});
 
     // Signals
-    ShapeRegister::registerComponentShape(GraphicsIDFor(Signal),
+    ShapeRegister::registerComponentShape(GraphicsIDFor(Wire),
                                           {[](QTransform t) {
                                                QPainterPath shape;
                                                shape.addRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))));

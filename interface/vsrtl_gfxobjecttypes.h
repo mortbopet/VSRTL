@@ -55,7 +55,7 @@ DefineGraphicsType(Register, L({"in", "out"}));
 
 DefineGraphicsType(RegisterBank, {});
 
-DefineGraphicsType(Signal, {});
+DefineGraphicsType(Wire, {});
 
 DefineGraphicsType(Constant, {});
 
