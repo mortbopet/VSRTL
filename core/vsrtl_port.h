@@ -9,7 +9,7 @@
 #include <memory>
 #include <type_traits>
 
-#include "vsrtl_binutils.h"
+#include "../interface/vsrtl_binutils.h"
 #include "vsrtl_defines.h"
 
 namespace vsrtl {

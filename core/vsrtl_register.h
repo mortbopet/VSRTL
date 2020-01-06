@@ -1,7 +1,7 @@
 #ifndef REGISTER_H
 #define REGISTER_H
 
-#include "vsrtl_binutils.h"
+#include "../interface/vsrtl_binutils.h"
 #include "vsrtl_component.h"
 #include "vsrtl_port.h"
 

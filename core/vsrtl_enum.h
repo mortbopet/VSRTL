@@ -1,7 +1,7 @@
 #ifndef VSRTL_ENUM_H
 #define VSRTL_ENUM_H
 
-#include "vsrtl_binutils.h"
+#include "../interface/vsrtl_binutils.h"
 
 #include "../external/better-enums/enum.h"
 

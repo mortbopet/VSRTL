@@ -6,10 +6,10 @@
 #include "vsrtl_portgraphic.h"
 
 #include "cereal/cereal.hpp"
-#include "cereal/include/cereal/types/map.hpp"
-#include "cereal/include/cereal/types/string.hpp"
-#include "cereal/include/cereal/types/utility.hpp"
-#include "cereal/include/cereal/types/vector.hpp"
+#include "cereal/types/map.hpp"
+#include "cereal/types/string.hpp"
+#include "cereal/types/utility.hpp"
+#include "cereal/types/vector.hpp"
 
 #include <QPen>
 #include <memory>

@@ -20,13 +20,6 @@ find_package(Qt5Widgets CONFIG REQUIRED)
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
 include_directories(${Qt5Core_INCLUDE_DIRS})
 
-# External project includes
-# Better enums, Signals
-include_directories(external)
-
-# Cereal
-include_directories(external/cereal/include)
-
 ######################################################################
 ## Code Coverage Configuration
 ######################################################################

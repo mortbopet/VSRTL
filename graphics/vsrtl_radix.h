@@ -1,8 +1,7 @@
 #ifndef VSRTL_Radix_H
 #define VSRTL_Radix_H
 
-#include "vsrtl_binutils.h"
-#include "vsrtl_defines.h"
+#include "../interface/vsrtl_binutils.h"
 
 #include "../interface/vsrtl.h"
 #include "../interface/vsrtl_binutils.h"
