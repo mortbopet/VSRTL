@@ -12,7 +12,7 @@
 
 namespace vsrtl {
 
-VSRTLWidget::VSRTLWidget(SimDesign& arch, QWidget* parent) : m_arch(arch), QWidget(parent), ui(new Ui::VSRTLWidget) {
+VSRTLWidget::VSRTLWidget(QWidget* parent) : QWidget(parent), ui(new Ui::VSRTLWidget) {
     ui->setupUi(this);
 
     // Register shapes for vsrtl-core provided components;
@@ -25,8 +25,15 @@ VSRTLWidget::VSRTLWidget(SimDesign& arch, QWidget* parent) : m_arch(arch), QWidg
     ui->viewLayout->addWidget(m_view);
     connect(m_scene, &QGraphicsScene::selectionChanged, this, (&VSRTLWidget::handleSceneSelectionChanged));
     m_scene->setBackgroundBrush(QBrush(BACKGROUND_COLOR));
+}
 
-    initializeDesign(arch);
+void VSRTLWidget::setDesign(SimDesign* design) {
+    if (m_topLevelComponent) {
+        // Clear previous design
+        m_topLevelComponent->deleteLater();
+    }
+    m_design = design;
+    initializeDesign();
 }
 
 VSRTLWidget::~VSRTLWidget() {
@@ -195,14 +202,14 @@ void VSRTLWidget::registerShapes() const {
                                QRect(0, 0, 2, 5)});
 }
 
-void VSRTLWidget::initializeDesign(SimDesign& arch) {
+void VSRTLWidget::initializeDesign() {
     // Verify the design in case user forgot to
-    arch.verifyAndInitialize();
+    m_design->verifyAndInitialize();
 
     // Create a ComponentGraphic for the top component. This will expand the component tree and create graphics for all
     // ports, wires etc. within the design. This is done through the initialize call, which must be called after the
     // item has been added to the scene.
-    m_topLevelComponent = new ComponentGraphic(arch, nullptr);
+    m_topLevelComponent = new ComponentGraphic(*m_design, nullptr);
     addComponent(m_topLevelComponent);
     m_topLevelComponent->initialize();
     // At this point, all graphic items have been created, and the post scene construction initialization may take
@@ -228,25 +235,25 @@ void VSRTLWidget::expandAllComponents(ComponentGraphic* fromThis) {
 }
 
 void VSRTLWidget::checkCanRewind() {
-    if (m_designCanrewind != m_arch.canrewind()) {
+    if (m_designCanrewind != m_design->canrewind()) {
         // Rewind state just changed, notify listeners
-        m_designCanrewind = m_arch.canrewind();
+        m_designCanrewind = m_design->canrewind();
         emit canrewind(m_designCanrewind);
     }
 }
 
 void VSRTLWidget::clock() {
-    m_arch.clock();
+    m_design->clock();
     checkCanRewind();
 }
 
 void VSRTLWidget::rewind() {
-    m_arch.rewind();
+    m_design->rewind();
     checkCanRewind();
 }
 
 void VSRTLWidget::reset() {
-    m_arch.reset();
+    m_design->reset();
     checkCanRewind();
 }
 

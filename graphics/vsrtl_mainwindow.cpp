@@ -21,7 +21,8 @@ namespace vsrtl {
 MainWindow::MainWindow(SimDesign& arch, QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     setWindowState(Qt::WindowMaximized);
-    m_vsrtlWidget = new VSRTLWidget(arch, this);
+    m_vsrtlWidget = new VSRTLWidget(this);
+    m_vsrtlWidget->setDesign(&arch);
 
     m_netlist = new Netlist(arch, this);
 

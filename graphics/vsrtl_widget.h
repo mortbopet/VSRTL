@@ -20,11 +20,13 @@ class VSRTLWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit VSRTLWidget(SimDesign& arch, QWidget* parent = nullptr);
+    explicit VSRTLWidget(QWidget* parent = nullptr);
     ~VSRTLWidget();
 
     void addComponent(ComponentGraphic* g);
     void expandAllComponents(ComponentGraphic* fromThis = nullptr);
+
+    void setDesign(SimDesign* design);
 
 public slots:
     void clock();
@@ -50,7 +52,7 @@ private:
 
     void registerShapes() const;
 
-    void initializeDesign(SimDesign& arch);
+    void initializeDesign();
     Ui::VSRTLWidget* ui;
 
     vsrtl::ComponentGraphic* m_topLevelComponent = nullptr;
@@ -58,7 +60,7 @@ private:
     VSRTLView* m_view;
     VSRTLScene* m_scene;
 
-    SimDesign& m_arch;
+    SimDesign* m_design;
 };
 
 }  // namespace vsrtl
