@@ -251,18 +251,24 @@ void VSRTLWidget::checkCanRewind() {
 }
 
 void VSRTLWidget::clock() {
-    m_design->clock();
-    checkCanRewind();
+    if (m_design) {
+        m_design->clock();
+        checkCanRewind();
+    }
 }
 
 void VSRTLWidget::rewind() {
-    m_design->rewind();
-    checkCanRewind();
+    if (m_design) {
+        m_design->rewind();
+        checkCanRewind();
+    }
 }
 
 void VSRTLWidget::reset() {
-    m_design->reset();
-    checkCanRewind();
+    if (m_design) {
+        m_design->reset();
+        checkCanRewind();
+    }
 }
 
 void VSRTLWidget::addComponent(ComponentGraphic* g) {
