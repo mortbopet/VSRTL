@@ -44,6 +44,10 @@ void VSRTLWidget::setDesign(SimDesign* design) {
     initializeDesign();
 }
 
+void VSRTLWidget::setOutputPortValuesVisible(bool visible) {
+    m_scene->setPortValuesVisibleForType(PortType::out, visible);
+}
+
 VSRTLWidget::~VSRTLWidget() {
     delete ui;
 }
