@@ -27,6 +27,14 @@ VSRTLWidget::VSRTLWidget(QWidget* parent) : QWidget(parent), ui(new Ui::VSRTLWid
     m_scene->setBackgroundBrush(QBrush(BACKGROUND_COLOR));
 }
 
+void VSRTLWidget::clearDesign() {
+    if (m_topLevelComponent) {
+        // Clear previous design
+        m_topLevelComponent->deleteLater();
+    }
+    m_design = nullptr;
+}
+
 void VSRTLWidget::setDesign(SimDesign* design) {
     if (m_topLevelComponent) {
         // Clear previous design

@@ -27,6 +27,7 @@ public:
     void expandAllComponents(ComponentGraphic* fromThis = nullptr);
 
     void setDesign(SimDesign* design);
+    void clearDesign();
 
 public slots:
     void clock();
