@@ -31,7 +31,7 @@ public:
      * Simulates clocking the circuit. Registers are clocked and the propagation algorithm is run
      * @pre A call to propagate() must be done, to set the initial state of the circuit
      */
-    void clock() {
+    void clock() override {
         if (!m_isVerifiedAndInitialized) {
             throw std::runtime_error("Design was not verified and initialized before clocking.");
         }
@@ -49,7 +49,7 @@ public:
         propagateDesign();
     }
 
-    void rewind() {
+    void rewind() override {
         if (canrewind()) {
             if (!m_isVerifiedAndInitialized) {
                 throw std::runtime_error("Design was not verified and initialized before rewinding.");
@@ -84,7 +84,7 @@ public:
         m_rewindstackCount = 0;
     }
 
-    inline bool canrewind() const { return m_rewindstackCount != 0; }
+    inline bool canrewind() const override { return m_rewindstackCount != 0; }
 
     void createPropagationStack() {
         // The circuit is traversed to find the sequence of which ports may be propagated, such that all input
@@ -99,7 +99,7 @@ public:
             p->setPortValue();
     }
 
-    void setSynchronousValue(SimSynchronous* c, VSRTL_VT_U addr, VSRTL_VT_U value) {
+    void setSynchronousValue(SimSynchronous* c, VSRTL_VT_U addr, VSRTL_VT_U value) override {
         c->forceValue(addr, value);
         // Given the new output value of the register, the circuit must be repropagated
         propagateDesign();
@@ -110,7 +110,7 @@ public:
      * Calls verifyDesign() to ensure that all the required inputs for each initialized object have been set, and
      * propagates the circuit to set the initial state.
      */
-    void verifyAndInitialize() {
+    void verifyAndInitialize() override {
         if (m_isVerifiedAndInitialized)
             return;
 
