@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../interface/vsrtl.h"
 #include <map>
 #include <unordered_map>
 #include <vector>
+#include "../interface/vsrtl.h"
 
 namespace vsrtl {
 struct SparseArray {
@@ -43,11 +43,10 @@ struct SparseArray {
         }
     }
 
-    void clearInitializationMemories(){
-        initializationMemories.clear();
-    }
+    void clearInitializationMemories() { initializationMemories.clear(); }
 
     void reset() {
+        data.clear();
         for (const auto& mem : initializationMemories) {
             for (const auto& memData : mem.data) {
                 writeMem(memData.first, memData.second, sizeof(memData.second));
@@ -58,4 +57,4 @@ struct SparseArray {
     std::unordered_map<VSRTL_VT_U, uint8_t> data;
     std::vector<SparseArray> initializationMemories;
 };
-}
+}  // namespace vsrtl
