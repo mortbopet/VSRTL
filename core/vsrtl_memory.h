@@ -66,10 +66,7 @@ public:
         }
     }
 
-    void forceValue(VSRTL_VT_U addr, VSRTL_VT_U value) override {
-        assert(false && "todo: Forcing values on the rewind stack?");
-        this->write(addr, value);
-    }
+    void forceValue(VSRTL_VT_U addr, VSRTL_VT_U value) override { this->write(addr, value); }
 
     INPUTPORT(addr, addrWidth);
     INPUTPORT(data_in, dataWidth);
