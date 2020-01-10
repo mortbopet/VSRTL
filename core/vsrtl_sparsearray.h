@@ -28,6 +28,8 @@ struct SparseArray {
         }
     }
 
+    bool contains(uint32_t address) const { return data.count(address) > 0; }
+
     /**
      * @brief addInitializationMemory
      * The specified program will be added as a memory segment which will be loaded into this memory once it is reset.
