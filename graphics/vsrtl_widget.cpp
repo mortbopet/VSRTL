@@ -246,32 +246,36 @@ void VSRTLWidget::expandAllComponents(ComponentGraphic* fromThis) {
     fromThis->placeAndRouteSubcomponents();
 }
 
-void VSRTLWidget::checkCanRewind() {
+bool VSRTLWidget::isRewindable() {
+    if (!m_design)
+        return false;
+
     if (m_designCanrewind != m_design->canrewind()) {
         // Rewind state just changed, notify listeners
         m_designCanrewind = m_design->canrewind();
         emit canrewind(m_designCanrewind);
     }
+    return m_designCanrewind;
 }
 
 void VSRTLWidget::clock() {
     if (m_design) {
         m_design->clock();
-        checkCanRewind();
+        isRewindable();
     }
 }
 
 void VSRTLWidget::rewind() {
     if (m_design) {
         m_design->rewind();
-        checkCanRewind();
+        isRewindable();
     }
 }
 
 void VSRTLWidget::reset() {
     if (m_design) {
         m_design->reset();
-        checkCanRewind();
+        isRewindable();
     }
 }
 
