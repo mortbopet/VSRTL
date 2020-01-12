@@ -17,15 +17,29 @@ struct SparseArray {
     }
 
     template <bool byteIndexed = true>
-    VSRTL_VT_U readMem(VSRTL_VT_U address) {
-        // Note: If address is not found in memory map, a default constructed object
-        // will be created, and read. in our case uint8_t() = 0
-        if constexpr (byteIndexed) {
-            return (data[address] | (data[address + 1] << 8) | (data[address + 2] << 16) | (data[address + 3] << 24));
-        } else {
-            return (data[(address << 2)] | (data[(address << 2) + 1] << 8) | (data[(address << 2) + 2] << 16) |
-                    (data[(address << 2) + 3] << 24));
+    VSRTL_VT_U readMem(VSRTL_VT_U address, unsigned width = 4) {
+        if constexpr (!byteIndexed)
+            address <<= 2;
+
+        VSRTL_VT_U value = 0;
+        for (unsigned i = 0; i < width; i++)
+            value |= data[address++] << (i * CHAR_BIT);
+
+        return value;
+    }
+
+    template <bool byteIndexed = true>
+    VSRTL_VT_U readMemConst(VSRTL_VT_U address, unsigned width = 4) const {
+        if constexpr (!byteIndexed)
+            address <<= 2;
+
+        VSRTL_VT_U value = 0;
+        for (unsigned i = 0; i < width; i++) {
+            value |= contains(address) ? data.at(address) << (i * CHAR_BIT) : 0;
+            address++;
         }
+
+        return value;
     }
 
     bool contains(uint32_t address) const { return data.count(address) > 0; }
