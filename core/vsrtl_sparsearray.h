@@ -6,6 +6,8 @@
 #include "../interface/vsrtl.h"
 
 namespace vsrtl {
+namespace core {
+
 struct SparseArray {
     void writeMem(VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
         // writes value from the given address start, and up to $size bytes of
@@ -73,4 +75,5 @@ struct SparseArray {
     std::unordered_map<VSRTL_VT_U, uint8_t> data;
     std::vector<SparseArray> initializationMemories;
 };
+}  // namespace core
 }  // namespace vsrtl
