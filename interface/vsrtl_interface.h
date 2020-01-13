@@ -391,14 +391,14 @@ public:
      * Simulates clocking the circuit. Registers are clocked and the propagation algorithm is run
      * @pre A call to propagate() must be done, to set the initial state of the circuit
      */
-    virtual void clock() = 0;
+    virtual void clock() { m_cycleCount++; }
 
     /**
      * @brief rewind
      * Undo the last clock operation. Registers will assert their previous state value. Memory elements will undo their
      * last transaction. The circuit shall be repropagated and assume its previous-cycle state.
      */
-    virtual void rewind() = 0;
+    virtual void rewind() { m_cycleCount--; }
 
     /**
      * @brief propagate
@@ -411,7 +411,7 @@ public:
      * Resets the circuit, setting all registers to 0 and propagates the circuit. Constants might have an affect on the
      * circuit in terms of not all component values being 0.
      */
-    virtual void reset() = 0;
+    virtual void reset() { m_cycleCount = 0; }
 
     /**
      * @brief canrewind
@@ -429,7 +429,12 @@ public:
         return getSubComponents([=](SimComponent& c) { return c.isSynchronous(); });
     }
 
+    unsigned getCycleCount() const { return m_cycleCount; }
+
     virtual void setSynchronousValue(SimSynchronous* c, VSRTL_VT_U addr, VSRTL_VT_U value) = 0;
+
+protected:
+    unsigned m_cycleCount = 0;
 };
 
 }  // namespace vsrtl

@@ -47,6 +47,7 @@ public:
         }
 
         propagateDesign();
+        SimDesign::clock();
     }
 
     void rewind() override {
@@ -61,6 +62,7 @@ public:
             m_rewindstackCount--;
             propagateDesign();
         }
+        SimDesign::rewind();
     }
 
     void propagate() override { propagateDesign(); }
@@ -82,6 +84,7 @@ public:
             reg->reset();
         propagateDesign();
         m_rewindstackCount = 0;
+        SimDesign::reset();
     }
 
     inline bool canrewind() const override { return m_rewindstackCount != 0; }
