@@ -46,10 +46,13 @@ public:
         out << ([=] { return m_savedValue; });
     }
 
+    void setInitValue(VSRTL_VT_U value) { m_initvalue = value; }
+
     void reset() override {
-        m_savedValue = 0;
+        m_savedValue = m_initvalue;
         m_rewindstack.clear();
     }
+
     void save() override {
         saveToStack();
         m_savedValue = in.template value<VSRTL_VT_U>();
@@ -83,7 +86,7 @@ protected:
     }
 
     VSRTL_VT_U m_savedValue = 0;
-
+    VSRTL_VT_U m_initvalue = 0;
     std::deque<VSRTL_VT_U> m_rewindstack;
 };
 
