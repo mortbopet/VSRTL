@@ -94,7 +94,9 @@ public:
         }
         if (m_value != prePropagateValue) {
             // Signal all watcher of this port that the port value changed
-            changed.Emit();
+            if (getDesign()->signalsEnabled()) {
+                changed.Emit();
+            }
         }
     }
 

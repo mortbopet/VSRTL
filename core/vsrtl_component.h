@@ -174,7 +174,9 @@ public:
 
             // if any internal values have changed...
             // @todo: implement granular change signal emission
-            changed.Emit();
+            if (getDesign()->signalsEnabled()) {
+                changed.Emit();
+            }
         }
 
         // Signal all connected components of the current component to propagate

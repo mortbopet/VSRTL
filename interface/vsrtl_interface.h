@@ -428,6 +428,10 @@ public:
      */
     virtual void verifyAndInitialize() = 0;
 
+    void setEnableSignals(bool state) { m_emitsSignals = state; }
+
+    bool signalsEnabled() const { return m_emitsSignals; }
+
     virtual std::vector<SimComponent*> getRegisters() const {
         return getSubComponents([=](SimComponent& c) { return c.isSynchronous(); });
     }
@@ -438,6 +442,7 @@ public:
 
 protected:
     unsigned m_cycleCount = 0;
+    bool m_emitsSignals = true;
 };
 
 }  // namespace vsrtl
