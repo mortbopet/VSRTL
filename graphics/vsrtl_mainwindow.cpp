@@ -9,6 +9,7 @@
 #include <QHeaderView>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <QThread>
 #include <QTimer>
 #include <QToolBar>
 
@@ -106,6 +107,19 @@ void MainWindow::createToolbar() {
     stepSpinBox->setValue(100);
 
     simulatorToolBar->addWidget(stepSpinBox);
+
+    QAction* runAct = new QAction(clockIcon, "Run", this);
+    runAct->setCheckable(true);
+    runAct->setChecked(false);
+    connect(runAct, &QAction::triggered, [this](bool state) {
+        if (state) {
+            auto thread = QThread::create([=] { this->m_vsrtlWidget->run(); });
+            thread->start();
+        } else {
+            this->m_vsrtlWidget->stop();
+        }
+    });
+    simulatorToolBar->addAction(runAct);
 
     simulatorToolBar->addSeparator();
 

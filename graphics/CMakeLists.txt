@@ -30,7 +30,7 @@ include_directories("../core/")
 
 set_target_properties(${VSRTL_GRAPHICS_LIB} PROPERTIES LINKER_LANGUAGE CXX)
 
-target_link_libraries(${VSRTL_GRAPHICS_LIB} ${VSRTL_CORE} ${VSRTL_INTERFACE_LIB})
+target_link_libraries(${VSRTL_GRAPHICS_LIB} ${VSRTL_CORE} ${VSRTL_INTERFACE_LIB} ${CMAKE_THREAD_LIBS_INIT})
 
 if(VSRTL_COVERAGE)
     target_link_libraries(${VSRTL_GRAPHICS_LIB} ${COVERAGE_LIB})

@@ -31,6 +31,8 @@ public:
     bool isRewindable();
 
 public slots:
+    void run();
+    void stop() { m_stop = true; }
     void clock();
     void reset();
     void rewind();
@@ -50,6 +52,8 @@ private slots:
 private:
     // State variable for reducing the number of emitted canrewind signals
     bool m_designCanrewind = false;
+
+    bool m_stop = false;
 
     void registerShapes() const;
 

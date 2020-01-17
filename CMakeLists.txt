@@ -15,6 +15,7 @@ set(CMAKE_AUTORCC ON)
 # Find Qt5Core and Qt5Widgets
 find_package(Qt5Core REQUIRED)
 find_package(Qt5Widgets CONFIG REQUIRED)
+find_package(Threads REQUIRED)
 
 # Finding Qt includes
 include_directories(${Qt5Widgets_INCLUDE_DIRS})

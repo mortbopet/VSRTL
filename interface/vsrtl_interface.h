@@ -436,12 +436,12 @@ public:
         return getSubComponents([=](SimComponent& c) { return c.isSynchronous(); });
     }
 
-    unsigned getCycleCount() const { return m_cycleCount; }
+    long long getCycleCount() const { return m_cycleCount; }
 
     virtual void setSynchronousValue(SimSynchronous* c, VSRTL_VT_U addr, VSRTL_VT_U value) = 0;
 
 protected:
-    unsigned m_cycleCount = 0;
+    long long m_cycleCount = 0;
     bool m_emitsSignals = true;
 };
 

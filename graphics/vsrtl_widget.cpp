@@ -265,6 +265,18 @@ void VSRTLWidget::clock() {
     }
 }
 
+void VSRTLWidget::run() {
+    if (m_design) {
+        m_design->setEnableSignals(false);
+        while (!m_stop) {
+            m_design->clock();
+        }
+        m_stop = false;
+        m_design->setEnableSignals(true);
+        m_scene->update();
+    }
+}
+
 void VSRTLWidget::rewind() {
     if (m_design) {
         m_design->rewind();
