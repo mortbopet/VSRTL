@@ -29,6 +29,8 @@ public:
     SimBase(std::string name, SimBase* parent) : m_name(name), m_parent(parent) {}
     virtual ~SimBase() {}
 
+    SimDesign* getDesign();
+
     template <typename T = std::runtime_error>
     void throwError(const std::string message) const {
         throw T(getName() + ": " + message);
@@ -60,6 +62,7 @@ public:
 protected:
     std::string m_name;
     SimBase* m_parent = nullptr;
+    SimDesign* m_design = nullptr;
     std::string m_displayName;
     void* m_graphicObject = nullptr;
 };
