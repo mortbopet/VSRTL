@@ -82,14 +82,14 @@ void tst_Leros::incInMemory() {
         design.clock();
     }
 
-    // Rewind
+    // Reverse
     for (unsigned int i = accTarget - 1; i >= accTarget / 2; i--) {
-        design.rewind();
-        design.rewind();
-        design.rewind();
-        design.rewind();
+        design.reverse();
+        design.reverse();
+        design.reverse();
+        design.reverse();
         QCOMPARE(design.acc_reg->out.uValue(), i);
-        design.rewind();
+        design.reverse();
     }
 }
 
@@ -115,11 +115,11 @@ void tst_Leros::incInAccumulator() {
         design.clock();
     }
 
-    // Rewind
+    // Reverse
     for (uint32_t i = accTarget; i >= accTarget / 2; i--) {
         QVERIFY(design.acc_reg->out.uValue() == i);
-        design.rewind();
-        design.rewind();
+        design.reverse();
+        design.reverse();
     }
 }
 

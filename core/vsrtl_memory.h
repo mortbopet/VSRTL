@@ -46,7 +46,7 @@ class WrMemory : public ClockedComponent, public BaseMemory<addrWidth, dataWidth
 public:
     SetGraphicsType(Component);
     WrMemory(std::string name, SimComponent* parent) : ClockedComponent(name, parent) {}
-    void reset() override { m_rewindstack.clear(); }
+    void reset() override { m_reverseStack.clear(); }
 
     void save() override {
         const VSRTL_VT_U addr_v = addr.template value<VSRTL_VT_U>();
@@ -58,11 +58,11 @@ public:
             this->write(addr_v, data_in_v, wr_width.uValue());
     }
 
-    void rewind() override {
-        if (m_rewindstack.size() > 0) {
-            auto lastEviction = m_rewindstack.front();
+    void reverse() override {
+        if (m_reverseStack.size() > 0) {
+            auto lastEviction = m_reverseStack.front();
             this->write(lastEviction.addr, lastEviction.data, lastEviction.width);
-            m_rewindstack.pop_front();
+            m_reverseStack.pop_front();
         }
     }
 
@@ -74,13 +74,13 @@ public:
     INPUTPORT(wr_en, 1);
 
     void saveToStack(MemoryEviction v) {
-        m_rewindstack.push_front(v);
-        if (m_rewindstack.size() > rewindStackSize()) {
-            m_rewindstack.pop_back();
+        m_reverseStack.push_front(v);
+        if (m_reverseStack.size() > reverseStackSize()) {
+            m_reverseStack.pop_back();
         }
     }
 
-    std::deque<MemoryEviction> m_rewindstack;
+    std::deque<MemoryEviction> m_reverseStack;
 };
 
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>

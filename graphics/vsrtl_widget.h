@@ -28,21 +28,21 @@ public:
 
     void setDesign(SimDesign* design);
     void clearDesign();
-    bool isRewindable();
+    bool isReversible();
 
 public slots:
     void run();
     void stop() { m_stop = true; }
     void clock();
     void reset();
-    void rewind();
+    void reverse();
     void setOutputPortValuesVisible(bool visible);
 
     // Selections which are imposed on the scene from external objects (ie. selecting items in the netlist)
     void handleSelectionChanged(const std::vector<SimComponent*>& selected, std::vector<SimComponent*>& deselected);
 
 signals:
-    void canrewind(bool);
+    void canReverse(bool);
     void componentSelectionChanged(const std::vector<SimComponent*>&);
     void portSelectionChanged(const std::vector<SimPort*>&);
 
@@ -50,8 +50,8 @@ private slots:
     void handleSceneSelectionChanged();
 
 private:
-    // State variable for reducing the number of emitted canrewind signals
-    bool m_designCanrewind = false;
+    // State variable for reducing the number of emitted canReverse signals
+    bool m_designCanreverse = false;
 
     bool m_stop = false;
 

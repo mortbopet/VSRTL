@@ -41,28 +41,28 @@ public:
             reg->save();
         }
 
-        // Increment rewind-stack if possible
-        if (m_rewindstackCount < ClockedComponent::rewindStackSize()) {
-            m_rewindstackCount++;
+        // Increment reverse-stack if possible
+        if (m_reverseStackCount < ClockedComponent::reverseStackSize()) {
+            m_reverseStackCount++;
         }
 
         propagateDesign();
         SimDesign::clock();
     }
 
-    void rewind() override {
-        if (canrewind()) {
+    void reverse() override {
+        if (canReverse()) {
             if (!m_isVerifiedAndInitialized) {
-                throw std::runtime_error("Design was not verified and initialized before rewinding.");
+                throw std::runtime_error("Design was not verified and initialized before reversing.");
             }
             // Clock registers
             for (const auto& reg : m_clockedComponents) {
-                reg->rewind();
+                reg->reverse();
             }
-            m_rewindstackCount--;
+            m_reverseStackCount--;
             propagateDesign();
         }
-        SimDesign::rewind();
+        SimDesign::reverse();
     }
 
     void propagate() override { propagateDesign(); }
@@ -83,11 +83,11 @@ public:
         for (const auto& reg : m_clockedComponents)
             reg->reset();
         propagateDesign();
-        m_rewindstackCount = 0;
+        m_reverseStackCount = 0;
         SimDesign::reset();
     }
 
-    inline bool canrewind() const override { return m_rewindstackCount != 0; }
+    inline bool canReverse() const override { return m_reverseStackCount != 0; }
 
     void createPropagationStack() {
         // The circuit is traversed to find the sequence of which ports may be propagated, such that all input
@@ -206,7 +206,7 @@ private:
         }
     }
 
-    unsigned int m_rewindstackCount = 0;
+    unsigned int m_reverseStackCount = 0;
     std::map<SimComponent*, std::vector<SimComponent*>> m_componentGraph;
     std::set<RegisterBase*> m_registers;
     std::set<ClockedComponent*> m_clockedComponents;

@@ -374,7 +374,7 @@ public:
     SimSynchronous(SimComponent* parent) : m_parent(parent) { m_parent->registerSynchronous(this); }
     virtual ~SimSynchronous() {}
     virtual void reset() = 0;
-    virtual void rewind() = 0;
+    virtual void reverse() = 0;
     virtual void forceValue(VSRTL_VT_U addr, VSRTL_VT_U value) = 0;
 
 private:
@@ -397,11 +397,11 @@ public:
     virtual void clock() { m_cycleCount++; }
 
     /**
-     * @brief rewind
+     * @brief reverse
      * Undo the last clock operation. Registers will assert their previous state value. Memory elements will undo their
      * last transaction. The circuit shall be repropagated and assume its previous-cycle state.
      */
-    virtual void rewind() { m_cycleCount--; }
+    virtual void reverse() { m_cycleCount--; }
 
     /**
      * @brief propagate
@@ -417,10 +417,10 @@ public:
     virtual void reset() { m_cycleCount = 0; }
 
     /**
-     * @brief canrewind
-     * @return is the simulator able to rewind?
+     * @brief canReverse
+     * @return is the simulator able to reverse?
      */
-    virtual bool canrewind() const = 0;
+    virtual bool canReverse() const = 0;
 
     /**
      * @brief verifyAndInitialize

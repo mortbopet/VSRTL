@@ -59,16 +59,16 @@ void MainWindow::createToolbar() {
     resetAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
     simulatorToolBar->addAction(resetAct);
 
-    const QIcon rewindIcon = QIcon(":/icons/rewind.svg");
-    QAction* rewindAct = new QAction(rewindIcon, "Rewind", this);
-    connect(rewindAct, &QAction::triggered, [this] {
-        m_vsrtlWidget->rewind();
+    const QIcon reverseIcon = QIcon(":/icons/reverse.svg");
+    QAction* reverseAct = new QAction(reverseIcon, "Reverse", this);
+    connect(reverseAct, &QAction::triggered, [this] {
+        m_vsrtlWidget->reverse();
         m_netlist->reloadNetlist();
     });
-    rewindAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Z));
-    simulatorToolBar->addAction(rewindAct);
-    rewindAct->setEnabled(false);
-    connect(m_vsrtlWidget, &VSRTLWidget::canrewind, rewindAct, &QAction::setEnabled);
+    reverseAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Z));
+    simulatorToolBar->addAction(reverseAct);
+    reverseAct->setEnabled(false);
+    connect(m_vsrtlWidget, &VSRTLWidget::canReverse, reverseAct, &QAction::setEnabled);
 
     const QIcon clockIcon = QIcon(":/icons/step.svg");
     QAction* clockAct = new QAction(clockIcon, "Clock", this);

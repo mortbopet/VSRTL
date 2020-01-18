@@ -19,9 +19,9 @@ public:
     ClockedComponent(std::string name, SimComponent* parent) : Component(name, parent), SimSynchronous(this) {}
     virtual void save() = 0;
 
-    static unsigned int& rewindStackSize() {
-        static unsigned int s_rewindstackSize = 100;
-        return s_rewindstackSize;
+    static unsigned int& reverseStackSize() {
+        static unsigned int s_reverseStackSize = 100;
+        return s_reverseStackSize;
     }
 };
 
@@ -50,7 +50,7 @@ public:
 
     void reset() override {
         m_savedValue = m_initvalue;
-        m_rewindstack.clear();
+        m_reverseStack.clear();
     }
 
     void save() override {
@@ -61,13 +61,13 @@ public:
     void forceValue(VSRTL_VT_U /* addr */, VSRTL_VT_U value) override {
         // Sign-extension with unsigned type forces width truncation to m_width bits
         m_savedValue = signextend<VSRTL_VT_U, W>(value);
-        // Forced values are a modification of the current state and thus not pushed onto the rewind stack
+        // Forced values are a modification of the current state and thus not pushed onto the reverse stack
     }
 
-    void rewind() override {
-        if (m_rewindstack.size() > 0) {
-            m_savedValue = m_rewindstack.front();
-            m_rewindstack.pop_front();
+    void reverse() override {
+        if (m_reverseStack.size() > 0) {
+            m_savedValue = m_reverseStack.front();
+            m_reverseStack.pop_front();
         }
     }
 
@@ -79,15 +79,15 @@ public:
 
 protected:
     void saveToStack() {
-        m_rewindstack.push_front(m_savedValue);
-        if (m_rewindstack.size() > rewindStackSize()) {
-            m_rewindstack.pop_back();
+        m_reverseStack.push_front(m_savedValue);
+        if (m_reverseStack.size() > reverseStackSize()) {
+            m_reverseStack.pop_back();
         }
     }
 
     VSRTL_VT_U m_savedValue = 0;
     VSRTL_VT_U m_initvalue = 0;
-    std::deque<VSRTL_VT_U> m_rewindstack;
+    std::deque<VSRTL_VT_U> m_reverseStack;
 };
 
 template <unsigned int W>
