@@ -21,14 +21,14 @@ matrix:
       addons:
         apt:
           sources: # An anchor is not present here given that Travis doesn't parse anchors with sourceline/key_url pairs correctly
-            - sourceline: 'ppa:beineri/opt-qt593-trusty'
+            - sourceline: 'ppa:beineri/opt-qt-5.10.1-trusty'
               key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x10C56D0DE9977759'
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise
           packages: &packages
             - g++-7
-            - qt59-meta-minimal
-            - qt59svg
+            - qt510-meta-minimal
+            - qt510svg
 
     # Xenial release build
     - env: VSRTL_PLATFORM='linux' CXX=g++-7 CC=gcc-7
@@ -37,7 +37,7 @@ matrix:
       addons:
         apt:
           sources:
-            - sourceline: 'ppa:beineri/opt-qt593-xenial'
+            - sourceline: 'ppa:beineri/opt-qt-5.10.1-xenial'
               key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x10C56D0DE9977759'
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise
