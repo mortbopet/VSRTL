@@ -71,6 +71,10 @@ void VSRTLScene::handleWirePointMove(QGraphicsSceneMouseEvent* event) {
 }
 
 void VSRTLScene::drawBackground(QPainter* painter, const QRectF& rect) {
+    if (backgroundBrush() != Qt::NoBrush) {
+        QGraphicsScene::drawBackground(painter, rect);
+    }
+
     if (!m_showGrid)
         return;
 
@@ -169,8 +173,17 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         auto* showGridAction = drawMenu->addAction("Show grid");
         showGridAction->setCheckable(true);
         showGridAction->setChecked(m_showGrid);
-        connect(showGridAction, &QAction::triggered, [=](bool checked) {
+        connect(showGridAction, &QAction::toggled, [=](bool checked) {
             m_showGrid = checked;
+            this->update();
+        });
+
+        auto* darkModeAction = drawMenu->addAction("Darkmode");
+        darkModeAction->setCheckable(true);
+        darkModeAction->setChecked(m_darkmode);
+        connect(darkModeAction, &QAction::toggled, [=](bool checked) {
+            m_darkmode = checked;
+            this->setBackgroundBrush(m_darkmode ? QBrush(QColor(Qt::darkGray).darker(300)) : Qt::NoBrush);
             this->update();
         });
     }

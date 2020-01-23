@@ -21,7 +21,6 @@ VSRTLWidget::VSRTLWidget(QWidget* parent) : QWidget(parent), ui(new Ui::VSRTLWid
     m_view->setScene(m_scene);
     ui->viewLayout->addWidget(m_view);
     connect(m_scene, &QGraphicsScene::selectionChanged, this, (&VSRTLWidget::handleSceneSelectionChanged));
-    m_scene->setBackgroundBrush(QBrush(BACKGROUND_COLOR));
 }
 
 void VSRTLWidget::clearDesign() {

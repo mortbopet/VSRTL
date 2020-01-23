@@ -25,11 +25,13 @@ public:
     void setPortValuesVisibleForType(PortType t, bool visible);
 
     bool isLocked() const { return m_isLocked; }
+    bool darkmode() const { return m_darkmode; }
 
 private:
     void handleSelectionChanged();
     void handleWirePointMove(QGraphicsSceneMouseEvent* event);
 
+    bool m_darkmode = false;
     bool m_showGrid = true;
     std::set<WirePoint*> m_currentDropTargets;
     WirePoint* m_selectedPoint = nullptr;

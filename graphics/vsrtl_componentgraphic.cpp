@@ -8,6 +8,7 @@
 #include "vsrtl_placeroute.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_registergraphic.h"
+#include "vsrtl_scene.h"
 #include "vsrtl_wiregraphic.h"
 
 #include <cereal/archives/json.hpp>
@@ -389,10 +390,16 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
 }
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
-    QColor color = hasSubcomponents() ? QColor("#ecf0f1") : QColor(Qt::white);
-    QColor fillColor = (option->state & QStyle::State_Selected) ? color.dark(150) : color;
+    QColor color;
+    if (static_cast<VSRTLScene*>(scene())->darkmode()) {
+        color = hasSubcomponents() && isExpanded() ? QColor(QColor(Qt::darkGray).darker()) : QColor("#c0cdd1");
+    } else {
+        color = hasSubcomponents() ? QColor("#ecf0f1") : QColor(Qt::white);
+    }
+
+    QColor fillColor = (option->state & QStyle::State_Selected) ? color.darker(150) : color;
     if (option->state & QStyle::State_MouseOver)
-        fillColor = fillColor.light(125);
+        fillColor = fillColor.lighter(125);
 
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
 

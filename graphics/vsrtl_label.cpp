@@ -4,6 +4,8 @@
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 
+#include "vsrtl_scene.h"
+
 namespace vsrtl {
 
 const QFont Label::s_font = QFont("Monospace", 12);
@@ -25,6 +27,11 @@ void Label::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
         QPointF offset(-m_textRect.width() / 2, -m_textRect.height() / 2);
         painter->setFont(s_font);
         painter->save();
+        if (static_cast<VSRTLScene*>(scene())->darkmode()) {
+            auto pen = painter->pen();
+            pen.setColor(QColor(Qt::lightGray).lighter());
+            painter->setPen(pen);
+        }
         painter->drawText(offset, m_text);
         painter->restore();
     }
