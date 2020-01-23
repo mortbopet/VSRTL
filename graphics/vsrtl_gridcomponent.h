@@ -76,11 +76,11 @@ protected:
 
 private:
     /**
-     * @brief childExpanded
-     * Called by child components, signalling that they expanded which (may) require a rezing of the current minimum
-     * component rect
+     * @brief childGeometryChanged
+     * Called by child components, signalling that their geometry or position was changed, which (may) require a rezing
+     * of the current minimum component rect.
      */
-    void childExpanded();
+    void childGeometryChanged();
 
 private:
     /**

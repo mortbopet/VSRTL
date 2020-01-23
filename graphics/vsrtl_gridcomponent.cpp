@@ -22,10 +22,11 @@ void GridComponent::setExpanded(bool state) {
 
     m_expanded = state;
 
-    // This component just expanded - this might require the parent component to expand its current bounding rect
+    // This component just modified its geometry - this might require the parent component to expand its current
+    // bounding rect
     auto* parent = dynamic_cast<GridComponent*>(parentItem());
-    if (state && parent && m_component.hasSubcomponents())
-        parent->childExpanded();
+    if (parent && m_component.hasSubcomponents())
+        parent->childGeometryChanged();
 
     emit gridRectChanged();
 }
@@ -60,7 +61,7 @@ bool GridComponent::adjust(const QRect& newRect) {
     return adjust(diff);
 }
 
-void GridComponent::childExpanded() {
+void GridComponent::childGeometryChanged() {
     updateSubcomponentBoundingRect();
 }
 
@@ -73,7 +74,7 @@ bool GridComponent::move(const QPoint& pos) {
     }
 
     // Restrict positioning to inside parent rect
-    const auto* parent = dynamic_cast<GridComponent*>(parentItem());
+    auto* parent = dynamic_cast<GridComponent*>(parentItem());
     QPoint newPos = pos;
     if (parent) {
         newPos.setX(qMin(parent->getCurrentComponentRect().right() + 1 - getCurrentComponentRect().width(),
@@ -87,8 +88,9 @@ bool GridComponent::move(const QPoint& pos) {
         return false;
 
     m_relPos = newPos;
-    if (parentIsPlacing())
-        emit gridPosChanged(m_relPos);
+    if (parent) {
+        parent->childGeometryChanged();
+    }
 
     return true;
 }
