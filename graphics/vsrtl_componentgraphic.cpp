@@ -379,6 +379,10 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
                 }
             }
         }
+
+        for (const auto& p_in : m_component.getPorts<SimPort::Direction::in>()) {
+            p_in->getGraphic<PortGraphic>()->setVisible(visible);
+        }
     }
 
     return QGraphicsItem::itemChange(change, value);

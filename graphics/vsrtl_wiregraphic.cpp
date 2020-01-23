@@ -513,9 +513,8 @@ void WireGraphic::setWiresVisibleToPort(const PortPoint* p, bool visible) {
         // Recurse?
         bool recurse = false;
         if (visible) {
-            /// traverse the sequence of wires if the next start point is not visible (which it by now should be, since
-            /// we just enabled visibility of its output wire
-            recurse = dynamic_cast<WirePoint*>(start) && !start->isVisible();
+            /// All wire points between this WireGraphic and the root port should be enabled.
+            recurse = dynamic_cast<WirePoint*>(start);
         } else {
             /// Traverse the sequence of wires from @param p towards @this source port, until we encounter a WirePoint
             /// which has more than 0 >visible< wire enabled
