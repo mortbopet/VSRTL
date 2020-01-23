@@ -55,8 +55,6 @@ private:
 
     bool m_stop = false;
 
-    void registerShapes() const;
-
     void initializeDesign();
     Ui::VSRTLWidget* ui;
 

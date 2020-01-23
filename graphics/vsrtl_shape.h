@@ -15,6 +15,14 @@ namespace vsrtl {
  *  Class for storing the draw shape associated with a Component from the VSRTL library
  */
 class ShapeRegister {
+private:
+    /**
+     * @brief ShapeRegister
+     * Constructor shall initialize all componentShapes
+     */
+    ShapeRegister();
+
+public:
     /**
      * @brief The Shape struct
      * Component shapes should be scalable in x- and y direction, but may contain complex shapes such as circles.
@@ -22,38 +30,42 @@ class ShapeRegister {
      * without using QPainte's scale functionality.
      * We avoid using QPainter::scale, given that this also scales the pen, yielding invalid drawings.
      */
-public:
     struct Shape {
         std::function<QPainterPath(QTransform)> shapeFunc;
         QRect min_rect;
     };
 
-    static void registerComponentShape(std::type_index component, Shape shape) {
-        Q_ASSERT(!s_componentShapes.count(component));
-        Q_ASSERT(shape.min_rect.topLeft() == QPoint(0, 0));
-
-        // Ensure that minimum rectangle is snapping to the grid
-        s_componentShapes[component] = shape;
+    static QPainterPath getComponentShape(const std::type_index& component, const QTransform& transform) {
+        // If no shape has been registered for the base component type, revert to displaying as a "SimComponent"
+        if (!get().m_componentShapes.count(component)) {
+            return get().m_componentShapes[GraphicsIDFor(Component)].shapeFunc(transform);
+        }
+        return get().m_componentShapes[component].shapeFunc(transform);
     }
 
-    static QPainterPath getComponentShape(std::type_index component, QTransform transform) {
+    static QRect getComponentMinGridRect(const std::type_index& component) {
         // If no shape has been registered for the base component type, revert to displaying as a "SimComponent"
-        if (!s_componentShapes.count(component)) {
-            return s_componentShapes[GraphicsIDFor(Component)].shapeFunc(transform);
+        if (!get().m_componentShapes.count(component)) {
+            return get().m_componentShapes[GraphicsIDFor(Component)].min_rect;
         }
-        return s_componentShapes[component].shapeFunc(transform);
-    }
-
-    static QRect getComponentMinGridRect(std::type_index component) {
-        // If no shape has been registered for the base component type, revert to displaying as a "SimComponent"
-        if (!s_componentShapes.count(component)) {
-            return s_componentShapes[GraphicsIDFor(Component)].min_rect;
-        }
-        return s_componentShapes[component].min_rect;
+        return get().m_componentShapes[component].min_rect;
     }
 
 private:
-    static std::map<std::type_index, Shape> s_componentShapes;
+    static ShapeRegister& get() {
+        static ShapeRegister sr;
+        return sr;
+    }
+
+    void registerComponentShape(const std::type_index& component, const Shape& shape) {
+        Q_ASSERT(!m_componentShapes.count(component));
+        Q_ASSERT(shape.min_rect.topLeft() == QPoint(0, 0));
+
+        // Ensure that minimum rectangle is snapping to the grid
+        m_componentShapes[component] = shape;
+    }
+
+    std::map<std::type_index, Shape> m_componentShapes;
 };
 
 }  // namespace vsrtl
