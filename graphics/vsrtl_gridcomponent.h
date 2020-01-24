@@ -57,6 +57,7 @@ public:
     QPoint getGridPos() const { return m_relPos; }
 
     SimComponent& getComponent() const { return m_component; }
+    bool hasSubcomponents() const;
 
     void placeAndRouteSubcomponents();
 

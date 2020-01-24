@@ -76,10 +76,6 @@ void ComponentGraphic::verifySpecialSignals() const {
     }
 }
 
-bool ComponentGraphic::hasSubcomponents() const {
-    return m_component.getSubComponents().size() != 0;
-}
-
 void ComponentGraphic::initialize() {
     Q_ASSERT(scene() != nullptr);
 

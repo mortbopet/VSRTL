@@ -17,7 +17,7 @@ GridComponent::GridComponent(SimComponent& c, GridComponent* parent) : GraphicsB
 }
 
 void GridComponent::setExpanded(bool state) {
-    if (!m_component.hasSubcomponents())
+    if (!hasSubcomponents())
         return;
 
     m_expanded = state;
@@ -25,7 +25,7 @@ void GridComponent::setExpanded(bool state) {
     // This component just modified its geometry - this might require the parent component to expand its current
     // bounding rect
     auto* parent = dynamic_cast<GridComponent*>(parentItem());
-    if (parent && m_component.hasSubcomponents())
+    if (parent && hasSubcomponents())
         parent->childGeometryChanged();
 
     emit gridRectChanged();
@@ -63,6 +63,10 @@ bool GridComponent::adjust(const QRect& newRect) {
 
 void GridComponent::childGeometryChanged() {
     updateSubcomponentBoundingRect();
+}
+
+bool GridComponent::hasSubcomponents() const {
+    return m_component.hasSubcomponents();
 }
 
 bool GridComponent::move(const QPoint& pos) {
@@ -143,7 +147,7 @@ const QRect& GridComponent::getCurrentMinRect() const {
 }
 
 bool GridComponent::updateSubcomponentBoundingRect() {
-    if (m_component.hasSubcomponents()) {
+    if (hasSubcomponents()) {
         std::vector<QRect> rects;
         for (const auto& c : getGridSubcomponents()) {
             rects.push_back(c->getCurrentComponentRect().translated(c->getGridPos()));

@@ -45,8 +45,6 @@ public:
     void setLocked(bool locked) override;
 
     void setExpanded(bool isExpanded);
-    bool hasSubcomponents() const;
-
     const auto& outputPorts() const { return m_outputPorts; }
 
     // Called by vsrtl_core components linked via signal/slot mechanism
