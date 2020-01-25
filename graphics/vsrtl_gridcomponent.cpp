@@ -32,23 +32,35 @@ void GridComponent::setExpanded(bool state) {
 }
 
 bool GridComponent::adjust(const QPoint& p) {
+    if (p == QPoint(0, 0))
+        return false;
+
     const auto& minRect = getCurrentMinRect();
     auto newRect = getCurrentComponentRect();
     newRect.adjust(0, 0, p.x(), p.y());
 
-    snapRectToInnerRect(minRect, newRect);
-    auto* parent = dynamic_cast<GridComponent*>(parentItem());
-    if (parent) {
-        // Snap new rect to stay within parent
-        newRect.translate(m_relPos);
-        snapRectToOuterRect(parent->getCurrentComponentRect(), newRect);
-        newRect.translate(-m_relPos);
+    if (!parentIsPlacing()) {
+        // Parent is not placing components, snap subcomponents inside rect inside parent
+        snapRectToInnerRect(minRect, newRect);
+        auto* parent = dynamic_cast<GridComponent*>(parentItem());
+        if (parent) {
+            // Snap new rect to stay within parent
+            newRect.translate(m_relPos);
+            snapRectToOuterRect(parent->getCurrentComponentRect(), newRect);
+            newRect.translate(-m_relPos);
+        }
     }
 
     // Rect is now snapped, calculate difference between current and new rect
     const QPoint diff = newRect.bottomRight() - getCurrentComponentRect().bottomRight();
 
     updateCurrentComponentRect(diff.x(), diff.y());
+
+    auto* parent = dynamic_cast<GridComponent*>(parentItem());
+    if (parent && (p.x() > 0 || p.y() > 0)) {
+        parent->childGeometryChanged();
+    }
+
     return true;
 }
 

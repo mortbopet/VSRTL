@@ -62,6 +62,7 @@ public:
             /// @todo: build an error report
         }
 
+        // Serialize expansion state
         if (hasSubcomponents()) {
             try {
                 bool expanded = isExpanded();
@@ -72,7 +73,18 @@ public:
             } catch (cereal::Exception e) {
                 /// @todo: build an error report
             }
+        }
 
+        // Serialize size
+        try {
+            QRect r = getCurrentComponentRect();
+            archive(cereal::make_nvp("Rect", r));
+            adjust(r);
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
+
+        if (hasSubcomponents()) {
             // Serialize wires from input ports to subcomponents
             for (auto& p : m_inputPorts) {
                 try {
@@ -117,6 +129,7 @@ public:
                 /// @todo: build an error report
             }
 
+            // Serialize visibility state
             try {
                 bool v = isVisible();
                 archive(cereal::make_nvp("Visible", v));

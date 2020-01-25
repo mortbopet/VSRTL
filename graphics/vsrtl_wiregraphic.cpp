@@ -317,6 +317,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     for (auto& wire : pointToRemove->getOutputWires()) {
         wire->setStart(newStartPoint);
     }
+    Q_ASSERT(pointToRemove->getOutputWires().size() == 0);
 
     // Delete the (now defunct) wire between the new start point and the point to be removed
     auto iter = std::find(m_wires.begin(), m_wires.end(), wireToRemove);
@@ -518,7 +519,7 @@ void WireGraphic::setWiresVisibleToPort(const PortPoint* p, bool visible) {
         } else {
             /// Traverse the sequence of wires from @param p towards @this source port, until we encounter a WirePoint
             /// which has more than 0 >visible< wire enabled
-            recurse = visibleOutputWires(start) == 0 && dynamic_cast<WirePoint*>(start);
+            recurse = dynamic_cast<WirePoint*>(start) && (visibleOutputWires(start) == 0);
         }
         if (recurse) {
             start->setVisible(visible);
