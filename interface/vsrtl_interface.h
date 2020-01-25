@@ -69,7 +69,10 @@ protected:
 
 template <typename T>
 struct BaseSorter {
-    bool operator()(const T& lhs, const T& rhs) const { return lhs->getName() < rhs->getName(); }
+    bool operator()(const T& lhs, const T& rhs) const {
+        return std::lexicographical_compare(lhs->getName().begin(), lhs->getName().end(), rhs->getName().begin(),
+                                            rhs->getName().end());
+    }
 };
 
 class SimPort : public SimBase {
@@ -113,8 +116,8 @@ public:
         }
     }
 
-    /* traverse from any given port towards its root (source) port, while executing nodeFunc(args...) in each port which
-    is visited along the way*/
+    /* traverse from any given port towards its root (source) port, while executing nodeFunc(args...) in each port
+    which is visited along the way*/
     template <typename T = SimPort, typename F, typename... Args>
     void traverseToRoot(const F& nodeFunc, Args&... args) {
         static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
@@ -124,8 +127,8 @@ public:
         }
     }
 
-    /* From this port, visit all directly and implicitely connected port to this port, and execute nodeFunc(args...) in
-    each visited port */
+    /* From this port, visit all directly and implicitely connected port to this port, and execute nodeFunc(args...)
+    in each visited port */
     template <typename T = SimPort, typename F, typename... Args>
     void traverseConnection(const F& nodeFunc, Args&... args) {
         static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
@@ -165,8 +168,8 @@ public:
     /** @todo: Figure out whether these should be defined in the interface */
     /**
      * @brief stringValue
-     * A port may define special string formatting to be displayed in the graphical library. If so, owning components
-     * should set the string value function to provide such values.
+     * A port may define special string formatting to be displayed in the graphical library. If so, owning
+     * components should set the string value function to provide such values.
      */
     virtual bool isEnumPort() const { return false; }
     virtual std::string valueToEnumString() const { throw std::runtime_error("This is not an enum port!"); }
@@ -199,17 +202,18 @@ public:
 
     /**
      * @brief getBaseType
-     * Used to identify the component type, which is used when determining how to draw a component. Introduced to avoid
-     * intermediate base classes for many (All) components, which is a template class. For instance, it is desireable to
-     * identify all instances of "Constant<...>" objects, but without introducing a "BaseConstant" class.
+     * Used to identify the component type, which is used when determining how to draw a component. Introduced to
+     * avoid intermediate base classes for many (All) components, which is a template class. For instance, it is
+     * desireable to identify all instances of "Constant<...>" objects, but without introducing a "BaseConstant"
+     * class.
      * @return String identifier for the component type
      */
     virtual std::type_index getGraphicsID() const { return GraphicsIDFor(Component); }
     virtual const GraphicsType* getGraphicsType() const { return GraphycsTypeForComponent(Component)::get(); }
 
     /**
-     * getInput&OutputComponents does not return a set, although it naturally should. In partitioning the circuit graph,
-     * it is beneficial to know whether two components have multiple edges between each other.
+     * getInput&OutputComponents does not return a set, although it naturally should. In partitioning the circuit
+     * graph, it is beneficial to know whether two components have multiple edges between each other.
      */
     template <typename T = SimComponent>
     std::vector<T*> getInputComponents() const {
@@ -365,8 +369,8 @@ private:
 /**
  * @brief The SimSynchronous class
  * Seen as addition to the interface of the SimComponent class, but not through inheritance. This is due to the fact
- * that simulators may have their synchronous components as inheriting from the simulator-specific component type. To
- * avoid a constraint saying that all interface and simulator level inheritance declarations must be declared
+ * that simulators may have their synchronous components as inheriting from the simulator-specific component type.
+ * To avoid a constraint saying that all interface and simulator level inheritance declarations must be declared
  * virtual, we define synchronous elements as being an optional part which may be included in a normal SimComponent.
  */
 class SimSynchronous {
@@ -398,8 +402,8 @@ public:
 
     /**
      * @brief reverse
-     * Undo the last clock operation. Registers will assert their previous state value. Memory elements will undo their
-     * last transaction. The circuit shall be repropagated and assume its previous-cycle state.
+     * Undo the last clock operation. Registers will assert their previous state value. Memory elements will undo
+     * their last transaction. The circuit shall be repropagated and assume its previous-cycle state.
      */
     virtual void reverse() { m_cycleCount--; }
 
@@ -411,8 +415,8 @@ public:
 
     /**
      * @brief reset
-     * Resets the circuit, setting all registers to 0 and propagates the circuit. Constants might have an affect on the
-     * circuit in terms of not all component values being 0.
+     * Resets the circuit, setting all registers to 0 and propagates the circuit. Constants might have an affect on
+     * the circuit in terms of not all component values being 0.
      */
     virtual void reset() { m_cycleCount = 0; }
 
