@@ -12,7 +12,7 @@ GridComponent::GridComponent(SimComponent& c, GridComponent* parent) : GraphicsB
     m_border = std::make_unique<ComponentBorder>(c);
 
     updateMinimumGridRect();
-    m_currentContractedRect = m_minimumGridRect;
+    setInitialRect();
     m_currentExpandedRect = m_currentSubcomponentBoundingRect;
 }
 
@@ -178,15 +178,33 @@ bool GridComponent::updateSubcomponentBoundingRect() {
     return false;
 }
 
+void GridComponent::setInitialRect() {
+    const auto preferredRect = ShapeRegister::getComponentPreferredRect(m_component.getGraphicsID());
+
+    auto initialRect = m_minimumGridRect;
+    if (preferredRect == QRect()) {
+        // No preferred size, adjust width heuristically based on height of component
+        const auto widthToAdd = static_cast<int>(std::floor(std::log2(initialRect.height())));
+        initialRect.adjust(0, 0, widthToAdd, 0);
+    } else {
+        // Attempt to adjust according to the preferred dimensions of the component
+        auto heightToAdd = preferredRect.height() - initialRect.height();
+        heightToAdd = heightToAdd < 0 ? 0 : heightToAdd;
+        auto widthToAdd = preferredRect.width() - initialRect.width();
+        widthToAdd = widthToAdd < 0 ? 0 : widthToAdd;
+        initialRect.adjust(0, 0, widthToAdd, heightToAdd);
+    }
+
+    m_currentContractedRect = initialRect;
+}
+
 bool GridComponent::updateMinimumGridRect() {
-    QRect shapeMinRect = ShapeRegister::getComponentMinGridRect(m_component.getGraphicsID());
+    QRect shapeMinRect = QRect(0, 0, 1, 1);  //
     const auto n_inPorts = m_component.getPorts<SimPort::Direction::in>().size();
     const auto n_outPorts = m_component.getPorts<SimPort::Direction::out>().size();
     const auto largestPortSize = n_inPorts > n_outPorts ? n_inPorts : n_outPorts;
-    const auto heightToAdd = (largestPortSize + 2) - shapeMinRect.height();
-    if (heightToAdd > 0) {
-        shapeMinRect.adjust(0, 0, 0, heightToAdd);
-    }
+    const auto heightToAdd = largestPortSize + 1 - shapeMinRect.height();
+    shapeMinRect.adjust(0, 0, 0, heightToAdd);
 
     if (shapeMinRect != m_minimumGridRect) {
         m_minimumGridRect = shapeMinRect;

@@ -32,7 +32,7 @@ public:
      */
     struct Shape {
         std::function<QPainterPath(QTransform)> shapeFunc;
-        QRect min_rect;
+        QRect min_rect = QRect();
     };
 
     static QPainterPath getComponentShape(const std::type_index& component, const QTransform& transform) {
@@ -43,7 +43,7 @@ public:
         return get().m_componentShapes[component].shapeFunc(transform);
     }
 
-    static QRect getComponentMinGridRect(const std::type_index& component) {
+    static QRect getComponentPreferredRect(const std::type_index& component) {
         // If no shape has been registered for the base component type, revert to displaying as a "SimComponent"
         if (!get().m_componentShapes.count(component)) {
             return get().m_componentShapes[GraphicsIDFor(Component)].min_rect;

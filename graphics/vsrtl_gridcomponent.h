@@ -97,6 +97,7 @@ private:
     bool updateCurrentComponentRect(int dx, int dy);
     bool updateMinimumGridRect();
     bool updateSubcomponentBoundingRect();
+    void setInitialRect();
 
     QRect& getCurrentComponentRectRef();
 
