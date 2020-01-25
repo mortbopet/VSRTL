@@ -54,20 +54,23 @@ public:
 
     /**
      * @brief movePort
-     * @return true if port actually changed position
+     * @return list of ports moved in the operation
      */
-    bool movePort(const SimPort* port, PortPos pos) {
+    std::vector<const SimPort*> movePort(const SimPort* port, PortPos pos) {
+        std::vector<const SimPort*> portsMoved;
         const auto* portAtPos = getPortAt(pos);
         if (portAtPos == port)
-            return false;
+            return {};
 
         if (portAtPos != nullptr) {
+            portsMoved.push_back(getPortAt(pos));
             swapPorts(getPortAt(pos), port);
         } else {
             removePortFromSide(port);
             addPortToSide(pos, port);
         }
-        return true;
+        portsMoved.push_back(port);
+        return portsMoved;
     }
 
     void swapPorts(const SimPort* port1, const SimPort* port2) {

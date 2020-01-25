@@ -41,12 +41,13 @@ public:
 
     /**
      * @brief adjustPort
-     * Attempt to move the position of @p port to @p pos
+     * Attempt to move the position of @p port to @p pos of its current side
      * @return  whether the requested pos has been set for the port
      */
-    bool adjustPort(SimPort* port, PortPos pos);
+    bool adjustPort(SimPort* port, unsigned pos);
 
     PortPos getPortPos(const SimPort* port) const;
+    std::vector<unsigned> getFreePortPositions(Side s);
 
     bool parentIsPlacing() const;
 

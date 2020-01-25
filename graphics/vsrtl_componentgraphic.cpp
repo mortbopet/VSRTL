@@ -30,30 +30,6 @@
 
 namespace vsrtl {
 
-namespace {
-
-static inline qreal snapToGrid(qreal v) {
-    return round(v / GRID_SIZE) * GRID_SIZE;
-}
-
-static inline QRectF gridToScene(QRect gridRect) {
-    // Scales a rectangle in grid coordinates to scene coordinates
-    QRectF sceneGridRect;
-    sceneGridRect.setWidth(gridRect.width() * GRID_SIZE);
-    sceneGridRect.setHeight(gridRect.height() * GRID_SIZE);
-    return sceneGridRect;
-}
-
-static inline QPoint sceneToGrid(QPointF p) {
-    return (p / GRID_SIZE).toPoint();
-}
-
-static inline QPointF gridToScene(QPoint p) {
-    return p * GRID_SIZE;
-}
-
-}  // namespace
-
 static constexpr qreal c_resizeMargin = GRID_SIZE;
 static constexpr qreal c_collapsedSideMargin = 15;
 
@@ -296,6 +272,14 @@ void ComponentGraphic::updateGeometry() {
             for (int y = gridTopLeft.y(); y <= gridBotRight.y(); y += GRID_SIZE)
                 m_gridPoints << QPoint(x, y);
     }
+}
+
+bool ComponentGraphic::handlePortGraphicMoveAttempt(const PortGraphic* port, const QPointF& newBorderPos) {
+    // Port will report its new position in its portGraphic coordinates. Transfor to this (the port parent) coordinate
+    // system and attempt to adjust port position.
+
+    const QPoint adjustedPos = sceneToGrid(mapFromItem(port, newBorderPos).toPoint());
+    return adjustPort(port->getPort(), adjustedPos.y());
 }
 
 void ComponentGraphic::handleGridPosChange(const QPoint p) {

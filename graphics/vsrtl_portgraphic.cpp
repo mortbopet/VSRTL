@@ -151,7 +151,7 @@ QPointF PortGraphic::getOutputPoint() const {
 void PortGraphic::updatePenColor() {
     // This is a source port. Update pen based on current state
     // Selection check is based on whether item is currently selected or about to be selected (via itemChange())
-    if (m_selected) {
+    if (m_signalSelected) {
         m_pen.setColor(WIRE_SELECTED_COLOR);
         m_pen.setWidth(static_cast<int>(WIRE_WIDTH * 1.5));
     } else {
@@ -180,7 +180,7 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
         auto* portGraphic = node->getGraphic<PortGraphic>();
         if (!portGraphic->m_inputWire) {
             if (aboutToBeDeselected || aboutToBeSelected) {
-                portGraphic->m_selected = aboutToBeSelected;
+                portGraphic->m_signalSelected = aboutToBeSelected;
             }
 
             /* If the port is anything other than a boolean port, a change in the signal is represented by starting
@@ -221,6 +221,16 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
     }
 
     return QGraphicsItem::itemChange(change, value);
+}
+
+void PortGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
+    // Move port position
+    if (isSelected()) {
+        auto* parent = static_cast<ComponentGraphic*>(parentItem());
+        if (parent->handlePortGraphicMoveAttempt(this, event->pos())) {
+            update();
+        }
+    }
 }
 
 void PortGraphic::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {

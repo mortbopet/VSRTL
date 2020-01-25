@@ -16,7 +16,29 @@
 
 #include "cereal/cereal.hpp"
 
+#include <qmath.h>
+
 namespace vsrtl {
+
+static inline qreal snapToGrid(qreal v) {
+    return round(v / GRID_SIZE) * GRID_SIZE;
+}
+
+static inline QRectF gridToScene(QRect gridRect) {
+    // Scales a rectangle in grid coordinates to scene coordinates
+    QRectF sceneGridRect;
+    sceneGridRect.setWidth(gridRect.width() * GRID_SIZE);
+    sceneGridRect.setHeight(gridRect.height() * GRID_SIZE);
+    return sceneGridRect;
+}
+
+static inline QPoint sceneToGrid(QPointF p) {
+    return (p / GRID_SIZE).toPoint();
+}
+
+static inline QPointF gridToScene(QPoint p) {
+    return p * GRID_SIZE;
+}
 
 class PortGraphic;
 class Label;
@@ -43,6 +65,7 @@ public:
     ComponentGraphic* getParent() const;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
     void setLocked(bool locked) override;
+    bool handlePortGraphicMoveAttempt(const PortGraphic* port, const QPointF& newBorderPos);
 
     void setExpanded(bool isExpanded);
     const auto& outputPorts() const { return m_outputPorts; }

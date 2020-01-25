@@ -233,6 +233,34 @@ PortPos GridComponent::getPortPos(const SimPort* port) const {
     return m_border->getPortPos(port);
 }
 
+std::vector<unsigned> GridComponent::getFreePortPositions(Side s) {
+    std::vector<unsigned> freePos;
+    const auto& usedIndexes = m_border->dirToMap(s).idToPort;
+    for (int i = 0; i < getCurrentComponentRect().height(); i++) {
+        if (usedIndexes.count(i) == 0) {
+            freePos.push_back(i);
+        }
+    }
+    return freePos;
+}
+
+bool GridComponent::adjustPort(SimPort* port, unsigned newPos) {
+    if ((newPos == 0) || (newPos >= getCurrentComponentRect().height()))
+        return false;
+
+    auto adjustedPos = m_border->getPortPos(port);
+    if (adjustedPos.index == newPos) {
+        // No change, same index
+        return false;
+    }
+    adjustedPos.index = newPos;
+    const auto movedPorts = m_border->movePort(port, adjustedPos);
+    for (const auto& p : movedPorts) {
+        emit portPosChanged(p);
+    }
+    return movedPorts.size() > 0;
+}
+
 void GridComponent::spreadPortsOnSide(const Side& side) {
     assert(side != Side::Top && side != Side::Bottom && "Not implemented");
 
@@ -245,9 +273,9 @@ void GridComponent::spreadPortsOnSide(const Side& side) {
         for (const auto& p : biMapCopy.portToId) {
             const int gridIndex = std::ceil((i * diff + diff / 2));
             const auto* port = p.first;  // Store port pointer here; p reference may change during port moving
-            bool portMoved = m_border->movePort(port, PortPos{side, gridIndex});
-            if (portMoved) {
-                emit portPosChanged(port);
+            const auto movedPorts = m_border->movePort(port, PortPos{side, gridIndex});
+            for (const auto& p : movedPorts) {
+                emit portPosChanged(p);
             }
             i++;
         }

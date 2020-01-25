@@ -31,9 +31,13 @@ public:
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
+
     void postSceneConstructionInitialize2() override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
 
@@ -69,9 +73,9 @@ private:
     void updatePen(bool aboutToBeSelected = false, bool aboutToBeDeselected = false);
     void updateSlot();
 
-    // m_selected: does not indicate visual selection (ie. isSelected()), but rather whether any port in the port/wire
-    // connection of this port has been selected.
-    bool m_selected = false;
+    // m_signalSelected: does not indicate visual selection (ie. isSelected()), but rather whether any port in the
+    // port/wire connection of this port has been selected.
+    bool m_signalSelected = false;
     bool m_hoverActive = false;
     ValueDisplayFormat m_valueBase = ValueDisplayFormat::baseTen;
 
