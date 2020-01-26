@@ -250,6 +250,16 @@ public:
         return ports;
     }
 
+    template <typename T = SimPort>
+    std::vector<T*> getAllPorts() const {
+        static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
+        std::vector<T*> ports;
+        for (auto portsForDir : {getPorts<SimPort::Direction::in, T>(), getPorts<SimPort::Direction::out, T>()}) {
+            ports.insert(ports.end(), portsForDir.begin(), portsForDir.end());
+        }
+        return ports;
+    }
+
     void verifyHasSpecialPortID(const std::string& id) const {
         const auto* type = getGraphicsType();
         if (!type->hasSpecialPortID(id)) {
