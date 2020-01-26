@@ -234,6 +234,9 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
                 });
             }
         }
+        if (indicatorMenu->actions().size() == 0) {
+            delete indicatorMenu;
+        }
     }
 
     if (m_component.getParent() != nullptr) {
