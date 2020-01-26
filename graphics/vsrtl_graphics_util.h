@@ -5,7 +5,7 @@
 
 #include <QGraphicsItem>
 
-#include "vsrtl_graphics_serializers.h"
+#include "vsrtl_qt_serializers.h"
 
 namespace vsrtl {
 

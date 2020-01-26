@@ -4,6 +4,7 @@
 
 #include <QPoint>
 #include <QRect>
+#include <QString>
 
 // QPoint serializer
 template <class Archive>
@@ -21,10 +22,18 @@ void serialize(Archive& archive, QRect& m) {
     int h = m.height();
     archive(cereal::make_nvp("x", x));
     archive(cereal::make_nvp("y", y));
-    archive(cereal::make_nvp("width", w));
-    archive(cereal::make_nvp("height", h));
+    archive(cereal::make_nvp("w", w));
+    archive(cereal::make_nvp("h", h));
     m.setX(x);
     m.setY(y);
     m.setHeight(h);
     m.setWidth(w);
+}
+
+// QString serializer
+template <class Archive>
+void serialize(Archive& archive, QString& m) {
+    std::string str = m.toStdString();
+    archive(cereal::make_nvp("str", str));
+    m = QString::fromStdString(str);
 }

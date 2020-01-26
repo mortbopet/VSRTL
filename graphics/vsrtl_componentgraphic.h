@@ -6,11 +6,12 @@
 
 #include "../interface/vsrtl_gfxobjecttypes.h"
 #include "vsrtl_graphics_defines.h"
-#include "vsrtl_graphics_serializers.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_graphicsbase.h"
 #include "vsrtl_gridcomponent.h"
+#include "vsrtl_label.h"
 #include "vsrtl_portgraphic.h"
+#include "vsrtl_qt_serializers.h"
 #include "vsrtl_shape.h"
 #include "vsrtl_wiregraphic.h"
 
@@ -41,7 +42,6 @@ static inline QPointF gridToScene(QPoint p) {
 }
 
 class PortGraphic;
-class Label;
 class ComponentButton;
 
 class ComponentGraphic : public GridComponent {
@@ -73,6 +73,65 @@ public:
     // Called by vsrtl_core components linked via signal/slot mechanism
     void updateSlot() { update(); }
 
+private slots:
+    /**
+     * @brief handleGridPosChange
+     * Slot called when position of grid component changed through the grid-layer (ie. through place and route).
+     */
+    void handleGridPosChange(const QPoint pos);
+    void handlePortPosChanged(const SimPort* port);
+    void updateGeometry();
+
+private:
+    void verifySpecialSignals() const;
+
+protected:
+    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
+    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
+    void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+
+    enum class GeometryChange {
+        None,
+        Resize,
+        Expand,
+        Collapse,
+        ChildJustExpanded,
+        ChildJustCollapsed,
+    };
+    void createSubcomponents();
+    QRectF sceneGridRect() const;
+
+    bool m_restrictSubcomponentPositioning = false;
+    bool m_inResizeDragZone = false;
+    bool m_resizeDragging = false;
+    bool m_isTopLevelSerializedComponent = false;
+
+    std::vector<ComponentGraphic*> m_subcomponents;
+    ComponentGraphic* m_parentComponentGraphic = nullptr;
+
+    QMap<SimPort*, PortGraphic*> m_inputPorts;
+    QMap<SimPort*, PortGraphic*> m_outputPorts;
+
+    Label* m_label = nullptr;
+
+    // Rectangles
+    QPainterPath m_shape;
+
+    QPolygon m_gridPoints;
+
+    QFont m_font;
+
+    QPointF m_expandButtonPos;  // Draw position of expand/collapse button in scene coordinates
+    ComponentButton* m_expandButton = nullptr;
+
+protected slots:
+    void loadLayout();
+    void saveLayout();
+    void resetWires();
+
+public:
     template <class Archive>
     void serialize(Archive& archive) {
         // Serialize the original component name. Wires within the component will reference this when describing parent
@@ -167,65 +226,10 @@ public:
          * (size, positions etc.) should be performed in the grid component.
          */
         serializeBorder(archive);
+
+        // Serialize component name label
+        archive(cereal::make_nvp("Name label", *m_label));
     }
-
-private slots:
-    /**
-     * @brief handleGridPosChange
-     * Slot called when position of grid component changed through the grid-layer (ie. through place and route).
-     */
-    void handleGridPosChange(const QPoint pos);
-    void handlePortPosChanged(const SimPort* port);
-    void updateGeometry();
-
-private:
-    void verifySpecialSignals() const;
-
-protected:
-    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
-    void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
-    void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
-    void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
-    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
-
-    enum class GeometryChange {
-        None,
-        Resize,
-        Expand,
-        Collapse,
-        ChildJustExpanded,
-        ChildJustCollapsed,
-    };
-    void createSubcomponents();
-    QRectF sceneGridRect() const;
-
-    bool m_restrictSubcomponentPositioning = false;
-    bool m_inResizeDragZone = false;
-    bool m_resizeDragging = false;
-    bool m_isTopLevelSerializedComponent = false;
-
-    std::vector<ComponentGraphic*> m_subcomponents;
-    ComponentGraphic* m_parentComponentGraphic = nullptr;
-
-    QMap<SimPort*, PortGraphic*> m_inputPorts;
-    QMap<SimPort*, PortGraphic*> m_outputPorts;
-
-    Label* m_label = nullptr;
-
-    // Rectangles
-    QPainterPath m_shape;
-
-    QPolygon m_gridPoints;
-
-    QFont m_font;
-
-    QPointF m_expandButtonPos;  // Draw position of expand/collapse button in scene coordinates
-    ComponentButton* m_expandButton = nullptr;
-
-protected slots:
-    void loadLayout();
-    void saveLayout();
-    void resetWires();
 };
 }  // namespace vsrtl
 
