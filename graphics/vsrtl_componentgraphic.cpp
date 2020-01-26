@@ -224,14 +224,7 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
                 auto* indicatorAction = indicatorMenu->addAction(QString::fromStdString(p->getPort()->getName()));
                 indicatorAction->setCheckable(true);
                 indicatorAction->setChecked(m_indicators.count(p));
-                connect(indicatorAction, &QAction::triggered, [=](bool checked) {
-                    if (checked) {
-                        m_indicators.emplace(p);
-                    } else {
-                        m_indicators.erase(p);
-                    }
-                    update();
-                });
+                connect(indicatorAction, &QAction::triggered, [=](bool checked) { setIndicatorState(p, checked); });
             }
         }
         if (indicatorMenu->actions().size() == 0) {
@@ -249,6 +242,15 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     connect(labelVisibilityAction, &QAction::triggered, [=] { m_label->setVisible(!labelVisible); });
 
     menu.exec(event->screenPos());
+}
+
+void ComponentGraphic::setIndicatorState(PortGraphic* p, bool enabled) {
+    if (enabled) {
+        m_indicators.emplace(p);
+    } else {
+        m_indicators.erase(p);
+    }
+    update();
 }
 
 void ComponentGraphic::setExpanded(bool state) {

@@ -16,6 +16,7 @@
 #include "vsrtl_wiregraphic.h"
 
 #include "cereal/cereal.hpp"
+#include "cereal/types/set.hpp"
 
 #include <qmath.h>
 
@@ -81,6 +82,7 @@ private slots:
     void handleGridPosChange(const QPoint pos);
     void handlePortPosChanged(const SimPort* port);
     void updateGeometry();
+    void setIndicatorState(PortGraphic* p, bool enabled);
 
 private:
     void verifySpecialSignals() const;
@@ -183,7 +185,7 @@ public:
             // @todo: should this be in port serialization?
             for (auto& p : m_inputPorts) {
                 try {
-                    archive(cereal::make_nvp(p->getPort()->getName(), *p->getOutputWire()));
+                    archive(cereal::make_nvp(p->getPort()->getName() + "_in_wire", *p->getOutputWire()));
                 } catch (cereal::Exception e) {
                     /// @todo: build an error report
                 }
@@ -194,7 +196,7 @@ public:
                 try {
                     archive(cereal::make_nvp(c->getComponent().getName(), *c));
                 } catch (cereal::Exception e) {
-                    /// @todo: build an error report
+                    Q_ASSERT(false);
                 }
             }
         }
@@ -206,7 +208,7 @@ public:
             // Serialize output wire
             for (auto& p : m_outputPorts) {
                 try {
-                    archive(cereal::make_nvp(p->getPort()->getName(), *p->getOutputWire()));
+                    archive(cereal::make_nvp(p->getPort()->getName() + "_out_wire", *p->getOutputWire()));
                 } catch (cereal::Exception e) {
                     /// @todo: build an error report
                 }
@@ -243,6 +245,22 @@ public:
         // Serialize component name label
         try {
             archive(cereal::make_nvp("Name label", *m_label));
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
+
+        // Serialize indicators
+        try {
+            std::set<std::string> indicators;
+            for (const auto& i : m_indicators) {
+                indicators.emplace(i->getPort()->getName());
+            }
+            archive(cereal::make_nvp("Indicators", indicators));
+            for (const auto& ip : m_inputPorts) {
+                if (std::find(indicators.begin(), indicators.end(), ip->getPort()->getName()) != indicators.end()) {
+                    m_indicators.emplace(ip);
+                }
+            }
         } catch (cereal::Exception e) {
             /// @todo: build an error report
         }
