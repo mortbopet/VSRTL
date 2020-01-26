@@ -103,7 +103,7 @@ void VSRTLScene::lockComponents(bool lock) {
 
 void VSRTLScene::setPortValuesVisibleForType(PortType t, bool visible) {
     predicatedExecOnItems<PortGraphic>([t](const PortGraphic* p) { return p->getPortType() == t; },
-                                       &PortGraphic::setLabelVisible, visible);
+                                       &PortGraphic::setValueLabelVisible, visible);
 }
 
 void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {

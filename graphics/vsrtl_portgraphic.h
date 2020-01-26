@@ -3,6 +3,7 @@
 
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphicsbase.h"
+#include "vsrtl_label.h"
 #include "vsrtl_valuelabel.h"
 
 #include "../interface/vsrtl_interface.h"
@@ -56,7 +57,7 @@ public:
     QPointF getOutputPoint() const;
 
     PortType getPortType() const { return m_type; }
-    void setLabelVisible(bool visible);
+    void setValueLabelVisible(bool visible);
 
     const QPen& getPen();
 
@@ -100,6 +101,7 @@ private:
 
     QPropertyAnimation* m_colorAnimation;
 
+    Label* m_label = nullptr;
     QString m_widthText;
     QFont m_font;
     QPen m_pen;

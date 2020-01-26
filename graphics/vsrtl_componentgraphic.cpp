@@ -196,11 +196,11 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         auto* hideOutputsAction = portMenu->addAction("Hide output values");
         connect(showOutputsAction, &QAction::triggered, [=] {
             for (auto& c : m_outputPorts)
-                c->setLabelVisible(true);
+                c->setValueLabelVisible(true);
         });
         connect(hideOutputsAction, &QAction::triggered, [=] {
             for (auto& c : m_outputPorts)
-                c->setLabelVisible(false);
+                c->setValueLabelVisible(false);
         });
     }
 

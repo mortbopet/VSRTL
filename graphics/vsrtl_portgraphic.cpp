@@ -23,6 +23,9 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     m_pen.setCapStyle(Qt::RoundCap);
     setAcceptHoverEvents(true);
 
+    m_label = new Label(QString::fromStdString(m_port->getDisplayName()), this, 8);
+    m_label->setVisible(false);
+
     if (m_port->isEnumPort()) {
         // By default, display Enum value if underlying port is enum
         m_Radix = Radix::Enum;
@@ -63,7 +66,7 @@ void PortGraphic::updateSlot() {
     m_valueLabel->updateText();
 }
 
-void PortGraphic::setLabelVisible(bool visible) {
+void PortGraphic::setValueLabelVisible(bool visible) {
     m_valueLabel->setVisible(visible);
     updateSlot();
 }
@@ -115,14 +118,20 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     menu.addMenu(createPortRadixMenu(m_port, m_Radix));
 
     if (!isLocked()) {
-        QAction* showLabel = new QAction("Show value");
-        showLabel->setCheckable(true);
-        showLabel->setChecked(m_valueLabel->isVisible());
-        connect(showLabel, &QAction::triggered, [this](bool checked) {
-            setLabelVisible(checked);
+        QAction* showValueAction = new QAction("Show value");
+        showValueAction->setCheckable(true);
+        showValueAction->setChecked(m_valueLabel->isVisible());
+        connect(showValueAction, &QAction::triggered, [this](bool checked) {
+            setValueLabelVisible(checked);
             updateSlot();
         });
-        menu.addAction(showLabel);
+        menu.addAction(showValueAction);
+
+        QAction* showLabelAction = new QAction("Show label");
+        showLabelAction->setCheckable(true);
+        showLabelAction->setChecked(m_label->isVisible());
+        connect(showLabelAction, &QAction::triggered, [this](bool checked) { m_label->setVisible(checked); });
+        menu.addAction(showLabelAction);
     }
 
     menu.exec(event->screenPos());

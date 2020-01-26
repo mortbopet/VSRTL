@@ -11,8 +11,8 @@
 
 namespace vsrtl {
 
-Label::Label(QString text, QGraphicsItem* parent) : GraphicsBase(parent) {
-    m_font = QFont("Monospace", 12);
+Label::Label(QString text, QGraphicsItem* parent, int fontSize) : GraphicsBase(parent) {
+    m_font = QFont("Monospace", fontSize);
 
     setText(text);
     setFlags(ItemIsSelectable);
