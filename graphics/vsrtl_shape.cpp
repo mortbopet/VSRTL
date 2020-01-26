@@ -97,8 +97,8 @@ ShapeRegister::ShapeRegister() {
     ShapeRegister::registerComponentShape(
         GraphicsIDFor(ALU), {[](QTransform t) {
             QPainterPath shape;
-            shape.addPolygon(
-                t.map(QPolygonF({QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1), QPointF(0, 0)})));
+            shape.addPolygon(t.map(QPolygonF({QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1),
+                                              QPointF(0, 0.65), QPointF(0.2, 0.5), QPointF(0, 0.35), QPointF(0, 0)})));
             return shape;
         }});
 
@@ -106,8 +106,8 @@ ShapeRegister::ShapeRegister() {
     ShapeRegister::registerComponentShape(
         GraphicsIDFor(Adder), {[](QTransform t) {
             QPainterPath shape;
-            shape.addPolygon(
-                t.map(QPolygonF({QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1), QPointF(0, 0)})));
+            shape.addPolygon(t.map(QPolygonF({QPointF(0, 0), QPointF(1, 0.2), QPointF(1, 0.8), QPointF(0, 1),
+                                              QPointF(0, 0.65), QPointF(0.2, 0.5), QPointF(0, 0.35), QPointF(0, 0)})));
             return shape;
         }});
 }
