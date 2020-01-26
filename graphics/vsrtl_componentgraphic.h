@@ -240,7 +240,11 @@ public:
         serializeBorder(archive);
 
         // Serialize component name label
-        archive(cereal::make_nvp("Name label", *m_label));
+        try {
+            archive(cereal::make_nvp("Name label", *m_label));
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
     }
 };
 }  // namespace vsrtl

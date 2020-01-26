@@ -113,7 +113,11 @@ public:
     template <class Archive>
     void serialize(Archive& archive) {
         // Serialize port name label
-        archive(cereal::make_nvp("Label", *m_label));
+        try {
+            archive(cereal::make_nvp("Label", *m_label));
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
     }
 };
 

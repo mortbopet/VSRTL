@@ -21,28 +21,52 @@ public:
 
     template <class Archive>
     void serialize(Archive& archive) {
-        bool v = isVisible();
-        archive(cereal::make_nvp("Visible", v));
-        setVisible(v);
+        try {
+            bool v = isVisible();
+            archive(cereal::make_nvp("Visible", v));
+            setVisible(v);
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
 
-        bool bold = m_font.bold();
-        archive(cereal::make_nvp("Bold", bold));
-        m_font.setBold(bold);
+        try {
+            bool bold = m_font.bold();
+            archive(cereal::make_nvp("Bold", bold));
+            m_font.setBold(bold);
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
 
-        bool italic = m_font.italic();
-        archive(cereal::make_nvp("Italic", italic));
-        m_font.setItalic(italic);
+        try {
+            bool italic = m_font.italic();
+            archive(cereal::make_nvp("Italic", italic));
+            m_font.setItalic(italic);
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
 
-        int ptSize = m_font.pointSize();
-        archive(cereal::make_nvp("PtSize", ptSize));
-        m_font.setPointSize(ptSize);
+        try {
+            int ptSize = m_font.pointSize();
+            archive(cereal::make_nvp("PtSize", ptSize));
+            m_font.setPointSize(ptSize);
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
 
-        archive(cereal::make_nvp("Text", m_text));
-        setText(m_text);  // Update text
+        try {
+            archive(cereal::make_nvp("Text", m_text));
+            setText(m_text);  // Update text
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
 
-        QPointF p = pos();
-        archive(cereal::make_nvp("Pos", p));
-        setPos(p);
+        try {
+            QPointF p = pos();
+            archive(cereal::make_nvp("Pos", p));
+            setPos(p);
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
     }
 
 private:

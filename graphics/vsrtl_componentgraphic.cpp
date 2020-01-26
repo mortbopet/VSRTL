@@ -148,7 +148,13 @@ void ComponentGraphic::loadLayout() {
     std::ifstream file(fileName.toStdString());
     cereal::JSONInputArchive archive(file);
     m_isTopLevelSerializedComponent = true;
-    archive(cereal::make_nvp("ComponentGraphic", *this));
+
+    try {
+        archive(cereal::make_nvp("ComponentGraphic", *this));
+    } catch (cereal::Exception e) {
+        /// @todo: build an error report
+    }
+
     m_isTopLevelSerializedComponent = false;
 }
 
@@ -167,7 +173,11 @@ void ComponentGraphic::saveLayout() {
     /// @todo: Is it more applicable to do a typeid(getComponent()).name() ? this would not work accross separate
     /// compilers, but would directly indicate the underlying type of which this layout is compatible with...
     m_isTopLevelSerializedComponent = true;
-    archive(cereal::make_nvp("ComponentGraphic", *this));
+    try {
+        archive(cereal::make_nvp("ComponentGraphic", *this));
+    } catch (cereal::Exception e) {
+        /// @todo: build an error report
+    }
     m_isTopLevelSerializedComponent = false;
 }
 

@@ -137,7 +137,12 @@ public:
                 portPosSerialMap[pm.dir][p.second->getName()] = p.first;
             }
         }
-        archive(cereal::make_nvp("Component border", portPosSerialMap));
+
+        try {
+            archive(cereal::make_nvp("Component border", portPosSerialMap));
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
 
         // Locate ports via. their names and set their positions as per the serialized archive.
         for (const auto& pm : portPosSerialMap) {
