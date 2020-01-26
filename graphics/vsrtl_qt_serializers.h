@@ -13,6 +13,12 @@ void serialize(Archive& archive, QPoint& m) {
     archive(cereal::make_nvp("y", m.ry()));
 }
 
+template <class Archive>
+void serialize(Archive& archive, QPointF& m) {
+    archive(cereal::make_nvp("x", m.rx()));
+    archive(cereal::make_nvp("y", m.ry()));
+}
+
 // QRect serializer
 template <class Archive>
 void serialize(Archive& archive, QRect& m) {

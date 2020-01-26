@@ -205,9 +205,13 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     }
 
     if (m_component.getParent() != nullptr) {
-        auto* hideAction = menu.addAction("Hide");
+        auto* hideAction = menu.addAction("Hide component");
         connect(hideAction, &QAction::triggered, [=] { this->hide(); });
     }
+
+    bool labelVisible = m_label->isVisible();
+    auto* labelVisibilityAction = menu.addAction(labelVisible ? "Hide label" : "Show label");
+    connect(labelVisibilityAction, &QAction::triggered, [=] { m_label->setVisible(!labelVisible); });
 
     menu.exec(event->screenPos());
 }
