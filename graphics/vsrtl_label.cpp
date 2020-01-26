@@ -38,6 +38,9 @@ void Label::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 };
 
 void Label::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
+    if (isLocked())
+        return;
+
     editTriggered();
 }
 
