@@ -108,6 +108,13 @@ private:
     QColor m_penColor;
     QPen m_oldPen;  // Pen which was previously used for paint(). If a change between m_oldPen and m_pen is seen, this
                     // triggers redrawing of the connected wires
+
+public:
+    template <class Archive>
+    void serialize(Archive& archive) {
+        // Serialize port name label
+        archive(cereal::make_nvp("Label", *m_label));
+    }
 };
 
 }  // namespace vsrtl

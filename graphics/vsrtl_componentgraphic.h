@@ -166,8 +166,20 @@ public:
             /// @todo: build an error report
         }
 
+        // Serialize ports
+        for (const auto& pm : {m_inputPorts, m_outputPorts}) {
+            for (const auto& p : pm) {
+                try {
+                    archive(cereal::make_nvp(p->getPort()->getName(), *p));
+                } catch (cereal::Exception e) {
+                    /// @todo: build an error report
+                }
+            }
+        }
+
         if (hasSubcomponents()) {
             // Serialize wires from input ports to subcomponents
+            // @todo: should this be in port serialization?
             for (auto& p : m_inputPorts) {
                 try {
                     archive(cereal::make_nvp(p->getPort()->getName(), *p->getOutputWire()));
