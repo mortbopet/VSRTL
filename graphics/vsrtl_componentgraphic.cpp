@@ -392,7 +392,7 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
                 const bool isNestedComponent = portParent == m_component.getParent();
 
                 if (!isNestedComponent && portParent && portGraphic) {
-                    portGraphic->setVisible(visible & portParent->getGraphic<ComponentGraphic>()->isVisible());
+                    portGraphic->setSourceVisible(visible & portParent->getGraphic<ComponentGraphic>()->isVisible());
                 }
             }
         }

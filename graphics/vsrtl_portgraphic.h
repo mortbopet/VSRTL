@@ -42,6 +42,12 @@ public:
     void postSceneConstructionInitialize2() override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
 
+    /**
+     * @brief setSourceVisible
+     * Whenever a component is hidden, all output ports of said component will set the connecting ports as having their
+     * source ports non-visible.
+     */
+    void setSourceVisible(bool visible);
     void updateGeometry();
     SimPort* getPort() const { return m_port; }
     void setInputWire(WireGraphic* wire);
@@ -78,6 +84,13 @@ private:
     // port/wire connection of this port has been selected.
     bool m_signalSelected = false;
     bool m_hoverActive = false;
+
+    /**
+     * @brief m_sourceVisible (for input ports)
+     * true if the outport which this inputport connects to, is visible. If not, the port shall not be drawn. However,
+     * the port is still scene-visible to allow for user interaction.
+     */
+    bool m_sourceVisible = true;
     ValueDisplayFormat m_valueBase = ValueDisplayFormat::baseTen;
 
     static int s_portGridWidth;

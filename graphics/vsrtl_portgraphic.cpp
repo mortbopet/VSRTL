@@ -137,6 +137,11 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     m_valueLabel->updateText();
 }
 
+void PortGraphic::setSourceVisible(bool visible) {
+    m_sourceVisible = visible;
+    update();
+}
+
 void PortGraphic::setInputWire(WireGraphic* wire) {
     // Set wire is called during post scene construction initialization, wherein WireGraphic's will register with its
     // destination ports (inputs)
@@ -279,6 +284,10 @@ const QPen& PortGraphic::getPen() {
 }
 
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
+    // Only draw the port if the source of the port is visible, or if the user is currently hovering over the port.
+    if (!(m_sourceVisible || m_hoverActive))
+        return;
+
     painter->save();
     painter->setFont(m_font);
     const int offset = m_type == PortType::out ? PORT_INNER_MARGIN
