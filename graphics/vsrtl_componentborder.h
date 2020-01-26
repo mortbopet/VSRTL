@@ -2,6 +2,9 @@
 
 #include <QPoint>
 
+#include "cereal/cereal.hpp"
+#include "cereal/types/map.hpp"
+
 #include "../interface/vsrtl_interface.h"
 
 namespace vsrtl {
@@ -18,16 +21,19 @@ class ComponentBorder {
 public:
     using IdToPortMap = std::map<int, const SimPort*>;
     using PortToIdMap = std::map<const SimPort*, int>;
+    using NameToPortMap = std::map<std::string, const SimPort*>;
 
     ComponentBorder(const SimComponent& c) {
         // Input- and outputs are initialized to uninitialized (<0) indicies on the left- and right side
         for (const auto& p : c.getPorts<SimPort::Direction::in>()) {
             m_portMap[p] = nullptr;
             addPortToSide(PortPos{Side::Left, int(-(m_left.count() + 1))}, p);
+            m_namePortMap[p->getName()] = p;
         }
         for (const auto& p : c.getPorts<SimPort::Direction::out>()) {
             m_portMap[p] = nullptr;
             addPortToSide(PortPos{Side::Right, int(-(m_right.count() + 1))}, p);
+            m_namePortMap[p->getName()] = p;
         }
     }
 
@@ -122,7 +128,32 @@ public:
         }
     }
 
+    template <class Archive>
+    void serialize(Archive& archive) {
+        std::map<Side, std::map<std::string, unsigned>> portPosSerialMap;
+        // Create a mapping between port names and their positions
+        for (const auto& pm : {m_left, m_right, m_top, m_bottom}) {
+            for (const auto& p : pm.idToPort) {
+                portPosSerialMap[pm.dir][p.second->getName()] = p.first;
+            }
+        }
+        archive(cereal::make_nvp("Component border", portPosSerialMap));
+
+        // Locate ports via. their names and set their positions as per the serialized archive.
+        for (const auto& pm : portPosSerialMap) {
+            for (const auto& p : pm.second) {
+                PortPos pos;
+                pos.dir = pm.first;
+                pos.index = p.second;
+
+                const SimPort* port = m_namePortMap.at(p.first);
+                movePort(port, pos);
+            }
+        }
+    }
+
 private:
+    NameToPortMap m_namePortMap;
     std::map<const SimPort*, PortIdBiMap*> m_portMap;
     PortIdBiMap m_left = PortIdBiMap(Side::Left);
     PortIdBiMap m_right = PortIdBiMap(Side::Right);

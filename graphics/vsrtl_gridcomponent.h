@@ -62,6 +62,16 @@ public:
 
     void placeAndRouteSubcomponents();
 
+    template <class Archive>
+    void serializeBorder(Archive& archive) {
+        m_border->serialize(archive);
+        // Invalidate all port positions
+
+        for (const auto& p : m_component.getAllPorts()) {
+            emit portPosChanged(p);
+        }
+    }
+
 signals:
     void gridRectChanged();
     void gridPosChanged(QPoint);

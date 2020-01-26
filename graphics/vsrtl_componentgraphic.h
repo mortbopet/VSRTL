@@ -161,6 +161,12 @@ public:
                 /// @todo: build an error report
             }
         }
+
+        /** Serialize port positions
+         * @todo this is right now done through GridComponent. In reality, all serialization of grid-component logic
+         * (size, positions etc.) should be performed in the grid component.
+         */
+        serializeBorder(archive);
     }
 
 private slots:
