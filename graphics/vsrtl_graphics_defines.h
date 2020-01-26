@@ -43,8 +43,8 @@ enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99
 #define COMPONENT_COLUMN_MARGIN 2
 #define COMPONENT_ROW_MARGIN COMPONENT_COLUMN_MARGIN / 2
 
-#define WIRE_WIDTH 3
-#define COMPONENT_BORDER_WIDTH 3
+#define WIRE_WIDTH 2
+#define COMPONENT_BORDER_WIDTH 2
 
 #define PORT_INNER_MARGIN 5
 
