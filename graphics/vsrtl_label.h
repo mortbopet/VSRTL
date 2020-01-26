@@ -11,7 +11,7 @@ namespace vsrtl {
 
 class Label : public GraphicsBase {
 public:
-    Label(QString text, QGraphicsItem* parent, int fontSize = 12);
+    Label(const QString& text, QGraphicsItem* parent, int fontSize = 12);
 
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;

@@ -108,6 +108,7 @@ protected:
     bool m_resizeDragging = false;
     bool m_isTopLevelSerializedComponent = false;
 
+    std::set<PortGraphic*> m_indicators;
     std::vector<ComponentGraphic*> m_subcomponents;
     ComponentGraphic* m_parentComponentGraphic = nullptr;
 

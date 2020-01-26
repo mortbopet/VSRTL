@@ -214,6 +214,28 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         });
     }
 
+    // ======================== Indicators menu ============================ //
+    if (m_inputPorts.size() > 0) {
+        auto* indicatorMenu = menu.addMenu("Indicators");
+        for (const auto& p : m_inputPorts) {
+            // Value indicators for boolean signals. Boolean indicators will be visible even if the port responsible for
+            // the indicator gets hidden.
+            if (p->getPort()->getWidth() == 1) {
+                auto* indicatorAction = indicatorMenu->addAction(QString::fromStdString(p->getPort()->getName()));
+                indicatorAction->setCheckable(true);
+                indicatorAction->setChecked(m_indicators.count(p));
+                connect(indicatorAction, &QAction::triggered, [=](bool checked) {
+                    if (checked) {
+                        m_indicators.emplace(p);
+                    } else {
+                        m_indicators.erase(p);
+                    }
+                    update();
+                });
+            }
+        }
+    }
+
     if (m_component.getParent() != nullptr) {
         auto* hideAction = menu.addAction("Hide component");
         connect(hideAction, &QAction::triggered, [=] { this->hide(); });
@@ -431,6 +453,24 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         }
     }
 
+    // Paint boolean indicators
+    for (const auto& p : m_indicators) {
+        if (p->getPort()->uValue()) {
+            painter->setBrush(Qt::green);
+        } else {
+            painter->setBrush(Qt::red);
+        }
+
+        constexpr qreal dotSize = 12;
+        QRectF chordRect(-dotSize / 2, -dotSize / 2, dotSize, dotSize);
+        chordRect.translate(mapFromItem(p, p->getOutputPoint()));
+        QPen pen = painter->pen();
+        pen.setWidth(WIRE_WIDTH - 1);
+        painter->setPen(pen);
+        painter->drawChord(chordRect, -90 * 16, 180 * 16);
+    }
+
+    // Paint overlay
     paintOverlay(painter, option, w);
 
 #ifdef VSRTL_DEBUG_DRAW
