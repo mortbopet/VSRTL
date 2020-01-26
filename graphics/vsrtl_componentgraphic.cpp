@@ -137,14 +137,7 @@ void ComponentGraphic::resetWires() {
     }
 }
 
-void ComponentGraphic::loadLayout() {
-    QString fileName = QFileDialog::getOpenFileName(QApplication::activeWindow(),
-                                                    "Save Layout " + QString::fromStdString(m_component.getName()),
-                                                    QString(), tr("JSON (*.json)"));
-
-    if (fileName.isEmpty())
-        return;
-
+void ComponentGraphic::loadLayoutFile(const QString& fileName) {
     std::ifstream file(fileName.toStdString());
     cereal::JSONInputArchive archive(file);
     m_isTopLevelSerializedComponent = true;
@@ -156,6 +149,17 @@ void ComponentGraphic::loadLayout() {
     }
 
     m_isTopLevelSerializedComponent = false;
+}
+
+void ComponentGraphic::loadLayout() {
+    QString fileName = QFileDialog::getOpenFileName(QApplication::activeWindow(),
+                                                    "Save Layout " + QString::fromStdString(m_component.getName()),
+                                                    QString(), tr("JSON (*.json)"));
+
+    if (fileName.isEmpty())
+        return;
+
+    loadLayoutFile(fileName);
 }
 
 void ComponentGraphic::saveLayout() {

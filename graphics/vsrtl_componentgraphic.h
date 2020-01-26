@@ -129,7 +129,8 @@ protected:
     QPointF m_expandButtonPos;  // Draw position of expand/collapse button in scene coordinates
     ComponentButton* m_expandButton = nullptr;
 
-protected slots:
+public slots:
+    void loadLayoutFile(const QString& file);
     void loadLayout();
     void saveLayout();
     void resetWires();

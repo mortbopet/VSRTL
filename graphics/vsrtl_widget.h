@@ -25,6 +25,7 @@ public:
 
     void addComponent(ComponentGraphic* g);
     void expandAllComponents(ComponentGraphic* fromThis = nullptr);
+    ComponentGraphic* getTopLevelComponent() { return m_topLevelComponent; }
 
     void setDesign(SimDesign* design);
     void clearDesign();
@@ -58,7 +59,7 @@ private:
     void initializeDesign();
     Ui::VSRTLWidget* ui;
 
-    vsrtl::ComponentGraphic* m_topLevelComponent = nullptr;
+    ComponentGraphic* m_topLevelComponent = nullptr;
 
     VSRTLView* m_view;
     VSRTLScene* m_scene;
