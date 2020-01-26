@@ -16,6 +16,7 @@ public:
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
 
     void setText(const QString& text);
 
@@ -70,6 +71,8 @@ public:
     }
 
 private:
+    void editTriggered();
+
     QString m_text;
     QRectF m_textRect;
     QFont m_font;

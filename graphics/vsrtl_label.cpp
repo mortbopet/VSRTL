@@ -28,27 +28,33 @@ void Label::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         return;
 
     QMenu menu;
-    auto* editAction = menu.addAction("Edit");
-    connect(editAction, &QAction::triggered, [=] {
-        LabelEditDialog diag;
-        diag.m_ui->bold->setChecked(m_font.bold());
-        diag.m_ui->italic->setChecked(m_font.italic());
-        diag.m_ui->size->setValue(m_font.pointSize());
-        diag.m_ui->text->setText(m_text);
+    auto* editAction = menu.addAction("Edit label");
+    connect(editAction, &QAction::triggered, this, &Label::editTriggered);
 
-        if (diag.exec()) {
-            m_font.setBold(diag.m_ui->bold->isChecked());
-            m_font.setItalic(diag.m_ui->italic->isChecked());
-            m_font.setPointSize(diag.m_ui->size->value());
-            setText(diag.m_ui->text->text());
-        }
-    });
-
-    auto* hideAction = menu.addAction("Hide");
+    auto* hideAction = menu.addAction("Hide label");
     connect(hideAction, &QAction::triggered, [=] { setVisible(false); });
 
     menu.exec(event->screenPos());
 };
+
+void Label::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
+    editTriggered();
+}
+
+void Label::editTriggered() {
+    LabelEditDialog diag;
+    diag.m_ui->bold->setChecked(m_font.bold());
+    diag.m_ui->italic->setChecked(m_font.italic());
+    diag.m_ui->size->setValue(m_font.pointSize());
+    diag.m_ui->text->setText(m_text);
+
+    if (diag.exec()) {
+        m_font.setBold(diag.m_ui->bold->isChecked());
+        m_font.setItalic(diag.m_ui->italic->isChecked());
+        m_font.setPointSize(diag.m_ui->size->value());
+        setText(diag.m_ui->text->text());
+    }
+}
 
 void Label::setText(const QString& text) {
     prepareGeometryChange();
