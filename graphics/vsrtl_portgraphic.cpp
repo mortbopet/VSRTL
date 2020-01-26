@@ -115,7 +115,6 @@ void PortGraphic::postSceneConstructionInitialize2() {
 
 void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
-    menu.addMenu(createPortRadixMenu(m_port, m_Radix));
 
     if (!isLocked()) {
         QAction* showValueAction = new QAction("Show value");
