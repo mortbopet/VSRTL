@@ -315,6 +315,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
 
     // Set all wires previously connecting to the input wire to connect with the new start point
     for (auto& wire : pointToRemove->getOutputWires()) {
+        Q_ASSERT(wire->getStart() == pointToRemove);
         wire->setStart(newStartPoint);
     }
     Q_ASSERT(pointToRemove->getOutputWires().size() == 0);

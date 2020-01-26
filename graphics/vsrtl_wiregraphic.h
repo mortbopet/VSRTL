@@ -213,14 +213,7 @@ public:
             auto* from = idxToPort[w.first];
             auto* to = idxToPort[w.second];
 
-            auto* newSeg = createSegment(from, to);
-
-            if (auto* g = dynamic_cast<WirePoint*>(from)) {
-                g->addOutputWire(newSeg);
-            }
-            if (auto* g = dynamic_cast<WirePoint*>(to)) {
-                g->setInputWire(newSeg);
-            }
+            createSegment(from, to);
         }
 
         // Move wire points (must be done >after< the point has been associated with wires)
