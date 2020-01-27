@@ -88,11 +88,11 @@ protected:
     void spreadPorts();
 
     /**
-     * @brief scalePorts
-     * Adjust all ports of the component such that their position is scaled relative to the height scaling @p sh and
-     * width scaling @p sw.
+     * @brief spreadPortsOrdered
+     * Adjust all ports of the component such that their position is evenly spread on the faces of the gridcomponent.
+     * Ports are spread in the order of which they currently appear on the given side.
      */
-    void scalePorts(float sw, float sh);
+    void spreadPortsOrdered();
 
 private:
     /**

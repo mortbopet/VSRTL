@@ -22,6 +22,7 @@ void GridComponent::setExpanded(bool state) {
 
     m_lastComponentRect = getCurrentComponentRect();
     m_expanded = state;
+    spreadPortsOrdered();
 
     // This component just modified its geometry - this might require the parent component to expand its current
     // bounding rect
@@ -217,7 +218,8 @@ bool GridComponent::updateMinimumGridRect() {
 bool GridComponent::updateCurrentComponentRect(int dx, int dy) {
     m_lastComponentRect = getCurrentComponentRect();
     getCurrentComponentRectRef().adjust(0, 0, dx, dy);
-    spreadPorts();
+
+    spreadPortsOrdered();
 
     // Port spreading only emits port positioning update signals when a port changes position logically on a given side.
     // If dx !^ dy, the component is adjusted in only a single direction. As such, ports on the side in the given change
@@ -271,7 +273,7 @@ void GridComponent::spreadPortsOnSide(const Side& side) {
     if (n_ports > 0) {
         int i = 0;
         auto h = getCurrentComponentRect().height();
-        const double diff = getCurrentComponentRect().height() / n_ports;
+        const double diff = h / n_ports;
         for (const auto& p : biMapCopy.portToId) {
             const int gridIndex = std::ceil((i * diff + diff / 2));
             const auto* port = p.first;  // Store port pointer here; p reference may change during port moving
@@ -280,6 +282,27 @@ void GridComponent::spreadPortsOnSide(const Side& side) {
                 emit portPosChanged(p);
             }
             i++;
+        }
+    }
+}
+
+void GridComponent::spreadPortsOrdered() {
+    for (const auto& side : {Side::Left, Side::Right}) {
+        auto biMapCopy = m_border->dirToMap(side);
+        const auto n_ports = biMapCopy.count();
+        if (n_ports > 0) {
+            int i = 0;
+            auto h = getCurrentComponentRect().height();
+            const double diff = getCurrentComponentRect().height() / n_ports;
+            for (const auto& idp : biMapCopy.idToPort) {
+                const int gridIndex = std::ceil((i * diff + diff / 2));
+                const auto* port = idp.second;  // Store port pointer here; p reference may change during port moving
+                const auto movedPorts = m_border->movePort(port, PortPos{side, gridIndex});
+                for (const auto& p : movedPorts) {
+                    emit portPosChanged(p);
+                }
+                i++;
+            }
         }
     }
 }
