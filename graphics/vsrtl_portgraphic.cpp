@@ -231,6 +231,9 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
     if (m_inputWire && m_type == PortType::in && change == QGraphicsItem::ItemVisibleChange) {
         // Inform wires terminating in this port to set their visibility based on this ports visibility
         m_inputWire->setWiresVisibleToPort(m_portPoint, value.toBool());
+        if (m_inputWire->isVisible()) {
+            setSourceVisible(true);
+        }
     }
 
     return QGraphicsItem::itemChange(change, value);
