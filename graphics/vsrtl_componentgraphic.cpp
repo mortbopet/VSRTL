@@ -7,7 +7,6 @@
 #include "vsrtl_multiplexergraphic.h"
 #include "vsrtl_placeroute.h"
 #include "vsrtl_portgraphic.h"
-#include "vsrtl_registergraphic.h"
 #include "vsrtl_scene.h"
 #include "vsrtl_wiregraphic.h"
 
@@ -100,8 +99,6 @@ void ComponentGraphic::createSubcomponents() {
         auto typeId = c->getGraphicsID();
         if (typeId == GraphicsIDFor(Multiplexer)) {
             nc = new MultiplexerGraphic(*c, this);
-        } else if (typeId == GraphicsIDFor(Register)) {
-            nc = new RegisterGraphic(*c, this);
         } else if (typeId == GraphicsIDFor(Constant)) {
             // Don't create a distinct ComponentGraphic for constants - these will be drawn next to the port connecting
             // to it
