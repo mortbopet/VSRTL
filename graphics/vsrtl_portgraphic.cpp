@@ -31,10 +31,6 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
         // By default, display Enum value if underlying port is enum
         m_Radix = Radix::Enum;
     }
-    m_valueLabel = new ValueLabel(m_Radix, m_port, this);
-    m_valueLabel->setVisible(false);
-    m_valueLabel->moveBy(3, -6);  // start position (may be dragged)
-
     port->changed.Connect(this, &PortGraphic::updateSlot);
 
     m_colorAnimation = new QPropertyAnimation(this, "penColor");
@@ -52,6 +48,10 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     m_portPoint->setPos(mapToItem(this, mapToScene(type == PortType::in ? getInputPoint() : getOutputPoint())));
 
     m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), this);
+
+    m_valueLabel = new ValueLabel(m_Radix, m_port, this);
+    m_valueLabel->setVisible(false);
+    m_valueLabel->moveBy(3, -6);  // start position (may be dragged)
 }
 
 void PortGraphic::setOutwireVisible(bool state) {
