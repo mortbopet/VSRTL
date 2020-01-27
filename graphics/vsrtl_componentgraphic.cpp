@@ -238,7 +238,10 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
     if (m_component.getParent() != nullptr) {
         auto* hideAction = menu.addAction("Hide component");
-        connect(hideAction, &QAction::triggered, [=] { this->hide(); });
+        connect(hideAction, &QAction::triggered, [=] {
+            m_userHidden = true;
+            this->hide();
+        });
     }
 
     bool labelVisible = m_label->isVisible();
@@ -263,7 +266,7 @@ void ComponentGraphic::setExpanded(bool state) {
     if (m_expandButton != nullptr) {
         m_expandButton->setChecked(areWeExpanded);
         for (const auto& c : m_subcomponents) {
-            c->setVisible(areWeExpanded);
+            c->setVisible(areWeExpanded && !c->userHidden());
         }
         // We are not hiding the input ports of a component, because these should always be drawn. However, a input port
         // of an expandable component has wires drawin inside the component, which must be hidden aswell, such that they
@@ -272,6 +275,11 @@ void ComponentGraphic::setExpanded(bool state) {
             p->setOutwireVisible(areWeExpanded);
         }
     }
+}
+
+void ComponentGraphic::setUserVisible(bool visible) {
+    m_userHidden = !visible;
+    setVisible(visible);
 }
 
 ComponentGraphic* ComponentGraphic::getParent() const {

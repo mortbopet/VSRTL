@@ -147,7 +147,7 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
                     // currently visible
                     if (c->getParent()->isExpanded()) {
                         auto* action = hiddenMenu->addAction(QString::fromStdString(c->getComponent().getName()));
-                        connect(action, &QAction::triggered, [c] { c->setVisible(true); });
+                        connect(action, &QAction::triggered, [c] { c->setUserVisible(true); });
                         showActions.push_back(action);
                     }
                 }

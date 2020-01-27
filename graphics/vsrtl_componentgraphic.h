@@ -69,6 +69,12 @@ public:
     bool handlePortGraphicMoveAttempt(const PortGraphic* port, const QPointF& newBorderPos);
 
     void setExpanded(bool isExpanded);
+
+    /**
+     * @brief setUserVisible
+     * Called whenever the user enables the visibility of a component.
+     */
+    void setUserVisible(bool state);
     const auto& outputPorts() const { return m_outputPorts; }
 
     // Called by vsrtl_core components linked via signal/slot mechanism
@@ -109,6 +115,13 @@ protected:
     bool m_inResizeDragZone = false;
     bool m_resizeDragging = false;
     bool m_isTopLevelSerializedComponent = false;
+    /**
+     * @brief m_userHidden
+     * True if the user has asked to hide this component. Maintains logical hide-state even
+     * if the parent component is collaposed, rendering this component as non-visible in the scene.
+     */
+    bool m_userHidden = false;
+    bool userHidden() const { return m_userHidden; }
 
     std::set<PortGraphic*> m_indicators;
     std::vector<ComponentGraphic*> m_subcomponents;
@@ -232,6 +245,7 @@ public:
                 bool v = isVisible();
                 archive(cereal::make_nvp("Visible", v));
                 setVisible(v);
+                m_userHidden = !v;
             } catch (cereal::Exception e) {
                 /// @todo: build an error report
             }
