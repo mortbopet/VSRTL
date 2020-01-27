@@ -535,9 +535,7 @@ void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
         auto newGridRect = oldGridRect;
         newGridRect.setBottomRight(gridPos);
 
-        if (adjust(newGridRect)) {
-            updateGeometry();
-        }
+        adjust(newGridRect);
     }
 
     QGraphicsItem::mouseMoveEvent(event);
