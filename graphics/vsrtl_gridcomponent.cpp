@@ -20,6 +20,7 @@ void GridComponent::setExpanded(bool state) {
     if (!hasSubcomponents())
         return;
 
+    m_lastComponentRect = getCurrentComponentRect();
     m_expanded = state;
 
     // This component just modified its geometry - this might require the parent component to expand its current
@@ -214,6 +215,7 @@ bool GridComponent::updateMinimumGridRect() {
 }
 
 bool GridComponent::updateCurrentComponentRect(int dx, int dy) {
+    m_lastComponentRect = getCurrentComponentRect();
     getCurrentComponentRectRef().adjust(0, 0, dx, dy);
     spreadPorts();
 

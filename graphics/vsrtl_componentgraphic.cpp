@@ -281,9 +281,7 @@ ComponentGraphic* ComponentGraphic::getParent() const {
 void ComponentGraphic::updateGeometry() {
     prepareGeometryChange();
     const QRectF sceneRect = sceneGridRect();
-
-    // Set label position
-    m_label->setPos(sceneRect.width() / 2, 0);
+    const QRect& currentGridRect = getCurrentComponentRect();
 
     // Update the draw shape, scaling it to the current scene size of the component grid rect
     QTransform t;
@@ -316,6 +314,22 @@ void ComponentGraphic::updateGeometry() {
         for (int x = gridTopLeft.x(); x <= gridBotRight.x(); x += GRID_SIZE)
             for (int y = gridTopLeft.y(); y <= gridBotRight.y(); y += GRID_SIZE)
                 m_gridPoints << QPoint(x, y);
+    }
+
+    // Adjust label position through scaling by the relative size change of the component.
+    const auto& lastComponentRect = getLastComponentRect();
+    if (lastComponentRect != QRect()) {
+        const auto widthScaledChanged = static_cast<qreal>(currentGridRect.width()) / lastComponentRect.width();
+        const auto heightScaledChanged = static_cast<qreal>(currentGridRect.height()) / lastComponentRect.height();
+
+        // Scale the positioning of the label, adjusting it accordingly to the component size change
+        auto labelPos = m_label->pos();
+        labelPos.rx() *= widthScaledChanged;
+        labelPos.ry() *= heightScaledChanged;
+        m_label->setPos(labelPos);
+    } else {
+        // First time setting label position. Position label above component.
+        m_label->setPos(sceneRect.width() / 2, 0);
     }
 }
 
@@ -517,11 +531,13 @@ void ComponentGraphic::mousePressEvent(QGraphicsSceneMouseEvent* event) {
 void ComponentGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     if (m_resizeDragging) {
         QPoint gridPos = (event->pos() / GRID_SIZE).toPoint();
-        auto newGridRect = getCurrentComponentRect();
+        const auto oldGridRect = getCurrentComponentRect();
+        auto newGridRect = oldGridRect;
         newGridRect.setBottomRight(gridPos);
 
-        if (adjust(newGridRect))
+        if (adjust(newGridRect)) {
             updateGeometry();
+        }
     }
 
     QGraphicsItem::mouseMoveEvent(event);

@@ -54,6 +54,7 @@ public:
     const ComponentBorder& getBorder() const { return *m_border; }
     const QRect& getCurrentComponentRect() const;
     const QRect& getCurrentMinRect() const;
+    const QRect& getLastComponentRect() const { return m_lastComponentRect; }
 
     QPoint getGridPos() const { return m_relPos; }
 
@@ -85,6 +86,13 @@ protected:
      * direction will not be changed
      */
     void spreadPorts();
+
+    /**
+     * @brief scalePorts
+     * Adjust all ports of the component such that their position is scaled relative to the height scaling @p sh and
+     * width scaling @p sw.
+     */
+    void scalePorts(float sw, float sh);
 
 private:
     /**
@@ -136,6 +144,10 @@ private:
     QRect m_currentContractedRect;
     QRect m_currentSubcomponentBoundingRect;
     QRect m_minimumGridRect;
+    QRect m_lastComponentRect =
+        QRect();  // whenever the current component rect changes, objects such as component labels etc.
+                  // may need to be adjusted based on the scaled difference between the new and old
+                  // visible grid rects. For this, we cache the last updated grid rect.
 
     QPoint m_relPos;  // Position in parent coordinates
 };
