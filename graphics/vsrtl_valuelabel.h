@@ -26,6 +26,7 @@ private:
     QString m_text;
     unsigned int m_maxBitWidth;
     static QFont s_font;
+    static QFont s_constantFont;
 };
 
 }  // namespace vsrtl

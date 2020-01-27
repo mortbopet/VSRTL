@@ -9,6 +9,7 @@
 namespace vsrtl {
 
 QFont ValueLabel::s_font = QFont("Monospace", 8);
+QFont ValueLabel::s_constantFont = QFont("Monospace", 10);
 
 static QRectF getTextRect(const QFont& font, const QString& text) {
     QFontMetrics metric = QFontMetrics(font);
@@ -30,13 +31,17 @@ QRectF ValueLabel::boundingRect() const {
 
 void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) {
     painter->save();
-    QRectF textRect = getTextRect(s_font, m_text);
-    textRect.adjust(-1, -1, 1, 1);  // Add a bit of margin to the label
-    painter->fillRect(textRect, Qt::white);
-    painter->setBrush(Qt::NoBrush);
-    painter->setPen(QPen(Qt::black, 1));
-    painter->drawRect(textRect);
-    painter->setFont(s_font);
+    if (!m_port->isConstant()) {
+        QRectF textRect = getTextRect(s_font, m_text);
+        textRect.adjust(-1, -1, 1, 1);  // Add a bit of margin to the label
+        painter->fillRect(textRect, Qt::white);
+        painter->setBrush(Qt::NoBrush);
+        painter->setPen(QPen(Qt::black, 1));
+        painter->drawRect(textRect);
+        painter->setFont(s_font);
+    } else {
+        painter->setFont(s_constantFont);
+    }
     painter->drawText(QPointF{0, 0}, m_text);
 
     painter->restore();

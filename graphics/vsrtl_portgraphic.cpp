@@ -107,7 +107,7 @@ void PortGraphic::postSceneConstructionInitialize2() {
         // Update the ValueLabel (Letting it resize to its final value) and position it next to the port
         updateSlot();
         const auto br = m_valueLabel->boundingRect();
-        m_valueLabel->setPos({-br.width() + 5, (br.height() + br.y()) / 4});
+        m_valueLabel->setPos({-br.width() * 0.8, br.height() * 0.2});
 
         // Initial port color is implicitely set by triggering the wire animation
         m_colorAnimation->start();
