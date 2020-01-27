@@ -178,6 +178,11 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
             this->update();
         });
 
+        auto* showPortWidthAction = drawMenu->addAction("Show port widths");
+        showPortWidthAction->setCheckable(true);
+        showPortWidthAction->setChecked(m_showPortWidth);
+        connect(showPortWidthAction, &QAction::toggled, this, &VSRTLScene::setShowPortWidth);
+
         auto* darkModeAction = drawMenu->addAction("Darkmode");
         darkModeAction->setCheckable(true);
         darkModeAction->setChecked(m_darkmode);
@@ -189,6 +194,11 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     }
 
     menu.exec(event->screenPos());
+}
+
+void VSRTLScene::setShowPortWidth(bool visible) {
+    m_showPortWidth = visible;
+    update();
 }
 
 void VSRTLScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {

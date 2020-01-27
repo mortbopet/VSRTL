@@ -48,6 +48,10 @@ VSRTLWidget::~VSRTLWidget() {
     delete ui;
 }
 
+void VSRTLWidget::setShowPortWidth(bool visible) {
+    m_scene->setShowPortWidth(visible);
+}
+
 void VSRTLWidget::handleSceneSelectionChanged() {
     std::vector<SimComponent*> selectedComponents;
     std::vector<SimPort*> selectedPorts;

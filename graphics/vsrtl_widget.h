@@ -38,6 +38,7 @@ public slots:
     void reset();
     void reverse();
     void setOutputPortValuesVisible(bool visible);
+    void setShowPortWidth(bool visible);
 
     // Selections which are imposed on the scene from external objects (ie. selecting items in the netlist)
     void handleSelectionChanged(const std::vector<SimComponent*>& selected, std::vector<SimComponent*>& deselected);

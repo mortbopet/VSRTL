@@ -1,6 +1,7 @@
 ﻿#include "vsrtl_portgraphic.h"
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_port.h"
+#include "vsrtl_scene.h"
 #include "vsrtl_wiregraphic.h"
 
 #include "math.h"
@@ -297,7 +298,7 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* optio
                                                : s_portGridWidth * GRID_SIZE - m_textRect.width() - PORT_INNER_MARGIN;
 
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
-    if (lod >= 0.6) {
+    if (lod >= 0.6 && static_cast<VSRTLScene*>(scene())->showPortWidth()) {
         painter->drawText(QPointF(offset, m_textRect.height() / 2 + PORT_INNER_MARGIN), m_widthText);
     }
 
