@@ -244,8 +244,8 @@ public:
             try {
                 bool v = isVisible();
                 archive(cereal::make_nvp("Visible", v));
-                setVisible(v);
-                m_userHidden = !v;
+                archive(cereal::make_nvp("User hidden", m_userHidden));
+                setVisible(v && !m_userHidden);
             } catch (cereal::Exception e) {
                 /// @todo: build an error report
             }
