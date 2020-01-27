@@ -438,7 +438,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     if (static_cast<VSRTLScene*>(scene())->darkmode()) {
         color = hasSubcomponents() && isExpanded() ? QColor(QColor(Qt::darkGray).darker()) : QColor("#c0cdd1");
     } else {
-        color = hasSubcomponents() ? QColor("#ecf0f1") : QColor(Qt::white);
+        color = hasSubcomponents() && isExpanded() ? QColor("#ecf0f1") : QColor(Qt::white);
     }
 
     QColor fillColor = (option->state & QStyle::State_Selected) ? color.darker(150) : color;
