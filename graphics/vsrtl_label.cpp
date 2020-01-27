@@ -49,21 +49,36 @@ void Label::editTriggered() {
     diag.m_ui->bold->setChecked(m_font.bold());
     diag.m_ui->italic->setChecked(m_font.italic());
     diag.m_ui->size->setValue(m_font.pointSize());
-    diag.m_ui->text->setText(m_text);
+    auto currentText = m_text;
+    currentText.replace('\n', "\\n");
+    diag.m_ui->text->setText(currentText);
 
     if (diag.exec()) {
         m_font.setBold(diag.m_ui->bold->isChecked());
         m_font.setItalic(diag.m_ui->italic->isChecked());
         m_font.setPointSize(diag.m_ui->size->value());
-        setText(diag.m_ui->text->text());
+        setText(diag.m_ui->text->text().replace("\\n", "\n"));
     }
 }
 
 void Label::setText(const QString& text) {
+    QStringList lines = text.split('\n');
     prepareGeometryChange();
+    int height = 0;
+    int width = 0;
     QFontMetricsF fm(m_font);
+    QPointF topLeft = QPoint();
+    for (const auto& line : lines) {
+        const auto linebr = fm.boundingRect(line);
+        height += linebr.height();
+        width = width < linebr.width() ? linebr.width() : width;
+
+        if (topLeft != QPoint()) {
+            topLeft = linebr.topLeft();
+        }
+    }
     m_text = text;
-    m_textRect = fm.boundingRect(m_text);
+    m_textRect = QRectF(topLeft.x(), topLeft.y(), width, height);
 }
 
 void Label::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
@@ -79,7 +94,10 @@ void Label::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
             pen.setColor(QColor(Qt::lightGray).lighter());
             painter->setPen(pen);
         }
-        painter->drawText(offset, m_text);
+        QTextOption opt;
+        opt.setWrapMode(QTextOption::WordWrap);
+        opt.setAlignment(Qt::AlignCenter);
+        painter->drawText(boundingRect(), m_text, opt);
         painter->restore();
     }
 }

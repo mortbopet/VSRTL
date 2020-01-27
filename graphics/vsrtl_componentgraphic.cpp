@@ -334,7 +334,7 @@ void ComponentGraphic::updateGeometry() {
         m_label->setPos(labelPos);
     } else {
         // First time setting label position. Position label above component.
-        m_label->setPos(sceneRect.width() / 2, 0);
+        m_label->setPos(sceneRect.width() / 2, -m_label->boundingRect().height());
     }
 }
 
