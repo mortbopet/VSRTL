@@ -24,6 +24,7 @@ public:
 
     void setPortValuesVisibleForType(PortType t, bool visible);
     void setShowPortWidth(bool visible);
+    void setLocked(bool locked);
 
     bool isLocked() const { return m_isLocked; }
     bool darkmode() const { return m_darkmode; }
@@ -68,9 +69,6 @@ private:
             }
         }
     }
-
-private slots:
-    void lockComponents(bool locked);
 
 protected:
 #ifdef VSRTL_DEBUG_DRAW

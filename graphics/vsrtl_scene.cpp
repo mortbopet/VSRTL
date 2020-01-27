@@ -92,7 +92,7 @@ void VSRTLScene::drawBackground(QPainter* painter, const QRectF& rect) {
     painter->restore();
 }
 
-void VSRTLScene::lockComponents(bool lock) {
+void VSRTLScene::setLocked(bool lock) {
     m_isLocked = lock;
 
     for (auto& i : items()) {
@@ -116,7 +116,7 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     auto lockAction = menu.addAction(m_isLocked ? "Unlock" : "Lock");
     lockAction->setCheckable(true);
     lockAction->setChecked(m_isLocked);
-    connect(lockAction, &QAction::triggered, this, &VSRTLScene::lockComponents);
+    connect(lockAction, &QAction::triggered, this, &VSRTLScene::setLocked);
 
     menu.addSeparator();
 

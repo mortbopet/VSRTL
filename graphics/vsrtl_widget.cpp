@@ -44,6 +44,10 @@ void VSRTLWidget::setOutputPortValuesVisible(bool visible) {
     m_scene->setPortValuesVisibleForType(PortType::out, visible);
 }
 
+void VSRTLWidget::setLocked(bool locked) {
+    m_scene->setLocked(locked);
+}
+
 VSRTLWidget::~VSRTLWidget() {
     delete ui;
 }

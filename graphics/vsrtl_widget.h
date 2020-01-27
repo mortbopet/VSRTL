@@ -31,14 +31,16 @@ public:
     void clearDesign();
     bool isReversible();
 
+    void setOutputPortValuesVisible(bool visible);
+    void setShowPortWidth(bool visible);
+    void setLocked(bool locked);
+
 public slots:
     void run();
     void stop() { m_stop = true; }
     void clock();
     void reset();
     void reverse();
-    void setOutputPortValuesVisible(bool visible);
-    void setShowPortWidth(bool visible);
 
     // Selections which are imposed on the scene from external objects (ie. selecting items in the netlist)
     void handleSelectionChanged(const std::vector<SimComponent*>& selected, std::vector<SimComponent*>& deselected);
