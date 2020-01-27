@@ -5,6 +5,7 @@
 
 #include "../interface/vsrtl_interface.h"
 
+#include <QFont>
 #include <QGraphicsItem>
 
 namespace vsrtl {
@@ -24,6 +25,7 @@ private:
     const SimPort* m_port;
     QString m_text;
     unsigned int m_maxBitWidth;
+    static QFont s_font;
 };
 
 }  // namespace vsrtl

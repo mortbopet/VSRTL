@@ -33,7 +33,7 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     }
     m_valueLabel = new ValueLabel(m_Radix, m_port, this);
     m_valueLabel->setVisible(false);
-    m_valueLabel->moveBy(0, -10);  // start position (may be dragged)
+    m_valueLabel->moveBy(3, -6);  // start position (may be dragged)
 
     port->changed.Connect(this, &PortGraphic::updateSlot);
 

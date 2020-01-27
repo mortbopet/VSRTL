@@ -8,8 +8,10 @@
 
 namespace vsrtl {
 
-static QRectF getTextRect(const QString& text) {
-    QFontMetrics metric = QFontMetrics(QFont());
+QFont ValueLabel::s_font = QFont("Monospace", 8);
+
+static QRectF getTextRect(const QFont& font, const QString& text) {
+    QFontMetrics metric = QFontMetrics(font);
     return metric.boundingRect(text);
 }
 
@@ -20,26 +22,22 @@ ValueLabel::ValueLabel(Radix& type, const SimPort* port, QGraphicsItem* parent)
 }
 
 QRectF ValueLabel::boundingRect() const {
-    auto textRect = getTextRect(m_text);
-    textRect.adjust(-10, -10, 10, 10);
+    auto textRect = getTextRect(s_font, m_text);
+    textRect.adjust(-3, -3, 3, 3);
 
     return textRect;
 }
 
 void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) {
     painter->save();
-    QRectF textRect = getTextRect(m_text);
-    textRect.adjust(-5, 0, 10, 5);  // adjust for pen width
+    QRectF textRect = getTextRect(s_font, m_text);
+    textRect.adjust(-1, -1, 1, 1);  // Add a bit of margin to the label
     painter->fillRect(textRect, Qt::white);
     painter->setBrush(Qt::NoBrush);
-    painter->setPen(QPen(Qt::black, 2));
+    painter->setPen(QPen(Qt::black, 1));
     painter->drawRect(textRect);
-    painter->setFont(QFont());
-    // Calculate drawing position
-    QPointF textPos = textRect.topLeft();
-    textPos.rx() += 5;
-    textPos.ry() += 16;
-    painter->drawText(textPos, m_text);
+    painter->setFont(s_font);
+    painter->drawText(QPointF{0, 0}, m_text);
 
     painter->restore();
 }
