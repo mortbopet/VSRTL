@@ -9,6 +9,33 @@
 #include <deque>
 #include <vector>
 
+/** Registered input
+ *  Constructs an inputport, outputport and register component with a given name @p input and @p width.
+ * Useful for creatng shift registers or pipeline stage separating register banks.
+ */
+#define REGISTERED_INPUT(input, width)          \
+    INPUTPORT(input##_in, width);               \
+    SUBCOMPONENT(input##_reg, Register<width>); \
+    OUTPUTPORT(input##_out, width)
+
+#define CONNECT_REGISTERED_INPUT(input) \
+    input##_in >> input##_reg->in;      \
+    input##_reg->out >> input##_out
+
+/** Registeren Clear/Enable input
+ * Similar to above, but instantiates clear/enable registers.
+ */
+#define REGISTERED_CLEN_INPUT(input, width)         \
+    INPUTPORT(input##_in, width);                   \
+    SUBCOMPONENT(input##_reg, RegisterClEn<width>); \
+    OUTPUTPORT(input##_out, width)
+
+#define CONNECT_REGISTERED_CLEN_INPUT(input, cl, en) \
+    input##_in >> input##_reg->in;                   \
+    cl >> input##_reg->clear;                        \
+    en >> input##_reg->enable;                       \
+    input##_reg->out >> input##_out
+
 namespace vsrtl {
 namespace core {
 
