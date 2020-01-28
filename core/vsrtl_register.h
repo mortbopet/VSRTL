@@ -1,5 +1,5 @@
-#ifndef REGISTER_H
-#define REGISTER_H
+#ifndef VSRTL_REGISTER_H
+#define VSRTL_REGISTER_H
 
 #include "../interface/vsrtl_binutils.h"
 #include "vsrtl_component.h"
@@ -90,31 +90,28 @@ protected:
     std::deque<VSRTL_VT_U> m_reverseStack;
 };
 
+// Synchronous clear/enable register
 template <unsigned int W>
-class RegisterEn : public Register<W> {
+class RegisterClEn : public Register<W> {
 public:
-    RegisterEn(std::string name, SimComponent* parent) : Register<W>(name, parent) {}
+    RegisterClEn(std::string name, SimComponent* parent) : Register<W>(name, parent) {}
 
     void save() override {
         this->saveToStack();
         if (enable.uValue()) {
-            this->m_savedValue = this->in.template value<VSRTL_VT_U>();
+            if (clear.uValue()) {
+                this->m_savedValue = 0;
+            } else {
+                this->m_savedValue = this->in.template value<VSRTL_VT_U>();
+            }
         }
     }
 
     INPUTPORT(enable, 1);
-};
-
-class RegisterBank : public Component {
-public:
-    SetGraphicsType(RegisterBank);
-    RegisterBank(std::string name, SimComponent* parent) : Component(name, parent) {}
-
     INPUTPORT(clear, 1);
-    INPUTPORT(enable, 1);
 };
 
 }  // namespace core
 }  // namespace vsrtl
 
-#endif  // REGISTER_H
+#endif  // VSRTL_REGISTER_H
