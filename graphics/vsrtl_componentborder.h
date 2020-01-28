@@ -147,6 +147,9 @@ public:
         // Locate ports via. their names and set their positions as per the serialized archive.
         for (const auto& pm : portPosSerialMap) {
             for (const auto& p : pm.second) {
+                if (!m_namePortMap.count(p.first))
+                    continue;
+
                 PortPos pos;
                 pos.dir = pm.first;
                 pos.index = p.second;
