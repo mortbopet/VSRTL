@@ -110,7 +110,7 @@ private:
 
     ValueLabel* m_valueLabel = nullptr;
 
-    Radix m_Radix = Radix::Hex;
+    Radix m_radix = Radix::Hex;
 
     QPropertyAnimation* m_colorAnimation;
 

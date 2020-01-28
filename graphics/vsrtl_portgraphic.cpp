@@ -29,7 +29,7 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
 
     if (m_port->isEnumPort()) {
         // By default, display Enum value if underlying port is enum
-        m_Radix = Radix::Enum;
+        m_radix = Radix::Enum;
     }
     port->changed.Connect(this, &PortGraphic::updateSlot);
 
@@ -49,7 +49,7 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
 
     m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), this);
 
-    m_valueLabel = new ValueLabel(m_Radix, m_port, this);
+    m_valueLabel = new ValueLabel(m_radix, m_port, this);
     m_valueLabel->setVisible(false);
     m_valueLabel->moveBy(3, -6);  // start position (may be dragged)
 }
@@ -103,7 +103,7 @@ void PortGraphic::postSceneConstructionInitialize2() {
     if (m_port->isConstant()) {
         // For constant ports, we by default display the value of the port
         m_valueLabel->show();
-        m_Radix = Radix::Signed;
+        m_radix = m_port->getWidth() == 1 ? Radix::Unsigned : Radix::Signed;
         // Update the ValueLabel (Letting it resize to its final value) and position it next to the port
         updateSlot();
         const auto br = m_valueLabel->boundingRect();
@@ -212,7 +212,7 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
 }
 
 QString PortGraphic::getTooltipString() const {
-    return QString::fromStdString(m_port->getDisplayName() + ":\n") + encodePortRadixValue(m_port, m_Radix);
+    return QString::fromStdString(m_port->getDisplayName() + ":\n") + encodePortRadixValue(m_port, m_radix);
 }
 
 QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
