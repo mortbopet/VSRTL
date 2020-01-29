@@ -69,6 +69,7 @@ void PortGraphic::updateSlot() {
 
 void PortGraphic::setValueLabelVisible(bool visible) {
     m_valueLabel->setVisible(visible);
+    m_valueLabel->setLocked(false);
     updateSlot();
 }
 
@@ -117,22 +118,23 @@ void PortGraphic::postSceneConstructionInitialize2() {
 void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
 
-    if (!isLocked()) {
-        QAction* showValueAction = new QAction("Show value");
-        showValueAction->setCheckable(true);
-        showValueAction->setChecked(m_valueLabel->isVisible());
-        connect(showValueAction, &QAction::triggered, [this](bool checked) {
-            setValueLabelVisible(checked);
-            updateSlot();
-        });
-        menu.addAction(showValueAction);
+    QAction* showValueAction = new QAction("Show value");
+    showValueAction->setCheckable(true);
+    showValueAction->setChecked(m_valueLabel->isVisible());
+    connect(showValueAction, &QAction::triggered, [this](bool checked) {
+        setValueLabelVisible(checked);
+        updateSlot();
+    });
+    menu.addAction(showValueAction);
 
-        QAction* showLabelAction = new QAction("Show label");
-        showLabelAction->setCheckable(true);
-        showLabelAction->setChecked(m_label->isVisible());
-        connect(showLabelAction, &QAction::triggered, [this](bool checked) { m_label->setVisible(checked); });
-        menu.addAction(showLabelAction);
-    }
+    QAction* showLabelAction = new QAction("Show label");
+    showLabelAction->setCheckable(true);
+    showLabelAction->setChecked(m_label->isVisible());
+    connect(showLabelAction, &QAction::triggered, [this](bool checked) {
+        m_label->setVisible(checked);
+        m_label->setLocked(false);
+    });
+    menu.addAction(showLabelAction);
 
     menu.exec(event->screenPos());
     m_valueLabel->updateText();

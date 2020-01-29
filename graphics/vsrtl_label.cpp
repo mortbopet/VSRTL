@@ -24,13 +24,11 @@ QRectF Label::boundingRect() const {
 }
 
 void Label::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
-    if (isLocked())
-        return;
-
     QMenu menu;
-    auto* editAction = menu.addAction("Edit label");
-    connect(editAction, &QAction::triggered, this, &Label::editTriggered);
-
+    if (!isLocked()) {
+        auto* editAction = menu.addAction("Edit label");
+        connect(editAction, &QAction::triggered, this, &Label::editTriggered);
+    }
     auto* hideAction = menu.addAction("Hide label");
     connect(hideAction, &QAction::triggered, [=] { setVisible(false); });
 

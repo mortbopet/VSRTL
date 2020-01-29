@@ -51,13 +51,11 @@ void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
     menu.addMenu(createPortRadixMenu(m_port, m_type));
 
-    if (!isLocked()) {
-        QAction* showLabel = new QAction("Show value");
-        showLabel->setCheckable(true);
-        showLabel->setChecked(isVisible());
-        QObject::connect(showLabel, &QAction::triggered, [this](bool checked) { setVisible(checked); });
-        menu.addAction(showLabel);
-    }
+    QAction* showLabel = new QAction("Show value");
+    showLabel->setCheckable(true);
+    showLabel->setChecked(isVisible());
+    QObject::connect(showLabel, &QAction::triggered, [this](bool checked) { setVisible(checked); });
+    menu.addAction(showLabel);
 
     menu.exec(event->screenPos());
 

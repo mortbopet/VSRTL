@@ -183,12 +183,9 @@ void ComponentGraphic::saveLayout() {
 }
 
 void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
-    if (isLocked())
-        return;
-
     QMenu menu;
 
-    if (hasSubcomponents()) {
+    if (hasSubcomponents() && !isLocked()) {
         // ======================== Layout menu ============================ //
         auto* layoutMenu = menu.addMenu("Layout");
         auto* loadAction = layoutMenu->addAction("Load layout");
@@ -216,7 +213,7 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     }
 
     // ======================== Indicators menu ============================ //
-    if (m_inputPorts.size() > 0) {
+    if ((m_inputPorts.size() > 0) && !isLocked()) {
         auto* indicatorMenu = menu.addMenu("Indicators");
         for (const auto& p : m_inputPorts) {
             // Value indicators for boolean signals. Boolean indicators will be visible even if the port responsible for
@@ -233,7 +230,7 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         }
     }
 
-    if (m_component.getParent() != nullptr) {
+    if ((m_component.getParent() != nullptr) && !isLocked()) {
         auto* hideAction = menu.addAction("Hide component");
         connect(hideAction, &QAction::triggered, [=] {
             m_userHidden = true;
