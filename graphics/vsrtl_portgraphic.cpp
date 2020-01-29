@@ -242,7 +242,7 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
 
 void PortGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     // Move port position
-    if (isSelected()) {
+    if (isSelected() && !isLocked()) {
         auto* parent = static_cast<ComponentGraphic*>(parentItem());
         if (parent->handlePortGraphicMoveAttempt(this, event->pos())) {
             update();
