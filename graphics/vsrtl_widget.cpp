@@ -38,6 +38,8 @@ void VSRTLWidget::setDesign(SimDesign* design) {
     }
     m_design = design;
     initializeDesign();
+
+    setLocked(m_scene->isLocked());
 }
 
 void VSRTLWidget::setOutputPortValuesVisible(bool visible) {
