@@ -118,7 +118,7 @@ void PortGraphic::postSceneConstructionInitialize2() {
 void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
 
-    QAction* showValueAction = new QAction("Show value");
+    QAction* showValueAction = menu.addAction("Show value");
     showValueAction->setCheckable(true);
     showValueAction->setChecked(m_valueLabel->isVisible());
     connect(showValueAction, &QAction::triggered, [this](bool checked) {
@@ -127,7 +127,7 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     });
     menu.addAction(showValueAction);
 
-    QAction* showLabelAction = new QAction("Show label");
+    QAction* showLabelAction = menu.addAction("Show label");
     showLabelAction->setCheckable(true);
     showLabelAction->setChecked(m_label->isVisible());
     connect(showLabelAction, &QAction::triggered, [this](bool checked) {
