@@ -136,6 +136,14 @@ public:
 
     void clearLayout();
 
+    /**
+     * @brief postSerializeInit
+     * Called after a WireGraphic has been loaded through serialization. This will call the in- and output ports of the
+     * WireGraphic and re-execute their visibility state functions, to propagate their visibility state to the wire
+     * segments, post-serialization.
+     */
+    void postSerializeInit();
+
     template <class Archive>
     void load(Archive& archive) {
         // Deserialize the layout
@@ -220,6 +228,8 @@ public:
         for (const auto& p : idxToPort) {
             p.second->setPos(idxToPoints[p.first]);
         }
+
+        postSerializeInit();
     }
 
     template <class Archive>

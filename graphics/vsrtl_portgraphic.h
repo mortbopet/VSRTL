@@ -48,6 +48,13 @@ public:
      * source ports non-visible.
      */
     void setSourceVisible(bool visible);
+
+    /**
+     * @brief setPortVisible
+     * Routine called whenever this port has triggered its visibility, either through scene- or user visibility.
+     */
+    void setPortVisible(bool visible);
+
     void updateGeometry();
     SimPort* getPort() const { return m_port; }
     void setInputWire(WireGraphic* wire);
@@ -58,6 +65,8 @@ public:
     QString getTooltipString() const;
 
     void setOutwireVisible(bool state);
+    bool userHidden() const { return m_userHidden; }
+    void setUserVisible(bool visible);
 
     QPointF getInputPoint() const;
     QPointF getOutputPoint() const;
@@ -79,6 +88,13 @@ private:
     void propagateRedraw();
     void updatePen(bool aboutToBeSelected = false, bool aboutToBeDeselected = false);
     void updateSlot();
+
+    /**
+     * @brief m_userHidden
+     * True if the user has asked to hide this component. Maintains logical hide-state even
+     * if the parent component is collaposed, rendering this component as non-visible in the scene.
+     */
+    bool m_userHidden = false;
 
     // m_signalSelected: does not indicate visual selection (ie. isSelected()), but rather whether any port in the
     // port/wire connection of this port has been selected.
@@ -128,6 +144,14 @@ public:
         // Serialize port name label
         try {
             archive(cereal::make_nvp("Label", *m_label));
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
+
+        // Serialize port visibility state
+        try {
+            archive(cereal::make_nvp("UserHidden", m_userHidden));
+            setUserVisible(!userHidden());
         } catch (cereal::Exception e) {
             /// @todo: build an error report
         }

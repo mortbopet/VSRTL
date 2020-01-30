@@ -578,6 +578,16 @@ void WireGraphic::postSceneConstructionInitialize1() {
     GraphicsBase::postSceneConstructionInitialize1();
 }
 
+void WireGraphic::postSerializeInit() {
+    if (m_fromPort) {
+        m_fromPort->setUserVisible(!m_fromPort->userHidden());
+    }
+
+    for (const auto& p : m_toGraphicPorts) {
+        p->setUserVisible(!p->userHidden());
+    }
+}
+
 const QPen& WireGraphic::getPen() {
     // propagate the source port pen to callers
     return m_fromPort->getPen();

@@ -68,9 +68,11 @@ void PortGraphic::updateSlot() {
 }
 
 void PortGraphic::setValueLabelVisible(bool visible) {
-    m_valueLabel->setVisible(visible);
-    m_valueLabel->setLocked(false);
-    updateSlot();
+    if (!userHidden() || m_valueLabel->isVisible()) {
+        m_valueLabel->setVisible(visible);
+        m_valueLabel->setLocked(false);
+        updateSlot();
+    }
 }
 
 void PortGraphic::updateWireGeometry() {
@@ -118,14 +120,16 @@ void PortGraphic::postSceneConstructionInitialize2() {
 void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
 
-    QAction* showValueAction = menu.addAction("Show value");
-    showValueAction->setCheckable(true);
-    showValueAction->setChecked(m_valueLabel->isVisible());
-    connect(showValueAction, &QAction::triggered, [this](bool checked) {
-        setValueLabelVisible(checked);
-        updateSlot();
-    });
-    menu.addAction(showValueAction);
+    if (!userHidden()) {
+        QAction* showValueAction = menu.addAction("Show value");
+        showValueAction->setCheckable(true);
+        showValueAction->setChecked(m_valueLabel->isVisible());
+        connect(showValueAction, &QAction::triggered, [this](bool checked) {
+            setValueLabelVisible(checked);
+            updateSlot();
+        });
+        menu.addAction(showValueAction);
+    }
 
     QAction* showLabelAction = menu.addAction("Show label");
     showLabelAction->setCheckable(true);
@@ -136,13 +140,15 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     });
     menu.addAction(showLabelAction);
 
+    if (!isLocked()) {
+        QAction* showAction = menu.addAction("Show port");
+        showAction->setCheckable(true);
+        showAction->setChecked(!userHidden());
+        connect(showAction, &QAction::triggered, [=](bool checked) { setUserVisible(checked); });
+    }
+
     menu.exec(event->screenPos());
     m_valueLabel->updateText();
-}
-
-void PortGraphic::setSourceVisible(bool visible) {
-    m_sourceVisible = visible;
-    update();
 }
 
 void PortGraphic::setInputWire(WireGraphic* wire) {
@@ -231,15 +237,50 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
         }
     }
 
-    if (m_inputWire && m_type == PortType::in && change == QGraphicsItem::ItemVisibleChange) {
-        // Inform wires terminating in this port to set their visibility based on this ports visibility
-        m_inputWire->setWiresVisibleToPort(m_portPoint, value.toBool());
-        if (m_inputWire->isVisible()) {
-            setSourceVisible(true);
-        }
+    if (change == QGraphicsItem::ItemVisibleChange) {
+        setPortVisible(value.toBool());
     }
 
     return QGraphicsItem::itemChange(change, value);
+}
+
+void PortGraphic::setPortVisible(bool visible) {
+    if (m_inputWire && m_type == PortType::in) {
+        // Inform wires terminating in this port to set their visibility based on this ports visibility
+        m_inputWire->setWiresVisibleToPort(m_portPoint, visible && m_sourceVisible && !m_userHidden);
+
+    }
+
+    else if (m_type == PortType::out) {
+        // hide all input ports of other components which this port is the source of.
+        for (const auto& p_conn : m_port->getOutputPorts()) {
+            auto* portParent = p_conn->getParent();
+            auto* portGraphic = p_conn->getGraphic<PortGraphic>();
+
+            const bool isNestedComponent = portParent == m_port->getParent<SimComponent>()->getParent<SimComponent>();
+
+            if (!isNestedComponent && portParent && portGraphic) {
+                portGraphic->setSourceVisible(visible && portParent->getGraphic<ComponentGraphic>()->isVisible() &&
+                                              !m_userHidden);
+            }
+        }
+    }
+}
+
+void PortGraphic::setSourceVisible(bool visible) {
+    m_sourceVisible = visible;
+    setPortVisible(visible);
+    update();
+}
+
+void PortGraphic::setUserVisible(bool visible) {
+    // User visibility only affects port draw state, >not< its scene visibility.
+
+    m_userHidden = !visible;
+    setPortVisible(visible);
+    setValueLabelVisible(false);
+
+    update();
 }
 
 void PortGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
@@ -291,7 +332,7 @@ const QPen& PortGraphic::getPen() {
 
 void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
     // Only draw the port if the source of the port is visible, or if the user is currently hovering over the port.
-    if (!(m_sourceVisible || m_hoverActive))
+    if (!((m_sourceVisible && !m_userHidden) || m_hoverActive))
         return;
 
     painter->save();

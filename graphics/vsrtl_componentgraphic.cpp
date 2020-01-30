@@ -210,6 +210,18 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
             for (auto& c : m_outputPorts)
                 c->setValueLabelVisible(false);
         });
+
+        auto* hiddenPortsMenu = portMenu->addMenu("Hidden ports");
+        for (const auto& p : m_component.getAllPorts()) {
+            auto* gp = p->getGraphic<PortGraphic>();
+            if (gp->userHidden()) {
+                auto* showPortAction = hiddenPortsMenu->addAction(QString::fromStdString(p->getName()));
+                connect(showPortAction, &QAction::triggered, [=] { gp->setUserVisible(true); });
+            }
+        }
+        if (hiddenPortsMenu->actions().size() == 0) {
+            delete hiddenPortsMenu;
+        }
     }
 
     // ======================== Indicators menu ============================ //
@@ -402,28 +414,6 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
                 // Move was unsuccessfull, keep current positioning
                 return pos();
             }
-        }
-    }
-
-    if (change == ItemVisibleChange && scene()) {
-        // hide all input ports of other components which this component has output ports connecting to.
-        const bool visible = value.toBool();
-
-        for (const auto& p_out : m_component.getPorts<SimPort::Direction::out>()) {
-            for (const auto& p_conn : p_out->getOutputPorts()) {
-                auto* portParent = p_conn->getParent();
-                auto* portGraphic = p_conn->getGraphic<PortGraphic>();
-
-                const bool isNestedComponent = portParent == m_component.getParent();
-
-                if (!isNestedComponent && portParent && portGraphic) {
-                    portGraphic->setSourceVisible(visible & portParent->getGraphic<ComponentGraphic>()->isVisible());
-                }
-            }
-        }
-
-        for (const auto& p_in : m_component.getPorts<SimPort::Direction::in>()) {
-            p_in->getGraphic<PortGraphic>()->setVisible(visible);
         }
     }
 
