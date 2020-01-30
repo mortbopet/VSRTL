@@ -210,7 +210,7 @@ public:
                 try {
                     archive(cereal::make_nvp(c->getComponent().getName(), *c));
                 } catch (cereal::Exception e) {
-                    Q_ASSERT(false);
+                    /// @todo: build an error report
                 }
             }
         }

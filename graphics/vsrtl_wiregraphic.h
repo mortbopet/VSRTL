@@ -184,7 +184,7 @@ public:
         // Locate input port
         const auto fromPortSeq = getPortParentNameSeq(m_fromPort->getPort());
         if (from.second != fromPortSeq) {
-            throw std::runtime_error("Incompatible layout");
+            throw cereal::Exception("Incompatible layout");
         }
         idxToPort[from.first] = m_fromPort->getPointGraphic();
 
@@ -199,7 +199,7 @@ public:
                 }
             }
             if (point == nullptr) {
-                throw std::runtime_error("Incompatible layout");
+                throw cereal::Exception("Incompatible layout");
             }
             idxToPort[iter.first] = point;
         }
@@ -213,10 +213,10 @@ public:
         // Construct wires
         for (const auto& w : wires) {
             if (idxToPort.count(w.first) == 0) {
-                throw std::runtime_error("Wire start point not found");
+                throw cereal::Exception("Wire start point not found");
             }
             if (idxToPort.count(w.second) == 0) {
-                throw std::runtime_error("Wire end point not found");
+                throw cereal::Exception("Wire end point not found");
             }
             auto* from = idxToPort[w.first];
             auto* to = idxToPort[w.second];
