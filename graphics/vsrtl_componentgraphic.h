@@ -50,6 +50,7 @@ public:
     ComponentGraphic(SimComponent& c, ComponentGraphic* parent);
 
     QRectF boundingRect() const override;
+    QPainterPath shape() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
 
     /**

@@ -501,6 +501,12 @@ QRectF ComponentGraphic::sceneGridRect() const {
     return gridToScene(getCurrentComponentRect());
 }
 
+QPainterPath ComponentGraphic::shape() const {
+    QPainterPath s;
+    s.addRect(sceneGridRect());
+    return s;
+}
+
 QRectF ComponentGraphic::boundingRect() const {
     QRectF boundingRect = sceneGridRect();
 
