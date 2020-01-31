@@ -64,7 +64,10 @@ public:
     void operator>>(Port<W>& toThis) {
         m_outputPorts.push_back(&toThis);
         if (toThis.m_inputPort != nullptr) {
-            throw std::runtime_error("Port input already connected");
+            throw std::runtime_error(
+                "Failed trying to connect port '" + getParent()->getName() + ":" + getName() + "' to port '" +
+                toThis.getParent()->getName() + ":" + toThis.getName() + ". Port is already connected to '" +
+                toThis.getInputPort()->getParent()->getName() + ":" + toThis.getInputPort()->getName());
         }
         toThis.m_inputPort = this;
     }
