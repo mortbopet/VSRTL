@@ -10,10 +10,15 @@
 
 #include <QGraphicsScene>
 
+void initVsrtlResources() {
+    Q_INIT_RESOURCE(vsrtl_icons);
+}
+
 namespace vsrtl {
 
 VSRTLWidget::VSRTLWidget(QWidget* parent) : QWidget(parent), ui(new Ui::VSRTLWidget) {
     ui->setupUi(this);
+    initVsrtlResources();
 
     m_view = new VSRTLView(this);
     m_view->setRenderHints(QPainter::Antialiasing | QPainter::TextAntialiasing);

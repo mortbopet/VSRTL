@@ -43,13 +43,13 @@ Netlist::Netlist(SimDesign& design, QWidget* parent) : QWidget(parent), ui(new U
 
     m_registerView->setItemDelegate(new NetlistDelegate(this));
 
-    const QIcon expandIcon = QIcon(":/icons/expand.svg");
+    const QIcon expandIcon = QIcon(":/vsrtl_icons/expand.svg");
     QAction* expandAct = new QAction(expandIcon, "Expand All", this);
     connect(expandAct, &QAction::triggered, [=] { this->setCurrentViewExpandState(true); });
     ui->expand->setIcon(expandIcon);
     connect(ui->expand, &QPushButton::clicked, expandAct, &QAction::trigger);
 
-    const QIcon collapseIcon = QIcon(":/icons/collapse.svg");
+    const QIcon collapseIcon = QIcon(":/vsrtl_icons/collapse.svg");
     QAction* collapseAct = new QAction(collapseIcon, "Collapse All", this);
     connect(collapseAct, &QAction::triggered, [=] { this->setCurrentViewExpandState(false); });
     ui->collapse->setIcon(collapseIcon);

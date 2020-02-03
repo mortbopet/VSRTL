@@ -50,7 +50,7 @@ MainWindow::~MainWindow() {
 void MainWindow::createToolbar() {
     QToolBar* simulatorToolBar = addToolBar("Simulator");
 
-    const QIcon resetIcon = QIcon(":/icons/reset.svg");
+    const QIcon resetIcon = QIcon(":/vsrtl_icons/reset.svg");
     QAction* resetAct = new QAction(resetIcon, "Reset", this);
     connect(resetAct, &QAction::triggered, [this] {
         m_vsrtlWidget->reset();
@@ -59,7 +59,7 @@ void MainWindow::createToolbar() {
     resetAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
     simulatorToolBar->addAction(resetAct);
 
-    const QIcon reverseIcon = QIcon(":/icons/reverse.svg");
+    const QIcon reverseIcon = QIcon(":/vsrtl_icons/reverse.svg");
     QAction* reverseAct = new QAction(reverseIcon, "Reverse", this);
     connect(reverseAct, &QAction::triggered, [this] {
         m_vsrtlWidget->reverse();
@@ -70,7 +70,7 @@ void MainWindow::createToolbar() {
     reverseAct->setEnabled(false);
     connect(m_vsrtlWidget, &VSRTLWidget::canReverse, reverseAct, &QAction::setEnabled);
 
-    const QIcon clockIcon = QIcon(":/icons/step.svg");
+    const QIcon clockIcon = QIcon(":/vsrtl_icons/step.svg");
     QAction* clockAct = new QAction(clockIcon, "Clock", this);
     connect(clockAct, &QAction::triggered, [this] {
         m_vsrtlWidget->clock();
@@ -82,8 +82,8 @@ void MainWindow::createToolbar() {
     QTimer* timer = new QTimer();
     connect(timer, &QTimer::timeout, clockAct, &QAction::trigger);
 
-    const QIcon startTimerIcon = QIcon(":/icons/step-clock.svg");
-    const QIcon stopTimerIcon = QIcon(":/icons/stop-clock.svg");
+    const QIcon startTimerIcon = QIcon(":/vsrtl_icons/step-clock.svg");
+    const QIcon stopTimerIcon = QIcon(":/vsrtl_icons/stop-clock.svg");
     QAction* clockTimerAct = new QAction(startTimerIcon, "Auto Clock", this);
     clockTimerAct->setCheckable(true);
     clockTimerAct->setChecked(false);
@@ -123,7 +123,7 @@ void MainWindow::createToolbar() {
 
     simulatorToolBar->addSeparator();
 
-    const QIcon showNetlistIcon = QIcon(":/icons/list.svg");
+    const QIcon showNetlistIcon = QIcon(":/vsrtl_icons/list.svg");
     QAction* showNetlist = new QAction(showNetlistIcon, "Show Netlist", this);
     connect(showNetlist, &QAction::triggered, [this] {
         if (m_netlist->isVisible()) {
@@ -134,7 +134,7 @@ void MainWindow::createToolbar() {
     });
     simulatorToolBar->addAction(showNetlist);
 
-    const QIcon expandAllComponentsIcon = QIcon(":/icons/expandSquare.svg");
+    const QIcon expandAllComponentsIcon = QIcon(":/vsrtl_icons/expandSquare.svg");
     QAction* expandAllComponents = new QAction(expandAllComponentsIcon, "Expand all components", this);
     connect(expandAllComponents, &QAction::triggered, [this] { m_vsrtlWidget->expandAllComponents(); });
     simulatorToolBar->addAction(expandAllComponents);

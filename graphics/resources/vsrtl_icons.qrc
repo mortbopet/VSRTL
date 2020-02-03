@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/icons">
+    <qresource prefix="/vsrtl_icons">
         <file>minus.svg</file>
         <file>plus.svg</file>
         <file>collapse.svg</file>
@@ -13,5 +13,8 @@
         <file>output.svg</file>
         <file>input.svg</file>
         <file>expandSquare.svg</file>
+        <file>alignright.svg</file>
+        <file>alignleft.svg</file>
+        <file>aligncenter.svg</file>
     </qresource>
 </RCC>
