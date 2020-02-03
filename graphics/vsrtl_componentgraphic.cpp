@@ -227,14 +227,16 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     // ======================== Indicators menu ============================ //
     if ((m_inputPorts.size() > 0) && !isLocked()) {
         auto* indicatorMenu = menu.addMenu("Indicators");
-        for (const auto& p : m_inputPorts) {
-            // Value indicators for boolean signals. Boolean indicators will be visible even if the port responsible for
-            // the indicator gets hidden.
-            if (p->getPort()->getWidth() == 1) {
-                auto* indicatorAction = indicatorMenu->addAction(QString::fromStdString(p->getPort()->getName()));
-                indicatorAction->setCheckable(true);
-                indicatorAction->setChecked(m_indicators.count(p));
-                connect(indicatorAction, &QAction::triggered, [=](bool checked) { setIndicatorState(p, checked); });
+        for (const auto& portmap : {m_inputPorts, m_outputPorts}) {
+            for (const auto& p : portmap) {
+                // Value indicators for boolean signals. Boolean indicators will be visible even if the port responsible
+                // for the indicator gets hidden.
+                if (p->getPort()->getWidth() == 1) {
+                    auto* indicatorAction = indicatorMenu->addAction(QString::fromStdString(p->getPort()->getName()));
+                    indicatorAction->setCheckable(true);
+                    indicatorAction->setChecked(m_indicators.count(p));
+                    connect(indicatorAction, &QAction::triggered, [=](bool checked) { setIndicatorState(p, checked); });
+                }
             }
         }
         if (indicatorMenu->actions().size() == 0) {
@@ -478,11 +480,12 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
         constexpr qreal dotSize = 12;
         QRectF chordRect(-dotSize / 2, -dotSize / 2, dotSize, dotSize);
-        chordRect.translate(mapFromItem(p, p->getOutputPoint()));
+        const bool inPort = p->getPortType() == PortType::in;
+        chordRect.translate(mapFromItem(p, inPort ? p->getOutputPoint() : p->getInputPoint()));
         QPen pen = painter->pen();
         pen.setWidth(WIRE_WIDTH - 1);
         painter->setPen(pen);
-        painter->drawChord(chordRect, -90 * 16, 180 * 16);
+        painter->drawChord(chordRect, -90 * 16, (inPort ? 1 : -1) * 180 * 16);
     }
 
     // Paint overlay
