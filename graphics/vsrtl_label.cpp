@@ -79,6 +79,11 @@ void Label::setText(const QString& text) {
     m_textRect = QRectF(topLeft.x(), topLeft.y(), width, height);
 }
 
+void Label::setColor(const QColor& color) {
+    prepareGeometryChange();
+    m_color = color;
+}
+
 void Label::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
 
@@ -87,11 +92,13 @@ void Label::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
         QPointF offset(-m_textRect.width() / 2, -m_textRect.height() / 2);
         painter->setFont(m_font);
         painter->save();
-        if (static_cast<VSRTLScene*>(scene())->darkmode()) {
-            auto pen = painter->pen();
+        auto pen = painter->pen();
+        if (m_color.isValid()) {
+            pen.setColor(m_color);
+        } else if (static_cast<VSRTLScene*>(scene())->darkmode()) {
             pen.setColor(QColor(Qt::lightGray).lighter());
-            painter->setPen(pen);
         }
+        painter->setPen(pen);
         QTextOption opt;
         opt.setWrapMode(QTextOption::WordWrap);
         opt.setAlignment(Qt::AlignCenter);

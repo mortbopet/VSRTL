@@ -19,6 +19,7 @@ public:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
 
     void setText(const QString& text);
+    void setColor(const QColor& color);
 
     template <class Archive>
     void serialize(Archive& archive) {
@@ -76,6 +77,7 @@ private:
     QString m_text;
     QRectF m_textRect;
     QFont m_font;
+    QColor m_color;
 };
 
 }  // namespace vsrtl
