@@ -47,14 +47,17 @@ void Label::editTriggered() {
     diag.m_ui->bold->setChecked(m_font.bold());
     diag.m_ui->italic->setChecked(m_font.italic());
     diag.m_ui->size->setValue(m_font.pointSize());
+    diag.setAlignment(m_alignment);
     auto currentText = m_text;
     currentText.replace('\n', "\\n");
     diag.m_ui->text->setText(currentText);
 
     if (diag.exec()) {
+        prepareGeometryChange();
         m_font.setBold(diag.m_ui->bold->isChecked());
         m_font.setItalic(diag.m_ui->italic->isChecked());
         m_font.setPointSize(diag.m_ui->size->value());
+        m_alignment = diag.getAlignment();
         setText(diag.m_ui->text->text().replace("\\n", "\n"));
     }
 }
@@ -101,7 +104,7 @@ void Label::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
         painter->setPen(pen);
         QTextOption opt;
         opt.setWrapMode(QTextOption::WordWrap);
-        opt.setAlignment(Qt::AlignCenter);
+        opt.setAlignment(m_alignment);
         painter->drawText(boundingRect(), m_text, opt);
         painter->restore();
     }

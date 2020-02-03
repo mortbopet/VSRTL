@@ -23,6 +23,7 @@ public:
 
     template <class Archive>
     void serialize(Archive& archive) {
+        prepareGeometryChange();
         try {
             bool v = isVisible();
             archive(cereal::make_nvp("Visible", v));
@@ -69,6 +70,14 @@ public:
         } catch (cereal::Exception e) {
             /// @todo: build an error report
         }
+
+        try {
+            unsigned alignment = m_alignment;
+            archive(cereal::make_nvp("Alignment", alignment));
+            m_alignment = static_cast<Qt::Alignment>(alignment);
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
     }
 
 private:
@@ -78,6 +87,7 @@ private:
     QRectF m_textRect;
     QFont m_font;
     QColor m_color;
+    Qt::Alignment m_alignment = Qt::AlignCenter;
 };
 
 }  // namespace vsrtl
