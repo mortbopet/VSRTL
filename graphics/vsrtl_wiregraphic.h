@@ -188,40 +188,47 @@ public:
         }
         idxToPort[from.first] = m_fromPort->getPointGraphic();
 
-        // Locate output ports
+        // Locate output ports from the layout indicies
         for (const auto& iter : idxToOutportNameSeq) {
             Q_ASSERT(idxToPort.count(iter.first) == 0);
             PortPoint* point = nullptr;
             for (const auto& p : m_toGraphicPorts) {
                 if (getPortParentNameSeq(p->getPort()) == iter.second) {
                     point = p->getPointGraphic();
+                    idxToPort[iter.first] = point;
                     break;
                 }
             }
-            if (point == nullptr) {
-                throw cereal::Exception("Incompatible layout");
-            }
-            idxToPort[iter.first] = point;
         }
 
-        // Construct PointGraphic's
+        // Construct PointGraphic's for intermediate points
         for (const auto& p : idxToPoints) {
             Q_ASSERT(idxToPort.count(p.first) == 0);
             idxToPort[p.first] = createWirePoint();
         }
 
-        // Construct wires
+        // Construct wires denoted in the layout
         for (const auto& w : wires) {
             if (idxToPort.count(w.first) == 0) {
-                throw cereal::Exception("Wire start point not found");
+                continue;  // Wire start point not found
             }
             if (idxToPort.count(w.second) == 0) {
-                throw cereal::Exception("Wire end point not found");
+                continue;  // Wire end point not found
             }
             auto* from = idxToPort[w.first];
             auto* to = idxToPort[w.second];
 
             createSegment(from, to);
+        }
+
+        // It may be that not all ports of a wire was denoted in the layout (ie. changes to the design which the layout
+        // is applied on has been made). Construct all missing wires between the source port
+        for (const auto& p : m_toGraphicPorts) {
+            const auto iter = std::find_if(idxToPort.begin(), idxToPort.end(),
+                                           [=](const auto& itp) { return itp.second == p->getPointGraphic(); });
+            if (iter == idxToPort.end()) {
+                createSegment(m_fromPort->getPointGraphic(), p->getPointGraphic());
+            }
         }
 
         // Move wire points (must be done >after< the point has been associated with wires)
