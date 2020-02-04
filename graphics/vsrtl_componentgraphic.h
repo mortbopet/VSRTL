@@ -272,9 +272,11 @@ public:
                 indicators.emplace(i->getPort()->getName());
             }
             archive(cereal::make_nvp("Indicators", indicators));
-            for (const auto& ip : m_inputPorts) {
-                if (std::find(indicators.begin(), indicators.end(), ip->getPort()->getName()) != indicators.end()) {
-                    m_indicators.emplace(ip);
+            for (const auto& pm : {m_inputPorts, m_outputPorts}) {
+                for (const auto& ip : pm) {
+                    if (std::find(indicators.begin(), indicators.end(), ip->getPort()->getName()) != indicators.end()) {
+                        m_indicators.emplace(ip);
+                    }
                 }
             }
         } catch (cereal::Exception e) {
