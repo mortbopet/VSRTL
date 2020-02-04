@@ -31,16 +31,14 @@ VSRTLWidget::VSRTLWidget(QWidget* parent) : QWidget(parent), ui(new Ui::VSRTLWid
 void VSRTLWidget::clearDesign() {
     if (m_topLevelComponent) {
         // Clear previous design
-        m_topLevelComponent->deleteLater();
+        delete m_topLevelComponent;
+        m_topLevelComponent = nullptr;
     }
     m_design = nullptr;
 }
 
 void VSRTLWidget::setDesign(SimDesign* design) {
-    if (m_topLevelComponent) {
-        // Clear previous design
-        m_topLevelComponent->deleteLater();
-    }
+    clearDesign();
     m_design = design;
     initializeDesign();
 

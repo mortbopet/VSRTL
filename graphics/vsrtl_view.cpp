@@ -16,6 +16,7 @@ VSRTLView::VSRTLView(QWidget* parent) : QGraphicsView(parent) {
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
     setRenderHint(QPainter::Antialiasing, false);
     setInteractive(true);
+    setupMatrix();
 }
 
 ComponentGraphic* VSRTLView::lookupGraphicForComponent(const SimComponent* c) {

@@ -171,11 +171,11 @@ public:
 
         // Clear current layout
         for (const auto& p : m_points) {
-            p->deleteLater();
+            delete p;
         }
         m_points.clear();
         for (const auto& w : m_wires) {
-            w->deleteLater();
+            delete w;
         }
         m_wires.clear();
 
