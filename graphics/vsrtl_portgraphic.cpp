@@ -70,7 +70,6 @@ void PortGraphic::updateSlot() {
 void PortGraphic::setValueLabelVisible(bool visible) {
     if (!userHidden() || m_valueLabel->isVisible()) {
         m_valueLabel->setVisible(visible);
-        m_valueLabel->setLocked(false);
         updateSlot();
     }
 }
@@ -275,10 +274,8 @@ void PortGraphic::setSourceVisible(bool visible) {
 
 void PortGraphic::setUserVisible(bool visible) {
     // User visibility only affects port draw state, >not< its scene visibility.
-
     m_userHidden = !visible;
     setPortVisible(visible);
-    setValueLabelVisible(false);
 
     update();
 }

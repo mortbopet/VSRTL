@@ -148,6 +148,15 @@ public:
             /// @todo: build an error report
         }
 
+        // Serialize port value label visibility
+        try {
+            bool valueLabelVisible = m_valueLabel->isVisible();
+            archive(cereal::make_nvp("ValueLabelVisible", valueLabelVisible));
+            setValueLabelVisible(valueLabelVisible);
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
+
         // Serialize port visibility state
         try {
             archive(cereal::make_nvp("UserHidden", m_userHidden));
