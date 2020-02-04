@@ -152,6 +152,7 @@ public slots:
 public:
     template <class Archive>
     void serialize(Archive& archive) {
+        m_serializing = true;
         // Serialize the original component name. Wires within the component will reference this when describing parent
         // components, but this component may have different names based on the design which instantiated it.
         // Thus, we need to replace the stored name with the actual name of the component.
@@ -282,6 +283,8 @@ public:
         } catch (cereal::Exception e) {
             /// @todo: build an error report
         }
+
+        m_serializing = false;
     }
 };
 }  // namespace vsrtl

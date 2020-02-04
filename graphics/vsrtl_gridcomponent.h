@@ -94,6 +94,10 @@ protected:
      */
     void spreadPortsOrdered();
 
+    /** Flag for indicating when serializing this component. If so, do not restrict subcomponent
+     * positioning inside the current minimum subcomponent bounding rect */
+    bool m_serializing = false;
+
 private:
     /**
      * @brief childGeometryChanged
@@ -135,8 +139,8 @@ private:
     /** current expansion state */
     bool m_expanded = false;
 
-    /** Flag for indicating when placement/routing is active. If so, do not restrict subcomponent positioning inside the
-     * current minimum subcomponent bounding rect */
+    /** Flag for indicating when placement/routing. If so, do not restrict subcomponent
+     * positioning inside the current minimum subcomponent bounding rect */
     bool m_isPlacing = false;
 
     /// Managed rectangles
