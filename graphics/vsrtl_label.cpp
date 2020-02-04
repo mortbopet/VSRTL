@@ -80,6 +80,7 @@ void Label::setText(const QString& text) {
     }
     m_text = text;
     m_textRect = QRectF(topLeft.x(), topLeft.y(), width, height);
+    m_textRect.adjust(-1, -1, 1, 1);
 }
 
 void Label::setColor(const QColor& color) {
