@@ -45,6 +45,11 @@ void VSRTLWidget::setDesign(SimDesign* design) {
     setLocked(m_scene->isLocked());
 }
 
+void VSRTLWidget::zoomToFit() {
+    const auto* tlc = getTopLevelComponent();
+    m_view->fitInView(tlc, Qt::KeepAspectRatio);
+}
+
 void VSRTLWidget::setOutputPortValuesVisible(bool visible) {
     m_scene->setPortValuesVisibleForType(PortType::out, visible);
 }

@@ -34,6 +34,7 @@ public:
     void setOutputPortValuesVisible(bool visible);
     void setShowPortWidth(bool visible);
     void setLocked(bool locked);
+    void zoomToFit();
 
 public slots:
     void run();
