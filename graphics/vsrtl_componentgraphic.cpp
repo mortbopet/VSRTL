@@ -211,16 +211,18 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
                 c->setValueLabelVisible(false);
         });
 
-        auto* hiddenPortsMenu = portMenu->addMenu("Hidden ports");
-        for (const auto& p : m_component.getAllPorts()) {
-            auto* gp = p->getGraphic<PortGraphic>();
-            if (gp->userHidden()) {
-                auto* showPortAction = hiddenPortsMenu->addAction(QString::fromStdString(p->getName()));
-                connect(showPortAction, &QAction::triggered, [=] { gp->setUserVisible(true); });
+        if (!isLocked()) {
+            auto* hiddenPortsMenu = portMenu->addMenu("Hidden ports");
+            for (const auto& p : m_component.getAllPorts()) {
+                auto* gp = p->getGraphic<PortGraphic>();
+                if (gp->userHidden()) {
+                    auto* showPortAction = hiddenPortsMenu->addAction(QString::fromStdString(p->getName()));
+                    connect(showPortAction, &QAction::triggered, [=] { gp->setUserVisible(true); });
+                }
             }
-        }
-        if (hiddenPortsMenu->actions().size() == 0) {
-            delete hiddenPortsMenu;
+            if (hiddenPortsMenu->actions().size() == 0) {
+                delete hiddenPortsMenu;
+            }
         }
     }
 
@@ -252,9 +254,11 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         });
     }
 
-    bool labelVisible = m_label->isVisible();
-    auto* labelVisibilityAction = menu.addAction(labelVisible ? "Hide label" : "Show label");
-    connect(labelVisibilityAction, &QAction::triggered, [=] { m_label->setVisible(!labelVisible); });
+    if (!isLocked()) {
+        bool labelVisible = m_label->isVisible();
+        auto* labelVisibilityAction = menu.addAction(labelVisible ? "Hide label" : "Show label");
+        connect(labelVisibilityAction, &QAction::triggered, [=] { m_label->setVisible(!labelVisible); });
+    }
 
     menu.exec(event->screenPos());
 }

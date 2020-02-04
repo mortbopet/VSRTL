@@ -131,16 +131,16 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         menu.addAction(showValueAction);
     }
 
-    QAction* showLabelAction = menu.addAction("Show label");
-    showLabelAction->setCheckable(true);
-    showLabelAction->setChecked(m_label->isVisible());
-    connect(showLabelAction, &QAction::triggered, [this](bool checked) {
-        m_label->setVisible(checked);
-        m_label->setLocked(false);
-    });
-    menu.addAction(showLabelAction);
-
     if (!isLocked()) {
+        QAction* showLabelAction = menu.addAction("Show label");
+        showLabelAction->setCheckable(true);
+        showLabelAction->setChecked(m_label->isVisible());
+        connect(showLabelAction, &QAction::triggered, [this](bool checked) {
+            m_label->setVisible(checked);
+            m_label->setLocked(false);
+        });
+        menu.addAction(showLabelAction);
+
         QAction* showAction = menu.addAction("Show port");
         showAction->setCheckable(true);
         showAction->setChecked(!userHidden());
