@@ -325,14 +325,14 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     Q_ASSERT(iter != m_wires.end());
     m_wires.erase(iter);
     wireToRemove->invalidate();
-    delete wireToRemove;
+    wireToRemove->deleteLater();
 
     // Finally, delete the point. At this point, no wires should be referencing the point
     Q_ASSERT(pointToRemove->getInputWire() == nullptr && pointToRemove->getOutputWires().empty());
     auto p_iter = std::find(m_points.begin(), m_points.end(), pointToRemove);
     Q_ASSERT(p_iter != m_points.end());
     m_points.erase(p_iter);
-    delete pointToRemove;
+    pointToRemove->deleteLater();
 }
 
 WireGraphic::WireGraphic(PortGraphic* from, const std::vector<SimPort*>& to, QGraphicsItem* parent)
