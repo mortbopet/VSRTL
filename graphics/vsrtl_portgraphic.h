@@ -30,6 +30,7 @@ public:
     PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent = nullptr);
 
     QRectF boundingRect() const override;
+    QPainterPath shape() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 

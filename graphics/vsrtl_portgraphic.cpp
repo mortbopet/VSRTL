@@ -161,6 +161,23 @@ QRectF PortGraphic::boundingRect() const {
     return m_boundingRect;
 }
 
+QPainterPath PortGraphic::shape() const {
+    QPolygonF p;
+
+    const auto& in = getInputPoint();
+    const auto& out = getOutputPoint();
+
+    const auto p1 = QPointF(in.x(), in.y() - GRID_SIZE / 2);
+    const auto p2 = QPointF(out.x(), out.y() - GRID_SIZE / 2);
+    const auto p3 = QPointF(out.x(), out.y() + GRID_SIZE / 2);
+    const auto p4 = QPointF(in.x(), in.y() + GRID_SIZE / 2);
+    p << p1 << p2 << p3 << p4;
+
+    QPainterPath path;
+    path.addPolygon(p);
+    return path;
+}
+
 QPointF PortGraphic::getInputPoint() const {
     return QPointF(0, 0);
 }
@@ -311,6 +328,9 @@ void PortGraphic::updateGeometry() {
     m_boundingRect = QRectF(getInputPoint(), m_textRect.size());
     const qreal portLen = (getOutputPoint() - getInputPoint()).manhattanLength();
     m_boundingRect.setWidth(m_boundingRect.width() < portLen ? portLen : m_boundingRect.width());
+
+    // Adjust for hover-arrow
+    m_boundingRect.adjust(0, -GRID_SIZE / 2, 0, 0);
 
     // Adjust for pen sizes etc. (set via. visual inspection of the bounding rect)
     m_boundingRect.adjust(-3, -3, 3, 1);
