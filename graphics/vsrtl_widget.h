@@ -32,7 +32,6 @@ public:
     bool isReversible();
 
     void setOutputPortValuesVisible(bool visible);
-    void setShowPortWidth(bool visible);
     void setLocked(bool locked);
     void zoomToFit();
 

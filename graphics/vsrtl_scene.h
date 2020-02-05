@@ -23,12 +23,11 @@ public:
     void drawBackground(QPainter* painter, const QRectF& rect) override;
 
     void setPortValuesVisibleForType(PortType t, bool visible);
-    void setShowPortWidth(bool visible);
+    void setPortWidthsVisible(bool visible);
     void setLocked(bool locked);
 
     bool isLocked() const { return m_isLocked; }
     bool darkmode() const { return m_darkmode; }
-    bool showPortWidth() const { return m_showPortWidth; }
 
 private:
     void handleSelectionChanged();
@@ -36,7 +35,6 @@ private:
 
     bool m_darkmode = false;
     bool m_showGrid = true;
-    bool m_showPortWidth = true;
     std::set<WirePoint*> m_currentDropTargets;
     WirePoint* m_selectedPoint = nullptr;
 

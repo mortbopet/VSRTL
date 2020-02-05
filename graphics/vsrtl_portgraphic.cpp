@@ -74,6 +74,11 @@ void PortGraphic::setValueLabelVisible(bool visible) {
     }
 }
 
+void PortGraphic::setPortWidthVisible(bool visible) {
+    m_portWidthVisible = visible;
+    update();
+}
+
 void PortGraphic::updateWireGeometry() {
     m_outputWire->prepareGeometryChange();
 }
@@ -123,11 +128,14 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         QAction* showValueAction = menu.addAction("Show value");
         showValueAction->setCheckable(true);
         showValueAction->setChecked(m_valueLabel->isVisible());
-        connect(showValueAction, &QAction::triggered, [this](bool checked) {
-            setValueLabelVisible(checked);
-            updateSlot();
-        });
+        connect(showValueAction, &QAction::triggered, this, &PortGraphic::setValueLabelVisible);
         menu.addAction(showValueAction);
+
+        QAction* showWidthAction = menu.addAction("Show width");
+        showWidthAction->setCheckable(true);
+        showWidthAction->setChecked(m_portWidthVisible);
+        connect(showWidthAction, &QAction::triggered, this, &PortGraphic::setPortWidthVisible);
+        menu.addAction(showWidthAction);
     }
 
     if (!isLocked()) {
@@ -143,7 +151,7 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         QAction* showAction = menu.addAction("Show port");
         showAction->setCheckable(true);
         showAction->setChecked(!userHidden());
-        connect(showAction, &QAction::triggered, [=](bool checked) { setUserVisible(checked); });
+        connect(showAction, &QAction::triggered, this, &PortGraphic::setUserVisible);
     }
 
     menu.exec(event->screenPos());
@@ -358,7 +366,7 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* optio
                                                : s_portGridWidth * GRID_SIZE - m_textRect.width() - PORT_INNER_MARGIN;
 
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
-    if (lod >= 0.6 && static_cast<VSRTLScene*>(scene())->showPortWidth()) {
+    if (lod >= 0.6 && m_portWidthVisible) {
         painter->drawText(QPointF(offset, m_textRect.height() / 2 + PORT_INNER_MARGIN), m_widthText);
     }
 

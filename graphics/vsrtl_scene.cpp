@@ -120,11 +120,19 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
     menu.addSeparator();
 
-    auto* showValuesAction = menu.addAction("Show signal values");
+    // ==================== Port modifying actions ====================
+    auto* portMenu = menu.addMenu("Ports");
+    auto* showValuesAction = portMenu->addAction("Show all values");
     connect(showValuesAction, &QAction::triggered, [=] { this->setPortValuesVisibleForType(PortType::out, true); });
 
-    auto* hideValuesAction = menu.addAction("Hide signal values");
+    auto* hideValuesAction = portMenu->addAction("Hide all values");
     connect(hideValuesAction, &QAction::triggered, [=] { this->setPortValuesVisibleForType(PortType::out, false); });
+
+    auto* showWidthsAction = portMenu->addAction("Show all widths");
+    connect(showWidthsAction, &QAction::triggered, [=] { this->setPortWidthsVisible(true); });
+
+    auto* hideWidthsAction = portMenu->addAction("Hide all widths");
+    connect(hideWidthsAction, &QAction::triggered, [=] { this->setPortWidthsVisible(false); });
 
     // ==================== Scene modifying actions ====================
     if (!m_isLocked) {
@@ -178,11 +186,6 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
             this->update();
         });
 
-        auto* showPortWidthAction = drawMenu->addAction("Show port widths");
-        showPortWidthAction->setCheckable(true);
-        showPortWidthAction->setChecked(m_showPortWidth);
-        connect(showPortWidthAction, &QAction::toggled, this, &VSRTLScene::setShowPortWidth);
-
         auto* darkModeAction = drawMenu->addAction("Darkmode");
         darkModeAction->setCheckable(true);
         darkModeAction->setChecked(m_darkmode);
@@ -196,9 +199,8 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     menu.exec(event->screenPos());
 }
 
-void VSRTLScene::setShowPortWidth(bool visible) {
-    m_showPortWidth = visible;
-    update();
+void VSRTLScene::setPortWidthsVisible(bool visible) {
+    execOnItems<PortGraphic>(&PortGraphic::setPortWidthVisible, visible);
 }
 
 void VSRTLScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {

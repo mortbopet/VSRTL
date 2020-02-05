@@ -74,6 +74,7 @@ public:
 
     PortType getPortType() const { return m_type; }
     void setValueLabelVisible(bool visible);
+    void setPortWidthVisible(bool visible);
 
     const QPen& getPen();
 
@@ -118,6 +119,7 @@ private:
 
     PortType m_type;
     SimPort* m_port;
+    bool m_portWidthVisible = false;
 
     // Used for allowing WireSegments to join up with a port
     PortPoint* m_portPoint = nullptr;
@@ -158,6 +160,13 @@ public:
             /// @todo: build an error report
         }
 
+        // Serialize port width label visibility
+        try {
+            archive(cereal::make_nvp("PortWidthVisible", m_portWidthVisible));
+        } catch (cereal::Exception e) {
+            /// @todo: build an error report
+        }
+
         // Serialize port visibility state
         try {
             archive(cereal::make_nvp("UserHidden", m_userHidden));
@@ -165,6 +174,8 @@ public:
         } catch (cereal::Exception e) {
             /// @todo: build an error report
         }
+
+        update();
     }
 };
 
