@@ -15,6 +15,13 @@
 
 namespace vsrtl {
 
+std::vector<std::string> getPortParentNameSeq(SimPort* p) {
+    std::vector<std::string> seq;
+    seq.push_back(p->getName());
+    seq.push_back(p->getParent()->getName());
+    return seq;
+}
+
 PortPoint::PortPoint(QGraphicsItem* parent) : GraphicsBase(parent) {}
 
 QRectF PortPoint::boundingRect() const {
@@ -25,7 +32,7 @@ QRectF PortPoint::boundingRect() const {
 #endif
 }
 
-void PortPoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) {
+void PortPoint::paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {
 #ifdef VSRTL_DEBUG_DRAW
     DRAW_BOUNDING_RECT(painter)
     painter->save();
@@ -148,7 +155,7 @@ void WirePoint::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
 // --------------------------------------------------------------------------------
 
-WireSegment::WireSegment(WireGraphic* parent) : m_parent(parent), GraphicsBase(parent) {
+WireSegment::WireSegment(WireGraphic* parent) : GraphicsBase(parent), m_parent(parent) {
     setAcceptHoverEvents(true);
 }
 
@@ -229,7 +236,7 @@ QRectF WireSegment::boundingRect() const {
     return br;
 }
 
-void WireSegment::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
+void WireSegment::hoverMoveEvent(QGraphicsSceneHoverEvent*) {
     setToolTip(m_parent->getFromPort()->getTooltipString());
 }
 
@@ -260,7 +267,7 @@ void WireSegment::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     menu.exec(event->screenPos());
 }
 
-void WireSegment::mousePressEvent(QGraphicsSceneMouseEvent* event) {}
+void WireSegment::mousePressEvent(QGraphicsSceneMouseEvent*) {}
 
 // --------------------------------------------------------------------------------
 
@@ -340,7 +347,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
 }
 
 WireGraphic::WireGraphic(PortGraphic* from, const std::vector<SimPort*>& to, QGraphicsItem* parent)
-    : m_fromPort(from), m_toPorts(to), GraphicsBase(parent) {}
+    : GraphicsBase(parent), m_fromPort(from), m_toPorts(to) {}
 
 bool WireGraphic::managesPoint(WirePoint* point) const {
     return std::find(m_points.begin(), m_points.end(), point) != m_points.end();
@@ -442,11 +449,6 @@ SimComponent& WireGraphic::getPointOwningComponent() const {
     return getPointOwningComponentGraphic()->getComponent();
 }
 
-void WireGraphic::portMoved(const PortGraphic* port, const QPoint dP) {
-    if (port == getFromPort()) {
-    }
-}
-
 void WireGraphic::createRectilinearSegments(PortPoint* start, PortPoint* end) {
     // 1. Create the initial segment between the two terminating points
     auto* seg = createSegment(start, end);
@@ -474,7 +476,8 @@ void WireGraphic::createRectilinearSegments(PortPoint* start, PortPoint* end) {
         QRectF sourceRect = mapRectFromItem(compSource, compSource->boundingRect());
         QRectF destRect = mapRectFromItem(compDst, compDst->boundingRect());
 
-        int y = sourceRect.bottom() < destRect.bottom() ? sourceRect.bottom() : destRect.bottom();
+        const int y =
+            static_cast<int>(sourceRect.bottom() < destRect.bottom() ? sourceRect.bottom() : destRect.bottom());
         intermediate1 = QPoint{line.x1(), y};
         intermediate2 = QPoint{line.x2(), y};
     } else {

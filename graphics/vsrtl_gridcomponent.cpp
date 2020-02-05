@@ -204,10 +204,10 @@ void GridComponent::setInitialRect() {
 
 bool GridComponent::updateMinimumGridRect() {
     QRect shapeMinRect = QRect(0, 0, 1, 1);  //
-    const auto n_inPorts = m_component.getPorts<SimPort::Direction::in>().size();
-    const auto n_outPorts = m_component.getPorts<SimPort::Direction::out>().size();
-    const auto largestPortSize = n_inPorts > n_outPorts ? n_inPorts : n_outPorts;
-    const auto heightToAdd = largestPortSize + 1 - shapeMinRect.height();
+    const unsigned n_inPorts = static_cast<unsigned>(m_component.getPorts<SimPort::Direction::in>().size());
+    const unsigned n_outPorts = static_cast<unsigned>(m_component.getPorts<SimPort::Direction::out>().size());
+    const unsigned largestPortSize = n_inPorts > n_outPorts ? n_inPorts : n_outPorts;
+    const int heightToAdd = largestPortSize + 1 - shapeMinRect.height();
     shapeMinRect.adjust(0, 0, 0, heightToAdd);
 
     if (shapeMinRect != m_minimumGridRect) {
@@ -217,7 +217,7 @@ bool GridComponent::updateMinimumGridRect() {
     return false;
 }
 
-bool GridComponent::updateCurrentComponentRect(int dx, int dy) {
+void GridComponent::updateCurrentComponentRect(int dx, int dy) {
     m_lastComponentRect = getCurrentComponentRect();
     getCurrentComponentRectRef().adjust(0, 0, dx, dy);
 
@@ -226,7 +226,7 @@ bool GridComponent::updateCurrentComponentRect(int dx, int dy) {
     // Port spreading only emits port positioning update signals when a port changes position logically on a given side.
     // If dx !^ dy, the component is adjusted in only a single direction. As such, ports on the side in the given change
     // direction will not move logically, but must be adjusted in terms of where they are drawn.
-    if (dx == 0 ^ dy == 0) {
+    if ((dx == 0) ^ (dy == 0)) {
         auto axisMovedPorts = dx == 0 ? m_border->dirToMap(Side::Bottom) : m_border->dirToMap(Side::Right);
         for (const auto& p : axisMovedPorts.portToId) {
             emit portPosChanged(p.first);
@@ -250,7 +250,7 @@ std::vector<unsigned> GridComponent::getFreePortPositions(Side s) {
     return freePos;
 }
 
-bool GridComponent::adjustPort(SimPort* port, unsigned newPos) {
+bool GridComponent::adjustPort(SimPort* port, int newPos) {
     if ((newPos == 0) || (newPos >= getCurrentComponentRect().height()))
         return false;
 
@@ -276,9 +276,9 @@ void GridComponent::spreadPortsOnSide(const Side& side) {
         int i = 0;
         auto h = getCurrentComponentRect().height();
         const double diff = h / n_ports;
-        for (const auto& p : biMapCopy.portToId) {
-            const int gridIndex = std::ceil((i * diff + diff / 2));
-            const auto* port = p.first;  // Store port pointer here; p reference may change during port moving
+        for (const auto& portId : biMapCopy.portToId) {
+            const int gridIndex = static_cast<int>(std::ceil((i * diff + diff / 2)));
+            const auto* port = portId.first;  // Store port pointer here; p reference may change during port moving
             const auto movedPorts = m_border->movePort(port, PortPos{side, gridIndex});
             for (const auto& p : movedPorts) {
                 emit portPosChanged(p);
@@ -294,10 +294,9 @@ void GridComponent::spreadPortsOrdered() {
         const auto n_ports = biMapCopy.count();
         if (n_ports > 0) {
             int i = 0;
-            auto h = getCurrentComponentRect().height();
             const double diff = getCurrentComponentRect().height() / n_ports;
             for (const auto& idp : biMapCopy.idToPort) {
-                const int gridIndex = std::ceil((i * diff + diff / 2));
+                const int gridIndex = static_cast<int>(std::ceil((i * diff + diff / 2)));
                 const auto* port = idp.second;  // Store port pointer here; p reference may change during port moving
                 const auto movedPorts = m_border->movePort(port, PortPos{side, gridIndex});
                 for (const auto& p : movedPorts) {

@@ -6,9 +6,10 @@
 
 #include "math.h"
 
+#include <QAction>
 #include <QGraphicsSceneMouseEvent>
+#include <QMenu>
 #include <QPainter>
-#include <QPropertyAnimation>
 #include <QStyleOptionGraphicsItem>
 
 namespace vsrtl {
@@ -16,7 +17,7 @@ namespace vsrtl {
 int PortGraphic::s_portGridWidth = 2;
 
 PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
-    : m_port(port), m_type(type), GraphicsBase(parent) {
+    : GraphicsBase(parent), m_type(type), m_port(port) {
     port->registerGraphic(this);
     m_widthText = QString::number(port->getWidth() - 1) + ":0";
     m_font = QFont("Monospace", 8);
@@ -33,12 +34,12 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     }
     port->changed.Connect(this, &PortGraphic::updateSlot);
 
-    m_colorAnimation = new QPropertyAnimation(this, "penColor");
+    m_colorAnimation = std::make_unique<QPropertyAnimation>(this, "penColor");
     m_colorAnimation->setDuration(100);
     m_colorAnimation->setStartValue(WIRE_BOOLHIGH_COLOR);
     m_colorAnimation->setEndValue(WIRE_DEFAULT_COLOR);
     m_colorAnimation->setEasingCurve(QEasingCurve::Linear);
-    connect(m_colorAnimation, &QPropertyAnimation::valueChanged, this, &PortGraphic::updatePenColor);
+    connect(m_colorAnimation.get(), &QPropertyAnimation::valueChanged, this, &PortGraphic::updatePenColor);
 
     setFlag(ItemIsSelectable);
 
@@ -117,7 +118,7 @@ void PortGraphic::postSceneConstructionInitialize2() {
         m_valueLabel->setPos({-br.width() * 0.8, br.height() * 0.2});
 
         // Initial port color is implicitely set by triggering the wire animation
-        m_colorAnimation->start();
+        m_colorAnimation->start(QPropertyAnimation::KeepWhenStopped);
     }
 }
 
@@ -232,7 +233,7 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
             /* If the port is anything other than a boolean port, a change in the signal is represented by starting
              * the color change animation. If it is a boolean signal, just update the pen color */
             if (m_port->getWidth() != 1) {
-                portGraphic->m_colorAnimation->start();
+                portGraphic->m_colorAnimation->start(QPropertyAnimation::KeepWhenStopped);
             } else {
                 portGraphic->updatePenColor();
             }
@@ -250,15 +251,6 @@ QString PortGraphic::getTooltipString() const {
 QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (change == QGraphicsItem::ItemSelectedChange) {
         updatePen(value.toBool(), !value.toBool());
-    }
-
-    if (change == QGraphicsItem::ItemPositionChange) {
-        QPoint dPos = value.toPoint() - pos().toPoint();
-        if (m_type == PortType::out) {
-            m_outputWire->portMoved(this, dPos);
-        } else {
-            m_inputWire->portMoved(this, dPos);
-        }
     }
 
     if (change == QGraphicsItem::ItemVisibleChange) {
@@ -315,17 +307,17 @@ void PortGraphic::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
     }
 }
 
-void PortGraphic::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
+void PortGraphic::hoverEnterEvent(QGraphicsSceneHoverEvent*) {
     m_hoverActive = true;
     update();
 }
 
-void PortGraphic::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
+void PortGraphic::hoverLeaveEvent(QGraphicsSceneHoverEvent*) {
     m_hoverActive = false;
     update();
 }
 
-void PortGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent* event) {
+void PortGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent*) {
     setToolTip(getTooltipString());
 }
 
@@ -362,8 +354,9 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* optio
 
     painter->save();
     painter->setFont(m_font);
-    const int offset = m_type == PortType::out ? PORT_INNER_MARGIN
-                                               : s_portGridWidth * GRID_SIZE - m_textRect.width() - PORT_INNER_MARGIN;
+    const int offset = m_type == PortType::out
+                           ? PORT_INNER_MARGIN
+                           : s_portGridWidth * GRID_SIZE - static_cast<int>(m_textRect.width()) - PORT_INNER_MARGIN;
 
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
     if (lod >= 0.6 && m_portWidthVisible) {

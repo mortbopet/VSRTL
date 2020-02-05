@@ -126,6 +126,7 @@ public:
             case Side::Bottom:
                 return m_bottom;
         }
+        Q_UNREACHABLE();
     }
 
     template <class Archive>

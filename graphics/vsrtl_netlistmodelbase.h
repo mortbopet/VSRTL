@@ -17,7 +17,7 @@ template <typename T>
 class NetlistModelBase : public QAbstractItemModel {
 public:
     NetlistModelBase(QStringList headers, SimDesign* arch, QObject* parent = nullptr)
-        : m_headers(headers), m_arch(arch), QAbstractItemModel(parent) {}
+        : QAbstractItemModel(parent), m_headers(headers), m_arch(arch) {}
 
     ~NetlistModelBase() override { delete rootItem; }
 
@@ -86,8 +86,8 @@ protected:
     }
 
     T* rootItem = nullptr;
-    SimDesign* m_arch;
     QStringList m_headers;
+    SimDesign* m_arch = nullptr;
 };
 
 }  // namespace vsrtl

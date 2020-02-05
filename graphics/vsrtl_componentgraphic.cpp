@@ -16,12 +16,14 @@
 #include <deque>
 #include <fstream>
 
+#include <QAction>
 #include <QApplication>
 #include <QFileDialog>
 #include <QGraphicsProxyWidget>
 #include <QGraphicsScene>
 #include <QGraphicsSceneHoverEvent>
 #include <QMatrix>
+#include <QMenu>
 #include <QMessageBox>
 #include <QPainter>
 #include <QPushButton>
@@ -30,7 +32,6 @@
 namespace vsrtl {
 
 static constexpr qreal c_resizeMargin = GRID_SIZE;
-static constexpr qreal c_collapsedSideMargin = 15;
 
 ComponentGraphic::ComponentGraphic(SimComponent& c, ComponentGraphic* parent) : GridComponent(c, parent) {
     c.changed.Connect(this, &ComponentGraphic::updateSlot);
@@ -448,7 +449,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         width += 1;
 
     pen.setWidth(width);
-    painter->setBrush(QBrush(fillColor.dark(option->state & QStyle::State_Sunken ? 120 : 100)));
+    painter->setBrush(QBrush(fillColor.darker(option->state & QStyle::State_Sunken ? 120 : 100)));
     painter->setPen(pen);
     painter->drawPath(m_shape);
 

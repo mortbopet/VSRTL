@@ -22,7 +22,7 @@ void MultiplexerGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraph
     const auto inputPorts = m_component.getPorts<SimPort::Direction::in>();
     const auto* select = getSelect();
     const unsigned int index = select->uValue();
-    Q_ASSERT(index < m_inputPorts.size());
+    Q_ASSERT(static_cast<long>(index) < m_inputPorts.size());
 
     for (const auto& ip : m_inputPorts) {
         const auto* p_base = ip->getPort();

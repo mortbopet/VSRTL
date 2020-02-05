@@ -1,8 +1,10 @@
 #include "vsrtl_label.h"
 
+#include <QAction>
 #include <QFontMetrics>
 #include <QGraphicsSceneContextMenuEvent>
 #include <QInputDialog>
+#include <QMenu>
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
 
@@ -35,7 +37,7 @@ void Label::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     menu.exec(event->screenPos());
 };
 
-void Label::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
+void Label::mouseDoubleClickEvent(QGraphicsSceneMouseEvent*) {
     if (isLocked())
         return;
 
@@ -71,8 +73,8 @@ void Label::setText(const QString& text) {
     QPointF topLeft = QPoint();
     for (const auto& line : lines) {
         const auto linebr = fm.boundingRect(line);
-        height += linebr.height();
-        width = width < linebr.width() ? linebr.width() : width;
+        height += static_cast<int>(linebr.height());
+        width = width < linebr.width() ? static_cast<int>(linebr.width()) : width;
 
         if (topLeft != QPoint()) {
             topLeft = linebr.topLeft();

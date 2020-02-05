@@ -18,7 +18,7 @@ class LabelEditDialog : public QDialog {
     friend class Label;
 
 private:
-    Ui::LabelEditDialog* m_ui;
+    Ui::LabelEditDialog* m_ui = nullptr;
 
 public:
     explicit LabelEditDialog(QWidget* parent = nullptr) : QDialog(parent), m_ui(new Ui::LabelEditDialog) {

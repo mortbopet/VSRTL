@@ -44,7 +44,7 @@ public:
      * Attempt to move the position of @p port to @p pos of its current side
      * @return  whether the requested pos has been set for the port
      */
-    bool adjustPort(SimPort* port, unsigned pos);
+    bool adjustPort(SimPort* port, int pos);
 
     PortPos getPortPos(const SimPort* port) const;
     std::vector<unsigned> getFreePortPositions(Side s);
@@ -111,9 +111,8 @@ private:
 
     /**
      * @brief Rect update functions
-     * @returns true if the given rect was modified
      */
-    bool updateCurrentComponentRect(int dx, int dy);
+    void updateCurrentComponentRect(int dx, int dy);
     bool updateMinimumGridRect();
     bool updateSubcomponentBoundingRect();
     void setInitialRect();

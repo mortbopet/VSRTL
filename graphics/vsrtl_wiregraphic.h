@@ -22,13 +22,7 @@ class WireGraphic;
 class WireSegment;
 class ComponentGraphic;
 
-static inline std::vector<std::string> getPortParentNameSeq(SimPort* p) {
-    std::vector<std::string> seq;
-    seq.push_back(p->getName());
-    seq.push_back(p->getParent()->getName());
-    return seq;
-}
-
+std::vector<std::string> getPortParentNameSeq(SimPort* p);
 /**
  * @brief The PortPoint class
  * Base class for wire graphic points. This is the point type which is assigned to PortGraphics. They are not moveable,
@@ -105,7 +99,7 @@ public:
 private:
     PortPoint* m_start = nullptr;
     PortPoint* m_end = nullptr;
-    WireGraphic* m_parent;
+    WireGraphic* m_parent = nullptr;
 };
 
 class WireGraphic : public GraphicsBase {
@@ -119,11 +113,10 @@ public:
     QRectF boundingRect() const override;
     const QPen& getPen();
     void postSceneConstructionInitialize1() override;
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override {}
+    void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) override {}
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
     void setWiresVisibleToPort(const PortPoint* p, bool visible);
-    void portMoved(const PortGraphic* port, const QPoint dP);
     PortGraphic* getFromPort() const { return m_fromPort; }
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }
     std::pair<WirePoint*, WireSegment*> createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment);
@@ -216,10 +209,10 @@ public:
             if (idxToPort.count(w.second) == 0) {
                 continue;  // Wire end point not found
             }
-            auto* from = idxToPort[w.first];
-            auto* to = idxToPort[w.second];
+            auto* fromPort = idxToPort[w.first];
+            auto* toPort = idxToPort[w.second];
 
-            createSegment(from, to);
+            createSegment(fromPort, toPort);
         }
 
         // It may be that not all ports of a wire was denoted in the layout (ie. changes to the design which the layout

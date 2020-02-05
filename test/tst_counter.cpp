@@ -25,7 +25,7 @@ void testCounter() {
     QVERIFY(counter.value->out.template value<VSRTL_VT_U>() == 1);
     counter.reset();
     QVERIFY(counter.value->out.template value<VSRTL_VT_U>() == 0);
-    for (int i = 0; i < powVal - 1; i++) {
+    for (unsigned i = 0; i < powVal - 1; i++) {
         counter.clock();
     }
     // Counter should be at max value

@@ -22,7 +22,7 @@ public:
     Collator(std::string name, SimComponent* parent) : Component(name, parent) {
         out << [=] {
             VSRTL_VT_U value = 0;
-            for (int i = 0; i < W; i++) {
+            for (unsigned i = 0; i < W; i++) {
                 value |= static_cast<bool>(*in[i]) << i;
             }
             return value;

@@ -40,7 +40,7 @@ Qt::ItemFlags NetlistModel::flags(const QModelIndex& index) const {
     return flags;
 }
 
-bool NetlistModel::setData(const QModelIndex& index, const QVariant& value, int role) {
+bool NetlistModel::setData(const QModelIndex& index, const QVariant& value, int) {
     if (indexIsRegisterOutputPortValue(index)) {
         SimSynchronous* reg = dynamic_cast<SimSynchronous*>(getParentComponent(index));
         if (reg) {

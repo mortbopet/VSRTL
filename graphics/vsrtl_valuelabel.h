@@ -22,7 +22,7 @@ public:
 
 private:
     Radix& m_type;
-    const SimPort* m_port;
+    const SimPort* m_port = nullptr;
     QString m_text;
     unsigned int m_maxBitWidth;
     static QFont s_font;

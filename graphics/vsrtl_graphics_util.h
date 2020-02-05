@@ -102,7 +102,7 @@ bool snapRectToOuterRect(const RectType& outer, RectType& snapping) {
 template <typename RectType>
 RectType boundingRectOfRects(const std::vector<RectType>& rects) {
     RectType boundingRect = rects.at(0);
-    for (int i = 1; i < rects.size(); i++) {
+    for (unsigned i = 1; i < rects.size(); i++) {
         boundingRect = boundingRectOfRects<RectType>(boundingRect, rects.at(i));
     }
     return boundingRect;

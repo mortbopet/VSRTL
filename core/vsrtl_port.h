@@ -44,9 +44,9 @@ public:
      * A port may define special string formatting to be displayed in the graphical library. If so, owning components
      * should set the string value function to provide such values.
      */
-    virtual bool isEnumPort() const { return false; }
-    virtual std::string valueToEnumString() const { throw std::runtime_error("This is not an enum port!"); }
-    virtual VSRTL_VT_U enumStringToValue(const char* str) const {
+    virtual bool isEnumPort() const override { return false; }
+    virtual std::string valueToEnumString() const override { throw std::runtime_error("This is not an enum port!"); }
+    virtual VSRTL_VT_U enumStringToValue(const char*) const override {
         throw std::runtime_error("This is not an enum port!");
     }
 

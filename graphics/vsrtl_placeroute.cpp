@@ -127,9 +127,8 @@ std::map<GridComponent*, QPoint> PlaceRoute::placeAndRoute(const std::vector<Gri
         case PlaceAlg::ASAP: {
             return ASAPPlacement(components);
         }
-        default:
-            Q_ASSERT(false);
     }
+    Q_UNREACHABLE();
 }
 
 }  // namespace vsrtl

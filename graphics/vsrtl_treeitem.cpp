@@ -75,7 +75,8 @@ QList<QMenu*> NetlistTreeItem::getActions() const {
 
 QVariant NetlistTreeItem::data(int column, int role) const {
     if (column == NetlistModel::IOColumn && role == Qt::DecorationRole && m_port != nullptr) {
-        return m_direction == PortDirection::Input ? QIcon(":/vsrtl_icons/input.svg") : QIcon(":/vsrtl_icons/output.svg");
+        return m_direction == PortDirection::Input ? QIcon(":/vsrtl_icons/input.svg")
+                                                   : QIcon(":/vsrtl_icons/output.svg");
     } else if (role == Qt::DisplayRole || role == Qt::EditRole) {
         switch (column) {
             case NetlistModel::ComponentColumn: {
@@ -97,7 +98,7 @@ QVariant NetlistTreeItem::data(int column, int role) const {
     }
     return QVariant();
 }
-bool NetlistTreeItem::setData(int column, const QVariant& value, int role) {
+bool NetlistTreeItem::setData(int, const QVariant&, int) {
     return false;
 }
 

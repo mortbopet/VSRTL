@@ -13,7 +13,7 @@ namespace core {
 namespace {
 constexpr bool valueFitsInBitWidth(unsigned int width, int value) {
     const int v = value < 0 ? -value : value;
-    int v_width = ceillog2(v) + ((bitcount(value) == 1) && (value != 0) && (value != 1) ? 1 : 0);
+    unsigned v_width = ceillog2(v) + ((bitcount(value) == 1) && (value != 0) && (value != 1) ? 1 : 0);
     return v_width <= width;
 }
 }  // namespace

@@ -12,6 +12,7 @@
 
 #include <QFont>
 #include <QPen>
+#include <QPropertyAnimation>
 
 QT_FORWARD_DECLARE_CLASS(QPropertyAnimation)
 
@@ -118,7 +119,7 @@ private:
     QRectF m_textRect;
 
     PortType m_type;
-    SimPort* m_port;
+    SimPort* m_port = nullptr;
     bool m_portWidthVisible = false;
 
     // Used for allowing WireSegments to join up with a port
@@ -131,7 +132,7 @@ private:
 
     Radix m_radix = Radix::Hex;
 
-    QPropertyAnimation* m_colorAnimation;
+    std::unique_ptr<QPropertyAnimation> m_colorAnimation;
 
     Label* m_label = nullptr;
     QString m_widthText;

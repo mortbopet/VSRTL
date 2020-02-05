@@ -20,7 +20,7 @@ public:
     SetGraphicsType(And) And(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
-            for (int i = 1; i < this->in.size(); i++) {
+            for (unsigned i = 1; i < this->in.size(); i++) {
                 v = v & this->in[i]->template value<VSRTL_VT_U>();
             }
             return v;
@@ -35,7 +35,7 @@ public:
     Or(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
-            for (int i = 1; i < this->in.size(); i++) {
+            for (unsigned i = 1; i < this->in.size(); i++) {
                 v = v | this->in[i]->template value<VSRTL_VT_U>();
             }
             return v;
@@ -50,7 +50,7 @@ public:
     Xor(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] {
             auto v = this->in[0]->template value<VSRTL_VT_U>();
-            for (int i = 1; i < this->in.size(); i++) {
+            for (unsigned i = 1; i < this->in.size(); i++) {
                 v = v ^ this->in[i]->template value<VSRTL_VT_U>();
             }
             return v;

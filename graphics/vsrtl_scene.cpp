@@ -138,12 +138,6 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     if (!m_isLocked) {
         menu.addSeparator();
 
-        auto* expandAction = menu.addAction("Expand all");
-
-        auto* collapseAction = menu.addAction("Collapse all");
-
-        menu.addSeparator();
-
         // Hidden components submenu
         auto* hiddenMenu = menu.addMenu("Hidden components");
         std::vector<QAction*> showActions;

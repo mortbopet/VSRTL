@@ -31,7 +31,6 @@ QVariant RegisterTreeItem::data(int column, int role) const {
                 return QBrush(Qt::blue);
             }
             case Qt::DisplayRole: {
-                VSRTL_VT_U value = m_port->uValue();
                 return encodePortRadixValue(m_port, m_radix);
             }
         }
@@ -53,7 +52,7 @@ QVariant RegisterTreeItem::data(int column, int role) const {
 
     return QVariant();
 }
-bool RegisterTreeItem::setData(int column, const QVariant& value, int role) {
+bool RegisterTreeItem::setData(int, const QVariant& value, int) {
     if (index.column() == RegisterModel::ValueColumn) {
         if (m_register) {
             m_design->setSynchronousValue(m_register->getSynchronous(), 0, value.value<VSRTL_VT_U>());
@@ -84,7 +83,7 @@ QVariant RegisterModel::data(const QModelIndex& index, int role) const {
 
 Qt::ItemFlags RegisterModel::flags(const QModelIndex& index) const {
     if (!index.isValid())
-        return 0;
+        return Qt::NoItemFlags;
     Qt::ItemFlags flags = QAbstractItemModel::flags(index);
 
     // Register values are editable

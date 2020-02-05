@@ -16,8 +16,7 @@ NetlistDelegate::NetlistDelegate(QObject* parent) : QStyledItemDelegate(parent) 
     m_validator = new QRegExpValidator(this);
 }
 
-QWidget* NetlistDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem& option,
-                                       const QModelIndex& index) const {
+QWidget* NetlistDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem&, const QModelIndex&) const {
     QLineEdit* editor = new QLineEdit(parent);
     editor->setFont(QFont("monospace"));
 
@@ -48,6 +47,9 @@ void NetlistDelegate::setEditorData(QWidget* e, const QModelIndex& index) const 
         case Radix::Signed: {
             m_validator->setRegExp(signedRegex);
             break;
+        }
+        case Radix::Enum: {
+            return;
         }
     }
 

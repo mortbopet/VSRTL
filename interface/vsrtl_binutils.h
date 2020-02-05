@@ -27,12 +27,15 @@ inline T signextend(const T x, unsigned B) {
     return (x << m) >> m;
 }
 
-constexpr unsigned int generateBitmask(int n) {
-    return (1 << n) - 1;
+constexpr inline unsigned generateBitmask(int n) {
+    if (n == 0) {
+        return 0;
+    }
+    return static_cast<unsigned>((1 << n) - 1);
 }
 
-constexpr uint32_t bitcount(int n) {
-    int count = 0;
+constexpr inline uint32_t bitcount(int n) {
+    unsigned count = 0;
     while (n > 0) {
         count += 1;
         n = n & (n - 1);
@@ -41,7 +44,7 @@ constexpr uint32_t bitcount(int n) {
 }
 
 template <uint32_t width>
-uint32_t accBVec(const std::array<bool, width>& v) {
+inline uint32_t accBVec(const std::array<bool, width>& v) {
     uint32_t r = 0;
     for (auto i = 0; i < width; i++) {
         r |= v[i] << i;
@@ -50,7 +53,7 @@ uint32_t accBVec(const std::array<bool, width>& v) {
 }
 
 template <unsigned int width>
-std::array<bool, width> buildUnsignedArr(uint32_t v) {
+inline std::array<bool, width> buildUnsignedArr(uint32_t v) {
     std::array<bool, width> r;
     for (size_t i = 0; i < width; i++) {
         r[i] = v & 0b1;
@@ -59,11 +62,11 @@ std::array<bool, width> buildUnsignedArr(uint32_t v) {
     return r;
 }
 
-constexpr unsigned floorlog2(unsigned x) {
+constexpr inline unsigned floorlog2(unsigned x) {
     return x == 1 ? 0 : 1 + floorlog2(x >> 1);
 }
 
-constexpr unsigned ceillog2(unsigned x) {
+constexpr inline unsigned ceillog2(unsigned x) {
     return x == 1 || x == 0 ? 1 : floorlog2(x - 1) + 1;
 }
 

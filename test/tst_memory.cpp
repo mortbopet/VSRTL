@@ -110,7 +110,7 @@ void tst_memory::repeatedWriteSameIdxSync() {
 
     const int n = 10;
     // Clock the circuit n times
-    for (int i = 0; i < n; i++) {
+    for (unsigned i = 0; i < n; i++) {
         QVERIFY(a.mem->data_out.template value<uint32_t>() == i);
         a.clock();
     }

@@ -12,6 +12,7 @@
 QT_FORWARD_DECLARE_CLASS(QMenu)
 
 namespace vsrtl {
+class SimComponent;
 
 /** Generic tree structure node class */
 class TreeItem : public QObject {

@@ -2,8 +2,10 @@
 
 #include "vsrtl_graphics_util.h"
 
+#include <QAction>
 #include <QFontMetrics>
 #include <QGraphicsSceneContextMenuEvent>
+#include <QMenu>
 #include <QPainter>
 
 namespace vsrtl {
@@ -17,7 +19,7 @@ static QRectF getTextRect(const QFont& font, const QString& text) {
 }
 
 ValueLabel::ValueLabel(Radix& type, const SimPort* port, QGraphicsItem* parent)
-    : m_type(type), m_port(port), GraphicsBase(parent) {
+    : GraphicsBase(parent), m_type(type), m_port(port) {
     setFlags(ItemIsSelectable);
     setMoveable();
 }
@@ -29,7 +31,7 @@ QRectF ValueLabel::boundingRect() const {
     return textRect;
 }
 
-void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) {
+void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
     painter->save();
     if (!m_port->isConstant()) {
         QRectF textRect = getTextRect(s_font, m_text);

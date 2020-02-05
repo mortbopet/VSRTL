@@ -24,7 +24,7 @@ public:
         regs[0]->out >> *value->in[0];
         adders[0]->S >> regs[0]->in;
 
-        for (int i = 1; i < width; i++) {
+        for (unsigned i = 1; i < width; i++) {
             adders[i - 1]->Cout >> adders[i]->Cin;
             regs[i]->out >> adders[i]->A;
             regs[i]->out >> *value->in[i];

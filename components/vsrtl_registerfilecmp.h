@@ -13,7 +13,7 @@ public:
     static constexpr unsigned int regFiles = 1;
 
     RegisterFileTester() : Design("Registerfile Tester") {
-        for (int i = 0; i < regFiles; i++) {
+        for (unsigned i = 0; i < regFiles; i++) {
             idx_reg->out >> regs[i]->rd_idx;
             idx_adder->out >> regs[i]->wr_idx;
             reg_adder->out >> regs[i]->wr_data;
