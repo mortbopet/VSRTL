@@ -41,7 +41,7 @@ bool GridComponent::adjust(const QPoint& p) {
     auto newRect = getCurrentComponentRect();
     newRect.adjust(0, 0, p.x(), p.y());
 
-    if (!parentIsPlacing() && !m_serializing) {
+    if (!parentIsPlacing() && !isSerializing()) {
         // Parent is not placing components, snap subcomponents inside rect inside parent
         snapRectToInnerRect(minRect, newRect);
         auto* parent = dynamic_cast<GridComponent*>(parentItem());
@@ -76,7 +76,7 @@ bool GridComponent::adjust(const QRect& newRect) {
 }
 
 void GridComponent::childGeometryChanged() {
-    if (!m_serializing) {
+    if (!isSerializing()) {
         updateSubcomponentBoundingRect();
     }
 }

@@ -94,10 +94,6 @@ protected:
      */
     void spreadPortsOrdered();
 
-    /** Flag for indicating when serializing this component. If so, do not restrict subcomponent
-     * positioning inside the current minimum subcomponent bounding rect */
-    bool m_serializing = false;
-
 private:
     /**
      * @brief childGeometryChanged

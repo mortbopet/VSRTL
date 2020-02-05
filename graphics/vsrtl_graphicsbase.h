@@ -40,9 +40,17 @@ public:
     }
     bool isLocked() const;
 
+    bool isSerializing() const { return m_isSerializing; }
+
 protected:
     bool m_initialized = false;
     bool m_isMoveable = false;
+
+    /** Flag for indicating when serializing this component. When active, GraphicsBase derived objects may temporarily
+     * disable various runtime-enabled checks which will could deserialization. */
+    bool m_isSerializing = false;
+
+    void setSerializing(bool state) { m_isSerializing = state; }
 };
 }  // namespace vsrtl
 
