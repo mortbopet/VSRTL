@@ -146,6 +146,7 @@ public:
 
     template <class Archive>
     void load(Archive& archive) {
+        setSerializing(true);
         // Deserialize the layout
 
         // This layout might originate from a similar component, but with a different name. Get the serialized parent
@@ -236,6 +237,7 @@ public:
             p.second->setPos(idxToPoints[p.first]);
         }
 
+        setSerializing(false);
         postSerializeInit();
     }
 

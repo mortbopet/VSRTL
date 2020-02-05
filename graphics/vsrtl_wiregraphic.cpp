@@ -76,6 +76,10 @@ QRectF WirePoint::boundingRect() const {
 
 QVariant WirePoint::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (change == QGraphicsItem::ItemPositionChange) {
+        // Disallow WirePoint moving when scene is locked
+        if (isLocked() && !m_parent.isSerializing())
+            return QVariant();
+
         // Snap to grid
         QPointF newPos = value.toPointF();
         qreal x = round(newPos.x() / GRID_SIZE) * GRID_SIZE;
