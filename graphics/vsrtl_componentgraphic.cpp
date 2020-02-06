@@ -147,6 +147,7 @@ void ComponentGraphic::loadLayoutFile(const QString& fileName) {
     }
 
     m_isTopLevelSerializedComponent = false;
+    file.close();
 }
 
 void ComponentGraphic::loadLayout() {
