@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.9)
 set (CMAKE_CXX_STANDARD 17)
 project(vsrtl CXX)
 
+if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    set(CMAKE_CXX_FLAGS "-Wextra -Wall -Wno-unused-local-typedefs -Wno-unused-function")
+endif()
+
 ######################################################################
 ## GUI setup
 ######################################################################
