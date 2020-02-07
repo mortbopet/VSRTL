@@ -150,11 +150,9 @@ public:
             /// @todo: build an error report
         }
 
-        // Serialize port value label visibility
+        // Serialize port value label
         try {
-            bool valueLabelVisible = m_valueLabel->isVisible();
-            archive(cereal::make_nvp("ValueLabelVisible", valueLabelVisible));
-            setValueLabelVisible(valueLabelVisible);
+            archive(cereal::make_nvp("ValueLabel", *m_valueLabel));
         } catch (cereal::Exception e) {
             /// @todo: build an error report
         }

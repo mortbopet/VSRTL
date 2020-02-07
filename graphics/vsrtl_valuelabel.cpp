@@ -3,50 +3,35 @@
 #include "vsrtl_graphics_util.h"
 
 #include <QAction>
-#include <QFontMetrics>
 #include <QGraphicsSceneContextMenuEvent>
 #include <QMenu>
 #include <QPainter>
 
 namespace vsrtl {
 
-QFont ValueLabel::s_font = QFont("Monospace", 8);
-QFont ValueLabel::s_constantFont = QFont("Monospace", 10);
-
-static QRectF getTextRect(const QFont& font, const QString& text) {
-    QFontMetrics metric = QFontMetrics(font);
-    return metric.boundingRect(text);
-}
-
 ValueLabel::ValueLabel(Radix& type, const SimPort* port, QGraphicsItem* parent)
-    : GraphicsBaseItem(parent), m_type(type), m_port(port) {
-    setFlags(ItemIsSelectable);
-    setMoveable();
+    : Label("", parent, 10), m_type(type), m_port(port) {
+    setFlag(ItemIsSelectable, true);
 }
 
-QRectF ValueLabel::boundingRect() const {
-    auto textRect = getTextRect(s_font, m_text);
-    textRect.adjust(-3, -3, 3, 3);
-
-    return textRect;
-}
-
-void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
+void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
+    // Paint a label box behind the text
     painter->save();
     if (!m_port->isConstant()) {
-        QRectF textRect = getTextRect(s_font, m_text);
-        textRect.adjust(-1, -1, 1, 1);  // Add a bit of margin to the label
+        QRectF textRect = shape().boundingRect();
         painter->fillRect(textRect, Qt::white);
         painter->setBrush(Qt::NoBrush);
         painter->setPen(QPen(Qt::black, 1));
         painter->drawRect(textRect);
-        painter->setFont(s_font);
-    } else {
-        painter->setFont(s_constantFont);
     }
-    painter->drawText(QPointF{0, 0}, m_text);
-
     painter->restore();
+
+    Label::paint(painter, option, w);
+}
+
+void ValueLabel::setLocked(bool) {
+    // ValueLabels should always be movable, even when the scene is locked
+    return;
 }
 
 void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
@@ -67,7 +52,7 @@ void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
 void ValueLabel::updateText() {
     prepareGeometryChange();
-    m_text = encodePortRadixValue(m_port, m_type);
+    setPlainText(encodePortRadixValue(m_port, m_type));
 }
 
 }  // namespace vsrtl
