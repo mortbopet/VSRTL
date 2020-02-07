@@ -16,7 +16,8 @@
 namespace vsrtl {
 
 Label::Label(const QString& text, QGraphicsItem* parent, int fontSize) : GraphicsBaseItem(parent) {
-    m_font = QFont("Monospace", fontSize);
+    m_font.setPointSize(fontSize);
+
     setMoveable();
     setPlainText(text);
 }
