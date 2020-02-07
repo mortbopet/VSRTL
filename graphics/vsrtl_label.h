@@ -18,7 +18,9 @@ public:
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
 
+    void setText(const QString& text);
     void setAlignment(Qt::Alignment alignment);
+    void setPointSize(int size);
     void setLocked(bool locked) override;
 
     template <class Archive>
@@ -84,7 +86,7 @@ public:
         applyFormatChanges();
     }
 
-private:
+protected:
     void applyFormatChanges();
     void editTriggered();
 

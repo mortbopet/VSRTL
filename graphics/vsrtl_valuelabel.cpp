@@ -51,8 +51,8 @@ void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 }
 
 void ValueLabel::updateText() {
-    prepareGeometryChange();
     setPlainText(encodePortRadixValue(m_port, m_type));
+    applyFormatChanges();
 }
 
 }  // namespace vsrtl

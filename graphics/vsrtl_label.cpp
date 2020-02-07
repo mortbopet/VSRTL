@@ -19,7 +19,17 @@ Label::Label(const QString& text, QGraphicsItem* parent, int fontSize) : Graphic
     m_font.setPointSize(fontSize);
 
     setMoveable();
+    setText(text);
+}
+
+void Label::setText(const QString& text) {
     setPlainText(text);
+    applyFormatChanges();
+}
+
+void Label::setPointSize(int size) {
+    m_font.setPointSize(size);
+    applyFormatChanges();
 }
 
 void Label::setLocked(bool locked) {
