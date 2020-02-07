@@ -11,7 +11,7 @@
 
 namespace vsrtl {
 
-class GridComponent : public GraphicsBaseItem<QGraphicsItem> {
+class GridComponent : public QObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
 public:
     GridComponent(SimComponent& c, GridComponent* parent);

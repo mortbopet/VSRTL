@@ -28,7 +28,8 @@ std::vector<std::string> getPortParentNameSeq(SimPort* p);
  * Base class for wire graphic points. This is the point type which is assigned to PortGraphics. They are not moveable,
  * but provide an interface between moveable WirePoints (on WireSegments) and immovable PortPoints, on ports.
  */
-class PortPoint : public GraphicsBaseItem<QGraphicsItem> {
+class PortPoint : public QObject, public GraphicsBaseItem<QGraphicsItem> {
+    Q_OBJECT
 public:
     PortPoint(QGraphicsItem* parent);
     QRectF boundingRect() const override;
@@ -74,7 +75,8 @@ private:
     WirePoint* m_draggedOnThis = nullptr;
 };
 
-class WireSegment : public GraphicsBaseItem<QGraphicsItem> {
+class WireSegment : public QObject, public GraphicsBaseItem<QGraphicsItem> {
+    Q_OBJECT
     friend class WirePoint;
 
 public:
@@ -102,7 +104,8 @@ private:
     WireGraphic* m_parent = nullptr;
 };
 
-class WireGraphic : public GraphicsBaseItem<QGraphicsItem> {
+class WireGraphic : public QObject, public GraphicsBaseItem<QGraphicsItem> {
+    Q_OBJECT
     friend class PortGraphic;
 
 public:

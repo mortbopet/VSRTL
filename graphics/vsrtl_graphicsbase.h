@@ -5,9 +5,10 @@
 
 namespace vsrtl {
 
-class GraphicsBase : public QObject {
+class GraphicsBase {
 public:
     GraphicsBase() {}
+    virtual ~GraphicsBase() {}
 
     /**
      * @brief postSceneConstructionInitialize#

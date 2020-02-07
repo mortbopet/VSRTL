@@ -21,7 +21,7 @@ namespace vsrtl {
 class WireGraphic;
 class PortPoint;
 
-class PortGraphic : public GraphicsBaseItem<QGraphicsItem> {
+class PortGraphic : public QObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
     Q_PROPERTY(QColor penColor MEMBER m_penColor)
 

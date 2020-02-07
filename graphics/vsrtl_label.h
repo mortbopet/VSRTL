@@ -9,7 +9,8 @@
 
 namespace vsrtl {
 
-class Label : public GraphicsBaseItem<QGraphicsItem> {
+class Label : public QObject, public GraphicsBaseItem<QGraphicsItem> {
+    Q_OBJECT
 public:
     Label(const QString& text, QGraphicsItem* parent, int fontSize = 12);
 
