@@ -7,6 +7,8 @@
 #include <QMenu>
 #include <QPainter>
 #include <QStyleOptionGraphicsItem>
+#include <QTextBlock>
+#include <QTextDocument>
 
 #include "vsrtl_labeleditdialog.h"
 #include "vsrtl_scene.h"
@@ -16,13 +18,14 @@ namespace vsrtl {
 Label::Label(const QString& text, QGraphicsItem* parent, int fontSize) : GraphicsBaseItem(parent) {
     m_font = QFont("Monospace", fontSize);
 
-    setText(text);
+    setPlainText(text);
     setFlags(ItemIsSelectable);
     setMoveable();
 }
 
-QRectF Label::boundingRect() const {
-    return m_textRect.translated(-m_textRect.width() / 2, -m_textRect.height() / 2);
+void Label::setLocked(bool locked) {
+    setFlag(ItemIsSelectable, !locked);
+    GraphicsBaseItem::setLocked(locked);
 }
 
 void Label::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
@@ -37,6 +40,17 @@ void Label::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     menu.exec(event->screenPos());
 };
 
+void Label::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
+    QGraphicsTextItem::paint(painter, option, w);
+
+    // There exists a bug within the drawing of QGraphicsTextItem wherein the painter pen does not return to its initial
+    // state wrt. the draw style (the pen draw style is set to Qt::DashLine after finishing painting whilst the
+    // QGraphicsTextItem is selected).
+    auto pen = painter->pen();
+    pen.setStyle(Qt::SolidLine);
+    painter->setPen(pen);
+}
+
 void Label::mouseDoubleClickEvent(QGraphicsSceneMouseEvent*) {
     if (isLocked())
         return;
@@ -49,68 +63,37 @@ void Label::editTriggered() {
     diag.m_ui->bold->setChecked(m_font.bold());
     diag.m_ui->italic->setChecked(m_font.italic());
     diag.m_ui->size->setValue(m_font.pointSize());
-    diag.setAlignment(m_alignment);
-    auto currentText = m_text;
-    currentText.replace('\n', "\\n");
-    diag.m_ui->text->setText(currentText);
+    diag.setAlignment(document()->defaultTextOption().alignment());
+    diag.m_ui->text->setText(toPlainText());
 
     if (diag.exec()) {
         prepareGeometryChange();
         m_font.setBold(diag.m_ui->bold->isChecked());
         m_font.setItalic(diag.m_ui->italic->isChecked());
         m_font.setPointSize(diag.m_ui->size->value());
-        m_alignment = diag.getAlignment();
-        setText(diag.m_ui->text->text().replace("\\n", "\n"));
+        setFont(m_font);
+        setPlainText(diag.m_ui->text->toPlainText());
+        setAlignment(diag.getAlignment());
     }
 }
 
-void Label::setText(const QString& text) {
-    QStringList lines = text.split('\n');
-    prepareGeometryChange();
-    int height = 0;
-    int width = 0;
-    QFontMetricsF fm(m_font);
-    QPointF topLeft = QPoint();
-    for (const auto& line : lines) {
-        const auto linebr = fm.boundingRect(line);
-        height += static_cast<int>(linebr.height());
-        width = width < linebr.width() ? static_cast<int>(linebr.width()) : width;
-
-        if (topLeft != QPoint()) {
-            topLeft = linebr.topLeft();
-        }
-    }
-    m_text = text;
-    m_textRect = QRectF(topLeft.x(), topLeft.y(), width, height);
-    m_textRect.adjust(-1, -1, 1, 1);
+void Label::setAlignment(Qt::Alignment alignment) {
+    auto textOption = document()->defaultTextOption();
+    textOption.setAlignment(alignment);
+    document()->setDefaultTextOption(textOption);
+    m_alignment = alignment;
+    applyFormatChanges();
 }
 
-void Label::setColor(const QColor& color) {
-    prepareGeometryChange();
-    m_color = color;
-}
-
-void Label::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
-    const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
-
-    // Draw text
-    if (lod >= 0.4) {
-        QPointF offset(-m_textRect.width() / 2, -m_textRect.height() / 2);
-        painter->setFont(m_font);
-        painter->save();
-        auto pen = painter->pen();
-        if (m_color.isValid()) {
-            pen.setColor(m_color);
-        } else if (static_cast<VSRTLScene*>(scene())->darkmode()) {
-            pen.setColor(QColor(Qt::lightGray).lighter());
-        }
-        painter->setPen(pen);
-        QTextOption opt;
-        opt.setWrapMode(QTextOption::WordWrap);
-        opt.setAlignment(m_alignment);
-        painter->drawText(boundingRect(), m_text, opt);
-        painter->restore();
-    }
+void Label::applyFormatChanges() {
+    setFont(m_font);
+    setPlainText(toPlainText());
+    // Setting text width to -1 will remove any textOption alignments. As such, any inferred linebreaks from having a
+    // fixed text width will be removed. Given this, the bounding rect width of the item will reflect the required width
+    // for representing the text without inferred linebreaks.
+    setTextWidth(-1);
+    // A non-negative text width is set, enabling alignment within the text document
+    setTextWidth(boundingRect().width());
 }
 
 }  // namespace vsrtl

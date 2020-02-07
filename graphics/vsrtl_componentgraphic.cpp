@@ -429,6 +429,7 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
 }
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
+    painter->save();
     QColor color;
     if (static_cast<VSRTLScene*>(scene())->darkmode()) {
         color = hasSubcomponents() && isExpanded() ? QColor(QColor(Qt::darkGray).darker()) : QColor("#c0cdd1");
@@ -504,6 +505,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     painter->restore();
     DRAW_BOUNDING_RECT(painter)
 #endif
+    painter->restore();
 }
 
 QRectF ComponentGraphic::sceneGridRect() const {

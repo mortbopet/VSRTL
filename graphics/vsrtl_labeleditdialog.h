@@ -36,7 +36,8 @@ public:
         alignment->setExclusive(true);
         m_ui->alignCenter->setChecked(true);
 
-        connect(m_ui->text, &QLineEdit::textChanged, [=](const QString& text) {
+        connect(m_ui->text, &QTextEdit::textChanged, [=]() {
+            const auto text = m_ui->text->toPlainText();
             m_ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(!text.isEmpty());
         });
     }

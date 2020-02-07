@@ -9,18 +9,17 @@
 
 namespace vsrtl {
 
-class Label : public QObject, public GraphicsBaseItem<QGraphicsItem> {
+class Label : public GraphicsBaseItem<QGraphicsTextItem> {
     Q_OBJECT
 public:
     Label(const QString& text, QGraphicsItem* parent, int fontSize = 12);
 
-    QRectF boundingRect() const override;
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
 
-    void setText(const QString& text);
-    void setColor(const QColor& color);
+    void setAlignment(Qt::Alignment alignment);
+    void setLocked(bool locked) override;
 
     template <class Archive>
     void serialize(Archive& archive) {
@@ -58,8 +57,9 @@ public:
         }
 
         try {
-            archive(cereal::make_nvp("Text", m_text));
-            setText(m_text);  // Update text
+            QString text = toPlainText();
+            archive(cereal::make_nvp("Text", text));
+            setPlainText(text);
         } catch (cereal::Exception e) {
             /// @todo: build an error report
         }
@@ -76,18 +76,19 @@ public:
             unsigned alignment = m_alignment;
             archive(cereal::make_nvp("Alignment", alignment));
             m_alignment = static_cast<Qt::Alignment>(alignment);
+            setAlignment(m_alignment);
         } catch (cereal::Exception e) {
             /// @todo: build an error report
         }
+
+        applyFormatChanges();
     }
 
 private:
+    void applyFormatChanges();
     void editTriggered();
 
-    QString m_text;
-    QRectF m_textRect;
     QFont m_font;
-    QColor m_color;
     Qt::Alignment m_alignment = Qt::AlignCenter;
 };
 
