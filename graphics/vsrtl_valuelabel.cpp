@@ -19,7 +19,7 @@ static QRectF getTextRect(const QFont& font, const QString& text) {
 }
 
 ValueLabel::ValueLabel(Radix& type, const SimPort* port, QGraphicsItem* parent)
-    : GraphicsBase(parent), m_type(type), m_port(port) {
+    : GraphicsBaseItem(parent), m_type(type), m_port(port) {
     setFlags(ItemIsSelectable);
     setMoveable();
 }

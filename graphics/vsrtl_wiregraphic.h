@@ -2,7 +2,7 @@
 #define VSRTL_WIREGRAPHIC_H
 
 #include "vsrtl_graphics_util.h"
-#include "vsrtl_graphicsbase.h"
+#include "vsrtl_graphicsbaseitem.h"
 #include "vsrtl_portgraphic.h"
 
 #include "cereal/cereal.hpp"
@@ -28,7 +28,7 @@ std::vector<std::string> getPortParentNameSeq(SimPort* p);
  * Base class for wire graphic points. This is the point type which is assigned to PortGraphics. They are not moveable,
  * but provide an interface between moveable WirePoints (on WireSegments) and immovable PortPoints, on ports.
  */
-class PortPoint : public GraphicsBase {
+class PortPoint : public GraphicsBaseItem<QGraphicsItem> {
 public:
     PortPoint(QGraphicsItem* parent);
     QRectF boundingRect() const override;
@@ -74,7 +74,7 @@ private:
     WirePoint* m_draggedOnThis = nullptr;
 };
 
-class WireSegment : public GraphicsBase {
+class WireSegment : public GraphicsBaseItem<QGraphicsItem> {
     friend class WirePoint;
 
 public:
@@ -102,7 +102,7 @@ private:
     WireGraphic* m_parent = nullptr;
 };
 
-class WireGraphic : public GraphicsBase {
+class WireGraphic : public GraphicsBaseItem<QGraphicsItem> {
     friend class PortGraphic;
 
 public:

@@ -17,7 +17,7 @@ namespace vsrtl {
 int PortGraphic::s_portGridWidth = 2;
 
 PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
-    : GraphicsBase(parent), m_type(type), m_port(port) {
+    : GraphicsBaseItem(parent), m_type(type), m_port(port) {
     port->registerGraphic(this);
     m_widthText = QString::number(port->getWidth() - 1) + ":0";
     m_font = QFont("Monospace", 8);

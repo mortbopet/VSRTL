@@ -22,7 +22,7 @@ std::vector<std::string> getPortParentNameSeq(SimPort* p) {
     return seq;
 }
 
-PortPoint::PortPoint(QGraphicsItem* parent) : GraphicsBase(parent) {}
+PortPoint::PortPoint(QGraphicsItem* parent) : GraphicsBaseItem(parent) {}
 
 QRectF PortPoint::boundingRect() const {
 #ifdef VSRTL_DEBUG_DRAW
@@ -155,7 +155,7 @@ void WirePoint::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
 // --------------------------------------------------------------------------------
 
-WireSegment::WireSegment(WireGraphic* parent) : GraphicsBase(parent), m_parent(parent) {
+WireSegment::WireSegment(WireGraphic* parent) : GraphicsBaseItem(parent), m_parent(parent) {
     setAcceptHoverEvents(true);
 }
 
@@ -219,6 +219,7 @@ void WireSegment::invalidate() {
 }
 
 QPainterPath WireSegment::shape() const {
+    return QPainterPath();
     if (m_start == nullptr || m_end == nullptr)
         return QPainterPath();
 
@@ -347,7 +348,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
 }
 
 WireGraphic::WireGraphic(PortGraphic* from, const std::vector<SimPort*>& to, QGraphicsItem* parent)
-    : GraphicsBase(parent), m_fromPort(from), m_toPorts(to) {}
+    : GraphicsBaseItem(parent), m_fromPort(from), m_toPorts(to) {}
 
 bool WireGraphic::managesPoint(WirePoint* point) const {
     return std::find(m_points.begin(), m_points.end(), point) != m_points.end();
@@ -582,7 +583,7 @@ void WireGraphic::postSceneConstructionInitialize1() {
         createRectilinearSegments(fromPoint.second, sink->getPointGraphic());
     }
 
-    GraphicsBase::postSceneConstructionInitialize1();
+    GraphicsBaseItem::postSceneConstructionInitialize1();
 }
 
 void WireGraphic::postSerializeInit() {

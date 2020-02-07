@@ -8,6 +8,10 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QMenu>
 
+#include "vsrtl_componentgraphic.h"
+#include "vsrtl_portgraphic.h"
+#include "vsrtl_wiregraphic.h"
+
 namespace vsrtl {
 
 template <typename T>

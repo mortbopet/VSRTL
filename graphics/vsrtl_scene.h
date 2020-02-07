@@ -4,14 +4,13 @@
 #include <QGraphicsScene>
 #include <QPainter>
 
-#include "vsrtl_componentgraphic.h"
 #include "vsrtl_graphics_defines.h"
-#include "vsrtl_portgraphic.h"
-#include "vsrtl_wiregraphic.h"
 
+#include <functional>
 #include <set>
 
 namespace vsrtl {
+class WirePoint;
 
 class VSRTLScene : public QGraphicsScene {
 public:

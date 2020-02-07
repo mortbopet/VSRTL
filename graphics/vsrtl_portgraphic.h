@@ -2,7 +2,7 @@
 #define VSRTL_PORTGRAPHIC_H
 
 #include "vsrtl_graphics_defines.h"
-#include "vsrtl_graphicsbase.h"
+#include "vsrtl_graphicsbaseitem.h"
 #include "vsrtl_label.h"
 #include "vsrtl_valuelabel.h"
 
@@ -21,9 +21,7 @@ namespace vsrtl {
 class WireGraphic;
 class PortPoint;
 
-enum class PortType { in, out };
-
-class PortGraphic : public GraphicsBase {
+class PortGraphic : public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
     Q_PROPERTY(QColor penColor MEMBER m_penColor)
 

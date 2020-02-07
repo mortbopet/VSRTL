@@ -13,7 +13,7 @@
 
 namespace vsrtl {
 
-Label::Label(const QString& text, QGraphicsItem* parent, int fontSize) : GraphicsBase(parent) {
+Label::Label(const QString& text, QGraphicsItem* parent, int fontSize) : GraphicsBaseItem(parent) {
     m_font = QFont("Monospace", fontSize);
 
     setText(text);

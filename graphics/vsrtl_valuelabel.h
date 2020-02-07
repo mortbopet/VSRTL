@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vsrtl_graphicsbase.h"
+#include "vsrtl_graphicsbaseitem.h"
 #include "vsrtl_radix.h"
 
 #include "../interface/vsrtl_interface.h"
@@ -10,7 +10,7 @@
 
 namespace vsrtl {
 
-class ValueLabel : public GraphicsBase {
+class ValueLabel : public GraphicsBaseItem<QGraphicsItem> {
 public:
     ValueLabel(Radix& type, const SimPort* port, QGraphicsItem* parent);
 

@@ -18,6 +18,8 @@ Q_DECLARE_METATYPE(vsrtl::VSRTL_VT_U)
 
 namespace vsrtl {
 
+enum class PortType { in, out };
+
 enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99 };
 
 #define WIRE_DEFAULT_COLOR QColor("#636363")

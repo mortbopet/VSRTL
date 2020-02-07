@@ -6,12 +6,12 @@
 
 #include "../interface/vsrtl_interface.h"
 #include "vsrtl_componentborder.h"
-#include "vsrtl_graphicsbase.h"
+#include "vsrtl_graphicsbaseitem.h"
 #include "vsrtl_shape.h"
 
 namespace vsrtl {
 
-class GridComponent : public GraphicsBase {
+class GridComponent : public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
 public:
     GridComponent(SimComponent& c, GridComponent* parent);

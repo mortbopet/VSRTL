@@ -391,7 +391,7 @@ void ComponentGraphic::setLocked(bool locked) {
     if (m_expandButton)
         m_expandButton->setVisible(!locked);
 
-    GraphicsBase::setLocked(locked);
+    GraphicsBaseItem::setLocked(locked);
 }
 
 QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {

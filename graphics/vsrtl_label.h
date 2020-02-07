@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vsrtl_graphicsbase.h"
+#include "vsrtl_graphicsbaseitem.h"
 #include "vsrtl_qt_serializers.h"
 
 #include "cereal/cereal.hpp"
@@ -9,7 +9,7 @@
 
 namespace vsrtl {
 
-class Label : public GraphicsBase {
+class Label : public GraphicsBaseItem<QGraphicsItem> {
 public:
     Label(const QString& text, QGraphicsItem* parent, int fontSize = 12);
 

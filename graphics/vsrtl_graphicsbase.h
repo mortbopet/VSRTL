@@ -5,9 +5,9 @@
 
 namespace vsrtl {
 
-class GraphicsBase : public QObject, public QGraphicsItem {
+class GraphicsBase : public QObject {
 public:
-    GraphicsBase(QGraphicsItem* parent);
+    GraphicsBase() {}
 
     /**
      * @brief postSceneConstructionInitialize#
@@ -16,29 +16,21 @@ public:
      *
      * Multiple passes may be used, allowing for staged initialization
      */
-    virtual void postSceneConstructionInitialize1();
-    virtual void postSceneConstructionInitialize2();
+    virtual void postSceneConstructionInitialize1() = 0;
+    virtual void postSceneConstructionInitialize2() = 0;
 
     /**
      * @brief setLocked
      * Toggles any interaction with the object in the scene. Components may specialize, if further modifications to the
      * components behaviour is required
      */
-    virtual void setLocked(bool locked) {
-        if (!m_isMoveable)
-            return;
-
-        if (locked)
-            setFlags(flags() & ~QGraphicsItem::ItemIsMovable);
-        else
-            setFlag(QGraphicsItem::ItemIsMovable);
-    }
+    virtual void setLocked(bool locked) = 0;
 
     void setMoveable() {
         m_isMoveable = true;
         setLocked(false);
     }
-    bool isLocked() const;
+    virtual bool isLocked() const = 0;
 
     bool isSerializing() const { return m_isSerializing; }
 
@@ -52,6 +44,7 @@ protected:
 
     void setSerializing(bool state) { m_isSerializing = state; }
 };
+
 }  // namespace vsrtl
 
 #endif  // VSRTL_GRAPHICSBASE_H
