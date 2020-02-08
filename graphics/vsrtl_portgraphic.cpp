@@ -48,15 +48,17 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     m_portPoint = new PortPoint(this);
     m_portPoint->setPos(mapToItem(this, mapToScene(type == PortType::in ? getInputPoint() : getOutputPoint())));
 
-    m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), this);
+    if (m_type == PortType::in) {
+        m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), WireGraphic::WireType::BorderOutput,
+                                       dynamic_cast<ComponentGraphic*>(parentItem()));
+    } else {
+        m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), WireGraphic::WireType::ComponentOutput,
+                                       dynamic_cast<ComponentGraphic*>(parentItem()->parentItem()));
+    }
 
     m_valueLabel = new ValueLabel(m_radix, m_port, this);
     m_valueLabel->setVisible(false);
     m_valueLabel->moveBy(3, -6);  // start position (may be dragged)
-}
-
-void PortGraphic::setOutwireVisible(bool state) {
-    m_outputWire->setVisible(state);
 }
 
 void PortGraphic::updateSlot() {
@@ -276,8 +278,7 @@ void PortGraphic::setPortVisible(bool visible) {
             const bool isNestedComponent = portParent == m_port->getParent<SimComponent>()->getParent<SimComponent>();
 
             if (!isNestedComponent && portParent && portGraphic) {
-                portGraphic->setSourceVisible(visible && portParent->getGraphic<ComponentGraphic>()->isVisible() &&
-                                              !m_userHidden);
+                portGraphic->setSourceVisible(visible && !m_userHidden);
             }
         }
     }

@@ -22,7 +22,23 @@ std::vector<std::string> getPortParentNameSeq(SimPort* p) {
     return seq;
 }
 
-PortPoint::PortPoint(QGraphicsItem* parent) : GraphicsBaseItem(parent) {}
+PortPoint::PortPoint(QGraphicsItem* parent) : GraphicsBaseItem(parent) {
+    setFlag(ItemSendsScenePositionChanges, true);
+}
+
+QVariant PortPoint::itemChange(GraphicsItemChange change, const QVariant& value) {
+    if (change == QGraphicsItem::ItemPositionHasChanged || change == QGraphicsItem::ItemScenePositionHasChanged) {
+        // Propagate a redraw call to all segments connecting to this
+        if (m_inputWire) {
+            m_inputWire->geometryModified();
+        }
+        for (const auto& wire : m_outputWires) {
+            wire->geometryModified();
+        }
+    }
+
+    return QGraphicsItem::itemChange(change, value);
+}
 
 QRectF PortPoint::boundingRect() const {
 #ifdef VSRTL_DEBUG_DRAW
@@ -51,14 +67,14 @@ void PortPoint::removeOutputWire(WireSegment* wire) {
 }
 
 void WirePoint::pointDrop(WirePoint* point) {
-    if (m_parent.canMergePoints(this, point) == WireGraphic::MergeType::CannotMerge)
+    if (m_parent->canMergePoints(this, point) == WireGraphic::MergeType::CannotMerge)
         return;
 
-    m_parent.mergePoints(this, point);
+    m_parent->mergePoints(this, point);
 }
 
 void WirePoint::pointDragEnter(WirePoint* point) {
-    if (m_parent.canMergePoints(this, point) != WireGraphic::MergeType::CannotMerge) {
+    if (m_parent->canMergePoints(this, point) != WireGraphic::MergeType::CannotMerge) {
         m_draggedOnThis = point;
         update();
     }
@@ -69,12 +85,10 @@ void WirePoint::pointDragLeave(WirePoint*) {
     update();
 }
 
-WirePoint::WirePoint(WireGraphic& parent, QGraphicsItem* sceneParent) : PortPoint(sceneParent), m_parent(parent) {
-    setFlags(ItemIsSelectable | ItemSendsScenePositionChanges);
+WirePoint::WirePoint(WireGraphic* parent) : PortPoint(parent), m_parent(parent) {
+    setFlag(ItemIsSelectable, true);
     setAcceptHoverEvents(true);
     setMoveable();
-    m_sceneParent = dynamic_cast<ComponentGraphic*>(sceneParent);
-    Q_ASSERT(m_sceneParent != nullptr);
 }
 
 QRectF WirePoint::boundingRect() const {
@@ -84,22 +98,17 @@ QRectF WirePoint::boundingRect() const {
 QVariant WirePoint::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (change == QGraphicsItem::ItemPositionChange) {
         // Disallow WirePoint moving when scene is locked
-        if (isLocked() && !m_parent.isSerializing())
-            return QVariant();
+        if (isLocked() && !m_parent->isSerializing())
+            return pos();
 
         // Snap to grid
         QPointF newPos = value.toPointF();
         qreal x = round(newPos.x() / GRID_SIZE) * GRID_SIZE;
         qreal y = round(newPos.y() / GRID_SIZE) * GRID_SIZE;
         return QPointF(x, y);
-    } else if (change == QGraphicsItem::ItemPositionHasChanged) {
-        // Propagate a redraw call to all segments connecting to this
-        m_inputWire->prepareGeometryChange();
-        for (const auto& wire : m_outputWires)
-            wire->prepareGeometryChange();
     }
 
-    return QGraphicsItem::itemChange(change, value);
+    return PortPoint::itemChange(change, value);
 }
 
 QPainterPath WirePoint::shape() const {
@@ -110,17 +119,12 @@ QPainterPath WirePoint::shape() const {
 }
 
 void WirePoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
-    // Given that WirePoints are graphical children of a component graphic (for them to be fixed on the component),
-    // they will still be drawn when the component graphic is not expanded (given that it is still visible). Thus,
-    // only paint if the parent componentgraphic is expanded.
-    if (!m_sceneParent->isExpanded())
-        return;
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
     if (lod < 0.35)
         return;
 
     painter->save();
-    QPen pen = m_parent.getPen();
+    QPen pen = m_parent->getPen();
 
     QColor fillColor = (option->state & QStyle::State_Selected) ? QColor(Qt::yellow) : pen.color();
     if (option->state & QStyle::State_MouseOver)
@@ -149,7 +153,7 @@ void WirePoint::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
     QMenu menu;
     auto removePointAction = menu.addAction("Remove point");
-    connect(removePointAction, &QAction::triggered, [this](bool) { m_parent.removeWirePoint(this); });
+    connect(removePointAction, &QAction::triggered, [this](bool) { m_parent->removeWirePoint(this); });
     menu.exec(event->screenPos());
 }
 
@@ -165,6 +169,8 @@ void WireSegment::setStart(PortPoint* start) {
     m_start = start;
     if (m_start)
         m_start->addOutputWire(this);
+
+    geometryModified();
 }
 
 void WireSegment::setEnd(PortPoint* end) {
@@ -173,6 +179,8 @@ void WireSegment::setEnd(PortPoint* end) {
     m_end = end;
     if (m_end)
         m_end->setInputWire(this);
+
+    geometryModified();
 }
 
 QLineF WireSegment::getLine() const {
@@ -218,23 +226,48 @@ void WireSegment::invalidate() {
     setEnd(nullptr);
 }
 
+void WireSegment::geometryModified() {
+    QPointF p1_mod, p2_mod;
+    prepareGeometryChange();
+    if (m_start == nullptr || m_end == nullptr) {
+        goto geometryModified_invalidate;
+    }
+
+    m_cachedLine = getLine();
+    if (m_cachedLine.p1() == m_cachedLine.p2()) {
+        goto geometryModified_invalidate;
+    }
+
+    // The shape of the line is defined as a box of WIRE_WIDTH around the entire line between the two end points. Except
+    // for WIRE_WIDTH/2 at the edges of the line, wherein we would like to be able to click on a potential WirePoint.
+    m_cachedShape = QPainterPath();
+    p1_mod = m_cachedLine.pointAt(WIRE_WIDTH / m_cachedLine.length());
+    p2_mod = m_cachedLine.pointAt((m_cachedLine.length() - WIRE_WIDTH) / m_cachedLine.length());
+    m_cachedShape.addPolygon(expandLine(QLineF(p1_mod, p2_mod), WIRE_WIDTH));
+
+    // The bounding rect is an equivalently expanded box around the current line, but with full length.
+    m_cachedBoundingRect = expandLine(m_cachedLine, WIRE_WIDTH).boundingRect();
+    return;
+
+geometryModified_invalidate:
+    m_cachedShape = QPainterPath();
+    m_cachedLine = QLine();
+    m_cachedBoundingRect = QRectF();
+    return;
+}
+
 QPainterPath WireSegment::shape() const {
-    return QPainterPath();
     if (m_start == nullptr || m_end == nullptr)
         return QPainterPath();
 
-    QPainterPath path;
-    path.addPolygon(expandLine(getLine(), WIRE_WIDTH));
-    return path;
+    return m_cachedShape;
 }
 
 QRectF WireSegment::boundingRect() const {
     if (m_start == nullptr || m_end == nullptr)
         return QRectF();
 
-    auto br = shape().boundingRect();
-    br.adjust(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
-    return br;
+    return m_cachedBoundingRect;
 }
 
 void WireSegment::hoverMoveEvent(QGraphicsSceneHoverEvent*) {
@@ -249,7 +282,7 @@ void WireSegment::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
 
     painter->save();
     painter->setPen(m_parent->getPen());
-    painter->drawLine(getLine());
+    painter->drawLine(m_cachedLine);
     painter->restore();
 #ifdef VSRTL_DEBUG_DRAW
     DRAW_BOUNDING_RECT(painter)
@@ -274,21 +307,14 @@ void WireSegment::mousePressEvent(QGraphicsSceneMouseEvent*) {}
 
 WirePoint* WireGraphic::createWirePoint() {
     // Create new point managed by this graphic.
-    auto* topComponent = getPointOwningComponentGraphic();
-    Q_ASSERT(topComponent != nullptr);
-    auto* point = new WirePoint(*this, topComponent);
+    auto* point = new WirePoint(this);
     m_points.insert(point);
     return point;
 }
 
 void WireGraphic::moveWirePoint(PortPoint* point, const QPointF scenePos) {
-    // The parent structure is somewhat nested; a wireGraphic must be a graphical child of the graphics component
-    // which this wire is nested inside. To reach this, we do: WireGraphic->parent = PortGraphic PortGraphic->parent
-    // = ComponentGraphic ComponentGrahic -> parent = ComponentGraphic (with nested components)
-    auto* topComponent = getPointOwningComponentGraphic();
-    Q_ASSERT(topComponent != nullptr);
     // Move new point to its creation position
-    point->setPos(mapToItem(topComponent, mapFromScene(scenePos)));
+    point->setPos(mapToItem(this, mapFromScene(scenePos)));
 }
 
 WireSegment* WireGraphic::createSegment(PortPoint* start, PortPoint* end) {
@@ -337,7 +363,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     Q_ASSERT(iter != m_wires.end());
     m_wires.erase(iter);
     wireToRemove->invalidate();
-    wireToRemove->deleteLater();
+    delete wireToRemove;
 
     // Finally, delete the point. At this point, no wires should be referencing the point
     Q_ASSERT(pointToRemove->getInputWire() == nullptr && pointToRemove->getOutputWires().empty());
@@ -347,8 +373,10 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     pointToRemove->deleteLater();
 }
 
-WireGraphic::WireGraphic(PortGraphic* from, const std::vector<SimPort*>& to, QGraphicsItem* parent)
-    : GraphicsBaseItem(parent), m_fromPort(from), m_toPorts(to) {}
+WireGraphic::WireGraphic(PortGraphic* from, const std::vector<SimPort*>& to, WireType type, ComponentGraphic* parent)
+    : GraphicsBaseItem(parent), m_parent(parent), m_fromPort(from), m_toPorts(to), m_type(type) {
+    m_parent->registerWire(this);
+}
 
 bool WireGraphic::managesPoint(WirePoint* point) const {
     return std::find(m_points.begin(), m_points.end(), point) != m_points.end();
@@ -373,9 +401,19 @@ void WireGraphic::mergePoints(WirePoint* base, WirePoint* toMerge) {
 }
 
 void WireGraphic::clearWirePoints() {
-    for (auto& p : m_points) {
+    // removeWirePoint modifies m_points. Iterate over a copy.
+    auto pointsCopy = m_points;
+    for (auto& p : pointsCopy) {
         removeWirePoint(p);
     }
+}
+
+void WireGraphic::clearWires() {
+    for (const auto& w : m_wires) {
+        w->invalidate();
+        delete w;
+    }
+    m_wires.clear();
 }
 
 /**
@@ -422,32 +460,6 @@ QRectF WireGraphic::boundingRect() const {
     // HACK HACK HACK
 
     return br;
-}
-
-/**
- * @brief WireGraphic::getPointOwningComponent
- * When creating new WireGraphic points, they must be the graphical children of some higher-level component, such
- * that they move with the component. This function locates, based on the type of port which this WireGraphic is created
- * with, the respective parent component to create a WirePoint as a child of.
- * Returns the component which will be the graphical parent of points created and managed by this wireGraphic
- */
-ComponentGraphic* WireGraphic::getPointOwningComponentGraphic() const {
-    // Initial hierarchy: WireGraphic -> portGraphic -> ComponentGraphic
-    auto* portParent = dynamic_cast<PortGraphic*>(parentItem());
-    auto* componentParent = dynamic_cast<ComponentGraphic*>(portParent->parentItem());
-    Q_ASSERT(portParent && componentParent);
-    if (componentParent->hasSubcomponents()) {
-        // If this wire graphic is the graphic of a port which is on the I/O boundary of a component with subcomponents,
-        // return the parent component
-        return componentParent;
-    } else {
-        // Else, we are a subcomponent within a component
-        return componentParent->getParent();
-    }
-}
-
-SimComponent& WireGraphic::getPointOwningComponent() const {
-    return getPointOwningComponentGraphic()->getComponent();
 }
 
 void WireGraphic::createRectilinearSegments(PortPoint* start, PortPoint* end) {
@@ -540,16 +552,8 @@ void WireGraphic::setWiresVisibleToPort(const PortPoint* p, bool visible) {
     }
 }
 
-QVariant WireGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
-    if (change == QGraphicsItem::ItemVisibleChange) {
-        // When this WireGraphic is hidden, output wire WireSegments (children of this) will be automatically hidden.
-        // However, WirePoints are children of a higher level parent component - so these must be hidden manually
-        for (auto& p : m_points) {
-            p->setVisible(value.toBool());
-        }
-    }
-
-    return QGraphicsItem::itemChange(change, value);
+SimComponent* WireGraphic::getParentComponent() const {
+    return m_parent->getComponent();
 }
 
 /**
@@ -593,6 +597,12 @@ void WireGraphic::postSerializeInit() {
 
     for (const auto& p : m_toGraphicPorts) {
         p->setUserVisible(!p->userHidden());
+    }
+
+    // Geometry updating is disabled whilst serializing. Make all wires update geometry after serialization has
+    // completed.
+    for (const auto& wire : m_wires) {
+        wire->geometryModified();
     }
 }
 

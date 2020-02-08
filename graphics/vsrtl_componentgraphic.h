@@ -47,7 +47,7 @@ class ComponentButton;
 
 class ComponentGraphic : public GridComponent {
 public:
-    ComponentGraphic(SimComponent& c, ComponentGraphic* parent);
+    ComponentGraphic(SimComponent* c, ComponentGraphic* parent);
 
     QRectF boundingRect() const override;
     QPainterPath shape() const override;
@@ -70,6 +70,7 @@ public:
     bool handlePortGraphicMoveAttempt(const PortGraphic* port, const QPointF& newBorderPos);
 
     void setExpanded(bool isExpanded);
+    void registerWire(WireGraphic* wire);
 
     /**
      * @brief setUserVisible
@@ -128,6 +129,14 @@ protected:
     std::vector<ComponentGraphic*> m_subcomponents;
     ComponentGraphic* m_parentComponentGraphic = nullptr;
 
+    /**
+     * @brief m_wires
+     * WireGraphics always lie within some parent ComponentGraphic. When ports create their wires, they will register
+     * their wire with a corresponding ComponentGraphic. These registrations may in turn be used to toggle the
+     * visibility of wires inside a ComponentGraphic, based on the expansion state of the ComponentGraphic.
+     */
+    std::vector<WireGraphic*> m_wires;
+
     QMap<SimPort*, PortGraphic*> m_inputPorts;
     QMap<SimPort*, PortGraphic*> m_outputPorts;
 
@@ -157,7 +166,7 @@ public:
         // components, but this component may have different names based on the design which instantiated it.
         // Thus, we need to replace the stored name with the actual name of the component.
         try {
-            std::string storedName = getComponent().getName();
+            std::string storedName = getComponent()->getName();
             archive(cereal::make_nvp("Top name", storedName));
         } catch (cereal::Exception e) {
             /// @todo: build an error report
@@ -210,7 +219,7 @@ public:
             // Serealize subcomponents
             for (const auto& c : m_subcomponents) {
                 try {
-                    archive(cereal::make_nvp(c->getComponent().getName(), *c));
+                    archive(cereal::make_nvp(c->getComponent()->getName(), *c));
                 } catch (cereal::Exception e) {
                     /// @todo: build an error report
                 }
@@ -285,6 +294,7 @@ public:
         }
 
         setSerializing(false);
+        update();
     }
 };
 }  // namespace vsrtl

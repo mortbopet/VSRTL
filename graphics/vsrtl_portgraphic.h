@@ -64,7 +64,6 @@ public:
     PortPoint* getPointGraphic() { return m_portPoint; }
     QString getTooltipString() const;
 
-    void setOutwireVisible(bool state);
     bool userHidden() const { return m_userHidden; }
     void setUserVisible(bool visible);
 

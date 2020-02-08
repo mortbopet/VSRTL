@@ -36,7 +36,7 @@ std::deque<SimComponent*> topologicalSort(const std::vector<GridComponent*>& com
     std::deque<SimComponent*> stack;
 
     for (const auto& cpt : components)
-        visited[&cpt->getComponent()] = false;
+        visited[cpt->getComponent()] = false;
 
     for (const auto& c : visited) {
         if (!c.second) {

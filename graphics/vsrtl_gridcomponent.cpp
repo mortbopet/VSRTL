@@ -8,7 +8,7 @@
 
 namespace vsrtl {
 
-GridComponent::GridComponent(SimComponent& c, GridComponent* parent) : GraphicsBaseItem(parent), m_component(c) {
+GridComponent::GridComponent(SimComponent* c, GridComponent* parent) : GraphicsBaseItem(parent), m_component(c) {
     m_border = std::make_unique<ComponentBorder>(c);
 
     updateMinimumGridRect();
@@ -82,7 +82,7 @@ void GridComponent::childGeometryChanged() {
 }
 
 bool GridComponent::hasSubcomponents() const {
-    return m_component.hasSubcomponents();
+    return m_component->hasSubcomponents();
 }
 
 bool GridComponent::move(const QPoint& pos) {
@@ -183,7 +183,7 @@ bool GridComponent::updateSubcomponentBoundingRect() {
 }
 
 void GridComponent::setInitialRect() {
-    const auto preferredRect = ShapeRegister::getComponentPreferredRect(m_component.getGraphicsID());
+    const auto preferredRect = ShapeRegister::getComponentPreferredRect(m_component->getGraphicsID());
 
     auto initialRect = m_minimumGridRect;
     if (preferredRect == QRect()) {
@@ -204,8 +204,8 @@ void GridComponent::setInitialRect() {
 
 bool GridComponent::updateMinimumGridRect() {
     QRect shapeMinRect = QRect(0, 0, 1, 1);  //
-    const unsigned n_inPorts = static_cast<unsigned>(m_component.getPorts<SimPort::Direction::in>().size());
-    const unsigned n_outPorts = static_cast<unsigned>(m_component.getPorts<SimPort::Direction::out>().size());
+    const unsigned n_inPorts = static_cast<unsigned>(m_component->getPorts<SimPort::Direction::in>().size());
+    const unsigned n_outPorts = static_cast<unsigned>(m_component->getPorts<SimPort::Direction::out>().size());
     const unsigned largestPortSize = n_inPorts > n_outPorts ? n_inPorts : n_outPorts;
     const int heightToAdd = largestPortSize + 1 - shapeMinRect.height();
     shapeMinRect.adjust(0, 0, 0, heightToAdd);

@@ -51,6 +51,16 @@ public:
         Q_ASSERT(p);
         return p->isLocked();
     }
+
+    void setSerializing(bool state) override {
+        m_isSerializing = state;
+        // Recursively propagate serialize state to children
+        for (const auto& c : T::childItems()) {
+            if (auto* gb = dynamic_cast<GraphicsBase*>(c)) {
+                gb->setSerializing(state);
+            }
+        }
+    }
 };
 
 }  // namespace vsrtl

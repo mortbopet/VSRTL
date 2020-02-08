@@ -33,19 +33,19 @@ namespace vsrtl {
 
 static constexpr qreal c_resizeMargin = GRID_SIZE;
 
-ComponentGraphic::ComponentGraphic(SimComponent& c, ComponentGraphic* parent) : GridComponent(c, parent) {
-    c.changed.Connect(this, &ComponentGraphic::updateSlot);
-    c.registerGraphic(this);
+ComponentGraphic::ComponentGraphic(SimComponent* c, ComponentGraphic* parent) : GridComponent(c, parent) {
+    c->changed.Connect(this, &ComponentGraphic::updateSlot);
+    c->registerGraphic(this);
     verifySpecialSignals();
 }
 
 void ComponentGraphic::verifySpecialSignals() const {
     // Ensure that all special signals required by the graphics type of this component has been set by the simulator
     // component
-    auto* type = m_component.getGraphicsType();
+    auto* type = m_component->getGraphicsType();
     for (const auto& typeID : type->specialPortIDs()) {
-        if (m_component.getSpecialPort(typeID) == nullptr) {
-            m_component.throwError(
+        if (m_component->getSpecialPort(typeID) == nullptr) {
+            m_component->throwError(
                 "Special port: '" + std::string(typeID) +
                 "' not assigned. A special port of this ID should be registered through SimComponent::setSpecialPort");
         }
@@ -59,13 +59,13 @@ void ComponentGraphic::initialize() {
     setAcceptHoverEvents(true);
     setMoveable();
 
-    m_label = new Label(QString::fromStdString(m_component.getDisplayName()), this);
+    m_label = new Label(QString::fromStdString(m_component->getDisplayName()), this);
 
     // Create IO ports of Component
-    for (const auto& p_in : m_component.getPorts<SimPort::Direction::in, SimPort>()) {
+    for (const auto& p_in : m_component->getPorts<SimPort::Direction::in, SimPort>()) {
         m_inputPorts[p_in] = new PortGraphic(p_in, PortType::in, this);
     }
-    for (const auto& p_out : m_component.getPorts<SimPort::Direction::out, SimPort>()) {
+    for (const auto& p_out : m_component->getPorts<SimPort::Direction::out, SimPort>()) {
         m_outputPorts[p_out] = new PortGraphic(p_out, PortType::out, this);
     }
 
@@ -95,17 +95,17 @@ void ComponentGraphic::initialize() {
  * In charge of hide()ing subcomponents if the parent component (this) is not expanded
  */
 void ComponentGraphic::createSubcomponents() {
-    for (const auto& c : m_component.getSubComponents()) {
+    for (const auto& c : m_component->getSubComponents()) {
         ComponentGraphic* nc;
         auto typeId = c->getGraphicsID();
         if (typeId == GraphicsIDFor(Multiplexer)) {
-            nc = new MultiplexerGraphic(*c, this);
+            nc = new MultiplexerGraphic(c, this);
         } else if (typeId == GraphicsIDFor(Constant)) {
             // Don't create a distinct ComponentGraphic for constants - these will be drawn next to the port connecting
             // to it
             continue;
         } else {
-            nc = new ComponentGraphic(*c, this);
+            nc = new ComponentGraphic(c, this);
         }
         nc->initialize();
         nc->setParentItem(this);
@@ -152,7 +152,7 @@ void ComponentGraphic::loadLayoutFile(const QString& fileName) {
 
 void ComponentGraphic::loadLayout() {
     QString fileName = QFileDialog::getOpenFileName(QApplication::activeWindow(),
-                                                    "Save Layout " + QString::fromStdString(m_component.getName()),
+                                                    "Save Layout " + QString::fromStdString(m_component->getName()),
                                                     QString(), tr("JSON (*.json)"));
 
     if (fileName.isEmpty())
@@ -163,7 +163,7 @@ void ComponentGraphic::loadLayout() {
 
 void ComponentGraphic::saveLayout() {
     QString fileName = QFileDialog::getSaveFileName(QApplication::activeWindow(),
-                                                    "Save Layout " + QString::fromStdString(m_component.getName()),
+                                                    "Save Layout " + QString::fromStdString(m_component->getName()),
                                                     QString(), tr("JSON (*.json)"));
 
     if (fileName.isEmpty())
@@ -215,7 +215,7 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
         if (!isLocked()) {
             auto* hiddenPortsMenu = portMenu->addMenu("Hidden ports");
-            for (const auto& p : m_component.getAllPorts()) {
+            for (const auto& p : m_component->getAllPorts()) {
                 auto* gp = p->getGraphic<PortGraphic>();
                 if (gp->userHidden()) {
                     auto* showPortAction = hiddenPortsMenu->addAction(QString::fromStdString(p->getName()));
@@ -248,7 +248,7 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         }
     }
 
-    if ((m_component.getParent() != nullptr) && !isLocked()) {
+    if ((m_component->getParent() != nullptr) && !isLocked()) {
         auto* hideAction = menu.addAction("Hide component");
         connect(hideAction, &QAction::triggered, [=] {
             m_userHidden = true;
@@ -274,6 +274,10 @@ void ComponentGraphic::setIndicatorState(PortGraphic* p, bool enabled) {
     update();
 }
 
+void ComponentGraphic::registerWire(WireGraphic* wire) {
+    m_wires.push_back(wire);
+}
+
 void ComponentGraphic::setExpanded(bool state) {
     GridComponent::setExpanded(state);
     bool areWeExpanded = isExpanded();
@@ -285,8 +289,8 @@ void ComponentGraphic::setExpanded(bool state) {
         // We are not hiding the input ports of a component, because these should always be drawn. However, a input port
         // of an expandable component has wires drawin inside the component, which must be hidden aswell, such that they
         // do not accept mouse events nor are drawn.
-        for (const auto& p : m_inputPorts) {
-            p->setOutwireVisible(areWeExpanded);
+        for (const auto& w : m_wires) {
+            w->setVisible(areWeExpanded);
         }
     }
 }
@@ -308,7 +312,7 @@ void ComponentGraphic::updateGeometry() {
     // Update the draw shape, scaling it to the current scene size of the component grid rect
     QTransform t;
     t.scale(sceneRect.width(), sceneRect.height());
-    m_shape = ShapeRegister::getComponentShape(m_component.getGraphicsID(), t);
+    m_shape = ShapeRegister::getComponentShape(m_component->getGraphicsID(), t);
 
     // Position the expand-button
     if (hasSubcomponents()) {

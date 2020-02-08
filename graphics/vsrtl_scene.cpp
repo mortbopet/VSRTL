@@ -152,7 +152,7 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
                     // If a components parent is expanded but it itself is not visible, then it may be set to being
                     // currently visible
                     if (c->getParent()->isExpanded()) {
-                        auto* action = hiddenMenu->addAction(QString::fromStdString(c->getComponent().getName()));
+                        auto* action = hiddenMenu->addAction(QString::fromStdString(c->getComponent()->getName()));
                         connect(action, &QAction::triggered, [c] { c->setUserVisible(true); });
                         showActions.push_back(action);
                     }

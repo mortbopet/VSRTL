@@ -14,7 +14,7 @@ namespace vsrtl {
 class GridComponent : public QObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
 public:
-    GridComponent(SimComponent& c, GridComponent* parent);
+    GridComponent(SimComponent* c, GridComponent* parent);
 
     /**
      * @brief adjust
@@ -58,7 +58,7 @@ public:
 
     QPoint getGridPos() const { return m_relPos; }
 
-    SimComponent& getComponent() const { return m_component; }
+    SimComponent* getComponent() const { return m_component; }
     bool hasSubcomponents() const;
 
     void placeAndRouteSubcomponents();
@@ -68,7 +68,7 @@ public:
         m_border->serialize(archive);
         // Invalidate all port positions
 
-        for (const auto& p : m_component.getAllPorts()) {
+        for (const auto& p : m_component->getAllPorts()) {
             emit portPosChanged(p);
         }
     }
@@ -79,7 +79,7 @@ signals:
     void portPosChanged(const SimPort* p);
 
 protected:
-    SimComponent& m_component;
+    SimComponent* m_component = nullptr;
     /**
      * @brief spreadPorts
      * Adjust all ports of the component such that they are evenly spread on a given face of the gridcomponent. Ports'

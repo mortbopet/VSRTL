@@ -23,14 +23,14 @@ public:
     using PortToIdMap = std::map<const SimPort*, int>;
     using NameToPortMap = std::map<std::string, const SimPort*>;
 
-    ComponentBorder(const SimComponent& c) {
+    ComponentBorder(const SimComponent* c) {
         // Input- and outputs are initialized to uninitialized (<0) indicies on the left- and right side
-        for (const auto& p : c.getPorts<SimPort::Direction::in>()) {
+        for (const auto& p : c->getPorts<SimPort::Direction::in>()) {
             m_portMap[p] = nullptr;
             addPortToSide(PortPos{Side::Left, int(-(m_left.count() + 1))}, p);
             m_namePortMap[p->getName()] = p;
         }
-        for (const auto& p : c.getPorts<SimPort::Direction::out>()) {
+        for (const auto& p : c->getPorts<SimPort::Direction::out>()) {
             m_portMap[p] = nullptr;
             addPortToSide(PortPos{Side::Right, int(-(m_right.count() + 1))}, p);
             m_namePortMap[p->getName()] = p;
