@@ -133,15 +133,14 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         showValueAction->setChecked(m_valueLabel->isVisible());
         connect(showValueAction, &QAction::triggered, this, &PortGraphic::setValueLabelVisible);
         menu.addAction(showValueAction);
+    }
 
+    if (!isLocked()) {
         QAction* showWidthAction = menu.addAction("Show width");
         showWidthAction->setCheckable(true);
         showWidthAction->setChecked(m_portWidthVisible);
         connect(showWidthAction, &QAction::triggered, this, &PortGraphic::setPortWidthVisible);
         menu.addAction(showWidthAction);
-    }
-
-    if (!isLocked()) {
         QAction* showLabelAction = menu.addAction("Show label");
         showLabelAction->setCheckable(true);
         showLabelAction->setChecked(m_label->isVisible());
