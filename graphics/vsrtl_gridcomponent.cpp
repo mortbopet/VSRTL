@@ -251,7 +251,7 @@ std::vector<unsigned> GridComponent::getFreePortPositions(Side s) {
 }
 
 bool GridComponent::adjustPort(SimPort* port, int newPos) {
-    if ((newPos == 0) || (newPos >= getCurrentComponentRect().height()))
+    if ((newPos <= 0) || (newPos >= getCurrentComponentRect().height()))
         return false;
 
     auto adjustedPos = m_border->getPortPos(port);

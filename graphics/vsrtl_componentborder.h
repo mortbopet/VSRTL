@@ -13,8 +13,7 @@ enum class Side { Left, Right, Top, Bottom };
 struct PortPos {
     Side dir;
     int index;
-    bool validIndex() const { return index != -1; }
-    bool uninitialized() const { return index < 0; }
+    bool validIndex() const { return index > 0; }
 };
 
 class ComponentBorder {
@@ -24,15 +23,14 @@ public:
     using NameToPortMap = std::map<std::string, const SimPort*>;
 
     ComponentBorder(const SimComponent* c) {
-        // Input- and outputs are initialized to uninitialized (<0) indicies on the left- and right side
         for (const auto& p : c->getPorts<SimPort::Direction::in>()) {
             m_portMap[p] = nullptr;
-            addPortToSide(PortPos{Side::Left, int(-(m_left.count() + 1))}, p);
+            addPortToSide(PortPos{Side::Left, static_cast<int>(-(m_left.count() + 1))}, p);
             m_namePortMap[p->getName()] = p;
         }
         for (const auto& p : c->getPorts<SimPort::Direction::out>()) {
             m_portMap[p] = nullptr;
-            addPortToSide(PortPos{Side::Right, int(-(m_right.count() + 1))}, p);
+            addPortToSide(PortPos{Side::Right, static_cast<int>(-(m_right.count() + 1))}, p);
             m_namePortMap[p->getName()] = p;
         }
     }
@@ -69,7 +67,7 @@ public:
             return {};
 
         if (portAtPos != nullptr) {
-            portsMoved.push_back(getPortAt(pos));
+            portsMoved.push_back(portAtPos);
             swapPorts(getPortAt(pos), port);
         } else {
             removePortFromSide(port);
@@ -91,8 +89,6 @@ public:
 
     void addPortToSide(PortPos pos, const SimPort* port) {
         assert(m_portMap.count(port) > 0);
-        assert((pos.validIndex() || pos.uninitialized()) &&
-               "Ports cannot be on the edge of a component & todo: also check for other edge bound");
         auto& map = dirToMap(pos.dir);
         if (map.idToPort.count(pos.index)) {
             assert(false && "Port already at index");

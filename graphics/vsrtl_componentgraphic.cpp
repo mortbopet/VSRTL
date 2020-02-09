@@ -79,15 +79,16 @@ void ComponentGraphic::initialize() {
         placeAndRouteSubcomponents();
     }
 
+    connect(this, &GridComponent::gridRectChanged, this, &ComponentGraphic::updateGeometry);
+    connect(this, &GridComponent::portPosChanged, this, &ComponentGraphic::handlePortPosChanged);
+    connect(this, &GridComponent::gridPosChanged, this, &ComponentGraphic::handleGridPosChange);
+
     // By default, a component is collapsed. This has no effect if a component does not have any subcomponents
     setExpanded(false);
     m_restrictSubcomponentPositioning = true;
 
-    connect(this, &GridComponent::gridRectChanged, this, &ComponentGraphic::updateGeometry);
-    connect(this, &GridComponent::portPosChanged, this, &ComponentGraphic::handlePortPosChanged);
-    connect(this, &GridComponent::gridPosChanged, this, &ComponentGraphic::handleGridPosChange);
-    spreadPorts();
     updateGeometry();
+    spreadPorts();
 }
 
 /**
