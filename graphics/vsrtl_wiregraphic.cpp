@@ -113,7 +113,7 @@ QVariant WirePoint::itemChange(GraphicsItemChange change, const QVariant& value)
 
 QPainterPath WirePoint::shape() const {
     QPainterPath path;
-    path.addEllipse({0, 0}, WIRE_WIDTH, WIRE_WIDTH);
+    path.addEllipse({0, 0}, WIRE_WIDTH * 1.2, WIRE_WIDTH * 1.2);
     path.setFillRule(Qt::WindingFill);
     return path;
 }
@@ -122,6 +122,12 @@ void WirePoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
     if (lod < 0.35)
         return;
+
+    // Do not draw point when only a single output wire exists, and we are not currently interacting with the point
+    if (m_outputWires.size() == 1 && m_draggedOnThis == nullptr &&
+        !(option->state & (QStyle::State_Selected | QStyle::State_MouseOver))) {
+        return;
+    }
 
     painter->save();
     QPen pen = m_parent->getPen();
