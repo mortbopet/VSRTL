@@ -61,7 +61,7 @@ public:
     WireGraphic* getOutputWire() { return m_outputWire; }
     void updateInputWire();
     void updateWireGeometry();
-    PortPoint* getPointGraphic() { return m_portPoint; }
+    PortPoint* getPortPoint(PortType t) { return t == PortType::in ? m_inputPortPoint : m_outputPortPoint; }
     QString getTooltipString() const;
 
     bool userHidden() const { return m_userHidden; }
@@ -120,7 +120,8 @@ private:
     bool m_portWidthVisible = false;
 
     // Used for allowing WireSegments to join up with a port
-    PortPoint* m_portPoint = nullptr;
+    PortPoint* m_inputPortPoint = nullptr;
+    PortPoint* m_outputPortPoint = nullptr;
 
     WireGraphic* m_outputWire = nullptr;
     WireGraphic* m_inputWire = nullptr;

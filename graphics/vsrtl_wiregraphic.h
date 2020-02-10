@@ -32,6 +32,8 @@ class PortPoint : public QObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
 public:
     PortPoint(QGraphicsItem* parent);
+
+    QPainterPath shape() const override;
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
@@ -40,6 +42,7 @@ public:
     // this point (and hence modifying m_outputWires)
     std::vector<WireSegment*> getOutputWires() { return m_outputWires; }
     WireSegment* getInputWire() { return m_inputWire; }
+    virtual const QPen& getPen();
 
     void addOutputWire(WireSegment* wire) { m_outputWires.push_back(wire); }
     void removeOutputWire(WireSegment* wire);
@@ -49,7 +52,11 @@ public:
 
 protected:
     WireSegment* m_inputWire = nullptr;
+    WirePoint* m_draggedOnThis = nullptr;
     std::vector<WireSegment*> m_outputWires;
+
+private:
+    PortGraphic* m_portParent = nullptr;
 };
 
 /**
@@ -60,11 +67,9 @@ class WirePoint : public PortPoint {
 public:
     WirePoint(WireGraphic* parent);
 
-    QPainterPath shape() const override;
-    QRectF boundingRect() const override;
-    void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
+    const QPen& getPen() override;
 
     void pointDrop(WirePoint* point);
     void pointDragEnter(WirePoint* point);
@@ -72,7 +77,6 @@ public:
 
 private:
     WireGraphic* m_parent = nullptr;
-    WirePoint* m_draggedOnThis = nullptr;
 };
 
 class WireSegment : public QObject, public GraphicsBaseItem<QGraphicsItem> {
@@ -83,6 +87,8 @@ public:
     WireSegment(WireGraphic* parent);
 
     void invalidate();
+    bool isDrawn() const;
+    bool isValid() const;
     void setStart(PortPoint* start);
     void setEnd(PortPoint* end);
     PortPoint* getStart() const { return m_start; }
@@ -177,8 +183,8 @@ public:
             std::replace(iter.second.begin(), iter.second.end(), inParent, getParentComponent()->getName());
         }
 
-        std::map<int, QPoint> idxToPoints;
-        archive(cereal::make_nvp("points", idxToPoints));
+        std::map<int, QPoint> idxToWirePointPos;
+        archive(cereal::make_nvp("points", idxToWirePointPos));
 
         std::vector<std::pair<int, int>> wires;
         archive(cereal::make_nvp("wires", wires));
@@ -187,18 +193,18 @@ public:
         clearWirePoints();
         clearWires();
 
-        std::map<int, PortPoint*> idxToPoint;
-        idxToPoint[from.first] = m_fromPort->getPointGraphic();
+        std::map<int, PortPoint*> idxToPointPtr;
+        idxToPointPtr[from.first] = m_fromPort->getPortPoint(PortType::out);
 
         // Locate output ports from the layout indicies
         for (const auto& iter : idxToOutportNameSeq) {
-            Q_ASSERT(idxToPoint.count(iter.first) == 0);
+            Q_ASSERT(idxToPointPtr.count(iter.first) == 0);
             PortPoint* point = nullptr;
             for (const auto& p : m_toGraphicPorts) {
                 const auto nameSeq = getPortParentNameSeq(p->getPort());
                 if (nameSeq == iter.second) {
-                    point = p->getPointGraphic();
-                    idxToPoint[iter.first] = point;
+                    point = p->getPortPoint(PortType::in);
+                    idxToPointPtr[iter.first] = point;
                     break;
                 }
             }
@@ -206,21 +212,21 @@ public:
         }
 
         // Construct PointGraphic's for intermediate points
-        for (const auto& p : idxToPoints) {
-            Q_ASSERT(idxToPoint.count(p.first) == 0);
-            idxToPoint[p.first] = createWirePoint();
+        for (const auto& p : idxToWirePointPos) {
+            Q_ASSERT(idxToPointPtr.count(p.first) == 0);
+            idxToPointPtr[p.first] = createWirePoint();
         }
 
         // Construct wires denoted in the layout
         for (const auto& w : wires) {
-            if (idxToPoint.count(w.first) == 0) {
+            if (idxToPointPtr.count(w.first) == 0) {
                 continue;  // Wire start point not found
             }
-            if (idxToPoint.count(w.second) == 0) {
+            if (idxToPointPtr.count(w.second) == 0) {
                 continue;  // Wire end point not found
             }
-            auto* fromPort = idxToPoint[w.first];
-            auto* toPort = idxToPoint[w.second];
+            auto* fromPort = idxToPointPtr[w.first];
+            auto* toPort = idxToPointPtr[w.second];
 
             createSegment(fromPort, toPort);
         }
@@ -228,16 +234,17 @@ public:
         // It may be that not all ports of a wire was denoted in the layout (ie. changes to the design which the layout
         // is applied on has been made). Construct all missing wires between the source port
         for (const auto& p : m_toGraphicPorts) {
-            const auto iter = std::find_if(idxToPoint.begin(), idxToPoint.end(),
-                                           [=](const auto& itp) { return itp.second == p->getPointGraphic(); });
-            if (iter == idxToPoint.end()) {
-                createSegment(m_fromPort->getPointGraphic(), p->getPointGraphic());
+            const auto iter = std::find_if(idxToPointPtr.begin(), idxToPointPtr.end(), [=](const auto& itp) {
+                return itp.second == p->getPortPoint(PortType::in);
+            });
+            if (iter == idxToPointPtr.end()) {
+                createSegment(m_fromPort->getPortPoint(PortType::out), p->getPortPoint(PortType::in));
             }
         }
 
         // Move wire points (must be done >after< the point has been associated with wires)
-        for (const auto& p : idxToPoint) {
-            p.second->setPos(idxToPoints[p.first]);
+        for (const auto& p : idxToWirePointPos) {
+            idxToPointPtr[p.first]->setPos(p.second);
         }
 
         setSerializing(false);
@@ -261,7 +268,7 @@ public:
             // @todo: this is not sufficient, ports may be named identically.
             // It should be a hierarchical list including its parent components
             idxToOutportNameSeq[i] = getPortParentNameSeq(p->getPort());
-            outportToIdx[p->getPointGraphic()] = i;
+            outportToIdx[p->getPortPoint(PortType::in)] = i;
             i++;
         }
         archive(cereal::make_nvp("To ports", idxToOutportNameSeq));
@@ -284,7 +291,7 @@ public:
 
             int startIdx, endIdx;
 
-            if (m_fromPort->getPointGraphic() == start) {
+            if (m_fromPort->getPortPoint(PortType::out) == start) {
                 startIdx = 0;
             } else if (outportToIdx.count(start)) {
                 startIdx = outportToIdx[start];

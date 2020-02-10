@@ -45,8 +45,10 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
 
     updateGeometry();
 
-    m_portPoint = new PortPoint(this);
-    m_portPoint->setPos(mapToItem(this, mapToScene(type == PortType::in ? getInputPoint() : getOutputPoint())));
+    m_inputPortPoint = new PortPoint(this);
+    m_inputPortPoint->setPos(getInputPoint());
+    m_outputPortPoint = new PortPoint(this);
+    m_outputPortPoint->setPos(getOutputPoint());
 
     if (m_type == PortType::in) {
         m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), WireGraphic::WireType::BorderOutput,
@@ -262,9 +264,11 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
 }
 
 void PortGraphic::setPortVisible(bool visible) {
+    m_inputPortPoint->setVisible(visible);
+    m_outputPortPoint->setVisible(visible);
     if (m_inputWire && m_type == PortType::in) {
         // Inform wires terminating in this port to set their visibility based on this ports visibility
-        m_inputWire->setWiresVisibleToPort(m_portPoint, visible && m_sourceVisible && !m_userHidden);
+        m_inputWire->setWiresVisibleToPort(m_inputPortPoint, visible && m_sourceVisible && !m_userHidden);
 
     }
 

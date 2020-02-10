@@ -15,6 +15,17 @@
 
 namespace vsrtl {
 
+namespace {
+
+unsigned int visibleOutputWires(PortPoint* p) {
+    unsigned int visibleWires = 0;
+    for (const auto& w : p->getOutputWires()) {
+        visibleWires += w->isVisible() && w->isDrawn() ? 1 : 0;
+    }
+    return visibleWires;
+}
+}  // namespace
+
 std::vector<std::string> getPortParentNameSeq(SimPort* p) {
     std::vector<std::string> seq;
     seq.push_back(p->getName());
@@ -23,7 +34,9 @@ std::vector<std::string> getPortParentNameSeq(SimPort* p) {
 }
 
 PortPoint::PortPoint(QGraphicsItem* parent) : GraphicsBaseItem(parent) {
+    setAcceptHoverEvents(false);
     setFlag(ItemSendsScenePositionChanges, true);
+    m_portParent = dynamic_cast<PortGraphic*>(parent);
 }
 
 QVariant PortPoint::itemChange(GraphicsItemChange change, const QVariant& value) {
@@ -41,23 +54,55 @@ QVariant PortPoint::itemChange(GraphicsItemChange change, const QVariant& value)
 }
 
 QRectF PortPoint::boundingRect() const {
-#ifdef VSRTL_DEBUG_DRAW
-    return QRectF(-WIRE_WIDTH / 2, -WIRE_WIDTH / 2, WIRE_WIDTH / 2, WIRE_WIDTH / 2);
-#else
-    return QRectF();
-#endif
+    return shape().boundingRect().adjusted(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
+}
+QPainterPath PortPoint::shape() const {
+    QPainterPath path;
+    path.addEllipse({0, 0}, WIRE_WIDTH * 1.5, WIRE_WIDTH * 1.5);
+    path.setFillRule(Qt::WindingFill);
+    return path;
 }
 
-void PortPoint::paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {
-#ifdef VSRTL_DEBUG_DRAW
-    DRAW_BOUNDING_RECT(painter)
+void PortPoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
+    const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
+    if (lod < 0.35)
+        return;
+
+    // Do not draw point when only a single output wire exists, and we are not currently interacting with the point
+    if (visibleOutputWires(this) <= 1 && m_draggedOnThis == nullptr &&
+        !(option->state & (QStyle::State_Selected | QStyle::State_MouseOver))) {
+        return;
+    }
+
     painter->save();
-    QPen pen(Qt::red);
-    pen.setWidth(5);
+    QPen pen = getPen();
+
+    QColor fillColor = (option->state & QStyle::State_Selected) ? QColor(Qt::yellow) : pen.color();
+    if (option->state & QStyle::State_MouseOver)
+        fillColor = fillColor.lighter(125);
+
     painter->setPen(pen);
-    painter->drawPoint(QPointF(0, 0));
+    if (option->state & QStyle::State_Selected) {
+        pen.setWidth(1);
+        painter->drawPath(shape());
+    }
+    painter->fillPath(shape(), QBrush(fillColor.darker(option->state & QStyle::State_Sunken ? 120 : 100)));
+
+    if (m_draggedOnThis != nullptr) {
+        pen.setColor(Qt::red);
+        painter->setPen(pen);
+        painter->setBrush(Qt::transparent);
+        painter->drawRect(
+            shape().boundingRect().adjusted(-WIRE_WIDTH / 2, -WIRE_WIDTH / 2, WIRE_WIDTH / 2, WIRE_WIDTH / 2));
+    }
     painter->restore();
-#endif
+}
+
+const QPen& PortPoint::getPen() {
+    // If getPen is called on a PortPoint, it is required that the parent item is a PortGraphic. PortGraphics are the
+    // only classes which should instatiate a PortPoint.
+    Q_ASSERT(m_portParent);
+    return m_portParent->getPen();
 }
 
 void PortPoint::removeOutputWire(WireSegment* wire) {
@@ -91,8 +136,8 @@ WirePoint::WirePoint(WireGraphic* parent) : PortPoint(parent), m_parent(parent) 
     setMoveable();
 }
 
-QRectF WirePoint::boundingRect() const {
-    return shape().boundingRect().adjusted(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
+const QPen& WirePoint::getPen() {
+    return m_parent->getPen();
 }
 
 QVariant WirePoint::itemChange(GraphicsItemChange change, const QVariant& value) {
@@ -109,48 +154,6 @@ QVariant WirePoint::itemChange(GraphicsItemChange change, const QVariant& value)
     }
 
     return PortPoint::itemChange(change, value);
-}
-
-QPainterPath WirePoint::shape() const {
-    QPainterPath path;
-    path.addEllipse({0, 0}, WIRE_WIDTH * 1.2, WIRE_WIDTH * 1.2);
-    path.setFillRule(Qt::WindingFill);
-    return path;
-}
-
-void WirePoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
-    const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
-    if (lod < 0.35)
-        return;
-
-    // Do not draw point when only a single output wire exists, and we are not currently interacting with the point
-    if (m_outputWires.size() == 1 && m_draggedOnThis == nullptr &&
-        !(option->state & (QStyle::State_Selected | QStyle::State_MouseOver))) {
-        return;
-    }
-
-    painter->save();
-    QPen pen = m_parent->getPen();
-
-    QColor fillColor = (option->state & QStyle::State_Selected) ? QColor(Qt::yellow) : pen.color();
-    if (option->state & QStyle::State_MouseOver)
-        fillColor = fillColor.lighter(125);
-
-    painter->setPen(pen);
-    if (option->state & QStyle::State_Selected) {
-        pen.setWidth(1);
-        painter->drawPath(shape());
-    }
-    painter->fillPath(shape(), QBrush(fillColor.darker(option->state & QStyle::State_Sunken ? 120 : 100)));
-
-    if (m_draggedOnThis != nullptr) {
-        pen.setColor(Qt::red);
-        painter->setPen(pen);
-        painter->setBrush(Qt::transparent);
-        painter->drawRect(
-            shape().boundingRect().adjusted(-WIRE_WIDTH / 2, -WIRE_WIDTH / 2, WIRE_WIDTH / 2, WIRE_WIDTH / 2));
-    }
-    painter->restore();
 }
 
 void WirePoint::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
@@ -235,7 +238,7 @@ void WireSegment::invalidate() {
 void WireSegment::geometryModified() {
     QPointF p1_mod, p2_mod;
     prepareGeometryChange();
-    if (m_start == nullptr || m_end == nullptr) {
+    if (!isValid()) {
         goto geometryModified_invalidate;
     }
 
@@ -263,14 +266,14 @@ geometryModified_invalidate:
 }
 
 QPainterPath WireSegment::shape() const {
-    if (m_start == nullptr || m_end == nullptr)
+    if (!isValid())
         return QPainterPath();
 
     return m_cachedShape;
 }
 
 QRectF WireSegment::boundingRect() const {
-    if (m_start == nullptr || m_end == nullptr)
+    if (!isValid())
         return QRectF();
 
     return m_cachedBoundingRect;
@@ -280,10 +283,16 @@ void WireSegment::hoverMoveEvent(QGraphicsSceneHoverEvent*) {
     setToolTip(m_parent->getFromPort()->getTooltipString());
 }
 
+bool WireSegment::isValid() const {
+    return m_start != nullptr && m_end != nullptr;
+}
+
+bool WireSegment::isDrawn() const {
+    return isValid() && m_start->isVisible() && m_end->isVisible();
+}
+
 void WireSegment::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
-    if (m_start == nullptr || m_end == nullptr)
-        return;
-    if (!m_start->isVisible() || !m_end->isVisible())
+    if (!isDrawn())
         return;
 
     painter->save();
@@ -514,14 +523,6 @@ void WireGraphic::createRectilinearSegments(PortPoint* start, PortPoint* end) {
         pointAndSeg = createWirePointOnSeg(mapToScene(intermediate2), pointAndSeg.second);
 }
 
-static inline unsigned int visibleOutputWires(PortPoint* p) {
-    unsigned int visibleWires = 0;
-    for (const auto& w : p->getOutputWires()) {
-        visibleWires += w->isVisible() ? 1 : 0;
-    }
-    return visibleWires;
-}
-
 /**
  * @brief WireGraphic::setWiresVisibleToPort
  * Used when a component graphic toggles its visibility. In this case, wires and points which traverse towards at an
@@ -581,16 +582,16 @@ void WireGraphic::postSceneConstructionInitialize1() {
         sink->setInputWire(this);
         // Create a rectilinear segment between the the closest point managed by this wire and the sink destination
         std::pair<qreal, PortPoint*> fromPoint;
-        const QPointF sinkPos = sink->getPointGraphic()->scenePos();
-        fromPoint.first = (sinkPos - m_fromPort->getPointGraphic()->scenePos()).manhattanLength();
-        fromPoint.second = m_fromPort->getPointGraphic();
+        const QPointF sinkPos = sink->getPortPoint(PortType::in)->scenePos();
+        fromPoint.first = (sinkPos - m_fromPort->getPortPoint(PortType::out)->scenePos()).manhattanLength();
+        fromPoint.second = m_fromPort->getPortPoint(PortType::out);
         for (const auto& p : m_points) {
             const qreal len = (sinkPos - p->scenePos()).manhattanLength();
             if (len < fromPoint.first) {
                 fromPoint = {len, p};
             }
         }
-        createRectilinearSegments(fromPoint.second, sink->getPointGraphic());
+        createRectilinearSegments(fromPoint.second, sink->getPortPoint(PortType::in));
     }
 
     GraphicsBaseItem::postSceneConstructionInitialize1();
