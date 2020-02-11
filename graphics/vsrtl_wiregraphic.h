@@ -207,8 +207,8 @@ public:
                     idxToPointPtr[iter.first] = point;
                     break;
                 }
+                // Point in serialized layout was not found in this layout, continue...
             }
-            Q_ASSERT(point != nullptr);
         }
 
         // Construct PointGraphic's for intermediate points
