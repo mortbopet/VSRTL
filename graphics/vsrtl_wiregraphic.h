@@ -104,9 +104,9 @@ public:
     QPainterPath shape() const override;
     QRectF boundingRect() const override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
-    void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
     QString deleted = "False";
 

@@ -170,6 +170,7 @@ void WirePoint::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
 WireSegment::WireSegment(WireGraphic* parent) : GraphicsBaseItem(parent), m_parent(parent) {
     setAcceptHoverEvents(true);
+    setFlag(ItemIsSelectable);
 }
 
 void WireSegment::setStart(PortPoint* start) {
@@ -316,7 +317,13 @@ void WireSegment::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     menu.exec(event->screenPos());
 }
 
-void WireSegment::mousePressEvent(QGraphicsSceneMouseEvent*) {}
+QVariant WireSegment::itemChange(GraphicsItemChange change, const QVariant& value) {
+    if (change == QGraphicsItem::ItemSelectedChange) {
+        m_parent->getFromPort()->itemChange(change, value);
+    }
+
+    return QGraphicsItem::itemChange(change, value);
+}
 
 // --------------------------------------------------------------------------------
 
