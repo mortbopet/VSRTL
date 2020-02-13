@@ -14,7 +14,7 @@
 
 namespace vsrtl {
 
-int PortGraphic::s_portGridWidth = 2;
+constexpr int s_portGridWidth = 1;
 
 PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     : GraphicsBaseItem(parent), m_type(type), m_port(port) {
@@ -96,6 +96,11 @@ void PortGraphic::redraw() {
     }
 }
 
+void PortGraphic::setSide(Side side) {
+    m_side = side;
+    updateGeometry();
+}
+
 void PortGraphic::propagateRedraw() {
     m_port->traverseToSinks([=](SimPort* port) {
         auto* portGraphic = port->getGraphic<PortGraphic>();
@@ -173,29 +178,38 @@ QRectF PortGraphic::boundingRect() const {
     return m_boundingRect;
 }
 
-QPainterPath PortGraphic::shape() const {
-    QPolygonF p;
-
-    const auto& in = getInputPoint();
-    const auto& out = getOutputPoint();
-
-    const auto p1 = QPointF(in.x(), in.y() - GRID_SIZE / 2);
-    const auto p2 = QPointF(out.x(), out.y() - GRID_SIZE / 2);
-    const auto p3 = QPointF(out.x(), out.y() + GRID_SIZE / 2);
-    const auto p4 = QPointF(in.x(), in.y() + GRID_SIZE / 2);
-    p << p1 << p2 << p3 << p4;
-
-    QPainterPath path;
-    path.addPolygon(p);
-    return path;
-}
-
 QPointF PortGraphic::getInputPoint() const {
-    return QPointF(0, 0);
+    switch (m_side) {
+        case Side::Right: {
+            return QPointF(m_type == PortType::in ? s_portGridWidth * GRID_SIZE : 0, 0);
+        }
+        case Side::Left: {
+            return QPointF(m_type == PortType::in ? -s_portGridWidth * GRID_SIZE : 0, 0);
+        }
+        case Side::Top: {
+            return QPointF(0, m_type == PortType::in ? -s_portGridWidth * GRID_SIZE : 0);
+        }
+        case Side::Bottom: {
+            return QPointF(0, m_type == PortType::in ? s_portGridWidth * GRID_SIZE : 0);
+        }
+    }
 }
 
 QPointF PortGraphic::getOutputPoint() const {
-    return QPointF(s_portGridWidth * GRID_SIZE, 0);
+    switch (m_side) {
+        case Side::Right: {
+            return QPointF(m_type == PortType::out ? s_portGridWidth * GRID_SIZE : 0, 0);
+        }
+        case Side::Left: {
+            return QPointF(m_type == PortType::out ? -s_portGridWidth * GRID_SIZE : 0, 0);
+        }
+        case Side::Top: {
+            return QPointF(0, m_type == PortType::out ? -s_portGridWidth * GRID_SIZE : 0);
+        }
+        case Side::Bottom: {
+            return QPointF(0, m_type == PortType::out ? s_portGridWidth * GRID_SIZE : 0);
+        }
+    }
 }
 
 void PortGraphic::updatePenColor() {
@@ -326,18 +340,36 @@ void PortGraphic::hoverMoveEvent(QGraphicsSceneHoverEvent*) {
 }
 
 void PortGraphic::updateGeometry() {
-    QFontMetrics fm(m_font);
-    m_textRect = fm.boundingRect(m_widthText);
+    prepareGeometryChange();
 
-    m_boundingRect = QRectF(getInputPoint(), m_textRect.size());
-    const qreal portLen = (getOutputPoint() - getInputPoint()).manhattanLength();
-    m_boundingRect.setWidth(m_boundingRect.width() < portLen ? portLen : m_boundingRect.width());
+    m_boundingRect.setTopLeft({0, 0});
+    switch (m_side) {
+        case Side::Left:
+        case Side::Right:
+            m_boundingRect.setY(-GRID_SIZE / 2);
+            m_boundingRect.setHeight(GRID_SIZE);
+            m_boundingRect.setX(m_side == Side::Left ? -GRID_SIZE * s_portGridWidth : 0);
+            m_boundingRect.setWidth(GRID_SIZE * s_portGridWidth);
+            break;
+        case Side::Top:
+        case Side::Bottom: {
+            m_boundingRect.setX(-GRID_SIZE / 2);
+            m_boundingRect.setWidth(GRID_SIZE);
+            m_boundingRect.setY(m_side == Side::Top ? -GRID_SIZE * s_portGridWidth : 0);
+            m_boundingRect.setHeight(GRID_SIZE * s_portGridWidth);
+            break;
+        }
+    }
+    // The shape of the component is defined as the above created rectangle
+    m_shape = QPainterPath();
+    m_shape.addPolygon(m_boundingRect);
 
-    // Adjust for hover-arrow
-    m_boundingRect.adjust(0, -GRID_SIZE / 2, 0, 0);
+    // Exapnd the rectangle to adjust for pen sizes etc.
+    m_boundingRect.adjust(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
+}
 
-    // Adjust for pen sizes etc. (set via. visual inspection of the bounding rect)
-    m_boundingRect.adjust(-3, -3, 3, 1);
+QPainterPath PortGraphic::shape() const {
+    return m_shape;
 }
 
 const QPen& PortGraphic::getPen() {
@@ -351,40 +383,56 @@ const QPen& PortGraphic::getPen() {
     }
 }
 
-void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
+void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
     // Only draw the port if the source of the port is visible, or if the user is currently hovering over the port.
     if (!((m_sourceVisible && !m_userHidden) || m_hoverActive))
         return;
 
     painter->save();
-    painter->setFont(m_font);
-    const int offset = m_type == PortType::out
-                           ? PORT_INNER_MARGIN
-                           : s_portGridWidth * GRID_SIZE - static_cast<int>(m_textRect.width()) - PORT_INNER_MARGIN;
-
-    const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
-    if (lod >= 0.6 && m_portWidthVisible) {
-        painter->drawText(QPointF(offset, m_textRect.height() / 2 + PORT_INNER_MARGIN), m_widthText);
-    }
-
     painter->setPen(getPen());
-    painter->drawLine(getInputPoint(), getOutputPoint());
+    const QLineF portLine = QLineF(getInputPoint(), getOutputPoint());
+    painter->drawLine(portLine);
 
     if (m_hoverActive) {
         // Draw an arrow indicating the direction of the port
         const auto d = std::sqrt(std::pow(GRID_SIZE / 2, 2) + std::pow(GRID_SIZE / 2, 2)) / 2;
-        const QPointF start = (getOutputPoint() - getInputPoint()) / 2;
-        const QPointF p1 = start - QPointF(d, d);
-        const QPointF p2 = start - QPointF(d, -d);
+        QPointF start = portLine.center();
+        QPointF p1, p2;
+
+        switch (m_side) {
+            case Side::Left:
+            case Side::Right: {
+                int dir = m_type == PortType::out ? -1 : 1;
+                dir *= m_side == Side::Right ? -1 : 1;
+
+                start.rx() = start.x() + dir * d / 2;
+
+                p1 = start - QPointF(dir * d, d);
+                p2 = start - QPointF(dir * d, -d);
+                break;
+            }
+
+            case Side::Bottom:
+            case Side::Top: {
+                int dir = m_type == PortType::in ? -1 : 1;
+                dir *= m_side == Side::Top ? -1 : 1;
+
+                start.ry() = start.y() + dir * d / 2;
+
+                p1 = start - QPointF(d, dir * d);
+                p2 = start - QPointF(-d, dir * d);
+                break;
+            }
+        }
         painter->drawLine(start, p1);
         painter->drawLine(start, p2);
     }
 
     painter->restore();
 
-#ifdef VSRTL_DEBUG_DRAW
+    //#ifdef VSRTL_DEBUG_DRAW
     DRAW_BOUNDING_RECT(painter)
-#endif
+    //#endif
 }
 
 }  // namespace vsrtl

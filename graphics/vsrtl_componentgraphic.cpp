@@ -376,10 +376,10 @@ void ComponentGraphic::handlePortPosChanged(const SimPort* port) {
     const auto pos = getPortPos(port);
     auto* g = port->getGraphic<PortGraphic>();
 
-    switch (pos.dir) {
+    g->setSide(pos.side);
+    switch (pos.side) {
         case Side::Left: {
-            g->setPos(
-                QPointF(sceneGridRect().left() - GRID_SIZE * PortGraphic::portGridWidth(), pos.index * GRID_SIZE));
+            g->setPos(QPointF(sceneGridRect().left(), pos.index * GRID_SIZE));
             break;
         }
         case Side::Right: {

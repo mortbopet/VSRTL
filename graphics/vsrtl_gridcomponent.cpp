@@ -273,16 +273,16 @@ bool GridComponent::adjustPort(SimPort* port, QPoint newPos) {
     newPos.ry() = newPos.y() > ccr.height() ? ccr.height() : newPos.y();
 
     if (newPos.x() == 0) {
-        newPortPos.dir = Side::Left;
+        newPortPos.side = Side::Left;
         newPortPos.index = newPos.y();
     } else if (newPos.x() == ccr.width()) {
-        newPortPos.dir = Side::Right;
+        newPortPos.side = Side::Right;
         newPortPos.index = newPos.y();
     } else if (newPos.y() == 0) {
-        newPortPos.dir = Side::Top;
+        newPortPos.side = Side::Top;
         newPortPos.index = newPos.x();
     } else if (newPos.y() == ccr.height()) {
-        newPortPos.dir = Side::Bottom;
+        newPortPos.side = Side::Bottom;
         newPortPos.index = newPos.x();
     } else {
         Q_ASSERT(false && "Error in snapping or out-of-bounds handling");

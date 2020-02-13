@@ -1,6 +1,7 @@
 #ifndef VSRTL_PORTGRAPHIC_H
 #define VSRTL_PORTGRAPHIC_H
 
+#include "vsrtl_componentborder.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphicsbaseitem.h"
 #include "vsrtl_label.h"
@@ -76,9 +77,7 @@ public:
 
     const QPen& getPen();
 
-    static int portGridWidth() { return s_portGridWidth; }
-    int gridIndex() const { return m_gridIndex; }
-    void setGridIndex(int i) { m_gridIndex = i; }
+    void setSide(Side side);
 
 private slots:
     void updatePenColor();
@@ -109,10 +108,8 @@ private:
     bool m_sourceVisible = true;
     ValueDisplayFormat m_valueBase = ValueDisplayFormat::baseTen;
 
-    static int s_portGridWidth;
-    int m_gridIndex;
-
     QRectF m_boundingRect;
+    QPainterPath m_shape;
     QRectF m_textRect;
 
     PortType m_type;
@@ -132,6 +129,7 @@ private:
 
     std::unique_ptr<QPropertyAnimation> m_colorAnimation;
 
+    Side m_side = Side::Right;
     Label* m_label = nullptr;
     QString m_widthText;
     QFont m_font;

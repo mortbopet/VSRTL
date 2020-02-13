@@ -11,11 +11,11 @@ namespace vsrtl {
 
 enum class Side { Left, Right, Top, Bottom };
 struct PortPos {
-    Side dir;
+    Side side;
     int index;
     bool validIndex() const { return index > 0; }
 
-    bool operator==(const PortPos& rhs) { return (this->index == rhs.index) && (this->dir == rhs.dir); }
+    bool operator==(const PortPos& rhs) { return (this->index == rhs.index) && (this->side == rhs.side); }
 };
 
 class ComponentBorder {
@@ -52,7 +52,7 @@ public:
     };
 
     const SimPort* getPortAt(PortPos p) {
-        auto& map = dirToMap(p.dir);
+        auto& map = dirToMap(p.side);
         if (map.idToPort.count(p.index))
             return map.idToPort.at(p.index);
         return nullptr;
@@ -91,7 +91,7 @@ public:
 
     void addPortToSide(PortPos pos, const SimPort* port) {
         assert(m_portMap.count(port) > 0);
-        auto& map = dirToMap(pos.dir);
+        auto& map = dirToMap(pos.side);
         if (map.idToPort.count(pos.index)) {
             assert(false && "Port already at index");
         }
@@ -150,7 +150,7 @@ public:
                     continue;
 
                 PortPos pos;
-                pos.dir = pm.first;
+                pos.side = pm.first;
                 pos.index = p.second;
 
                 const SimPort* port = m_namePortMap.at(p.first);
