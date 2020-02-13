@@ -430,9 +430,9 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
 
     painter->restore();
 
-    //#ifdef VSRTL_DEBUG_DRAW
+#ifdef VSRTL_DEBUG_DRAW
     DRAW_BOUNDING_RECT(painter)
-    //#endif
+#endif
 }
 
 }  // namespace vsrtl

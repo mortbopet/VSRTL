@@ -101,6 +101,7 @@ protected:
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+    void paintIndicator(QPainter* painter, PortGraphic* port, QColor color);
 
     enum class GeometryChange {
         None,

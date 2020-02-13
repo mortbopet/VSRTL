@@ -78,6 +78,7 @@ public:
     const QPen& getPen();
 
     void setSide(Side side);
+    Side getSide() const { return m_side; }
 
 private slots:
     void updatePenColor();

@@ -490,20 +490,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
 
     // Paint boolean indicators
     for (const auto& p : m_indicators) {
-        if (p->getPort()->uValue()) {
-            painter->setBrush(Qt::green);
-        } else {
-            painter->setBrush(Qt::red);
-        }
-
-        constexpr qreal dotSize = 12;
-        QRectF chordRect(-dotSize / 2, -dotSize / 2, dotSize, dotSize);
-        const bool inPort = p->getPortType() == PortType::in;
-        chordRect.translate(mapFromItem(p, inPort ? p->getOutputPoint() : p->getInputPoint()));
-        QPen pen = painter->pen();
-        pen.setWidth(WIRE_WIDTH - 1);
-        painter->setPen(pen);
-        painter->drawChord(chordRect, -90 * 16, (inPort ? 1 : -1) * 180 * 16);
+        paintIndicator(painter, p, p->getPort()->uValue() ? Qt::green : Qt::red);
     }
 
     // Paint overlay
@@ -516,6 +503,32 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     painter->restore();
     DRAW_BOUNDING_RECT(painter)
 #endif
+    painter->restore();
+}
+
+void ComponentGraphic::paintIndicator(QPainter* painter, PortGraphic* p, QColor color) {
+    painter->save();
+    constexpr qreal dotSize = 12;
+    QPen pen = painter->pen();
+    pen.setWidth(WIRE_WIDTH - 1);
+    painter->setBrush(color);
+    painter->setPen(pen);
+
+    const bool inPort = p->getPortType() == PortType::in;
+    QRectF chordRect(-dotSize / 2, -dotSize / 2, dotSize, dotSize);
+    chordRect.translate(mapFromItem(p, inPort ? p->getOutputPoint() : p->getInputPoint()));
+
+    int startAngle;
+    // clang-format off
+    switch(p->getSide()){
+        case Side::Top : startAngle = 0; break;
+        case Side::Bottom : startAngle = -180; break;
+        case Side::Left : startAngle = 90; break;
+        case Side::Right : startAngle = -90; break;
+    }
+    // clang-format on
+
+    painter->drawChord(chordRect, startAngle * 16, -180 * 16);
     painter->restore();
 }
 
