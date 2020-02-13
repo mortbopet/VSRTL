@@ -250,17 +250,50 @@ std::vector<unsigned> GridComponent::getFreePortPositions(Side s) {
     return freePos;
 }
 
-bool GridComponent::adjustPort(SimPort* port, int newPos) {
-    if ((newPos <= 0) || (newPos >= getCurrentComponentRect().height()))
+bool GridComponent::adjustPort(SimPort* port, QPoint newPos) {
+    const auto ccr = getCurrentComponentRect();
+    if ((newPos.x() <= 0 && newPos.y() <= 0) || (newPos.x() >= ccr.width() && newPos.y() >= ccr.height()) ||
+        (newPos.x() <= 0 && newPos.y() >= ccr.height()) || (newPos.x() >= ccr.width() && newPos.y() <= 0)) {
+        // Out of bounds
         return false;
+    }
 
-    auto adjustedPos = m_border->getPortPos(port);
-    if (adjustedPos.index == newPos) {
+    if ((newPos.x() > 0 && newPos.x() < ccr.width()) && (newPos.y() > 0 && newPos.y() < ccr.height())) {
+        // newPos is inside this component
+        return false;
+    }
+
+    PortPos newPortPos;
+
+    // Snap port position to the border of the component
+    newPos.rx() = newPos.x() < 0 ? 0 : newPos.x();
+    newPos.rx() = newPos.x() > ccr.width() ? ccr.width() : newPos.x();
+
+    newPos.ry() = newPos.y() < 0 ? 0 : newPos.y();
+    newPos.ry() = newPos.y() > ccr.height() ? ccr.height() : newPos.y();
+
+    if (newPos.x() == 0) {
+        newPortPos.dir = Side::Left;
+        newPortPos.index = newPos.y();
+    } else if (newPos.x() == ccr.width()) {
+        newPortPos.dir = Side::Right;
+        newPortPos.index = newPos.y();
+    } else if (newPos.y() == 0) {
+        newPortPos.dir = Side::Top;
+        newPortPos.index = newPos.x();
+    } else if (newPos.y() == ccr.height()) {
+        newPortPos.dir = Side::Bottom;
+        newPortPos.index = newPos.x();
+    } else {
+        Q_ASSERT(false && "Error in snapping or out-of-bounds handling");
+    }
+
+    if (newPortPos == m_border->getPortPos(port)) {
         // No change, same index
         return false;
     }
-    adjustedPos.index = newPos;
-    const auto movedPorts = m_border->movePort(port, adjustedPos);
+
+    const auto movedPorts = m_border->movePort(port, newPortPos);
     for (const auto& p : movedPorts) {
         emit portPosChanged(p);
     }

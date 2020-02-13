@@ -44,7 +44,7 @@ public:
      * Attempt to move the position of @p port to @p pos of its current side
      * @return  whether the requested pos has been set for the port
      */
-    bool adjustPort(SimPort* port, int pos);
+    bool adjustPort(SimPort* port, QPoint pos);
 
     PortPos getPortPos(const SimPort* port) const;
     std::vector<unsigned> getFreePortPositions(Side s);

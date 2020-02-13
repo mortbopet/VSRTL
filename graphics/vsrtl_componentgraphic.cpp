@@ -365,7 +365,7 @@ bool ComponentGraphic::handlePortGraphicMoveAttempt(const PortGraphic* port, con
     // system and attempt to adjust port position.
 
     const QPoint adjustedPos = sceneToGrid(mapFromItem(port, newBorderPos).toPoint());
-    return adjustPort(port->getPort(), adjustedPos.y());
+    return adjustPort(port->getPort(), adjustedPos);
 }
 
 void ComponentGraphic::handleGridPosChange(const QPoint p) {
@@ -386,8 +386,14 @@ void ComponentGraphic::handlePortPosChanged(const SimPort* port) {
             g->setPos(QPointF(sceneGridRect().right(), pos.index * GRID_SIZE));
             break;
         }
-        default:
-            Q_UNREACHABLE();
+        case Side::Top: {
+            g->setPos(QPointF(pos.index * GRID_SIZE, sceneGridRect().top()));
+            break;
+        }
+        case Side::Bottom: {
+            g->setPos(QPointF(pos.index * GRID_SIZE, sceneGridRect().bottom()));
+            break;
+        }
     }
 }
 

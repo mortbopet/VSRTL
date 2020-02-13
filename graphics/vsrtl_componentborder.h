@@ -14,6 +14,8 @@ struct PortPos {
     Side dir;
     int index;
     bool validIndex() const { return index > 0; }
+
+    bool operator==(const PortPos& rhs) { return (this->index == rhs.index) && (this->dir == rhs.dir); }
 };
 
 class ComponentBorder {
