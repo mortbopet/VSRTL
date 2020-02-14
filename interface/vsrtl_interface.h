@@ -268,11 +268,23 @@ public:
         }
     }
 
-    SimPort* getSpecialPort(const std::string& id) {
+    template <typename T = SimPort>
+    T* getSpecialPort(const std::string& id) const {
+        static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
         verifyHasSpecialPortID(id);
         if (m_specialPorts.count(id) != 0)
-            return m_specialPorts[id];
+            return m_specialPorts.at(id);
         return nullptr;
+    }
+
+    template <typename T = SimPort>
+    std::vector<T*> getSpecialPorts() const {
+        static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
+        std::vector<T*> ports;
+        for (const auto& p : m_specialPorts) {
+            ports.push_back(p.second);
+        }
+        return ports;
     }
 
     void setSpecialPort(const std::string& id, SimPort* port) {
