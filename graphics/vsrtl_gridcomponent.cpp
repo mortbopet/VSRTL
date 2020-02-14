@@ -206,13 +206,14 @@ QRect GridComponent::getContractedMinimumGridRect() const {
     // ports on that side
     QRect shapeMinRect = QRect(0, 0, 1, 1);
 
-    const unsigned maxVerticalPorts = m_border->dirToMap(Side::Left).count() > m_border->dirToMap(Side::Right).count()
-                                          ? m_border->dirToMap(Side::Left).count()
-                                          : m_border->dirToMap(Side::Right).count();
+    const unsigned maxVerticalPorts = m_border->sideToMap(Side::Left).count() > m_border->sideToMap(Side::Right).count()
+                                          ? m_border->sideToMap(Side::Left).count()
+                                          : m_border->sideToMap(Side::Right).count();
 
-    const unsigned maxHorizontalPorts = m_border->dirToMap(Side::Top).count() > m_border->dirToMap(Side::Bottom).count()
-                                            ? m_border->dirToMap(Side::Top).count()
-                                            : m_border->dirToMap(Side::Bottom).count();
+    const unsigned maxHorizontalPorts =
+        m_border->sideToMap(Side::Top).count() > m_border->sideToMap(Side::Bottom).count()
+            ? m_border->sideToMap(Side::Top).count()
+            : m_border->sideToMap(Side::Bottom).count();
 
     shapeMinRect.adjust(0, 0, maxHorizontalPorts, maxVerticalPorts);
 
@@ -229,7 +230,7 @@ void GridComponent::updateCurrentComponentRect(int dx, int dy) {
     // If dx !^ dy, the component is adjusted in only a single direction. As such, ports on the side in the given change
     // direction will not move logically, but must be adjusted in terms of where they are drawn.
     if ((dx == 0) ^ (dy == 0)) {
-        auto axisMovedPorts = dx == 0 ? m_border->dirToMap(Side::Bottom) : m_border->dirToMap(Side::Right);
+        auto axisMovedPorts = dx == 0 ? m_border->sideToMap(Side::Bottom) : m_border->sideToMap(Side::Right);
         for (const auto& p : axisMovedPorts.portToId) {
             emit portPosChanged(p.first);
         }
@@ -243,7 +244,7 @@ PortPos GridComponent::getPortPos(const SimPort* port) const {
 
 std::vector<unsigned> GridComponent::getFreePortPositions(Side s) {
     std::vector<unsigned> freePos;
-    const auto& usedIndexes = m_border->dirToMap(s).idToPort;
+    const auto& usedIndexes = m_border->sideToMap(s).idToPort;
     for (int i = 0; i < getCurrentComponentRect().height(); i++) {
         if (usedIndexes.count(i) == 0) {
             freePos.push_back(i);
@@ -303,7 +304,7 @@ bool GridComponent::adjustPort(SimPort* port, QPoint newPos) {
 }
 
 void GridComponent::spreadPortsOnSide(const Side& side) {
-    auto biMapCopy = m_border->dirToMap(side);
+    auto biMapCopy = m_border->sideToMap(side);
     const auto n_ports = biMapCopy.count();
     if (n_ports > 0) {
         int i = 0;
@@ -323,7 +324,7 @@ void GridComponent::spreadPortsOnSide(const Side& side) {
 
 void GridComponent::spreadPortsOrdered() {
     for (const auto& side : {Side::Left, Side::Right, Side::Top, Side::Bottom}) {
-        auto biMapCopy = m_border->dirToMap(side);
+        auto biMapCopy = m_border->sideToMap(side);
         const auto n_ports = biMapCopy.count();
         if (n_ports > 0) {
             int i = 0;

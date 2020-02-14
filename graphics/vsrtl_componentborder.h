@@ -25,16 +25,25 @@ public:
     using NameToPortMap = std::map<std::string, const SimPort*>;
 
     ComponentBorder(const SimComponent* c) {
+        std::set<SimPort*> placedPorts;
+
         for (const auto& p : c->getPorts<SimPort::Direction::in>()) {
-            m_portMap[p] = nullptr;
-            addPortToSide(PortPos{Side::Left, static_cast<int>(-(m_left.count() + 1))}, p);
-            m_namePortMap[p->getName()] = p;
+            initPlacePortOnSide(Side::Left, p, placedPorts);
         }
         for (const auto& p : c->getPorts<SimPort::Direction::out>()) {
-            m_portMap[p] = nullptr;
-            addPortToSide(PortPos{Side::Right, static_cast<int>(-(m_right.count() + 1))}, p);
-            m_namePortMap[p->getName()] = p;
+            initPlacePortOnSide(Side::Right, p, placedPorts);
         }
+    }
+
+    void initPlacePortOnSide(Side s, SimPort* p, std::set<SimPort*>& placed) {
+        if (placed.count(p))
+            return;
+
+        m_portMap[p] = nullptr;
+        const auto& sideMap = sideToMap(s);
+        addPortToSide(PortPos{s, static_cast<int>(-(sideMap.count() + 1))}, p);
+        m_namePortMap[p->getName()] = p;
+        placed.insert(p);
     }
 
     struct PortIdBiMap {
@@ -52,7 +61,7 @@ public:
     };
 
     const SimPort* getPortAt(PortPos p) {
-        auto& map = dirToMap(p.side);
+        auto& map = sideToMap(p.side);
         if (map.idToPort.count(p.index))
             return map.idToPort.at(p.index);
         return nullptr;
@@ -91,7 +100,7 @@ public:
 
     void addPortToSide(PortPos pos, const SimPort* port) {
         assert(m_portMap.count(port) > 0);
-        auto& map = dirToMap(pos.side);
+        auto& map = sideToMap(pos.side);
         if (map.idToPort.count(pos.index)) {
             assert(false && "Port already at index");
         }
@@ -113,7 +122,7 @@ public:
         return {map->dir, map->portToId[p]};
     }
 
-    inline PortIdBiMap& dirToMap(Side d) {
+    inline PortIdBiMap& sideToMap(Side d) {
         switch (d) {
             case Side::Left:
                 return m_left;
