@@ -11,7 +11,6 @@ namespace vsrtl {
 GridComponent::GridComponent(SimComponent* c, GridComponent* parent) : GraphicsBaseItem(parent), m_component(c) {
     m_border = std::make_unique<ComponentBorder>(c);
 
-    updateMinimumGridRect();
     setInitialRect();
     m_currentExpandedRect = m_currentSubcomponentBoundingRect;
 }
@@ -158,8 +157,8 @@ const QRect& GridComponent::getCurrentComponentRect() const {
     return m_expanded ? m_currentExpandedRect : m_currentContractedRect;
 }
 
-const QRect& GridComponent::getCurrentMinRect() const {
-    return m_expanded ? m_currentSubcomponentBoundingRect : m_minimumGridRect;
+QRect GridComponent::getCurrentMinRect() const {
+    return m_expanded ? m_currentSubcomponentBoundingRect : getContractedMinimumGridRect();
 }
 
 bool GridComponent::updateSubcomponentBoundingRect() {
@@ -185,7 +184,7 @@ bool GridComponent::updateSubcomponentBoundingRect() {
 void GridComponent::setInitialRect() {
     const auto preferredRect = ShapeRegister::getComponentPreferredRect(m_component->getGraphicsID());
 
-    auto initialRect = m_minimumGridRect;
+    auto initialRect = getContractedMinimumGridRect();
     if (preferredRect == QRect()) {
         // No preferred size, adjust width heuristically based on height of component
         const auto widthToAdd = static_cast<int>(std::floor(std::log2(initialRect.height())));
@@ -202,19 +201,22 @@ void GridComponent::setInitialRect() {
     m_currentContractedRect = initialRect;
 }
 
-bool GridComponent::updateMinimumGridRect() {
-    QRect shapeMinRect = QRect(0, 0, 1, 1);  //
-    const unsigned n_inPorts = static_cast<unsigned>(m_component->getPorts<SimPort::Direction::in>().size());
-    const unsigned n_outPorts = static_cast<unsigned>(m_component->getPorts<SimPort::Direction::out>().size());
-    const unsigned largestPortSize = n_inPorts > n_outPorts ? n_inPorts : n_outPorts;
-    const int heightToAdd = largestPortSize + 1 - shapeMinRect.height();
-    shapeMinRect.adjust(0, 0, 0, heightToAdd);
+QRect GridComponent::getContractedMinimumGridRect() const {
+    // The contracted minimum grid rect is defined as a 1x1 rectangle, with each side being elongated by the number of
+    // ports on that side
+    QRect shapeMinRect = QRect(0, 0, 1, 1);
 
-    if (shapeMinRect != m_minimumGridRect) {
-        m_minimumGridRect = shapeMinRect;
-        return true;
-    }
-    return false;
+    const unsigned maxVerticalPorts = m_border->dirToMap(Side::Left).count() > m_border->dirToMap(Side::Right).count()
+                                          ? m_border->dirToMap(Side::Left).count()
+                                          : m_border->dirToMap(Side::Right).count();
+
+    const unsigned maxHorizontalPorts = m_border->dirToMap(Side::Top).count() > m_border->dirToMap(Side::Bottom).count()
+                                            ? m_border->dirToMap(Side::Top).count()
+                                            : m_border->dirToMap(Side::Bottom).count();
+
+    shapeMinRect.adjust(0, 0, maxHorizontalPorts, maxVerticalPorts);
+
+    return shapeMinRect;
 }
 
 void GridComponent::updateCurrentComponentRect(int dx, int dy) {
@@ -301,8 +303,6 @@ bool GridComponent::adjustPort(SimPort* port, QPoint newPos) {
 }
 
 void GridComponent::spreadPortsOnSide(const Side& side) {
-    assert(side != Side::Top && side != Side::Bottom && "Not implemented");
-
     auto biMapCopy = m_border->dirToMap(side);
     const auto n_ports = biMapCopy.count();
     if (n_ports > 0) {
@@ -322,12 +322,14 @@ void GridComponent::spreadPortsOnSide(const Side& side) {
 }
 
 void GridComponent::spreadPortsOrdered() {
-    for (const auto& side : {Side::Left, Side::Right}) {
+    for (const auto& side : {Side::Left, Side::Right, Side::Top, Side::Bottom}) {
         auto biMapCopy = m_border->dirToMap(side);
         const auto n_ports = biMapCopy.count();
         if (n_ports > 0) {
             int i = 0;
-            const double diff = getCurrentComponentRect().height() / n_ports;
+            const double diff = ((side == Side::Left || side == Side::Right) ? getCurrentComponentRect().height()
+                                                                             : getCurrentComponentRect().width()) /
+                                n_ports;
             for (const auto& idp : biMapCopy.idToPort) {
                 const int gridIndex = static_cast<int>(std::ceil((i * diff + diff / 2)));
                 const auto* port = idp.second;  // Store port pointer here; p reference may change during port moving
@@ -344,8 +346,8 @@ void GridComponent::spreadPortsOrdered() {
 void GridComponent::spreadPorts() {
     spreadPortsOnSide(Side::Left);
     spreadPortsOnSide(Side::Right);
-    // spreadPortsOnSide(Side::Top);
-    // spreadPortsOnSide(Side::Bottom);
+    spreadPortsOnSide(Side::Top);
+    spreadPortsOnSide(Side::Bottom);
 }
 
 }  // namespace vsrtl

@@ -53,7 +53,7 @@ public:
 
     const ComponentBorder& getBorder() const { return *m_border; }
     const QRect& getCurrentComponentRect() const;
-    const QRect& getCurrentMinRect() const;
+    QRect getCurrentMinRect() const;
     const QRect& getLastComponentRect() const { return m_lastComponentRect; }
 
     QPoint getGridPos() const { return m_relPos; }
@@ -113,7 +113,7 @@ private:
      * @brief Rect update functions
      */
     void updateCurrentComponentRect(int dx, int dy);
-    bool updateMinimumGridRect();
+    QRect getContractedMinimumGridRect() const;
     bool updateSubcomponentBoundingRect();
     void setInitialRect();
 
@@ -142,7 +142,6 @@ private:
     QRect m_currentExpandedRect;
     QRect m_currentContractedRect;
     QRect m_currentSubcomponentBoundingRect;
-    QRect m_minimumGridRect;
     QRect m_lastComponentRect =
         QRect();  // whenever the current component rect changes, objects such as component labels etc.
                   // may need to be adjusted based on the scaled difference between the new and old
