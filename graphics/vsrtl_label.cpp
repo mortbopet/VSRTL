@@ -36,6 +36,20 @@ void Label::setLocked(bool locked) {
     GraphicsBaseItem::setLocked(locked);
 }
 
+void Label::setHoverable(bool enabled) {
+    m_hoverable = enabled;
+    prepareGeometryChange();
+}
+
+QPainterPath Label::shape() const {
+    // A non-hoverable/non-selectable item has a null shape
+    if (m_hoverable) {
+        return QGraphicsTextItem::shape();
+    } else {
+        return QPainterPath();
+    }
+}
+
 void Label::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
     if (!isLocked()) {

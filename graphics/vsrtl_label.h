@@ -17,7 +17,9 @@ public:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
+    QPainterPath shape() const override;
 
+    void setHoverable(bool enabled);
     void setText(const QString& text);
     void setAlignment(Qt::Alignment alignment);
     void setPointSize(int size);
@@ -90,6 +92,7 @@ protected:
     void applyFormatChanges();
     void editTriggered();
 
+    bool m_hoverable = true;
     QFont m_font;
     Qt::Alignment m_alignment = Qt::AlignCenter;
 };

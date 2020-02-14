@@ -61,6 +61,7 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
 
     m_portWidthLabel = new Label(QString::number(port->getWidth() - 1) + ":0", this, 7);
     m_portWidthLabel->setMoveable(false);
+    m_portWidthLabel->setHoverable(false);
     m_portWidthLabel->setFlags(m_portWidthLabel->flags() &
                                ~(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable));
 
@@ -125,10 +126,11 @@ void PortGraphic::postSceneConstructionInitialize2() {
         // For constant ports, we by default display the value of the port
         m_valueLabel->show();
         m_radix = m_port->getWidth() == 1 ? Radix::Unsigned : Radix::Signed;
+
         // Update the ValueLabel (Letting it resize to its final value) and position it next to the port
         updateSlot();
         const auto br = m_valueLabel->boundingRect();
-        m_valueLabel->setPos({-br.width() * 0.8, br.height() * 0.2});
+        m_valueLabel->setPos({-br.width() - boundingRect().width(), -br.height() / 2});
 
         // Initial port color is implicitely set by triggering the wire animation
         m_colorAnimation->start(QPropertyAnimation::KeepWhenStopped);
