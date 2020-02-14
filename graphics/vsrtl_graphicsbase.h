@@ -27,9 +27,9 @@ public:
      */
     virtual void setLocked(bool locked) = 0;
 
-    void setMoveable() {
-        m_isMoveable = true;
-        setLocked(false);
+    void setMoveable(bool moveable = true) {
+        m_isMoveable = moveable;
+        setLocked(!moveable);
     }
     virtual bool isLocked() const = 0;
 

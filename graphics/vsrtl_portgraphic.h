@@ -115,7 +115,6 @@ private:
 
     PortType m_type;
     SimPort* m_port = nullptr;
-    bool m_portWidthVisible = false;
 
     // Used for allowing WireSegments to join up with a port
     PortPoint* m_inputPortPoint = nullptr;
@@ -132,6 +131,7 @@ private:
 
     Side m_side = Side::Right;
     Label* m_label = nullptr;
+    Label* m_portWidthLabel = nullptr;
     QString m_widthText;
     QFont m_font;
     QPen m_pen;
@@ -158,7 +158,9 @@ public:
 
         // Serialize port width label visibility
         try {
-            archive(cereal::make_nvp("PortWidthVisible", m_portWidthVisible));
+            bool visible = m_portWidthLabel->isVisible();
+            archive(cereal::make_nvp("PortWidthVisible", visible));
+            setPortWidthVisible(visible);
         } catch (cereal::Exception e) {
             /// @todo: build an error report
         }

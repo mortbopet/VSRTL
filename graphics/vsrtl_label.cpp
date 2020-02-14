@@ -33,7 +33,6 @@ void Label::setPointSize(int size) {
 }
 
 void Label::setLocked(bool locked) {
-    setFlag(ItemIsSelectable, !locked);
     GraphicsBaseItem::setLocked(locked);
 }
 

@@ -19,7 +19,6 @@ constexpr int s_portGridWidth = 1;
 PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     : GraphicsBaseItem(parent), m_type(type), m_port(port) {
     port->registerGraphic(this);
-    m_widthText = QString::number(port->getWidth() - 1) + ":0";
     m_font = QFont("Monospace", 8);
     m_pen.setWidth(WIRE_WIDTH);
     m_pen.setCapStyle(Qt::RoundCap);
@@ -43,8 +42,6 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
 
     setFlag(ItemIsSelectable);
 
-    updateGeometry();
-
     m_inputPortPoint = new PortPoint(this);
     m_inputPortPoint->setPos(getInputPoint());
     m_outputPortPoint = new PortPoint(this);
@@ -61,6 +58,13 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     m_valueLabel = new ValueLabel(m_radix, m_port, this);
     m_valueLabel->setVisible(false);
     m_valueLabel->moveBy(3, -6);  // start position (may be dragged)
+
+    m_portWidthLabel = new Label(QString::number(port->getWidth() - 1) + ":0", this, 7);
+    m_portWidthLabel->setMoveable(false);
+    m_portWidthLabel->setFlags(m_portWidthLabel->flags() &
+                               ~(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable));
+
+    updateGeometry();
 }
 
 void PortGraphic::updateSlot() {
@@ -80,7 +84,7 @@ void PortGraphic::setValueLabelVisible(bool visible) {
 }
 
 void PortGraphic::setPortWidthVisible(bool visible) {
-    m_portWidthVisible = visible;
+    m_portWidthLabel->setVisible(visible);
     update();
 }
 
@@ -145,7 +149,7 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     if (!isLocked()) {
         QAction* showWidthAction = menu.addAction("Show width");
         showWidthAction->setCheckable(true);
-        showWidthAction->setChecked(m_portWidthVisible);
+        showWidthAction->setChecked(m_portWidthLabel->isVisible());
         connect(showWidthAction, &QAction::triggered, this, &PortGraphic::setPortWidthVisible);
         menu.addAction(showWidthAction);
         QAction* showLabelAction = menu.addAction("Show label");
@@ -345,18 +349,31 @@ void PortGraphic::updateGeometry() {
     m_boundingRect.setTopLeft({0, 0});
     switch (m_side) {
         case Side::Left:
-        case Side::Right:
+        case Side::Right: {
             m_boundingRect.setY(-GRID_SIZE / 2);
             m_boundingRect.setHeight(GRID_SIZE);
             m_boundingRect.setX(m_side == Side::Left ? -GRID_SIZE * s_portGridWidth : 0);
             m_boundingRect.setWidth(GRID_SIZE * s_portGridWidth);
+
+            const qreal vDiff = std::abs(GRID_SIZE / 2 - m_portWidthLabel->boundingRect().height() / 2);
+
+            m_portWidthLabel->setPos(m_side == Side::Left ? QPointF{-m_portWidthLabel->boundingRect().width(), -vDiff}
+                                                          : QPointF{0, -vDiff});
+
             break;
+        }
         case Side::Top:
         case Side::Bottom: {
             m_boundingRect.setX(-GRID_SIZE / 2);
             m_boundingRect.setWidth(GRID_SIZE);
             m_boundingRect.setY(m_side == Side::Top ? -GRID_SIZE * s_portGridWidth : 0);
             m_boundingRect.setHeight(GRID_SIZE * s_portGridWidth);
+
+            const qreal vDiff = std::abs(GRID_SIZE / 2 - m_portWidthLabel->boundingRect().height() / 2);
+            m_portWidthLabel->setPos(m_side == Side::Top
+                                         ? QPointF{0, -m_portWidthLabel->boundingRect().height() + vDiff}
+                                         : QPointF{0, -vDiff});
+
             break;
         }
     }
