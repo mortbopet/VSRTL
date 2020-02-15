@@ -9,7 +9,7 @@ file(GLOB LIB_HEADERS *.h)
 
 # set Qt specific files
 file ( GLOB UIS *.ui)
-file ( GLOB RESOURCES resources/icons/*.qrc)
+file ( GLOB RESOURCES resources/icons/*.qrc resources/fonts/*.qrc)
 
 ######################################################################
 ## Linking

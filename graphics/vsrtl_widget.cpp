@@ -8,10 +8,26 @@
 
 #include <memory>
 
+#include <QFontDatabase>
 #include <QGraphicsScene>
 
 void initVsrtlResources() {
     Q_INIT_RESOURCE(vsrtl_icons);
+    Q_INIT_RESOURCE(vsrtl_fonts);
+
+    // Initialize fonts
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-Thin.ttf");
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-ThinItalic.ttf");
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-Regular.ttf");
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-MediumItalic.ttf");
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-Medium.ttf");
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-LightItalic.ttf");
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-Light.ttf");
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-Italic.ttf");
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-BoldItalic.ttf");
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-Bold.ttf");
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-Black.ttf");
+    QFontDatabase::addApplicationFont(":/vsrtl_fonts/Roboto/Roboto-BlackItalic.ttf");
 }
 
 namespace vsrtl {
