@@ -5,8 +5,8 @@
 
 ***V**isual **S**imulation of **R**egister **T**ransfer **L**ogic*
 
-VSRTL is a collection of libraries and applications for visualizing simulations of digital circuits.
-VSRTL is intended to be an intuitive HDL simulator which may be used for teaching digital circuits and boolean logic. 
+VSRTL is a framework for describing, visualizing and simulating digital circuits.  
+A VSRTL-described circuit may be built and simulated as a standalone application or embedded within a Qt-based C++ application. As an example, VSRTL is used as the simulation and visualization framework for [Ripes](https://github.com/mortbopet/Ripes), a graphical processor simulator and assembly editor for the RISC-V ISA.
 
 Refer to the [reference section](docs/README.md) for implementation and usage documentation.  
 If you would like to contribute, check the [issues](https://github.com/mortbopet/vsrtl/issues) section - There's plenty of work to be done!  
