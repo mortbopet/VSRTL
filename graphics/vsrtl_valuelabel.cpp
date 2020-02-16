@@ -1,6 +1,6 @@
 #include "vsrtl_valuelabel.h"
-
 #include "vsrtl_graphics_util.h"
+#include "vsrtl_portgraphic.h"
 
 #include <QAction>
 #include <QGraphicsSceneContextMenuEvent>
@@ -9,15 +9,16 @@
 
 namespace vsrtl {
 
-ValueLabel::ValueLabel(Radix& type, const SimPort* port, QGraphicsItem* parent)
+ValueLabel::ValueLabel(Radix& type, const PortGraphic* port, QGraphicsItem* parent)
     : Label("", parent, 10), m_type(type), m_port(port) {
     setFlag(ItemIsSelectable, true);
+    setAcceptHoverEvents(true);
 }
 
 void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
     // Paint a label box behind the text
     painter->save();
-    if (!m_port->isConstant()) {
+    if (!m_port->getPort()->isConstant()) {
         QRectF textRect = shape().boundingRect();
         painter->fillRect(textRect, Qt::white);
         painter->setBrush(Qt::NoBrush);
@@ -29,6 +30,10 @@ void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* option
     Label::paint(painter, option, w);
 }
 
+void ValueLabel::hoverMoveEvent(QGraphicsSceneHoverEvent*) {
+    setToolTip(m_port->getTooltipString());
+}
+
 void ValueLabel::setLocked(bool) {
     // ValueLabels should always be movable, even when the scene is locked
     return;
@@ -36,7 +41,7 @@ void ValueLabel::setLocked(bool) {
 
 void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
-    menu.addMenu(createPortRadixMenu(m_port, m_type));
+    menu.addMenu(createPortRadixMenu(m_port->getPort(), m_type));
 
     QAction* showLabel = menu.addAction("Show value");
     showLabel->setCheckable(true);
@@ -51,7 +56,7 @@ void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 }
 
 void ValueLabel::updateText() {
-    setPlainText(encodePortRadixValue(m_port, m_type));
+    setPlainText(encodePortRadixValue(m_port->getPort(), m_type));
     applyFormatChanges();
 }
 

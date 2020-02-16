@@ -55,7 +55,7 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
                                        dynamic_cast<ComponentGraphic*>(parentItem()->parentItem()));
     }
 
-    m_valueLabel = new ValueLabel(m_radix, m_port, this);
+    m_valueLabel = new ValueLabel(m_radix, this, this);
     m_valueLabel->setVisible(false);
     m_valueLabel->moveBy(3, -6);  // start position (may be dragged)
 

@@ -9,19 +9,22 @@
 
 namespace vsrtl {
 
+class PortGraphic;
+
 class ValueLabel : public Label {
 public:
-    ValueLabel(Radix& type, const SimPort* port, QGraphicsItem* parent);
+    ValueLabel(Radix& type, const PortGraphic* port, QGraphicsItem* parent);
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
+    void hoverMoveEvent(QGraphicsSceneHoverEvent*) override;
 
     void updateText();
     void setLocked(bool locked) override;
 
 private:
     Radix& m_type;
-    const SimPort* m_port = nullptr;
+    const PortGraphic* m_port = nullptr;
     unsigned int m_maxBitWidth;
 };
 
