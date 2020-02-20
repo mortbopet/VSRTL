@@ -129,7 +129,7 @@ public:
 
     WireGraphic(PortGraphic* from, const std::vector<SimPort*>& to, WireType type, ComponentGraphic* parent);
 
-    QRectF boundingRect() const override;
+    QRectF boundingRect() const override { return QRectF(); }
     const QPen& getPen();
     void postSceneConstructionInitialize1() override;
     void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) override {}

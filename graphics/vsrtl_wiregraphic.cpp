@@ -400,6 +400,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
 WireGraphic::WireGraphic(PortGraphic* from, const std::vector<SimPort*>& to, WireType type, ComponentGraphic* parent)
     : GraphicsBaseItem(parent), m_parent(parent), m_fromPort(from), m_toPorts(to), m_type(type) {
     m_parent->registerWire(this);
+    setFlag(QGraphicsItem::ItemHasNoContents, true);
 }
 
 bool WireGraphic::managesPoint(WirePoint* point) const {
@@ -466,24 +467,6 @@ WireGraphic::MergeType WireGraphic::canMergePoints(WirePoint* base, WirePoint* t
         return MergeType::MergeParallelSinks;
 
     return MergeType::CannotMerge;
-}
-
-QRectF WireGraphic::boundingRect() const {
-    QPolygonF p;
-    p.append(mapFromItem(m_fromPort, m_fromPort->getInputPoint()));
-    for (const auto& to : m_toGraphicPorts) {
-        p.append(mapFromItem(to, to->getInputPoint()));
-    }
-    QRectF br = p.boundingRect();
-    br.adjust(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
-
-    // HACK HACK HACK
-    // To ensure that input ports are redrawn when this wire changes (ie. gets selected), we overlap the bounding
-    // rect of this item onto both of its ports, ensuring redraws
-    br.adjust(-parentItem()->boundingRect().width(), 0, parentItem()->boundingRect().width(), 0);
-    // HACK HACK HACK
-
-    return br;
 }
 
 void WireGraphic::createRectilinearSegments(PortPoint* start, PortPoint* end) {
