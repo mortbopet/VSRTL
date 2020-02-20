@@ -355,8 +355,9 @@ void ComponentGraphic::updateGeometry() {
         labelPos.ry() *= heightScaledChanged;
         m_label->setPos(labelPos);
     } else {
-        // First time setting label position. Position label above component.
-        m_label->setPos(sceneRect.width() / 2, -m_label->boundingRect().height());
+        // First time setting label position. Position label centered above component.
+        m_label->setPos((sceneRect.width() / 2) - m_label->boundingRect().width() / 2,
+                        -m_label->boundingRect().height());
     }
 }
 
