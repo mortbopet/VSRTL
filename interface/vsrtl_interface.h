@@ -12,6 +12,7 @@
 
 #include "vsrtl.h"
 #include "vsrtl_gfxobjecttypes.h"
+#include "vsrtl_parameter.h"
 
 #include "../external/Signals/Signal.h"
 
@@ -188,6 +189,7 @@ private:
 #define TYPE(...) __VA_ARGS__
 #define SUBCOMPONENT(name, type, ...) type* name = create_component<type>(#name, ##__VA_ARGS__)
 #define SUBCOMPONENTS(name, type, n, ...) std::vector<type*> name = create_components<type>(#name, n, ##__VA_ARGS__)
+#define PARAMETER(name, type, initial) Parameter<type>& name = this->template createParameter<type>(#name, initial)
 
 namespace {
 struct NoPredicate {};
@@ -197,6 +199,7 @@ class SimComponent : public SimBase {
 public:
     using PortBaseCompT = BaseSorter<std::unique_ptr<SimPort>>;
     using ComponentCompT = BaseSorter<std::unique_ptr<SimComponent>>;
+
     SimComponent(std::string name, SimBase* parent) : SimBase(name, parent) {}
     virtual ~SimComponent() {}
 
@@ -340,10 +343,26 @@ public:
         return components;
     }
 
+    template <typename T, typename IT>
+    Parameter<T>& createParameter(std::string name, const IT& initial) {
+        verifyIsUniqueParameterName(name);
+        auto sptr = std::make_unique<Parameter<T, IT>>(name, initial);
+        auto* ptr = sptr.get();
+        m_parameters.emplace(std::move(sptr));
+        return *ptr;
+    }
+
     void verifyIsUniqueComponentName(const std::string& name) {
         if (!isUniqueName(name, m_subcomponents)) {
             throw std::runtime_error("Duplicate subcomponent name: '" + name + "' in component: '" + getName() +
                                      "'. Subcomponent names must be unique.");
+        }
+    }
+
+    void verifyIsUniqueParameterName(const std::string& name) {
+        if (!isUniqueName(name, m_parameters)) {
+            throw std::runtime_error("Duplicate parameter name: '" + name + "' in component: '" + getName() +
+                                     "'. Parameter names must be unique.");
         }
     }
 
@@ -381,6 +400,7 @@ protected:
     std::set<std::unique_ptr<SimPort>, PortBaseCompT> m_outputPorts;
     std::set<std::unique_ptr<SimPort>, PortBaseCompT> m_inputPorts;
     std::set<std::unique_ptr<SimComponent>, ComponentCompT> m_subcomponents;
+    std::set<std::unique_ptr<ParameterBase>> m_parameters;
     std::map<std::string, SimPort*> m_specialPorts;
 
 private:
