@@ -21,7 +21,7 @@ public:
 
     // Create objects
     SUBCOMPONENT(adder, Adder<32>);
-    SUBCOMPONENT(reg, Register<32>);
+    SUBCOMPONENT(reg, ShiftRegister<32>);
 };
 
 }  // namespace core

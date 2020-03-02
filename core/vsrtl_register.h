@@ -138,6 +138,72 @@ public:
     INPUTPORT(clear, 1);
 };
 
+template <unsigned int W>
+class ShiftRegister : public RegisterBase {
+public:
+    SetGraphicsType(Register);
+
+    ShiftRegister(std::string name, SimComponent* parent) : RegisterBase(name, parent) {
+        setSpecialPort("in", getIn());
+        setSpecialPort("out", getOut());
+
+        size.changed.Connect(this, &ShiftRegister::sizeChanged);
+        sizeChanged();  // Default initialize
+
+        // Calling out.propagate() will clock the register the register.
+        // Output the value for the last register in the shift register array
+        out << ([=] { return m_savedValues.at(size.getValue() - 1); });
+    }
+
+    void setInitValue(VSRTL_VT_U value) { m_initvalue = value; }
+
+    void reset() override {
+        for (int i = 0; i < m_savedValues.size(); i++) {
+            m_savedValues[i] = m_initvalue;
+        }
+        m_reverseStack.clear();
+    }
+
+    void save() override {
+        m_reverseStack.push_front(m_savedValues.at(size.getValue() - 1));
+        if (m_reverseStack.size() > reverseStackSize()) {
+            m_reverseStack.pop_back();
+        }
+        // Rotate to the right and store new value as first register
+        std::rotate(m_savedValues.rbegin(), m_savedValues.rbegin() + 1, m_savedValues.rend());
+        m_savedValues.at(0) = in.template value<VSRTL_VT_U>();
+    }
+
+    void forceValue(VSRTL_VT_U /* addr */, VSRTL_VT_U value) override {
+        // Sign-extension with unsigned type forces width truncation to m_width bits
+        m_savedValues[0] = signextend<VSRTL_VT_U, W>(value);
+        // Forced values are a modification of the current state and thus not pushed onto the reverse stack
+    }
+
+    void reverse() override {
+        if (m_reverseStack.size() > 0) {
+            // Rotate to the left and store popped value as last register
+            std::rotate(m_savedValues.begin(), m_savedValues.begin() + 1, m_savedValues.end());
+            m_savedValues.at(size.getValue() - 1) = m_reverseStack.front();
+            m_reverseStack.pop_front();
+        }
+    }
+
+    PortBase* getIn() override { return &in; }
+    PortBase* getOut() override { return &out; }
+
+    INPUTPORT(in, W);
+    OUTPUTPORT(out, W);
+    PARAMETER(size, int, 3);
+
+protected:
+    void sizeChanged() { m_savedValues.resize(size.getValue()); }
+
+    std::vector<VSRTL_VT_U> m_savedValues;
+    VSRTL_VT_U m_initvalue = 0;
+    std::deque<VSRTL_VT_U> m_reverseStack;
+};
+
 }  // namespace core
 }  // namespace vsrtl
 
