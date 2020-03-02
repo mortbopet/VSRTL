@@ -22,6 +22,14 @@ public:
     // Create objects
     SUBCOMPONENT(adder, Adder<32>);
     SUBCOMPONENT(reg, ShiftRegister<32>);
+
+    PARAMETER(a, int, 1);
+    PARAMETER(b, std::string, "abc");
+    PARAMETER(c, bool, true);
+    /*
+    PARAMETER(d, std::vector<int>, 123);
+    PARAMETER(e, std::vector<std::string>, TYPE({"abc", "def", "eh"}));
+    */
 };
 
 }  // namespace core

@@ -343,13 +343,21 @@ public:
         return components;
     }
 
-    template <typename T, typename IT>
-    Parameter<T>& createParameter(std::string name, const IT& initial) {
+    template <typename T>
+    Parameter<T>& createParameter(std::string name, const T& value) {
         verifyIsUniqueParameterName(name);
-        auto sptr = std::make_unique<Parameter<T, IT>>(name, initial);
+        auto sptr = std::make_unique<Parameter<T>>(name, value);
         auto* ptr = sptr.get();
         m_parameters.emplace(std::move(sptr));
         return *ptr;
+    }
+
+    std::vector<ParameterBase*> getParameters() const {
+        std::vector<ParameterBase*> parameters;
+        for (const auto& p : m_parameters) {
+            parameters.push_back(p.get());
+        }
+        return parameters;
     }
 
     void verifyIsUniqueComponentName(const std::string& name) {

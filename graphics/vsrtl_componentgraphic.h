@@ -158,6 +158,7 @@ public slots:
     void loadLayout();
     void saveLayout();
     void resetWires();
+    void parameterDialogTriggered();
 
 public:
     template <class Archive>

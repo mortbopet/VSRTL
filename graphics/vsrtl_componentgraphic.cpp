@@ -5,6 +5,7 @@
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_label.h"
 #include "vsrtl_multiplexergraphic.h"
+#include "vsrtl_parameterdialog.h"
 #include "vsrtl_placeroute.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_scene.h"
@@ -185,8 +186,21 @@ void ComponentGraphic::saveLayout() {
     m_isTopLevelSerializedComponent = false;
 }
 
+void ComponentGraphic::parameterDialogTriggered() {
+    ParameterDialog dialog(m_component);
+
+    if (dialog.exec()) {
+    }
+    return;
+}
+
 void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
+
+    if (!m_component->getParameters().empty()) {
+        auto* parameterAction = menu.addAction("Parameters");
+        connect(parameterAction, &QAction::triggered, this, &ComponentGraphic::parameterDialogTriggered);
+    }
 
     if (hasSubcomponents() && !isLocked()) {
         // ======================== Layout menu ============================ //

@@ -147,12 +147,14 @@ public:
         setSpecialPort("in", getIn());
         setSpecialPort("out", getOut());
 
-        size.changed.Connect(this, &ShiftRegister::sizeChanged);
-        sizeChanged();  // Default initialize
+        stages.setTooltip("Number of shift register stages");
+        stages.setOptions({1, 100});
+        stages.changed.Connect(this, &ShiftRegister::stagesChanged);
+        stagesChanged();  // Default initialize
 
         // Calling out.propagate() will clock the register the register.
         // Output the value for the last register in the shift register array
-        out << ([=] { return m_savedValues.at(size.getValue() - 1); });
+        out << ([=] { return m_savedValues.at(stages.getValue() - 1); });
     }
 
     void setInitValue(VSRTL_VT_U value) { m_initvalue = value; }
@@ -165,7 +167,7 @@ public:
     }
 
     void save() override {
-        m_reverseStack.push_front(m_savedValues.at(size.getValue() - 1));
+        m_reverseStack.push_front(m_savedValues.at(stages.getValue() - 1));
         if (m_reverseStack.size() > reverseStackSize()) {
             m_reverseStack.pop_back();
         }
@@ -184,7 +186,7 @@ public:
         if (m_reverseStack.size() > 0) {
             // Rotate to the left and store popped value as last register
             std::rotate(m_savedValues.begin(), m_savedValues.begin() + 1, m_savedValues.end());
-            m_savedValues.at(size.getValue() - 1) = m_reverseStack.front();
+            m_savedValues.at(stages.getValue() - 1) = m_reverseStack.front();
             m_reverseStack.pop_front();
         }
     }
@@ -194,10 +196,10 @@ public:
 
     INPUTPORT(in, W);
     OUTPUTPORT(out, W);
-    PARAMETER(size, int, 3);
+    PARAMETER(stages, int, 2);
 
 protected:
-    void sizeChanged() { m_savedValues.resize(size.getValue()); }
+    void stagesChanged() { m_savedValues.resize(stages.getValue()); }
 
     std::vector<VSRTL_VT_U> m_savedValues;
     VSRTL_VT_U m_initvalue = 0;
