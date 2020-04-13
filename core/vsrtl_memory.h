@@ -15,6 +15,7 @@ namespace vsrtl {
 namespace core {
 
 struct MemoryEviction {
+    bool writeEnable;
     VSRTL_VT_U addr;
     VSRTL_VT_U data;
     VSRTL_VT_U width;
@@ -49,19 +50,22 @@ public:
     void reset() override { m_reverseStack.clear(); }
 
     void save() override {
+        const bool writeEnable = static_cast<bool>(wr_en);
         const VSRTL_VT_U addr_v = addr.template value<VSRTL_VT_U>();
         const VSRTL_VT_U data_in_v = data_in.template value<VSRTL_VT_U>();
         const VSRTL_VT_U data_out_v = this->read(addr_v);
-        auto ev = MemoryEviction({addr_v, data_out_v, wr_width.uValue()});
+        auto ev = MemoryEviction({writeEnable, addr_v, data_out_v, wr_width.uValue()});
         saveToStack(ev);
-        if (static_cast<bool>(wr_en))
+        if (writeEnable)
             this->write(addr_v, data_in_v, wr_width.uValue());
     }
 
     void reverse() override {
         if (m_reverseStack.size() > 0) {
             auto lastEviction = m_reverseStack.front();
-            this->write(lastEviction.addr, lastEviction.data, lastEviction.width);
+            if (lastEviction.writeEnable) {
+                this->write(lastEviction.addr, lastEviction.data, lastEviction.width);
+            }
             m_reverseStack.pop_front();
         }
     }
