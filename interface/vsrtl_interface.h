@@ -448,14 +448,25 @@ public:
      * Simulates clocking the circuit. Registers are clocked and the propagation algorithm is run
      * @pre A call to propagate() must be done, to set the initial state of the circuit
      */
-    virtual void clock() { m_cycleCount++; }
+    virtual void clock() {
+        m_cycleCount++;
+
+        if (clockedSignalsEnabled()) {
+            designWasClocked.Emit();
+        }
+    }
 
     /**
      * @brief reverse
      * Undo the last clock operation. Registers will assert their previous state value. Memory elements will undo
      * their last transaction. The circuit shall be repropagated and assume its previous-cycle state.
      */
-    virtual void reverse() { m_cycleCount--; }
+    virtual void reverse() {
+        m_cycleCount--;
+        if (clockedSignalsEnabled()) {
+            designWasReversed.Emit();
+        }
+    }
 
     /**
      * @brief propagate
@@ -468,7 +479,12 @@ public:
      * Resets the circuit, setting all registers to 0 and propagates the circuit. Constants might have an affect on
      * the circuit in terms of not all component values being 0.
      */
-    virtual void reset() { m_cycleCount = 0; }
+    virtual void reset() {
+        m_cycleCount = 0;
+        if (clockedSignalsEnabled()) {
+            designWasReset.Emit();
+        }
+    }
 
     /**
      * @brief canReverse
@@ -482,9 +498,19 @@ public:
      */
     virtual void verifyAndInitialize() = 0;
 
+    /**
+     * m_emitsSignals related functions
+     * signalsEnabled() may be used by child components and ports of this design, to emit status change signals.
+     */
     void setEnableSignals(bool state) { m_emitsSignals = state; }
-
     bool signalsEnabled() const { return m_emitsSignals; }
+
+    /**
+     * m_emitsClockedSignals related functions
+     * clockedSignalsEnabled() may be used by the design to control whether the clocked/reversed signals are emitted.
+     */
+    void setEnableClockedSignals(bool state) { m_emitsClockedSignals = state; }
+    bool clockedSignalsEnabled() const { return m_emitsClockedSignals; }
 
     virtual std::vector<SimComponent*> getRegisters() const {
         return getSubComponents([=](SimComponent& c) { return c.isSynchronous(); });
@@ -494,9 +520,21 @@ public:
 
     virtual void setSynchronousValue(SimSynchronous* c, VSRTL_VT_U addr, VSRTL_VT_U value) = 0;
 
+    /**
+     * @brief clocked, reversed & reset signals
+     * These signals are emitted whenever the design has finished an entire clockcycle (clock + signal propagation).
+     * Signals are emitted if m_emitsClockedSignals is set.
+     */
+    Gallant::Signal0<> designWasClocked;
+    Gallant::Signal0<> designWasReversed;
+    Gallant::Signal0<> designWasReset;
+
 protected:
     long long m_cycleCount = 0;
     bool m_emitsSignals = true;
+
+private:
+    bool m_emitsClockedSignals = true;
 };
 
 }  // namespace vsrtl
