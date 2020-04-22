@@ -10,6 +10,7 @@
 
 #include <QFontDatabase>
 #include <QGraphicsScene>
+#include <QtConcurrent/QtConcurrent>
 
 void initVsrtlResources() {
     Q_INIT_RESOURCE(vsrtl_icons);
@@ -42,6 +43,14 @@ VSRTLWidget::VSRTLWidget(QWidget* parent) : QWidget(parent), ui(new Ui::VSRTLWid
     m_view->setScene(m_scene);
     ui->viewLayout->addWidget(m_view);
     connect(m_scene, &QGraphicsScene::selectionChanged, this, (&VSRTLWidget::handleSceneSelectionChanged));
+
+    /**
+     * runFinished will always be emitted asynchronously within the run call.
+     * When a run is finished, we need to ensure that the graphical view is fully up to date with the underlying
+     * circuit. This is performed through handleRunFinished, but ensured to be performed on the main gui thread, and not
+     * on whatever thread the running was performed on.
+     */
+    connect(this, &VSRTLWidget::runFinished, this, &VSRTLWidget::handleRunFinished, Qt::QueuedConnection);
 }
 
 void VSRTLWidget::clearDesign() {
@@ -164,16 +173,39 @@ void VSRTLWidget::clock() {
     }
 }
 
-void VSRTLWidget::run() {
-    if (m_design) {
-        m_design->setEnableSignals(false);
-        while (!m_stop) {
-            m_design->clock();
+void VSRTLWidget::handleRunFinished() {
+    // Since the design does not emit signals during running, we need to manually tell all labels to reset their text
+    // value, given that labels manually must have their text updated (ie. text is not updated in the redraw call).
+    for (const auto& item : m_scene->items()) {
+        if (auto* label = dynamic_cast<Label*>(item)) {
+            label->updateText();
         }
-        m_stop = false;
-        m_design->setEnableSignals(true);
-        m_scene->update();
     }
+
+    m_scene->update();
+}
+
+QFuture<void> VSRTLWidget::run(const std::function<void()>& cycleFunctor) {
+    auto future = QtConcurrent::run([=] {
+        if (m_design) {
+            m_design->setEnableSignals(false);
+            if (cycleFunctor) {
+                while (!m_stop) {
+                    m_design->clock();
+                    cycleFunctor();
+                }
+            } else {
+                while (!m_stop) {
+                    m_design->clock();
+                }
+            }
+            m_stop = false;
+            m_design->setEnableSignals(true);
+
+            emit runFinished();
+        }
+    });
+    return future;
 }
 
 void VSRTLWidget::reverse() {

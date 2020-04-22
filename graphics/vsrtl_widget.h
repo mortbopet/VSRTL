@@ -5,6 +5,8 @@
 #include "vsrtl_componentgraphic.h"
 #include "vsrtl_portgraphic.h"
 
+#include <QtConcurrent/QtConcurrent>
+
 QT_FORWARD_DECLARE_CLASS(QGraphicsScene)
 
 namespace vsrtl {
@@ -36,7 +38,16 @@ public:
     void zoomToFit();
 
 public slots:
-    void run();
+
+    /**
+     * @brief run
+     * Asynchronously run the design until m_stop is asserted. @returns a future which may be watched to monitor run
+     * finishing.
+     * Additionally, a functor @param cycleFunctor can be passed to the function. This functor will be
+     * executed after each clock cycle. Example uses of such functor could be; ie. if simulating a processor, whether
+     * the prcoessor has hit a breakpoint and running needs to be terminated.
+     */
+    QFuture<void> run(const std::function<void()>& cycleFunctor = std::function<void()>());
     void stop() { m_stop = true; }
     void clock();
     void reset();
@@ -44,6 +55,12 @@ public slots:
 
     // Selections which are imposed on the scene from external objects (ie. selecting items in the netlist)
     void handleSelectionChanged(const std::vector<SimComponent*>& selected, std::vector<SimComponent*>& deselected);
+
+signals:
+    void runFinished();
+
+private slots:
+    void handleRunFinished();
 
 signals:
     void canReverse(bool);
@@ -57,7 +74,7 @@ private:
     // State variable for reducing the number of emitted canReverse signals
     bool m_designCanreverse = false;
 
-    bool m_stop = false;
+    std::atomic<bool> m_stop = false;
 
     void initializeDesign();
     Ui::VSRTLWidget* ui;
