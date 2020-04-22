@@ -19,7 +19,7 @@ public:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent*) override;
 
-    void updateText();
+    void updateText() override;
     void setLocked(bool locked) override;
 
 private:

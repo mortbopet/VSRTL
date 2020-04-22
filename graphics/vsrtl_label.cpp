@@ -27,6 +27,8 @@ void Label::setText(const QString& text) {
     applyFormatChanges();
 }
 
+void Label::updateText() {}
+
 void Label::setPointSize(int size) {
     m_font.setPointSize(size);
     applyFormatChanges();

@@ -25,6 +25,12 @@ public:
     void setPointSize(int size);
     void setLocked(bool locked) override;
 
+    /**
+     * @brief updateText
+     * Triggers an update of the current text. Relevant if the Label gathers its text from some dynamic structure.
+     */
+    virtual void updateText();
+
     template <class Archive>
     void serialize(Archive& archive) {
         prepareGeometryChange();
