@@ -41,10 +41,7 @@ public:
             reg->save();
         }
 
-        // Increment reverse-stack if possible
-        if (m_reverseStackCount < ClockedComponent::reverseStackSize()) {
-            m_reverseStackCount++;
-        }
+        ClockedComponent::pushReversibleCycle();
 
         propagateDesign();
         SimDesign::clock();
@@ -59,7 +56,7 @@ public:
             for (const auto& reg : m_clockedComponents) {
                 reg->reverse();
             }
-            m_reverseStackCount--;
+            ClockedComponent::popReversibleCycle();
             propagateDesign();
         }
         SimDesign::reverse();
@@ -83,11 +80,22 @@ public:
         for (const auto& reg : m_clockedComponents)
             reg->reset();
         propagateDesign();
-        m_reverseStackCount = 0;
+        ClockedComponent::resetReverseStackCount();
         SimDesign::reset();
     }
 
-    inline bool canReverse() const override { return m_reverseStackCount != 0; }
+    bool canReverse() const override { return ClockedComponent::canReverse(); }
+    /**
+     * @brief setReverseStackSize
+     * Sets the maximum number of reversible cycles to @param size and updates all clocked components to reflect the new
+     * reverse stack size.
+     */
+    void setReverseStackSize(unsigned size) {
+        ClockedComponent::setReverseStackSize(size);
+        for (const auto& c : m_clockedComponents) {
+            c->reverseStackSizeChanged();
+        }
+    }
 
     void createPropagationStack() {
         // The circuit is traversed to find the sequence of which ports may be propagated, such that all input
@@ -206,7 +214,6 @@ private:
         }
     }
 
-    unsigned int m_reverseStackCount = 0;
     std::map<SimComponent*, std::vector<SimComponent*>> m_componentGraph;
     std::set<RegisterBase*> m_registers;
     std::set<ClockedComponent*> m_clockedComponents;

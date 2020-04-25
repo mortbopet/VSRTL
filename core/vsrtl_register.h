@@ -46,9 +46,50 @@ public:
     ClockedComponent(std::string name, SimComponent* parent) : Component(name, parent), SimSynchronous(this) {}
     virtual void save() = 0;
 
-    static unsigned int& reverseStackSize() {
-        static unsigned int s_reverseStackSize = 100;
-        return s_reverseStackSize;
+    /**
+     * @brief Reverse stack management
+     * The following functions manages a static count of the current number of reversible cycles in the design. It is
+     * expected that modifications to the reverse stack counters are performed solely by the top-level managing design.
+     */
+    static void setReverseStackSize(unsigned size) {
+        getReverseStack().max = size;
+
+        if (getReverseStack().current > size) {
+            getReverseStack().current = size;
+        }
+    }
+    static unsigned reverseStackSize() { return getReverseStack().max; }
+    static unsigned reversibleCycles() { return getReverseStack().current; }
+    static void resetReverseStackCount() { getReverseStack().current = 0; }
+    static void pushReversibleCycle() {
+        // Increment reverse-stack count if possible
+        if (reversibleCycles() < reverseStackSize()) {
+            getReverseStack().current++;
+        }
+    }
+    static void popReversibleCycle() {
+        if (!canReverse()) {
+            throw std::runtime_error("Tried to reverse the design with empty reverse stacks");
+        }
+        getReverseStack().current--;
+    }
+    static bool canReverse() { return getReverseStack().current != 0; }
+
+    /**
+     * @brief reverseStackSizeChanged
+     * Whenever the reverse stack changes, all synchronous elements may check whether they need to delete cycles within
+     * their current reverse stack.
+     */
+    virtual void reverseStackSizeChanged() = 0;
+
+private:
+    struct ReverseStackCounter {
+        unsigned max = 100;    // Maximum number of cycles on clocked components reverse stacks
+        unsigned current = 0;  // Current number of reversible cycles
+    };
+    static ReverseStackCounter& getReverseStack() {
+        static ReverseStackCounter reverseStackCounter;
+        return reverseStackCounter;
     }
 };
 
@@ -103,6 +144,12 @@ public:
 
     INPUTPORT(in, W);
     OUTPUTPORT(out, W);
+
+    void reverseStackSizeChanged() override {
+        if (reverseStackSize() < m_reverseStack.size()) {
+            m_reverseStack.resize(m_reverseStack.size());
+        }
+    }
 
 protected:
     void saveToStack() {
@@ -197,6 +244,12 @@ public:
     INPUTPORT(in, W);
     OUTPUTPORT(out, W);
     PARAMETER(stages, int, 2);
+
+    void reverseStackSizeChanged() override {
+        if (reverseStackSize() < m_reverseStack.size()) {
+            m_reverseStack.resize(m_reverseStack.size());
+        }
+    }
 
 protected:
     void stagesChanged() { m_savedValues.resize(stages.getValue()); }

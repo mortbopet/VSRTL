@@ -77,6 +77,14 @@ public:
     INPUTPORT(wr_width, ceillog2(dataWidth / 8 + 1));  // # bytes
     INPUTPORT(wr_en, 1);
 
+protected:
+    void reverseStackSizeChanged() override {
+        if (reverseStackSize() < m_reverseStack.size()) {
+            m_reverseStack.resize(m_reverseStack.size());
+        }
+    }
+
+private:
     void saveToStack(MemoryEviction v) {
         m_reverseStack.push_front(v);
         if (m_reverseStack.size() > reverseStackSize()) {
