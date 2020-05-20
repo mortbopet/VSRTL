@@ -71,8 +71,7 @@ void VSRTLWidget::setDesign(SimDesign* design) {
 }
 
 void VSRTLWidget::zoomToFit() {
-    const auto* tlc = getTopLevelComponent();
-    m_view->fitInView(tlc, Qt::KeepAspectRatio);
+    m_view->zoomToFit(getTopLevelComponent());
 }
 
 void VSRTLWidget::setOutputPortValuesVisible(bool visible) {
