@@ -10,49 +10,48 @@
 namespace vsrtl {
 namespace core {
 
-namespace {
-constexpr bool valueFitsInBitWidth(unsigned int width, int value) {
-    const int v = value < 0 ? -value : value;
-    unsigned v_width = ceillog2(v) + ((bitcount(value) == 1) && (value != 0) && (value != 1) ? 1 : 0);
-    return v_width <= width;
-}
-}  // namespace
-
 /**
  * @param width Must be able to contain the signed bitfield of value
  *
  */
-template <unsigned int W>
 class Constant : public Component {
 public:
     SetGraphicsType(Constant);
-    Constant(std::string name, SimComponent* parent, VSRTL_VT_U value = 0) : Component(name, parent) {
+    Constant(std::string name, SimComponent* parent, VSRTL_VT_U value = 0, unsigned int W = 0)
+        : Component(name, parent), m_W(W) {
+        if (m_W == 0) {
+            m_W = bitsToRepresentValue(value);
+        }
         m_value = value;
-        if (!valueFitsInBitWidth(W, m_value)) {
+        if (!valueFitsInBitWidth(m_W, m_value)) {
             throw std::runtime_error("Value does not fit inside provided bit-width");
         }
+        // Width has now been fixed, initialize port
+        DYNP_OUT_INIT(out, m_W);
 
-        out << ([=] { return m_value; });
+        *out << ([=] { return m_value; });
     }
 
-    OUTPUTPORT(out, W);
+    DYNP_OUT(out);
 
 private:
     VSRTL_VT_U m_value;
+    unsigned m_W;
 };
 
-template <unsigned int W>
-void operator>>(VSRTL_VT_S c, Port<W>& toThis) {
+void operator>>(VSRTL_VT_S c, Port& toThis) {
     // A constant should be created as a child of the shared parent between the component to be connected and the newly
     // created constant
     auto* parent = toThis.getParent()->template getParent<SimComponent>();
-    auto* constant = parent->template create_component<Constant<W>>(
-        "constant #" + std::to_string(parent->reserveConstantId()) + "v:" + std::to_string(c), c);
-    constant->out >> toThis;
+    if (toThis.getWidth() == 0) {
+        throw std::runtime_error("Cannot implicitely construct Constant for an uninitialized port!");
+    }
+    auto* constant = parent->template create_component<Constant>(
+        "constant #" + std::to_string(parent->reserveConstantId()) + "v:" + std::to_string(c), c, toThis.getWidth());
+    *constant->out >> toThis;
 }
 
-template <unsigned int W>
-void operator>>(VSRTL_VT_U c, std::vector<Port<W>*> toThis) {
+void operator>>(VSRTL_VT_U c, std::vector<Port*> toThis) {
     for (auto& p : toThis)
         c >> *p;
 }

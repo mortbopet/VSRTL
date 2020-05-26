@@ -197,7 +197,7 @@ struct NoPredicate {};
 
 class SimComponent : public SimBase {
 public:
-    using PortBaseCompT = BaseSorter<std::unique_ptr<SimPort>>;
+    using PortCompT = BaseSorter<std::unique_ptr<SimPort>>;
     using ComponentCompT = BaseSorter<std::unique_ptr<SimComponent>>;
 
     SimComponent(std::string name, SimBase* parent) : SimBase(name, parent) {}
@@ -405,8 +405,8 @@ public:
 protected:
     // Ports and subcomponents should be maintained as sorted sets based on port and component names, ensuring
     // consistent ordering between executions
-    std::set<std::unique_ptr<SimPort>, PortBaseCompT> m_outputPorts;
-    std::set<std::unique_ptr<SimPort>, PortBaseCompT> m_inputPorts;
+    std::set<std::unique_ptr<SimPort>, PortCompT> m_outputPorts;
+    std::set<std::unique_ptr<SimPort>, PortCompT> m_inputPorts;
     std::set<std::unique_ptr<SimComponent>, ComponentCompT> m_subcomponents;
     std::set<std::unique_ptr<ParameterBase>> m_parameters;
     std::map<std::string, SimPort*> m_specialPorts;

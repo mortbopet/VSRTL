@@ -70,4 +70,14 @@ constexpr inline unsigned ceillog2(unsigned x) {
     return x == 1 || x == 0 ? 1 : floorlog2(x - 1) + 1;
 }
 
+constexpr unsigned bitsToRepresentValue(int value) {
+    const int v = value < 0 ? -value : value;
+    const unsigned v_width = ceillog2(v) + ((bitcount(value) == 1) && (value != 0) && (value != 1) ? 1 : 0);
+    return v_width;
+}
+
+constexpr bool valueFitsInBitWidth(unsigned int width, int value) {
+    return bitsToRepresentValue(value) <= width;
+}
+
 }  // namespace vsrtl

@@ -26,13 +26,24 @@ namespace core {
 /// the actual macro. For these cases, we may say SUBCOMPONENT(xor1, TYPE(Xor<1,2>));
 #define TYPE(...) __VA_ARGS__
 
-#define INPUTPORT(name, W) Port<W>& name = this->template createInputPort<W>(#name)
-#define INPUTPORT_ENUM(name, E_t) Port<E_t::width()>& name = this->template createInputPort<E_t::width(), E_t>(#name)
-#define INPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->template createInputPorts<W>("in", N)
+#define INPUTPORT(name, W) Port& name = this->template createInputPort(#name, W)
+#define INPUTPORT_ENUM(name, E_t) Port& name = this->template createInputPort<E_t>(#name, E_t::width())
+#define INPUTPORTS(name, W, N) std::vector<Port*> name = createInputPorts("in", W, N)
 
-#define OUTPUTPORT(name, W) Port<W>& name = this->template createOutputPort<W>(#name)
-#define OUTPUTPORT_ENUM(name, E_t) Port<E_t::width()>& name = this->template createOutputPort<E_t::width(), E_t>(#name)
-#define OUTPUTPORTS(name, W, N) std::vector<Port<W>*> name = this->template createOutputPorts<W>("in", N)
+#define OUTPUTPORT(name, W) Port& name = this->template createOutputPort(#name, W)
+#define OUTPUTPORT_ENUM(name, E_t) Port& name = this->template createOutputPort<E_t>(#name, E_t::width())
+#define OUTPUTPORTS(name, W, N) std::vector<Port*> name = createOutputPorts("in", W, N)
+
+/**
+ * Dynamic ports
+ * For components which may be dynamically instantiated with a desired port width, the dynamic ports are provided.
+ * The dynamic ports must be initialized during the construction of the component. The dynamic ports must be initialized
+ * before assigning signals to the port.
+ */
+#define DYNP_OUT(name) Port* name = (nullptr)
+#define DYNP_OUT_INIT(name, W) name = &(this->template createOutputPort(#name, W))
+#define DYNP_IN(name) Port* name = (nullptr)
+#define DYNP_IN_INIT(name, W) name = &(this->template createInputPort(#name, W))
 
 class Component : public SimComponent {
 public:
@@ -51,36 +62,34 @@ public:
             // Constants (components with no inputs) are always propagated
         } else {
             m_propagationState = PropagationState::unpropagated;
-            for (const auto& i : getPorts<SimPort::Direction::in, PortBase>())
+            for (const auto& i : getPorts<SimPort::Direction::in, Port>())
                 i->resetPropagation();
-            for (const auto& o : getPorts<SimPort::Direction::out, PortBase>())
+            for (const auto& o : getPorts<SimPort::Direction::out, Port>())
                 o->resetPropagation();
         }
     }
     bool isPropagated() const { return m_propagationState == PropagationState::propagated; }
-    void setSensitiveTo(const PortBase* p) { m_sensitivityList.push_back(p); }
-    void setSensitiveTo(const PortBase& p) { setSensitiveTo(&p); }
+    void setSensitiveTo(const Port* p) { m_sensitivityList.push_back(p); }
+    void setSensitiveTo(const Port& p) { setSensitiveTo(&p); }
 
-    template <unsigned int W, typename E_t = void>
-    Port<W>& createInputPort(std::string name) {
-        return createPort<W, E_t>(name, m_inputPorts);
+    template <typename E_t = void>
+    Port& createInputPort(std::string name, unsigned int W) {
+        return createPort<E_t>(name, W, m_inputPorts);
     }
-    template <unsigned int W, typename E_t = void>
-    Port<W>& createOutputPort(std::string name) {
-        return createPort<W, E_t>(name, m_outputPorts);
-    }
-
-    template <unsigned int W>
-    std::vector<Port<W>*> createInputPorts(std::string name, unsigned int n) {
-        return createPorts<W>(name, m_inputPorts, n);
+    template <typename E_t = void>
+    Port& createOutputPort(std::string name, unsigned int W) {
+        return createPort<E_t>(name, W, m_outputPorts);
     }
 
-    template <unsigned int W>
-    std::vector<Port<W>*> createOutputPorts(std::string name, unsigned int n) {
-        return createPorts<W>(name, m_outputPorts, n);
+    std::vector<Port*> createInputPorts(std::string name, unsigned int W, unsigned int n) {
+        return createPorts(name, W, m_inputPorts, n);
     }
 
-    void propagateComponent(std::vector<PortBase*>& propagationStack) {
+    std::vector<Port*> createOutputPorts(std::string name, unsigned int W, unsigned int n) {
+        return createPorts(name, W, m_outputPorts, n);
+    }
+
+    void propagateComponent(std::vector<Port*>& propagationStack) {
         // Component has already been propagated
         if (m_propagationState == PropagationState::propagated)
             return;
@@ -89,7 +98,7 @@ public:
             // Registers are implicitely clocked by calling propagate() on its output ports.
             /** @remark register <must> be saved before propagateComponent reaches the register ! */
             m_propagationState = PropagationState::propagated;
-            for (const auto& s : getPorts<SimPort::Direction::out, PortBase>()) {
+            for (const auto& s : getPorts<SimPort::Direction::out, Port>()) {
                 s->propagate(propagationStack);
             }
         } else {
@@ -152,7 +161,7 @@ public:
             // not the case, the function will return. Iff the circuit is correctly connected, this component will at a
             // later point be visited, given that the input port which is currently not yet propagated, will become
             // propagated at some point, signalling its connected components to propagate.
-            for (const auto& input : getPorts<SimPort::Direction::in, PortBase>()) {
+            for (const auto& input : getPorts<SimPort::Direction::in, Port>()) {
                 if (!input->isPropagated())
                     return;
             }
@@ -167,7 +176,7 @@ public:
 
             // At this point, all input ports are assured to be propagated. In this case, it is safe to propagate
             // the outputs of the component.
-            for (const auto& s : getPorts<SimPort::Direction::out, PortBase>()) {
+            for (const auto& s : getPorts<SimPort::Direction::out, Port>()) {
                 s->propagate(propagationStack);
             }
             m_propagationState = PropagationState::propagated;
@@ -180,7 +189,7 @@ public:
         }
 
         // Signal all connected components of the current component to propagate
-        for (const auto& out : getPorts<SimPort::Direction::out, PortBase>()) {
+        for (const auto& out : getPorts<SimPort::Direction::out, Port>()) {
             for (const auto& in : out->getOutputPorts()) {
                 // With the input port of the connected component propagated, the parent component may be propagated.
                 // This will succeed if all input components to the parent component has been propagated.
@@ -208,19 +217,19 @@ public:
         if (m_inputPorts.size() == 0 && !hasSubcomponents() && m_sensitivityList.empty()) {
             // Component has no input ports - ie. component is a constant. propagate all output ports and set component
             // as propagated.
-            for (const auto& p : getPorts<SimPort::Direction::out, PortBase>())
+            for (const auto& p : getPorts<SimPort::Direction::out, Port>())
                 p->propagateConstant();
             m_propagationState = PropagationState::propagated;
         }
     }
 
     virtual void verifyComponent() const {
-        for (const auto& ip : getPorts<SimPort::Direction::in, PortBase>()) {
+        for (const auto& ip : getPorts<SimPort::Direction::in, Port>()) {
             if (!ip->isConnected()) {
                 throw std::runtime_error("Component: '" + getName() + "' has unconnected input '" + ip->getName());
             }
         }
-        for (const auto& op : getPorts<SimPort::Direction::out, PortBase>()) {
+        for (const auto& op : getPorts<SimPort::Direction::out, Port>()) {
             if (!op->isConnected()) {
                 throw std::runtime_error("Component: '" + getName() + "' has unconnected output '" + op->getName());
             }
@@ -228,29 +237,27 @@ public:
     }
 
 protected:
-    template <unsigned int W, typename E_t = void>
-    Port<W>& createPort(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container) {
+    template <typename E_t = void>
+    Port& createPort(std::string name, unsigned int W, std::set<std::unique_ptr<SimPort>, PortCompT>& container) {
         verifyIsUniquePortName(name);
-        Port<W>* port;
+        Port* port;
         if constexpr (std::is_void<E_t>::value) {
-            port = static_cast<Port<W>*>((*container.emplace(std::make_unique<Port<W>>(name, this)).first).get());
+            port = static_cast<Port*>((*container.emplace(std::make_unique<Port>(name, W, this)).first).get());
         } else {
-            port =
-                static_cast<Port<W>*>((*container.emplace(std::make_unique<EnumPort<W, E_t>>(name, this)).first).get());
+            port = static_cast<Port*>((*container.emplace(std::make_unique<EnumPort<E_t>>(name, W, this)).first).get());
         }
         return *port;
     }
 
-    template <unsigned int W>
-    std::vector<Port<W>*> createPorts(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container,
-                                      unsigned int n) {
-        std::vector<Port<W>*> ports;
-        Port<W>* port;
+    std::vector<Port*> createPorts(std::string name, unsigned int W,
+                                   std::set<std::unique_ptr<SimPort>, PortCompT>& container, unsigned int n) {
+        std::vector<Port*> ports;
+        Port* port;
         for (unsigned int i = 0; i < n; i++) {
             std::string i_name = name + "_" + std::to_string(i);
             verifyIsUniquePortName(i_name);
-            port = static_cast<Port<W>*>(
-                (*container.emplace(std::make_unique<Port<W>>(i_name.c_str(), this)).first).get());
+            port =
+                static_cast<Port*>((*container.emplace(std::make_unique<Port>(i_name.c_str(), W, this)).first).get());
             ports.push_back(port);
         }
         return ports;
@@ -263,7 +270,7 @@ protected:
         }
     }
 
-    std::vector<const PortBase*> m_sensitivityList;
+    std::vector<const Port*> m_sensitivityList;
     PropagationState m_propagationState = PropagationState::unpropagated;
 };
 

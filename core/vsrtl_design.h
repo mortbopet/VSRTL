@@ -220,7 +220,7 @@ private:
     std::vector<std::unique_ptr<SparseArray>> m_memories;
 
     bool m_isVerifiedAndInitialized = false;
-    std::vector<PortBase*> m_propagationStack;
+    std::vector<Port*> m_propagationStack;
 };
 
 }  // namespace core

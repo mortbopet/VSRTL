@@ -97,8 +97,8 @@ class RegisterBase : public ClockedComponent {
 public:
     RegisterBase(std::string name, SimComponent* parent) : ClockedComponent(name, parent) {}
 
-    virtual PortBase* getIn() = 0;
-    virtual PortBase* getOut() = 0;
+    virtual Port* getIn() = 0;
+    virtual Port* getOut() = 0;
 };
 
 template <unsigned int W>
@@ -139,8 +139,8 @@ public:
         }
     }
 
-    PortBase* getIn() override { return &in; }
-    PortBase* getOut() override { return &out; }
+    Port* getIn() override { return &in; }
+    Port* getOut() override { return &out; }
 
     INPUTPORT(in, W);
     OUTPUTPORT(out, W);
@@ -238,8 +238,8 @@ public:
         }
     }
 
-    PortBase* getIn() override { return &in; }
-    PortBase* getOut() override { return &out; }
+    Port* getIn() override { return &in; }
+    Port* getOut() override { return &out; }
 
     INPUTPORT(in, W);
     OUTPUTPORT(out, W);

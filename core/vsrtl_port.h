@@ -19,13 +19,12 @@ class Component;
 
 enum class PropagationState { unpropagated, propagated, constant };
 
-/**
- * @brief The PortBase class
- * Base class for ports, does not have a bit width property
- */
-class PortBase : public SimPort {
+class Port : public SimPort {
 public:
-    PortBase(std::string name, SimComponent* parent) : SimPort(name, parent) { assert(parent != nullptr); }
+    Port(std::string name, unsigned int W, SimComponent* parent) : SimPort(name, parent), m_W(W) {
+        assert(parent != nullptr);
+    }
+    bool isConnected() const { return m_inputPort != nullptr || m_propagationFunction; }
 
     bool isPropagated() const { return m_propagationState != PropagationState::unpropagated; }
     bool isConstant() const override { return m_propagationState == PropagationState::constant; }
@@ -34,35 +33,13 @@ public:
             m_propagationState == PropagationState::constant ? m_propagationState : PropagationState::unpropagated;
     }
 
-    virtual void propagate(std::vector<PortBase*>& propagationStack) = 0;
-    virtual void propagateConstant() = 0;
-    virtual void setPortValue() = 0;
-    virtual bool isConnected() const = 0;
-
-    /**
-     * @brief stringValue
-     * A port may define special string formatting to be displayed in the graphical library. If so, owning components
-     * should set the string value function to provide such values.
-     */
-    virtual bool isEnumPort() const override { return false; }
-    virtual std::string valueToEnumString() const override { throw std::runtime_error("This is not an enum port!"); }
-    virtual VSRTL_VT_U enumStringToValue(const char*) const override {
-        throw std::runtime_error("This is not an enum port!");
-    }
-
-protected:
-    PropagationState m_propagationState = PropagationState::unpropagated;
-};
-
-template <unsigned int W>
-class Port : public PortBase {
-public:
-    Port(std::string name, SimComponent* parent) : PortBase(name, parent) {}
-    bool isConnected() const override { return m_inputPort != nullptr || m_propagationFunction; }
-
     // Port connections are doubly linked
-    void operator>>(Port<W>& toThis) {
-        m_outputPorts.push_back(&toThis);
+    void operator>>(Port& toThis) {
+        if (toThis.getWidth() != getWidth()) {
+            throw std::runtime_error("Failed trying to connect port '" + getParent()->getName() + ":" + getName() +
+                                     "' to port '" + toThis.getParent()->getName() + ":" + toThis.getName() +
+                                     ". Port width mismatch '");
+        }
         if (toThis.m_inputPort != nullptr) {
             throw std::runtime_error(
                 "Failed trying to connect port '" + getParent()->getName() + ":" + getName() + "' to port '" +
@@ -70,30 +47,31 @@ public:
                 toThis.getInputPort()->getParent()->getName() + ":" + toThis.getInputPort()->getName());
         }
         toThis.m_inputPort = this;
+        m_outputPorts.push_back(&toThis);
     }
 
-    void operator>>(const std::vector<Port<W>*>& toThis) {
+    void operator>>(const std::vector<Port*>& toThis) {
         for (auto& p : toThis)
             *this >> *p;
     }
 
     template <typename T>
     T value() const {
-        return static_cast<T>(signextend<T, W>(m_value));
+        return static_cast<T>(signextend<T>(m_value, m_W));
     }
 
     VSRTL_VT_U uValue() const override { return value<VSRTL_VT_U>(); }
     VSRTL_VT_S sValue() const override { return value<VSRTL_VT_S>(); }
-    unsigned int getWidth() const override { return W; }
+    unsigned int getWidth() const override { return m_W; }
 
-    explicit operator VSRTL_VT_S() const { return signextend<VSRTL_VT_S, W>(m_value); }
+    explicit operator VSRTL_VT_S() const { return signextend<VSRTL_VT_S>(m_value, m_W); }
 
-    void setPortValue() override {
+    void setPortValue() {
         auto prePropagateValue = m_value;
         if (m_propagationFunction) {
             m_value = m_propagationFunction();
         } else {
-            m_value = getInputPort<Port<W>>()->template value<VSRTL_VT_U>();
+            m_value = getInputPort<Port>()->template value<VSRTL_VT_U>();
         }
         if (m_value != prePropagateValue) {
             // Signal all watcher of this port that the port value changed
@@ -103,20 +81,20 @@ public:
         }
     }
 
-    void propagate(std::vector<PortBase*>& propagationStack) override {
+    void propagate(std::vector<Port*>& propagationStack) {
         if (m_propagationState == PropagationState::unpropagated) {
             propagationStack.push_back(this);
             // Propagate the value to the ports which connect to this
-            for (const auto& port : getOutputPorts<Port<W>>())
+            for (const auto& port : getOutputPorts<Port>())
                 port->propagate(propagationStack);
             m_propagationState = PropagationState::propagated;
         }
     }
 
-    void propagateConstant() override {
+    void propagateConstant() {
         m_propagationState = PropagationState::constant;
         setPortValue();
-        for (const auto& port : getOutputPorts<Port<W>>())
+        for (const auto& port : getOutputPorts<Port>())
             port->propagateConstant();
     }
 
@@ -131,6 +109,17 @@ public:
     explicit operator VSRTL_VT_U() const { return m_value; }
     explicit operator bool() const { return m_value & 0b1; }
 
+    /**
+     * @brief stringValue
+     * A port may define special string formatting to be displayed in the graphical library. If so, owning components
+     * should set the string value function to provide such values.
+     */
+    virtual bool isEnumPort() const override { return false; }
+    virtual std::string valueToEnumString() const override { throw std::runtime_error("This is not an enum port!"); }
+    virtual VSRTL_VT_U enumStringToValue(const char*) const override {
+        throw std::runtime_error("This is not an enum port!");
+    }
+
 protected:
     // Port values are initialized to 0xdeadbeef for error detection reasons. In reality (in a circuit), this would
     // not be the case - the entire circuit is reset when the registers are reset (to 0), and the circuit state is
@@ -138,12 +127,14 @@ protected:
     VSRTL_VT_U m_value = 0xdeadbeef;
 
     std::function<VSRTL_VT_U()> m_propagationFunction = {};
+    PropagationState m_propagationState = PropagationState::unpropagated;
+    const unsigned int m_W;
 };
 
-template <unsigned int W, typename E_t>
-class EnumPort : public Port<W> {
+template <typename E_t>
+class EnumPort : public Port {
 public:
-    EnumPort(std::string name, Component* parent) : Port<W>(name, parent) {}
+    EnumPort(std::string name, unsigned int W, SimComponent* parent) : Port(name, W, parent) {}
 
     bool isEnumPort() const override { return true; }
     std::string valueToEnumString() const override {

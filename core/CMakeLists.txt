@@ -1,7 +1,12 @@
 cmake_minimum_required(VERSION 3.9)
 
-file(GLOB LIB_SOURCES *.cpp)
-file(GLOB LIB_HEADERS *.h)
+file(GLOB LIB_SOURCES
+    *.cpp
+    ops/*.cpp)
+file(GLOB LIB_HEADERS
+    *.h
+    ops/*.h)
+
 
 add_library(${VSRTL_CORE_LIB} ${LIB_SOURCES} ${LIB_HEADERS} )
 target_include_directories (${VSRTL_CORE_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
