@@ -11,7 +11,7 @@ namespace core {
 
 class OpBitExtr : public Component {
 public:
-    SetGraphicsType(Adder);
+    SetGraphicsType(Wire);
     OpBitExtr(std::string name, SimComponent* parent, unsigned int w_in, unsigned int lo, unsigned int hi)
         : Component(name, parent) {
         if (hi >= w_in || hi >= w_in) {
