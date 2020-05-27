@@ -37,8 +37,9 @@ public:
     void operator>>(Port& toThis) {
         if (toThis.getWidth() != getWidth()) {
             throw std::runtime_error("Failed trying to connect port '" + getParent()->getName() + ":" + getName() +
-                                     "' to port '" + toThis.getParent()->getName() + ":" + toThis.getName() +
-                                     ". Port width mismatch '");
+                                     +"[" + std::to_string(getWidth()) + "]" + "' to port '" +
+                                     toThis.getParent()->getName() + ":" + toThis.getName() + "[" +
+                                     std::to_string(toThis.getWidth()) + "]" + ". Port width mismatch '");
         }
         if (toThis.m_inputPort != nullptr) {
             throw std::runtime_error(
