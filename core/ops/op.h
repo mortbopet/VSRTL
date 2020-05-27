@@ -4,6 +4,7 @@
 
 // VSRTL Dynamic components
 #include "op_add.h"
+#include "op_bitextr.h"
 #include "op_div.h"
 #include "op_mul.h"
 #include "op_reg.h"
