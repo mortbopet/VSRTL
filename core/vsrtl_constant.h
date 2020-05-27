@@ -20,7 +20,7 @@ public:
     Constant(std::string name, SimComponent* parent, VSRTL_VT_U value = 0, unsigned int W = 0)
         : Component(name, parent), m_W(W) {
         if (m_W == 0) {
-            m_W = bitsToRepresentValue(value);
+            m_W = bitsToRepresentUValue(value);
         }
         m_value = value;
         if (!valueFitsInBitWidth(m_W, m_value)) {

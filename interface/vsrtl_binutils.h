@@ -34,6 +34,14 @@ constexpr inline unsigned generateBitmask(int n) {
     return static_cast<unsigned>((1 << n) - 1);
 }
 
+constexpr inline unsigned extractBits(unsigned x, int n, int offs) {
+    if (n == 0) {
+        return 0;
+    }
+    const unsigned bitmask = generateBitmask(n);
+    return ((x & (bitmask << offs)) >> offs) & bitmask;
+}
+
 constexpr inline uint32_t bitcount(int n) {
     unsigned count = 0;
     while (n > 0) {
@@ -70,14 +78,19 @@ constexpr inline unsigned ceillog2(unsigned x) {
     return x == 1 || x == 0 ? 1 : floorlog2(x - 1) + 1;
 }
 
-constexpr unsigned bitsToRepresentValue(int value) {
-    const int v = value < 0 ? -value : value;
-    const unsigned v_width = ceillog2(v) + ((bitcount(value) == 1) && (value != 0) && (value != 1) ? 1 : 0);
+constexpr unsigned bitsToRepresentUValue(unsigned v) {
+    const unsigned v_width = ceillog2(v) + ((bitcount(v) == 1) && (v != 0) && (v != 1) ? 1 : 0);
     return v_width;
 }
 
+constexpr unsigned bitsToRepresentSValue(int value) {
+    const unsigned v = value < 0 ? ~value : value;
+    const unsigned ubits = bitsToRepresentUValue(v);
+    return ubits + 1;
+}
+
 constexpr bool valueFitsInBitWidth(unsigned int width, int value) {
-    return bitsToRepresentValue(value) <= width;
+    return bitsToRepresentSValue(value) <= width;
 }
 
 }  // namespace vsrtl
