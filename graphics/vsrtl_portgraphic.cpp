@@ -31,7 +31,10 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
         // By default, display Enum value if underlying port is enum
         m_radix = Radix::Enum;
     }
-    port->changed.Connect(this, &PortGraphic::updateSlot);
+
+    // Connect changes from simulator through our signal translation mechanism, see doc wrt. simChanged
+    port->changed.Connect(this, &PortGraphic::emitSimChanged);
+    connect(this, &PortGraphic::simChanged, this, &PortGraphic::updateSlot);
 
     m_colorAnimation = std::make_unique<QPropertyAnimation>(this, "penColor");
     m_colorAnimation->setDuration(100);
@@ -66,6 +69,10 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
                                ~(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable));
 
     updateGeometry();
+}
+
+void PortGraphic::emitSimChanged() {
+    emit simChanged();
 }
 
 void PortGraphic::updateSlot() {

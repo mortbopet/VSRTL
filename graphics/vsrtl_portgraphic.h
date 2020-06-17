@@ -80,10 +80,21 @@ public:
     void setSide(Side side);
     Side getSide() const { return m_side; }
 
+signals:
+    /**
+     * @brief simChanged
+     * Given that the simulator signal/slot framework is not the Qt framework, we here provide a translation signal for
+     * simulator-to-Qt signals. This is done to allow for using Qt's Qt::AutoConnection connection type which handles
+     * cross-thread signal-slot connections if the simulator is executing in some none-GUI thread.
+     */
+    void simChanged();
+
 private slots:
     void updatePenColor();
 
 private:
+    /** @brief see simChanged **/
+    void emitSimChanged();
     void redraw();
     void propagateRedraw();
     void updatePen(bool aboutToBeSelected = false, bool aboutToBeDeselected = false);

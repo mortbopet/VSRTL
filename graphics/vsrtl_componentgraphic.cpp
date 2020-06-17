@@ -35,9 +35,16 @@ namespace vsrtl {
 static constexpr qreal c_resizeMargin = GRID_SIZE;
 
 ComponentGraphic::ComponentGraphic(SimComponent* c, ComponentGraphic* parent) : GridComponent(c, parent) {
-    c->changed.Connect(this, &ComponentGraphic::updateSlot);
+    // Connect changes from simulator through our signal translation mechanism, see doc wrt. simChanged
+    c->changed.Connect(this, &ComponentGraphic::emitSimChanged);
+    connect(this, &ComponentGraphic::simChanged, this, &ComponentGraphic::updateSlot);
+
     c->registerGraphic(this);
     verifySpecialSignals();
+}
+
+void ComponentGraphic::emitSimChanged() {
+    emit simChanged();
 }
 
 void ComponentGraphic::verifySpecialSignals() const {
