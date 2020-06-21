@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <typeindex>
 #include <vector>
+#include <stdexcept>
 
 #include "vsrtl.h"
 #include "vsrtl_gfxobjecttypes.h"
