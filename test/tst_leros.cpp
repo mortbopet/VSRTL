@@ -2,6 +2,29 @@
 
 #include "Leros/SingleCycleLeros/SingleCycleLeros.h"
 
+using SAS = SparseAddressSpace<uint32_t>;
+using Seg = SAS::Segment;
+using SegSPtr = std::shared_ptr<Seg>;
+
+SegSPtr createSegment(uint32_t start, const std::vector<uint8_t>& data) {
+    auto s = std::make_shared<Seg>();
+    s->data = data;
+    s->start = start;
+    return s;
+}
+
+std::vector<uint8_t> shortToByteVec(const std::vector<uint16_t>& shortArr) {
+    std::vector<uint8_t> byteVec;
+    byteVec.reserve(shortArr.size() * 2);
+
+    for (const auto& v : shortArr) {
+        byteVec.push_back(v & 0xFF);
+        byteVec.push_back((v >> 8) & 0xFF);
+    }
+
+    return byteVec;
+}
+
 class tst_Leros : public QObject {
     Q_OBJECT
 
@@ -41,7 +64,9 @@ void tst_Leros::incInRegister() {
      * br       -6
      */
     std::vector<unsigned short> program = {0x2000, 0x0901, 0x3000, 0x8FFD};
-    design.m_memory->addInitializationMemory(0x0, program.data(), program.size());
+    auto seg = createSegment(0, shortToByteVec(program));
+
+    design.m_memory->getInitSas().insertSegment(*seg);
     design.verifyAndInitialize();
 }
 void tst_Leros::incInMemory() {
@@ -63,7 +88,8 @@ void tst_Leros::incInMemory() {
     std::vector<unsigned short> program = {0x2901, 0x3000, 0x5000, 0x2100, 0x7000,
                                            0x6000, 0x0901, 0x7000, 0x2100, 0x8FFC};
 
-    design.m_memory->addInitializationMemory(0x0, program.data(), program.size());
+    auto seg = createSegment(0, shortToByteVec(program));
+    design.m_memory->getInitSas().insertSegment(*seg);
     design.verifyAndInitialize();
 
     constexpr int accTarget = 10;
@@ -101,7 +127,9 @@ void tst_Leros::incInAccumulator() {
      * br -2
      */
     std::vector<unsigned short> program = {0x0901, 0x8FFF};
-    design.m_memory->addInitializationMemory(0x0, program.data(), program.size());
+    auto seg = createSegment(0, shortToByteVec(program));
+
+    design.m_memory->getInitSas().insertSegment(*seg);
     design.verifyAndInitialize();
 
     constexpr int accTarget = 10;

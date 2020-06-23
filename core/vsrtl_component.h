@@ -14,7 +14,6 @@
 #include "../interface/vsrtl_binutils.h"
 #include "vsrtl_defines.h"
 #include "vsrtl_port.h"
-#include "vsrtl_sparsearray.h"
 
 #include "../interface/vsrtl_gfxobjecttypes.h"
 

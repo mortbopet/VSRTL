@@ -16,7 +16,7 @@ namespace core {
 
 // An ADDRESSSPACE instance defines a distinct address space, implemented by a sparse array. Multiple memory
 // components may be linked to the same sparse array to provide separate access ports to a shared address space.
-#define ADDRESSSPACE(name) SparseArray* name = this->createMemory()
+#define ADDRESSSPACE(name) AddressSpace* name = this->createMemory()
 
 /**
  * @brief The Design class
@@ -191,8 +191,8 @@ public:
         return false;
     }
 
-    SparseArray* createMemory() {
-        auto sptr = std::make_unique<SparseArray>();
+    AddressSpace* createMemory() {
+        auto sptr = std::make_unique<AddressSpace>(128);
         auto* ptr = sptr.get();
         m_memories.push_back(std::move(sptr));
         return ptr;
@@ -217,7 +217,7 @@ private:
     std::map<SimComponent*, std::vector<SimComponent*>> m_componentGraph;
     std::set<RegisterBase*> m_registers;
     std::set<ClockedComponent*> m_clockedComponents;
-    std::vector<std::unique_ptr<SparseArray>> m_memories;
+    std::vector<std::unique_ptr<AddressSpace>> m_memories;
 
     bool m_isVerifiedAndInitialized = false;
     std::vector<PortBase*> m_propagationStack;

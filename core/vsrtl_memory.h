@@ -4,8 +4,8 @@
 #include "vsrtl_component.h"
 #include "vsrtl_defines.h"
 #include "vsrtl_register.h"
-#include "vsrtl_sparsearray.h"
 
+#include "../external/SparseAddressSpace/SparseAddressSpace.h"
 #include "../interface/vsrtl_gfxobjecttypes.h"
 
 #include <cstdint>
@@ -26,20 +26,24 @@ class BaseMemory {
 public:
     BaseMemory() {}
 
-    void setMemory(SparseArray* mem) { m_memory = mem; }
+    void setMemory(AddressSpace* mem) { m_memory = mem; }
 
-    VSRTL_VT_U read(VSRTL_VT_U address) { return m_memory->readMem<byteIndexed>(address); }
+    VSRTL_VT_U read(VSRTL_VT_U address) {
+        if constexpr (!byteIndexed)
+            address <<= 2;
 
-    void write(VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
-        if constexpr (byteIndexed) {
-            m_memory->writeMem(address, value, size);
-        } else {
-            m_memory->writeMem(address << 2, value, size);
-        }
+        return m_memory->readValue<VSRTL_VT_U>(address);
+    }
+
+    void write(VSRTL_VT_U byteAddress, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
+        if constexpr (!byteIndexed)
+            byteAddress <<= 2;
+
+        m_memory->writeValue(byteAddress, value, size);
     }
 
 protected:
-    SparseArray* m_memory = nullptr;
+    AddressSpace* m_memory = nullptr;
 };
 
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
@@ -137,7 +141,7 @@ public:
         _rd_mem->data_out >> data_out;
     }
 
-    void setMemory(SparseArray* mem) {
+    void setMemory(AddressSpace* mem) {
         _wr_mem->setMemory(mem);
         _rd_mem->setMemory(mem);
     }
