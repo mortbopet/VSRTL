@@ -55,13 +55,19 @@ public:
 
     void save() override {
         const bool writeEnable = static_cast<bool>(wr_en);
-        const VSRTL_VT_U addr_v = addr.template value<VSRTL_VT_U>();
-        const VSRTL_VT_U data_in_v = data_in.template value<VSRTL_VT_U>();
-        const VSRTL_VT_U data_out_v = this->read(addr_v);
-        auto ev = MemoryEviction({writeEnable, addr_v, data_out_v, wr_width.uValue()});
-        saveToStack(ev);
-        if (writeEnable)
+
+        if (!writeEnable) {
+            // push dummy value onto rewind stack
+            auto ev = MemoryEviction({writeEnable, 0, 0, 0});
+            saveToStack(ev);
+        } else {
+            const VSRTL_VT_U addr_v = addr.template value<VSRTL_VT_U>();
+            const VSRTL_VT_U data_in_v = data_in.template value<VSRTL_VT_U>();
+            const VSRTL_VT_U data_out_v = this->read(addr_v);
+            auto ev = MemoryEviction({writeEnable, addr_v, data_out_v, wr_width.uValue()});
+            saveToStack(ev);
             this->write(addr_v, data_in_v, wr_width.uValue());
+        }
     }
 
     void reverse() override {
@@ -103,10 +109,11 @@ template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = tru
 class MemorySyncRd : public WrMemory<addrWidth, dataWidth, byteIndexed> {
 public:
     MemorySyncRd(std::string name, SimComponent* parent) : WrMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {
-        data_out << [=] { return this->read(this->addr.template value<VSRTL_VT_U>()); };
+        data_out << [=] { return rd_en.uValue() ? this->read(addr.template value<VSRTL_VT_U>()) : data_out.uValue(); };
     }
 
     OUTPUTPORT(data_out, dataWidth);
+    INPUTPORT(rd_en, 1);
 
 private:
     std::unordered_map<VSRTL_VT_U, uint8_t> m_memory;
@@ -120,9 +127,10 @@ class RdMemory : public Component, public BaseMemory<addrWidth, dataWidth, byteI
 public:
     SetGraphicsType(ClockedComponent);
     RdMemory(std::string name, SimComponent* parent) : Component(name, parent) {
-        data_out << [=] { return this->read(addr.template value<VSRTL_VT_U>()); };
+        data_out << [=] { return rd_en.uValue() ? this->read(addr.template value<VSRTL_VT_U>()) : data_out.uValue(); };
     }
 
+    INPUTPORT(rd_en, 1);
     INPUTPORT(addr, addrWidth);
     OUTPUTPORT(data_out, dataWidth);
 };
@@ -134,6 +142,7 @@ public:
     MemoryAsyncRd(std::string name, SimComponent* parent) : Component(name, parent) {
         addr >> _wr_mem->addr;
         wr_en >> _wr_mem->wr_en;
+        rd_en >> _rd_mem->rd_en;
         data_in >> _wr_mem->data_in;
         wr_width >> _wr_mem->wr_width;
 
@@ -152,6 +161,7 @@ public:
     INPUTPORT(addr, addrWidth);
     INPUTPORT(data_in, dataWidth);
     INPUTPORT(wr_en, 1);
+    INPUTPORT(rd_en, 1);
     INPUTPORT(wr_width, ceillog2(dataWidth / 8 + 1));  // # bytes
     OUTPUTPORT(data_out, dataWidth);
 };

@@ -130,7 +130,11 @@ void tst_Leros::incInAccumulator() {
     auto seg = createSegment(0, shortToByteVec(program));
 
     design.m_memory->getInitSas().insertSegment(*seg);
-    design.verifyAndInitialize();
+    try {
+        design.verifyAndInitialize();
+    } catch (const std::exception& exc) {
+        QFAIL(exc.what());
+    }
 
     constexpr int accTarget = 10;
     QVERIFY(design.acc_reg->out.uValue() == 0);

@@ -192,7 +192,7 @@ public:
     }
 
     AddressSpace* createMemory() {
-        auto sptr = std::make_unique<AddressSpace>(128);
+        auto sptr = std::make_unique<AddressSpace>(129);
         auto* ptr = sptr.get();
         m_memories.push_back(std::move(sptr));
         return ptr;

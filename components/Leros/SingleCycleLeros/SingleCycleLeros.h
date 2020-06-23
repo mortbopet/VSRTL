@@ -78,6 +78,9 @@ public:
         mem_out_data_mux->out >> data_mem->data_in;
         mem_out_addr_mux->out >> data_mem->addr;
         dm_wr_en->out >> data_mem->wr_en;
+        1 >> data_mem->rd_en;
+        1 >> regs->rd_en;
+        1 >> instr_mem->rd_en;
         ctrl_comp->dm_op >> dm_wr_en->op1;
         mem_op::wr >> dm_wr_en->op2;
 
