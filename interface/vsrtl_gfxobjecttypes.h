@@ -51,9 +51,7 @@ public:
 // Supported graphical objects
 DefineGraphicsType(Component, {});
 
-DefineGraphicsType(Register, L({"in", "out"}));
-
-DefineGraphicsType(RegisterBank, {});
+DefineGraphicsType(Register, {});
 
 DefineGraphicsType(Wire, {});
 

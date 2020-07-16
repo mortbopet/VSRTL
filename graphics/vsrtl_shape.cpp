@@ -28,16 +28,14 @@ ShapeRegister::ShapeRegister() {
          },
          QRect(0, 0, 3, 4)});
 
-    ShapeRegister::registerComponentShape(
-        GraphicsIDFor(ClockedComponent),
-        {[](QTransform t) {
-             QPainterPath shape;
-             shape.addPolygon(t.map(QPolygonF({QPointF(0.3, 1), QPointF(0.5, 0.8), QPointF(0.7, 1), QPointF(0.3, 1)})));
-             shape.addRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))));
-             shape.setFillRule(Qt::WindingFill);
-             return shape;
-         },
-         QRect(0, 0, 3, 4)});
+    ShapeRegister::registerComponentShape(GraphicsIDFor(ClockedComponent),
+                                          {[](QTransform t) {
+                                               QPainterPath shape;
+                                               shape.addRect(t.mapRect(QRectF(QPointF(0, 0), QPointF(1, 1))));
+                                               shape.setFillRule(Qt::WindingFill);
+                                               return shape;
+                                           },
+                                           QRect(0, 0, 3, 4)});
 
     // Logic gates
     ShapeRegister::registerComponentShape(
