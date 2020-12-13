@@ -50,5 +50,7 @@ enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99
 
 #define PORT_INNER_MARGIN 5
 
+enum ZHeight { Components, Wires, ValueLabels = 10000 };
+
 }  // namespace vsrtl
 #endif  // VSRTL_GRAPHICS_DEFINES_H

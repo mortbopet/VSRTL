@@ -73,11 +73,8 @@ public:
     void setExpanded(bool isExpanded);
     void registerWire(WireGraphic* wire);
 
-    /**
-     * @brief setUserVisible
-     * Called whenever the user enables the visibility of a component.
-     */
-    void setUserVisible(bool state);
+    void makeVirtualChild(QGraphicsItem* item);
+
     const auto& outputPorts() const { return m_outputPorts; }
 
 signals:
@@ -127,17 +124,13 @@ protected:
     void createSubcomponents();
     QRectF sceneGridRect() const;
 
+    std::vector<QGraphicsItem*> m_virtualChildren;
+    QPointF oldPos;
+
     bool m_restrictSubcomponentPositioning = false;
     bool m_inResizeDragZone = false;
     bool m_resizeDragging = false;
     bool m_isTopLevelSerializedComponent = false;
-    /**
-     * @brief m_userHidden
-     * True if the user has asked to hide this component. Maintains logical hide-state even
-     * if the parent component is collaposed, rendering this component as non-visible in the scene.
-     */
-    bool m_userHidden = false;
-    bool userHidden() const { return m_userHidden; }
 
     std::set<PortGraphic*> m_indicators;
     std::vector<ComponentGraphic*> m_subcomponents;

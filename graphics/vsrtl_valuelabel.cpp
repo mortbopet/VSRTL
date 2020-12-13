@@ -13,6 +13,7 @@ ValueLabel::ValueLabel(Radix& type, const PortGraphic* port, QGraphicsItem* pare
     : Label("", parent, 10), m_type(type), m_port(port) {
     setFlag(ItemIsSelectable, true);
     setAcceptHoverEvents(true);
+    m_userHidden = true;
 }
 
 void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
@@ -46,7 +47,7 @@ void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QAction* showLabel = menu.addAction("Show value");
     showLabel->setCheckable(true);
     showLabel->setChecked(isVisible());
-    QObject::connect(showLabel, &QAction::triggered, [this](bool checked) { setVisible(checked); });
+    QObject::connect(showLabel, &QAction::triggered, [this](bool checked) { setUserVisible(checked); });
     menu.addAction(showLabel);
 
     menu.exec(event->screenPos());

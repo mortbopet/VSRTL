@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QGraphicsItem>
+
 #include "vsrtl_graphicsbase.h"
 #include "vsrtl_scene.h"
 
@@ -61,6 +62,27 @@ public:
             }
         }
     }
+
+    /**
+     * @brief m_userHidden
+     * True if the user has asked to hide this component. Maintains logical hide-state even
+     * if the parent component is collaposed, rendering this component as non-visible in the scene.
+     */
+    bool userHidden() const { return m_userHidden; }
+
+    /**
+     * @brief setUserVisible
+     * Called whenever the user enables the visibility of a graphics object.
+     */
+    void setUserVisible(bool visible) {
+        m_userHidden = !visible;
+        setVisibleIfNotHidden(visible);
+    }
+
+    void setVisibleIfNotHidden(bool visible) { QGraphicsItem::setVisible(visible && !m_userHidden); }
+
+protected:
+    bool m_userHidden = false;
 };
 
 }  // namespace vsrtl

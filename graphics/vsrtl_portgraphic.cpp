@@ -58,9 +58,15 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
                                        dynamic_cast<ComponentGraphic*>(parentItem()->parentItem()));
     }
 
-    m_valueLabel = new ValueLabel(m_radix, this, this);
+    // Value labels should be drawn on top of other components as well as wires - within - the parent component of the
+    // component that owns this port. As such, we make the valueLabel a child of the parentofparent component.
+    // Note that care is taken in itemChange() to ensure that the valueLabel moves with this port.
+    auto* parentOfParent = parentItem()->parentItem();
+    Q_ASSERT(parentOfParent != nullptr && "Can top-level components have ports?");
+    m_valueLabel = new ValueLabel(m_radix, this, parentOfParent);
+    dynamic_cast<ComponentGraphic*>(parentItem())->makeVirtualChild(m_valueLabel);
     m_valueLabel->setVisible(false);
-    m_valueLabel->moveBy(3, -6);  // start position (may be dragged)
+    m_valueLabel->setZValue(ZHeight::ValueLabels);
 
     m_portWidthLabel = new Label(QString::number(port->getWidth() - 1) + ":0", this, 7);
     m_portWidthLabel->setMoveable(false);
@@ -86,7 +92,7 @@ void PortGraphic::updateSlot() {
 
 void PortGraphic::setValueLabelVisible(bool visible) {
     if (!userHidden() || m_valueLabel->isVisible()) {
-        m_valueLabel->setVisible(visible);
+        m_valueLabel->setUserVisible(visible);
         updateSlot();
     }
 }
@@ -287,10 +293,11 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
         setPortVisible(value.toBool());
     }
 
-    return QGraphicsItem::itemChange(change, value);
+    return GraphicsBaseItem::itemChange(change, value);
 }
 
 void PortGraphic::setPortVisible(bool visible) {
+    m_valueLabel->setVisibleIfNotHidden(visible);
     m_inputPortPoint->setVisible(visible);
     m_outputPortPoint->setVisible(visible);
     if (m_inputWire && m_type == PortType::in) {

@@ -63,7 +63,7 @@ void ComponentGraphic::verifySpecialSignals() const {
 void ComponentGraphic::initialize() {
     Q_ASSERT(scene() != nullptr);
 
-    setFlags(ItemIsSelectable | ItemSendsScenePositionChanges);
+    setFlags(ItemIsSelectable | ItemSendsScenePositionChanges | flags());
     setAcceptHoverEvents(true);
     setMoveable();
 
@@ -317,11 +317,6 @@ void ComponentGraphic::setExpanded(bool state) {
     }
 }
 
-void ComponentGraphic::setUserVisible(bool visible) {
-    m_userHidden = !visible;
-    setVisible(visible);
-}
-
 ComponentGraphic* ComponentGraphic::getParent() const {
     return dynamic_cast<ComponentGraphic*>(parentItem());
 }
@@ -419,6 +414,11 @@ void ComponentGraphic::handlePortPosChanged(const SimPort* port) {
     }
 }
 
+void ComponentGraphic::makeVirtualChild(QGraphicsItem* item) {
+    QGraphicsItem::setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+    m_virtualChildren.push_back(item);
+}
+
 void ComponentGraphic::setLocked(bool locked) {
     // No longer give the option of expand the component if the scene is locked
     if (m_expandButton)
@@ -458,7 +458,18 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
         }
     }
 
-    return QGraphicsItem::itemChange(change, value);
+    if (change == QGraphicsItem::ItemPositionHasChanged) {
+        if (!m_virtualChildren.empty()) {
+            const QPointF newPos = qvariant_cast<QPointF>(value);
+            const QPointF dPos = newPos - oldPos;
+            for (const auto& item : m_virtualChildren) {
+                item->setPos(item->pos() + dPos);
+            }
+            oldPos = newPos;
+        }
+    }
+
+    return GridComponent::itemChange(change, value);
 }
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {

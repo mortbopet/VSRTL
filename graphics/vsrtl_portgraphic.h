@@ -160,13 +160,6 @@ public:
             /// @todo: build an error report
         }
 
-        // Serialize port value label
-        try {
-            archive(cereal::make_nvp("ValueLabel", *m_valueLabel));
-        } catch (cereal::Exception e) {
-            /// @todo: build an error report
-        }
-
         // Serialize port width label visibility
         try {
             bool visible = m_portWidthLabel->isVisible();

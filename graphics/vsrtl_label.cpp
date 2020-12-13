@@ -59,7 +59,7 @@ void Label::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         auto* editAction = menu.addAction("Edit label");
         connect(editAction, &QAction::triggered, this, &Label::editTriggered);
         auto* hideAction = menu.addAction("Hide label");
-        connect(hideAction, &QAction::triggered, [=] { setVisible(false); });
+        connect(hideAction, &QAction::triggered, [=] { setUserVisible(false); });
     }
 
     menu.exec(event->screenPos());
