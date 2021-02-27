@@ -32,3 +32,13 @@ make -j$(nproc)
   * CMake
 * **Graphics**
   * Qt 5.9.3+: https://www.qt.io/download
+
+---
+In papers and reports, please refer to VSRTL as follows: 'Morten Borup Petersen. VSRTL. https://github.com/mortbopet/VSRTL', e.g. using the following BibTeX code:
+```
+@MISC{VSRTL,
+	author = {Morten Borup Petersen},
+	title = {VSRTL},
+	howpublished = "\url{https://github.com/mortbopet/VSRTL}"
+}
+```
