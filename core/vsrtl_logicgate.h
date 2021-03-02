@@ -62,8 +62,8 @@ template <unsigned int W, unsigned int nInputs>
 class Not : public LogicGate<W, nInputs> {
 public:
     SetGraphicsType(Not);
-    Not(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent, 1) {
-        this->out << [=] { return signextend(~this->in[0]->template value<VSRTL_VT_U>()); };
+    Not(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
+        this->out << [=] { return ~this->in[0]->template value<VSRTL_VT_U>(); };
     }
 };
 
