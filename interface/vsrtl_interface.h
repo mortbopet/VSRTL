@@ -6,10 +6,10 @@
 #include <map>
 #include <memory>
 #include <set>
+#include <stdexcept>
 #include <type_traits>
 #include <typeindex>
 #include <vector>
-#include <stdexcept>
 
 #include "vsrtl.h"
 #include "vsrtl_gfxobjecttypes.h"
@@ -450,7 +450,10 @@ public:
      * @pre A call to propagate() must be done, to set the initial state of the circuit
      */
     virtual void clock() {
-        m_cycleCount++;
+#ifndef NDEBUG
+        assert(m_cycleCount != m_cycleCountPre && "Sim library should update cycle count!");
+        m_cycleCountPre = m_cycleCount;
+#endif
 
         if (clockedSignalsEnabled()) {
             designWasClocked.Emit();
@@ -463,7 +466,10 @@ public:
      * their last transaction. The circuit shall be repropagated and assume its previous-cycle state.
      */
     virtual void reverse() {
-        m_cycleCount--;
+#ifndef NDEBUG
+        assert(m_cycleCount != m_cycleCountPre && "Sim library should update cycle count!");
+        m_cycleCountPre = m_cycleCount;
+#endif
         if (clockedSignalsEnabled()) {
             designWasReversed.Emit();
         }
@@ -481,7 +487,10 @@ public:
      * the circuit in terms of not all component values being 0.
      */
     virtual void reset() {
-        m_cycleCount = 0;
+#ifndef NDEBUG
+        assert(m_cycleCount == 0 && "Sim library should have reset cycle count!");
+        m_cycleCountPre = -1;
+#endif
         if (clockedSignalsEnabled()) {
             designWasReset.Emit();
         }
@@ -536,6 +545,10 @@ protected:
 
 private:
     bool m_emitsClockedSignals = true;
+
+#ifndef NDEBUG
+    long long m_cycleCountPre = 0;
+#endif
 };
 
 }  // namespace vsrtl

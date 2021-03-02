@@ -42,7 +42,7 @@ public:
         }
 
         ClockedComponent::pushReversibleCycle();
-
+        m_cycleCount++;
         propagateDesign();
         SimDesign::clock();
     }
@@ -57,6 +57,7 @@ public:
                 reg->reverse();
             }
             ClockedComponent::popReversibleCycle();
+            m_cycleCount--;
             propagateDesign();
         }
         SimDesign::reverse();
@@ -81,6 +82,7 @@ public:
             reg->reset();
         propagateDesign();
         ClockedComponent::resetReverseStackCount();
+        m_cycleCount = 0;
         SimDesign::reset();
     }
 
