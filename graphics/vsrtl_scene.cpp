@@ -210,12 +210,10 @@ void VSRTLScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 void VSRTLScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     if (m_selectedPoint && m_currentDropTargets.size() != 0) {
         Q_ASSERT(m_currentDropTargets.size() == 1);
-        (*m_currentDropTargets.begin())->pointDrop(m_selectedPoint);
-
-        for (const auto& point : m_currentDropTargets) {
-            point->pointDragLeave(m_selectedPoint);
-            m_currentDropTargets.erase(point);
-        }
+        auto* mergepoint = *m_currentDropTargets.begin();
+        mergepoint->pointDrop(m_selectedPoint);
+        mergepoint->pointDragLeave(m_selectedPoint);
+        m_currentDropTargets.clear();
     }
     QGraphicsScene::mouseReleaseEvent(event);
 }
