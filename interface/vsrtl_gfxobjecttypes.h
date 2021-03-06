@@ -61,6 +61,8 @@ DefineGraphicsType(ClockedComponent, {});
 
 DefineGraphicsType(And, {});
 
+DefineGraphicsType(Nand, {});
+
 DefineGraphicsType(Or, {});
 
 DefineGraphicsType(Xor, {});

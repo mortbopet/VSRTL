@@ -49,10 +49,21 @@ ShapeRegister::ShapeRegister() {
             shape.lineTo(QPointF(0, 0));
             return shape;
         }});
+
+    ShapeRegister::registerComponentShape(
+        GraphicsIDFor(Nand), {[](QTransform t) {
+            constexpr double dotRadius = 0.1;
+            constexpr double gateRhs = 1.0 - dotRadius * 2;
+            constexpr double linearEnd = 0.3;
             QPainterPath shape;
-            shape.cubicTo(QPointF(0, 0), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
-            shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1, 1)), t.map(QPointF(0, 1)));
+            shape.lineTo(t.map(QPointF(linearEnd, 0)));
+            shape.cubicTo(t.map(QPointF(linearEnd, 0)), t.map(QPointF(gateRhs, 0)), t.map(QPointF(gateRhs, 0.5)));
+            shape.cubicTo(t.map(QPointF(gateRhs, 0.5)), t.map(QPointF(gateRhs, 1)), t.map(QPointF(linearEnd, 1)));
+            shape.lineTo(t.map(QPointF(0, 1)));
             shape.lineTo(QPointF(0, 0));
+            QRectF circle = t.mapRect(QRectF(QPointF(0, 0), QPointF(dotRadius, dotRadius)));
+            shape.addEllipse(t.map(QPointF(gateRhs + dotRadius, 0.5)), circle.width(), circle.height());
+            shape.setFillRule(Qt::WindingFill);
             return shape;
         }});
 

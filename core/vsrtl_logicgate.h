@@ -29,6 +29,20 @@ public:
 };
 
 template <unsigned int W, unsigned int nInputs>
+class Nand : public LogicGate<W, nInputs> {
+public:
+    SetGraphicsType(Nand) Nand(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
+        this->out << [=] {
+            auto v = this->in[0]->template value<VSRTL_VT_U>();
+            for (unsigned i = 1; i < this->in.size(); i++) {
+                v = v & this->in[i]->template value<VSRTL_VT_U>();
+            }
+            return ~v;
+        };
+    }
+};
+
+template <unsigned int W, unsigned int nInputs>
 class Or : public LogicGate<W, nInputs> {
 public:
     SetGraphicsType(Or);
