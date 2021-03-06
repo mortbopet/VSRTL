@@ -40,6 +40,15 @@ ShapeRegister::ShapeRegister() {
     // Logic gates
     ShapeRegister::registerComponentShape(
         GraphicsIDFor(And), {[](QTransform t) {
+            constexpr double linearEnd = 0.3;
+            QPainterPath shape;
+            shape.lineTo(t.map(QPointF(linearEnd, 0)));
+            shape.cubicTo(t.map(QPointF(linearEnd, 0)), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
+            shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1, 1)), t.map(QPointF(linearEnd, 1)));
+            shape.lineTo(t.map(QPointF(0, 1)));
+            shape.lineTo(QPointF(0, 0));
+            return shape;
+        }});
             QPainterPath shape;
             shape.cubicTo(QPointF(0, 0), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
             shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1, 1)), t.map(QPointF(0, 1)));
@@ -64,11 +73,15 @@ ShapeRegister::ShapeRegister() {
     ShapeRegister::registerComponentShape(
         GraphicsIDFor(Or), {[](QTransform t) {
             QPainterPath shape;
-            shape.lineTo(t.map(QPointF(0.4, 0)));
-            shape.cubicTo(t.map(QPointF(0.4, 0)), t.map(QPointF(0.95, 0.05)), t.map(QPointF(1, 0.5)));
-            shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(0.95, 0.95)), t.map(QPointF(0.4, 1)));
+            constexpr double linearEnd = 0.3;
+            constexpr double cornerIndent = 0.09;
+            shape.lineTo(t.map(QPointF(linearEnd, 0)));
+            shape.cubicTo(t.map(QPointF(linearEnd, 0)), t.map(QPointF(1 - cornerIndent, cornerIndent)),
+                          t.map(QPointF(1, 0.5)));
+            shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1 - cornerIndent, 1 - cornerIndent)),
+                          t.map(QPointF(linearEnd, 1)));
             shape.lineTo(t.map(QPointF(0, 1)));
-            shape.cubicTo(t.map(QPointF(0, 1)), t.map(QPointF(0.4, 0.5)), t.map(QPointF(0, 0)));
+            shape.cubicTo(t.map(QPointF(0, 1)), t.map(QPointF(linearEnd, 0.5)), t.map(QPointF(0, 0)));
             return shape;
         }});
 
