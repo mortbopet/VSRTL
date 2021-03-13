@@ -162,7 +162,7 @@ public:
     SUBCOMPONENT(dm_wr_en, Eq<mem_op::width()>);
     SUBCOMPONENT(reg_wr_en, Eq<mem_op::width()>);
 
-    ADDRESSSPACE(m_memory);
+    ADDRESSSPACEMM(m_memory);
     ADDRESSSPACE(m_regMemory);
 };
 

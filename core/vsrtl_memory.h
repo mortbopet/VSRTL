@@ -28,14 +28,10 @@ public:
 
     void setMemory(SparseArray* mem) { m_memory = mem; }
 
-    VSRTL_VT_U read(VSRTL_VT_U address) { return m_memory->readMem<byteIndexed>(address); }
+    VSRTL_VT_U read(VSRTL_VT_U address) { return m_memory->readMem(byteIndexed ? address : address << 2); }
 
     void write(VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
-        if constexpr (byteIndexed) {
-            m_memory->writeMem(address, value, size);
-        } else {
-            m_memory->writeMem(address << 2, value, size);
-        }
+        m_memory->writeMem(byteIndexed ? address : address << 2, value, size);
     }
 
 protected:
@@ -123,7 +119,7 @@ public:
     OUTPUTPORT(data_out, dataWidth);
 };
 
-template <unsigned int addrWidth, unsigned int dataWidth>
+template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
 class MemoryAsyncRd : public Component {
 public:
     SetGraphicsType(ClockedComponent);
@@ -142,8 +138,8 @@ public:
         _rd_mem->setMemory(mem);
     }
 
-    SUBCOMPONENT(_rd_mem, TYPE(RdMemory<addrWidth, dataWidth>));
-    SUBCOMPONENT(_wr_mem, TYPE(WrMemory<addrWidth, dataWidth>));
+    SUBCOMPONENT(_rd_mem, TYPE(RdMemory<addrWidth, dataWidth, byteIndexed>));
+    SUBCOMPONENT(_wr_mem, TYPE(WrMemory<addrWidth, dataWidth, byteIndexed>));
 
     INPUTPORT(addr, addrWidth);
     INPUTPORT(data_in, dataWidth);

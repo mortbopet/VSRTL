@@ -55,7 +55,7 @@ public:
     SUBCOMPONENT(idx_reg, Register<regSize>);
     SUBCOMPONENT(acc_reg, Register<regSize>);
 
-    ADDRESSSPACE(m_memory);
+    ADDRESSSPACEMM(m_memory);
 };
 
 class WriteSameIdx : public Design {
@@ -77,7 +77,7 @@ public:
     SUBCOMPONENT(mem, TYPE(MemorySyncRd<ceillog2(regs), regWidth>));
     SUBCOMPONENT(inc_adder, Adder<regWidth>);
 
-    ADDRESSSPACE(m_memory);
+    ADDRESSSPACEMM(m_memory);
 };
 
 }  // namespace vsrtl

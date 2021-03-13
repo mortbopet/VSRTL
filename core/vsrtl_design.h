@@ -16,7 +16,8 @@ namespace core {
 
 // An ADDRESSSPACE instance defines a distinct address space, implemented by a sparse array. Multiple memory
 // components may be linked to the same sparse array to provide separate access ports to a shared address space.
-#define ADDRESSSPACE(name) SparseArray* name = this->createMemory()
+#define ADDRESSSPACE(name) SparseArray* name = this->createMemory<SparseArray>()
+#define ADDRESSSPACEMM(name) SparseArrayMM* name = this->createMemory<SparseArrayMM>()
 
 /**
  * @brief The Design class
@@ -193,8 +194,10 @@ public:
         return false;
     }
 
-    SparseArray* createMemory() {
-        auto sptr = std::make_unique<SparseArray>();
+    template <typename T>
+    T* createMemory() {
+        static_assert(std::is_base_of<SparseArray, T>::value);
+        auto sptr = std::make_unique<T>();
         auto* ptr = sptr.get();
         m_memories.push_back(std::move(sptr));
         return ptr;
