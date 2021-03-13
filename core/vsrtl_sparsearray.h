@@ -103,25 +103,31 @@ struct IOFunctors {
  */
 class SparseArrayMM : public SparseArray {
 public:
+    struct MMapValue {
+        uint32_t base;
+        unsigned size;
+        IOFunctors io;
+    };
+
     virtual void writeMem(VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) override {
-        if (auto* io = findMMapRegion(address)) {
-            io->ioWrite(address, value, size);
+        if (auto* mmapregion = findMMapRegion(address)) {
+            mmapregion->io.ioWrite(address - mmapregion->base, value, size);
         } else {
             SparseArray::writeMem(address, value, size);
         }
     }
 
     virtual VSRTL_VT_U readMem(VSRTL_VT_U address, unsigned width = 4) override {
-        if (auto* io = findMMapRegion(address)) {
-            return io->ioRead(address, width);
+        if (auto* mmapregion = findMMapRegion(address)) {
+            return mmapregion->io.ioRead(address - mmapregion->base, width);
         } else {
             return SparseArray::readMem(address, width);
         }
     }
 
     virtual VSRTL_VT_U readMemConst(VSRTL_VT_U address, unsigned width = 4) const override {
-        if (auto* io = findMMapRegion(address)) {
-            return io->ioRead(address, width);
+        if (auto* mmapregion = findMMapRegion(address)) {
+            return mmapregion->io.ioRead(address - mmapregion->base, width);
         } else {
             return SparseArray::readMemConst(address, width);
         }
@@ -135,10 +141,11 @@ public:
         // Assert that there lies no memory regions within the region that we are about to insert
         assert(findMMapRegion(baseAddr) == nullptr && findMMapRegion(baseAddr + size - 1) == nullptr &&
                "Tried to add memory mapped region which overlaps with some other region");
-        m_mmapRegions[baseAddr] = MMapValue{size, io};
+        assert(size > 0);
+        m_mmapRegions[baseAddr + size - 1] = MMapValue{baseAddr, size, io};
     }
-    void removeRegion(VSRTL_VT_U baseAddr) {
-        auto it = m_mmapRegions.find(baseAddr);
+    void removeRegion(VSRTL_VT_U baseAddr, unsigned size) {
+        auto it = m_mmapRegions.find(baseAddr + size - 1);
         assert(it != m_mmapRegions.end() && "Tried to remove non-existing memory mapped region");
         m_mmapRegions.erase(it);
     }
@@ -148,7 +155,7 @@ public:
      * Attempts to locate the memory mapped region which @param address resides in. If located, returns I/O capabilities
      * to this region, else returns nullptr.
      */
-    const IOFunctors* findMMapRegion(VSRTL_VT_U address) const {
+    const MMapValue* findMMapRegion(VSRTL_VT_U address) const {
         if (m_mmapRegions.empty()) {
             return nullptr;
         }
@@ -156,22 +163,19 @@ public:
         auto it = m_mmapRegions.lower_bound(address);
         if (it == m_mmapRegions.end()) {
             return nullptr;
-        } else if (address >= it->first + it->second.size) {
+        } else if (address < it->second.base) {
             return nullptr;
         }
-        return &it->second.io;
+
+        return &it->second;
     }
 
 private:
-    struct MMapValue {
-        unsigned size;
-        IOFunctors io;
-    };
-
     /**
      * @brief m_mmapRegions
-     * Map of memory-mapped regions. Key is the base-address of the region. Value represents the size of the region
-     * (used to determine indexing into the region) as well as I/O functions.
+     * Map of memory-mapped regions. Key is the last address of the region. Might seem like a weird choice (instead of
+     * base address of the region), however, this logic works better with std::map::lower_bound. Value represents the
+     * size of the region (used to determine indexing into the region) as well as I/O functions.
      */
     std::map<uint32_t, MMapValue> m_mmapRegions;
 };
