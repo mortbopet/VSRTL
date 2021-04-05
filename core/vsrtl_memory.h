@@ -66,7 +66,7 @@ public:
         }
     }
 
-    void forceValue(VSRTL_VT_U addr, VSRTL_VT_U value) override { this->write(addr, value); }
+    void forceValue(VSRTL_VT_U address, VSRTL_VT_U value) override { this->write(address, value); }
 
     INPUTPORT(addr, addrWidth);
     INPUTPORT(data_in, dataWidth);
