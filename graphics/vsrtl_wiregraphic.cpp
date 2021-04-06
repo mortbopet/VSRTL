@@ -111,8 +111,12 @@ void PortPoint::removeOutputWire(WireSegment* wire) {
     m_outputWires.erase(iter);
 }
 
+bool WirePoint::canMergeWith(WirePoint* point) {
+    return m_parent->canMergePoints(this, point) != WireGraphic::MergeType::CannotMerge;
+}
+
 void WirePoint::pointDrop(WirePoint* point) {
-    if (m_parent->canMergePoints(this, point) == WireGraphic::MergeType::CannotMerge)
+    if (!canMergeWith(point))
         return;
 
     m_parent->mergePoints(this, point);

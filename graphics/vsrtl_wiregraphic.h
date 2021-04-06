@@ -71,6 +71,7 @@ public:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
     const QPen& getPen() override;
 
+    bool canMergeWith(WirePoint* point);
     void pointDrop(WirePoint* point);
     void pointDragEnter(WirePoint* point);
     void pointDragLeave(WirePoint* point);

@@ -39,7 +39,9 @@ void VSRTLScene::handleWirePointMove(QGraphicsSceneMouseEvent* event) {
         std::set<WirePoint*> pointsUnderCursor;
         for (const auto& item : items(event->scenePos())) {
             if (auto* point = dynamic_cast<WirePoint*>(item)) {
-                pointsUnderCursor.insert(point);
+                if (m_selectedPoint->canMergeWith(point)) {
+                    pointsUnderCursor.insert(point);
+                }
             }
         }
 
@@ -209,7 +211,6 @@ void VSRTLScene::mouseMoveEvent(QGraphicsSceneMouseEvent* event) {
 
 void VSRTLScene::mouseReleaseEvent(QGraphicsSceneMouseEvent* event) {
     if (m_selectedPoint && m_currentDropTargets.size() != 0) {
-        Q_ASSERT(m_currentDropTargets.size() == 1);
         auto* mergepoint = *m_currentDropTargets.begin();
         mergepoint->pointDrop(m_selectedPoint);
         mergepoint->pointDragLeave(m_selectedPoint);
