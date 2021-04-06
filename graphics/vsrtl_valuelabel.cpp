@@ -19,8 +19,10 @@ void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* option
     // Paint a label box behind the text
     painter->save();
     if (!m_port->getPort()->isConstant()) {
+        const bool darkmode = static_cast<VSRTLScene*>(scene())->darkmode();
+
         QRectF textRect = shape().boundingRect();
-        painter->fillRect(textRect, Qt::white);
+        painter->fillRect(textRect, darkmode ? QColor("#454545") : Qt::white);
         painter->setBrush(Qt::NoBrush);
         painter->setPen(QPen(Qt::black, 1));
         painter->drawRect(textRect);
