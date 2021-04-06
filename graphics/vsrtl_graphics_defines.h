@@ -25,6 +25,7 @@ enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99
 #define WIRE_DEFAULT_COLOR QColor("#636363")
 #define WIRE_SELECTED_COLOR QColor("#FEF160")
 #define WIRE_BOOLHIGH_COLOR QColor("#6EEB83")
+#define WIRE_HIGH_COLOR QColor("#FFD52E")
 #define BACKGROUND_COLOR QColor("#222222")
 #define BUTTON_COLLAPSE_COLOR QColor("#6bc8ff")
 #define BUTTON_EXPAND_COLOR QColor("#26a65b")

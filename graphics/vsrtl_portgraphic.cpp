@@ -38,7 +38,8 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
 
     m_colorAnimation = std::make_unique<QPropertyAnimation>(this, "penColor");
     m_colorAnimation->setDuration(100);
-    m_colorAnimation->setStartValue(WIRE_BOOLHIGH_COLOR);
+    m_colorAnimation->setStartValue(m_port->getWidth() == 1 ? WIRE_BOOLHIGH_COLOR : WIRE_HIGH_COLOR);
+
     m_colorAnimation->setEndValue(WIRE_DEFAULT_COLOR);
     m_colorAnimation->setEasingCurve(QEasingCurve::Linear);
     connect(m_colorAnimation.get(), &QPropertyAnimation::valueChanged, this, &PortGraphic::updatePenColor);
