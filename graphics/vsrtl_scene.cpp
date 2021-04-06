@@ -25,6 +25,18 @@ T* getSingleSelectedItem(const QGraphicsScene& scene) {
 
 VSRTLScene::VSRTLScene(QObject* parent) : QGraphicsScene(parent) {
     connect(this, &QGraphicsScene::selectionChanged, this, &VSRTLScene::handleSelectionChanged);
+
+    m_darkmodeAction = new QAction("Darkmode", this);
+    m_darkmodeAction->setCheckable(true);
+    m_darkmodeAction->setChecked(m_darkmode);
+    connect(m_darkmodeAction, &QAction::toggled, [=](bool checked) {
+        m_darkmode = checked;
+
+        // Background
+        this->setBackgroundBrush(m_darkmode ? QBrush(QColor(Qt::darkGray).darker(300)) : Qt::NoBrush);
+
+        this->update();
+    });
 }
 
 /**
@@ -186,17 +198,14 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
             this->update();
         });
 
-        auto* darkModeAction = drawMenu->addAction("Darkmode");
-        darkModeAction->setCheckable(true);
-        darkModeAction->setChecked(m_darkmode);
-        connect(darkModeAction, &QAction::toggled, [=](bool checked) {
-            m_darkmode = checked;
-            this->setBackgroundBrush(m_darkmode ? QBrush(QColor(Qt::darkGray).darker(300)) : Qt::NoBrush);
-            this->update();
-        });
+        drawMenu->addAction(m_darkmodeAction);
     }
 
     menu.exec(event->screenPos());
+}
+
+void VSRTLScene::setDarkmode(bool enabled) {
+    m_darkmodeAction->setChecked(enabled);
 }
 
 void VSRTLScene::setPortWidthsVisible(bool visible) {

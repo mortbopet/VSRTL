@@ -22,6 +22,11 @@ Label::Label(const QString& text, QGraphicsItem* parent, int fontSize) : Graphic
     setText(text);
 }
 
+void Label::forceDefaultTextColor(const QColor& color) {
+    m_defaultColorOverridden = true;
+    QGraphicsTextItem::setDefaultTextColor(color);
+}
+
 void Label::setText(const QString& text) {
     setPlainText(text);
     applyFormatChanges();
@@ -66,14 +71,16 @@ void Label::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 };
 
 void Label::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
-    QGraphicsTextItem::paint(painter, option, w);
-
     // There exists a bug within the drawing of QGraphicsTextItem wherein the painter pen does not return to its initial
     // state wrt. the draw style (the pen draw style is set to Qt::DashLine after finishing painting whilst the
     // QGraphicsTextItem is selected).
-    auto pen = painter->pen();
-    pen.setStyle(Qt::SolidLine);
-    painter->setPen(pen);
+    painter->save();
+    if (!m_defaultColorOverridden) {
+        setDefaultTextColor(static_cast<VSRTLScene*>(scene())->darkmode() ? Qt::white : Qt::black);
+    }
+
+    QGraphicsTextItem::paint(painter, option, w);
+    painter->restore();
 }
 
 void Label::mouseDoubleClickEvent(QGraphicsSceneMouseEvent*) {

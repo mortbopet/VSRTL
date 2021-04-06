@@ -66,8 +66,8 @@ void VSRTLWidget::setDesign(SimDesign* design) {
     clearDesign();
     m_design = design;
     initializeDesign();
-
     setLocked(m_scene->isLocked());
+    setDarkmode(m_scene->darkmode());
 }
 
 void VSRTLWidget::zoomToFit() {
@@ -76,6 +76,10 @@ void VSRTLWidget::zoomToFit() {
 
 void VSRTLWidget::setOutputPortValuesVisible(bool visible) {
     m_scene->setPortValuesVisibleForType(PortType::out, visible);
+}
+
+void VSRTLWidget::setDarkmode(bool enabled) {
+    m_scene->setDarkmode(enabled);
 }
 
 void VSRTLWidget::setLocked(bool locked) {

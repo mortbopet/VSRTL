@@ -34,6 +34,7 @@ public:
     bool isReversible();
 
     void setOutputPortValuesVisible(bool visible);
+    void setDarkmode(bool enabled);
     void setLocked(bool locked);
     void zoomToFit();
 

@@ -465,7 +465,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     painter->save();
     QColor color;
     if (static_cast<VSRTLScene*>(scene())->darkmode()) {
-        color = hasSubcomponents() && isExpanded() ? QColor(QColor(Qt::darkGray).darker()) : QColor("#c0cdd1");
+        color = hasSubcomponents() && isExpanded() ? QColor(QColor(Qt::darkGray).darker()) : QColor("#80848a");
     } else {
         color = hasSubcomponents() && isExpanded() ? QColor("#ecf0f1") : QColor(Qt::white);
     }

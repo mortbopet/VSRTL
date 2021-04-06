@@ -1,6 +1,7 @@
 #ifndef VSRTL_SCENE_H
 #define VSRTL_SCENE_H
 
+#include <QAction>
 #include <QGraphicsScene>
 #include <QPainter>
 
@@ -27,6 +28,7 @@ public:
 
     bool isLocked() const { return m_isLocked; }
     bool darkmode() const { return m_darkmode; }
+    void setDarkmode(bool enabled);
 
 private:
     void handleSelectionChanged();
@@ -36,6 +38,7 @@ private:
     bool m_showGrid = true;
     std::set<WirePoint*> m_currentDropTargets;
     WirePoint* m_selectedPoint = nullptr;
+    QAction* m_darkmodeAction = nullptr;
 
     /**
      * @brief m_isLocked

@@ -24,6 +24,8 @@ public:
     void setAlignment(Qt::Alignment alignment);
     void setPointSize(int size);
     void setLocked(bool locked) override;
+    void forceDefaultTextColor(const QColor& color);
+    void clearForcedDefaultTextColor() { m_defaultColorOverridden = false; }
 
     /**
      * @brief updateText
@@ -100,6 +102,7 @@ protected:
 
     bool m_hoverable = true;
     QFont m_font;
+    bool m_defaultColorOverridden = false;
     Qt::Alignment m_alignment = Qt::AlignCenter;
 };
 
