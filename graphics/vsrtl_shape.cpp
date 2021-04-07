@@ -42,11 +42,12 @@ ShapeRegister::ShapeRegister() {
         GraphicsIDFor(And), {[](QTransform t) {
             constexpr double linearEnd = 0.3;
             QPainterPath shape;
+            shape.moveTo(t.map(QPointF(0, 0)));
             shape.lineTo(t.map(QPointF(linearEnd, 0)));
             shape.cubicTo(t.map(QPointF(linearEnd, 0)), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
             shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1, 1)), t.map(QPointF(linearEnd, 1)));
             shape.lineTo(t.map(QPointF(0, 1)));
-            shape.lineTo(QPointF(0, 0));
+            shape.lineTo(t.map(QPointF(0, 0)));
             return shape;
         }});
 
@@ -56,11 +57,12 @@ ShapeRegister::ShapeRegister() {
             constexpr double gateRhs = 1.0 - dotRadius * 2;
             constexpr double linearEnd = 0.3;
             QPainterPath shape;
+            shape.moveTo(t.map(QPointF(0, 0)));
             shape.lineTo(t.map(QPointF(linearEnd, 0)));
             shape.cubicTo(t.map(QPointF(linearEnd, 0)), t.map(QPointF(gateRhs, 0)), t.map(QPointF(gateRhs, 0.5)));
             shape.cubicTo(t.map(QPointF(gateRhs, 0.5)), t.map(QPointF(gateRhs, 1)), t.map(QPointF(linearEnd, 1)));
             shape.lineTo(t.map(QPointF(0, 1)));
-            shape.lineTo(QPointF(0, 0));
+            shape.lineTo(t.map(QPointF(0, 0)));
             QRectF circle = t.mapRect(QRectF(QPointF(0, 0), QPointF(dotRadius, dotRadius)));
             shape.addEllipse(t.map(QPointF(gateRhs + dotRadius, 0.5)), circle.width(), circle.height());
             shape.setFillRule(Qt::WindingFill);
@@ -70,13 +72,14 @@ ShapeRegister::ShapeRegister() {
     ShapeRegister::registerComponentShape(
         GraphicsIDFor(Xor), {[](QTransform t) {
             QPainterPath shape;
-            shape.moveTo(t.map(QPointF(0.1, 0)));
-            shape.cubicTo(QPointF(0.1, 0), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
+            shape.moveTo(t.map(QPointF(0, 0)));
+            shape.lineTo(t.map(QPointF(0.1, 0)));
+            shape.cubicTo(t.map(QPointF(0.1, 0)), t.map(QPointF(1, 0)), t.map(QPointF(1, 0.5)));
             shape.cubicTo(t.map(QPointF(1, 0.5)), t.map(QPointF(1, 1)), t.map(QPointF(0.1, 1)));
             shape.cubicTo(t.map(QPointF(0.1, 1)), t.map(QPointF(0.5, 0.5)), t.map(QPointF(0.1, 0)));
-            shape.moveTo(0, 0);
-            shape.cubicTo(QPointF(0, 0), t.map(QPointF(0.4, 0.5)), t.map(QPointF(0, 1)));
-            shape.cubicTo(t.map(QPointF(0, 1)), t.map(QPointF(0.4, 0.5)), QPointF(0, 0));
+            shape.moveTo(t.map(QPointF(0, 0)));
+            shape.cubicTo(t.map(QPointF(0, 0)), t.map(QPointF(0.4, 0.5)), t.map(QPointF(0, 1)));
+            shape.cubicTo(t.map(QPointF(0, 1)), t.map(QPointF(0.4, 0.5)), t.map(QPointF(0, 0)));
             shape.setFillRule(Qt::WindingFill);
             return shape;
         }});
@@ -86,6 +89,7 @@ ShapeRegister::ShapeRegister() {
             QPainterPath shape;
             constexpr double linearEnd = 0.3;
             constexpr double cornerIndent = 0.09;
+            shape.moveTo(t.map(QPointF(0, 0)));
             shape.lineTo(t.map(QPointF(linearEnd, 0)));
             shape.cubicTo(t.map(QPointF(linearEnd, 0)), t.map(QPointF(1 - cornerIndent, cornerIndent)),
                           t.map(QPointF(1, 0.5)));
