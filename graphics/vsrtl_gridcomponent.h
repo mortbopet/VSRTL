@@ -16,6 +16,14 @@ class GridComponent : public QObject, public GraphicsBaseItem<QGraphicsItem> {
 public:
     GridComponent(SimComponent* c, GridComponent* parent);
 
+    enum class RotationDirection { RightHand, LeftHand };
+    /**
+     * @brief rotate
+     * Attempt to rotate the component in the direction of @p dir
+     */
+    void gridRotate(const RotationDirection& dir);
+    int gridRotation() const { return m_gridRotation; }
+
     /**
      * @brief adjust
      * Attempt to expand the currently visible grid rect. Bounded by current minimum rect size.
@@ -79,6 +87,8 @@ signals:
     void portPosChanged(const SimPort* p);
 
 protected:
+    int m_gridRotation = 0;  // Rotation angle, in the range [0, 360[ in intervals of 90 deg.
+
     SimComponent* m_component = nullptr;
     /**
      * @brief spreadPorts
@@ -108,6 +118,12 @@ private:
      * Spread all ports currently located on @p side
      */
     void spreadPortsOnSide(const Side& side);
+
+    /**
+     * @brief rotatePorts
+     * Rotates all ports in the provided @param dir
+     */
+    void rotatePorts(const RotationDirection& dir);
 
     /**
      * @brief Rect update functions

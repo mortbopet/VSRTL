@@ -270,6 +270,15 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         }
     }
 
+    // ======================== Rotation menu ============================ //
+    if ((m_component->getParent() != nullptr) && !isLocked()) {
+        auto* rotationMenu = menu.addMenu("Rotate");
+        auto* rotateClockwiseAction = rotationMenu->addAction("+90º");
+        auto* rotateCounterClockwiseAction = rotationMenu->addAction("-90º");
+        connect(rotateClockwiseAction, &QAction::triggered, [=] { gridRotate(RotationDirection::RightHand); });
+        connect(rotateCounterClockwiseAction, &QAction::triggered, [=] { gridRotate(RotationDirection::LeftHand); });
+    }
+
     if ((m_component->getParent() != nullptr) && !isLocked()) {
         auto* hideAction = menu.addAction("Hide component");
         connect(hideAction, &QAction::triggered, [=] {
@@ -329,12 +338,18 @@ ComponentGraphic* ComponentGraphic::getParent() const {
 void ComponentGraphic::updateGeometry() {
     prepareGeometryChange();
     const QRectF sceneRect = sceneGridRect();
+    const QPointF sceneRectCenter = {sceneRect.width() / 2.0, sceneRect.height() / 2.0};
     const QRect& currentGridRect = getCurrentComponentRect();
 
-    // Update the draw shape, scaling it to the current scene size of the component grid rect
+    // Apply rotation around center of shape. All shape points are defined in grid [x,y] in [0:1], so rotate around
+    // [0.5, 0.5]
+    // Next, separately apply the scaling through a secondary matrix (The transformation gets a lot simpler like this,
+    // rather than composing translation + rotation +translation + scaling in a single matrix.
     QTransform t;
-    t.scale(sceneRect.width(), sceneRect.height());
-    m_shape = ShapeRegister::getComponentShape(m_component->getGraphicsID(), t);
+    QMatrix mat;
+    mat.scale(sceneRect.width(), sceneRect.height());
+    t.translate(0.5, 0.5).rotate(gridRotation()).translate(-0.5, -0.5);
+    m_shape = mat.map(ShapeRegister::getComponentShape(m_component->getGraphicsID(), t));
 
     // Position the expand-button
     if (hasSubcomponents()) {
@@ -342,8 +357,8 @@ void ComponentGraphic::updateGeometry() {
             m_expandButton->setPos(QPointF(0, 0));
         } else {
             // Center
-            const qreal x = sceneRect.width() / 2 - m_expandButton->boundingRect().width() / 2;
-            const qreal y = sceneRect.height() / 2 - m_expandButton->boundingRect().height() / 2;
+            const qreal x = sceneRectCenter.x() - m_expandButton->boundingRect().width() / 2;
+            const qreal y = sceneRectCenter.y() - m_expandButton->boundingRect().height() / 2;
             m_expandButton->setPos(QPointF(x, y));
         }
     }
@@ -364,21 +379,23 @@ void ComponentGraphic::updateGeometry() {
                 m_gridPoints << QPoint(x, y);
     }
 
-    // Adjust label position through scaling by the relative size change of the component.
-    const auto& lastComponentRect = getLastComponentRect();
-    if (lastComponentRect != QRect()) {
-        const auto widthScaledChanged = static_cast<qreal>(currentGridRect.width()) / lastComponentRect.width();
-        const auto heightScaledChanged = static_cast<qreal>(currentGridRect.height()) / lastComponentRect.height();
+    if (!isSerializing()) {
+        // Adjust label position through scaling by the relative size change of the component.
+        const auto& lastComponentRect = getLastComponentRect();
+        if (lastComponentRect != QRect()) {
+            const auto widthScaledChanged = static_cast<qreal>(currentGridRect.width()) / lastComponentRect.width();
+            const auto heightScaledChanged = static_cast<qreal>(currentGridRect.height()) / lastComponentRect.height();
 
-        // Scale the positioning of the label, adjusting it accordingly to the component size change
-        auto labelPos = m_label->pos();
-        labelPos.rx() *= widthScaledChanged;
-        labelPos.ry() *= heightScaledChanged;
-        m_label->setPos(labelPos);
-    } else {
-        // First time setting label position. Position label centered above component.
-        m_label->setPos((sceneRect.width() / 2) - m_label->boundingRect().width() / 2,
-                        -m_label->boundingRect().height());
+            // Scale the positioning of the label, adjusting it accordingly to the component size change
+            auto labelPos = m_label->pos();
+            labelPos.rx() *= widthScaledChanged;
+            labelPos.ry() *= heightScaledChanged;
+            m_label->setPos(labelPos);
+        } else {
+            // First time setting label position. Position label centered above component.
+            m_label->setPos((sceneRect.width() / 2) - m_label->boundingRect().width() / 2,
+                            -m_label->boundingRect().height());
+        }
     }
 }
 

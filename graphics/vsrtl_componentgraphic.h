@@ -209,6 +209,12 @@ public:
             /// @todo: build an error report
         }
 
+        // Serialize rotation
+        try {
+            archive(cereal::make_nvp("rot", m_gridRotation));
+        } catch (cereal::Exception e) {
+        }
+
         // Serialize ports
         for (const auto& pm : {m_inputPorts, m_outputPorts}) {
             for (const auto& p : pm) {
@@ -308,8 +314,8 @@ public:
             /// @todo: build an error report
         }
 
+        updateGeometry();
         setSerializing(false);
-        update();
     }
 };
 }  // namespace vsrtl

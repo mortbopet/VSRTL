@@ -220,6 +220,16 @@ QRect GridComponent::getContractedMinimumGridRect() const {
     return shapeMinRect;
 }
 
+void GridComponent::gridRotate(const RotationDirection& dir) {
+    m_lastComponentRect = getCurrentComponentRect();
+    m_gridRotation += (dir == RotationDirection::RightHand ? 90 : -90);
+    getCurrentComponentRectRef().setHeight(m_lastComponentRect.width());
+    getCurrentComponentRectRef().setWidth(m_lastComponentRect.height());
+
+    rotatePorts(dir);
+    emit gridRectChanged();
+}
+
 void GridComponent::updateCurrentComponentRect(int dx, int dy) {
     m_lastComponentRect = getCurrentComponentRect();
     getCurrentComponentRectRef().adjust(0, 0, dx, dy);
@@ -301,6 +311,30 @@ bool GridComponent::adjustPort(SimPort* port, QPoint newPos) {
         emit portPosChanged(p);
     }
     return movedPorts.size() > 0;
+}
+
+void GridComponent::rotatePorts(const RotationDirection& dir) {
+    std::vector<std::pair<Side, ComponentBorder::PortIdBiMap>> oldPorts;
+    for (const auto& side : {Side::Left, Side::Right, Side::Top, Side::Bottom}) {
+        oldPorts.push_back({side, m_border->sideToMap(side)});
+    }
+
+    for (const auto& sidePorts : oldPorts) {
+        for (const auto& port : sidePorts.second.portToId) {
+            Side newSide;
+            // clang-format off
+            switch(sidePorts.first) {
+                case Side::Top:     newSide = dir == RotationDirection::RightHand ? Side::Right : Side::Left; break;
+                case Side::Left:    newSide = dir == RotationDirection::RightHand ? Side::Top : Side::Bottom; break;
+                case Side::Right:   newSide = dir == RotationDirection::RightHand ? Side::Bottom : Side::Top; break;
+                case Side::Bottom:  newSide = dir == RotationDirection::RightHand ? Side::Left : Side::Right; break;
+            }
+            // clang-format on
+
+            m_border->movePort(port.first, PortPos{newSide, port.second});
+            emit portPosChanged(port.first);
+        }
+    }
 }
 
 void GridComponent::spreadPortsOnSide(const Side& side) {
