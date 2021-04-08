@@ -31,7 +31,7 @@ ComponentGraphic* VSRTLView::lookupGraphicForComponent(const SimComponent* c) {
 
 void VSRTLView::zoomToFit(const QGraphicsItem* tlc) {
     fitInView(tlc->boundingRect(), Qt::KeepAspectRatio);
-    const auto m = matrix();
+    const auto m = transform();
 
     // When zooming to fit, we want to adjust the current view via. fitInView, and then derive the zoom factor
     // corresponding to the scale factor which was set by fitInView.
@@ -42,7 +42,7 @@ void VSRTLView::zoomToFit(const QGraphicsItem* tlc) {
         // revert to the deafult zoom amount if some too small zoom is detected when trying to fit into view.
         m_zoom = s_zoomDefault;
     } else {
-        m_zoom = std::log2(matrix().m11()) * s_zoomScale + s_zoomDefault;
+        m_zoom = std::log2(transform().m11()) * s_zoomScale + s_zoomDefault;
     }
 
     setupMatrix();
@@ -50,7 +50,7 @@ void VSRTLView::zoomToFit(const QGraphicsItem* tlc) {
 
 void VSRTLView::wheelEvent(QWheelEvent* e) {
     if (e->modifiers() & Qt::ControlModifier) {
-        if (e->delta() > 0)
+        if (e->angleDelta().y() > 0)
             zoomIn(s_zoomInterval);
         else
             zoomOut(s_zoomInterval);
@@ -73,9 +73,9 @@ void VSRTLView::zoomOut(double level) {
 void VSRTLView::setupMatrix() {
     const double scale = std::pow(2.0, (m_zoom - s_zoomDefault) / s_zoomScale);
 
-    QMatrix matrix;
+    QTransform matrix;
     matrix.scale(scale, scale);
 
-    setMatrix(matrix);
+    setTransform(matrix);
 }
 }  // namespace vsrtl

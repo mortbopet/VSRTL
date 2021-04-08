@@ -148,7 +148,7 @@ public:
 
         try {
             archive(cereal::make_nvp("Component border", portPosSerialMap));
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 

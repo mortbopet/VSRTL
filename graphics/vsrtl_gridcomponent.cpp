@@ -321,7 +321,7 @@ void GridComponent::rotatePorts(const RotationDirection& dir) {
 
     for (const auto& sidePorts : oldPorts) {
         for (const auto& port : sidePorts.second.portToId) {
-            Side newSide;
+            Side newSide = Side();
             // clang-format off
             switch(sidePorts.first) {
                 case Side::Top:     newSide = dir == RotationDirection::RightHand ? Side::Right : Side::Left; break;

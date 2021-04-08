@@ -40,7 +40,7 @@ public:
             bool v = isVisible();
             archive(cereal::make_nvp("Visible", v));
             setVisible(v);
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
@@ -48,7 +48,7 @@ public:
             bool bold = m_font.bold();
             archive(cereal::make_nvp("Bold", bold));
             m_font.setBold(bold);
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
@@ -56,7 +56,7 @@ public:
             bool italic = m_font.italic();
             archive(cereal::make_nvp("Italic", italic));
             m_font.setItalic(italic);
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
@@ -64,7 +64,7 @@ public:
             int ptSize = m_font.pointSize();
             archive(cereal::make_nvp("PtSize", ptSize));
             m_font.setPointSize(ptSize);
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
@@ -72,7 +72,7 @@ public:
             QString text = toPlainText();
             archive(cereal::make_nvp("Text", text));
             setPlainText(text);
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
@@ -80,7 +80,7 @@ public:
             QPointF p = pos();
             archive(cereal::make_nvp("Pos", p));
             setPos(p);
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
@@ -89,7 +89,7 @@ public:
             archive(cereal::make_nvp("Alignment", alignment));
             m_alignment = static_cast<Qt::Alignment>(alignment);
             setAlignment(m_alignment);
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 

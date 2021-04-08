@@ -11,11 +11,10 @@
 #include <typeindex>
 #include <vector>
 
+#include "Signals/Signal.h"
 #include "vsrtl.h"
 #include "vsrtl_gfxobjecttypes.h"
 #include "vsrtl_parameter.h"
-
-#include "../external/Signals/Signal.h"
 
 namespace vsrtl {
 

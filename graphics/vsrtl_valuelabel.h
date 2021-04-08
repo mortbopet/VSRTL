@@ -25,7 +25,6 @@ public:
 private:
     Radix& m_type;
     const PortGraphic* m_port = nullptr;
-    unsigned int m_maxBitWidth;
 };
 
 }  // namespace vsrtl

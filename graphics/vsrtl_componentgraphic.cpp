@@ -151,7 +151,7 @@ void ComponentGraphic::loadLayoutFile(const QString& fileName) {
 
     try {
         archive(cereal::make_nvp("ComponentGraphic", *this));
-    } catch (cereal::Exception e) {
+    } catch (const cereal::Exception& e) {
         /// @todo: build an error report
     }
 
@@ -187,7 +187,7 @@ void ComponentGraphic::saveLayout() {
     m_isTopLevelSerializedComponent = true;
     try {
         archive(cereal::make_nvp("ComponentGraphic", *this));
-    } catch (cereal::Exception e) {
+    } catch (const cereal::Exception& e) {
         /// @todo: build an error report
     }
     m_isTopLevelSerializedComponent = false;

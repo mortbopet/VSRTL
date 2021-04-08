@@ -204,7 +204,7 @@ public:
     void setInitValue(VSRTL_VT_U value) { m_initvalue = value; }
 
     void reset() override {
-        for (int i = 0; i < m_savedValues.size(); i++) {
+        for (unsigned i = 0; i < m_savedValues.size(); i++) {
             m_savedValues[i] = m_initvalue;
         }
         m_reverseStack.clear();

@@ -57,8 +57,10 @@ ParameterDialog::ParameterDialog(SimComponent* component, QWidget* parent)
                 }
             });
         } else if (auto* pt = dynamic_cast<Parameter<std::vector<int>>*>(p)) {
+            Q_UNUSED(pt);
             Q_ASSERT(false && "todo");
         } else if (auto* pt = dynamic_cast<Parameter<std::vector<std::string>>*>(p)) {
+            Q_UNUSED(pt);
             Q_ASSERT(false && "todo");
         } else {
             Q_ASSERT(false && "Unknown parameter type");

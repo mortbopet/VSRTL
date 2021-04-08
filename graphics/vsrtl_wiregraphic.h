@@ -290,7 +290,8 @@ public:
             auto* start = w->getStart();
             auto* end = w->getEnd();
 
-            int startIdx, endIdx;
+            int startIdx = 0;
+            int endIdx = 0;
 
             if (m_fromPort->getPortPoint(PortType::out) == start) {
                 startIdx = 0;

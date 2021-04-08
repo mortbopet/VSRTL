@@ -57,7 +57,7 @@ Netlist::Netlist(SimDesign& design, QWidget* parent) : QWidget(parent), ui(new U
 }
 
 void Netlist::setCurrentViewExpandState(bool state) {
-    QTreeView* view;
+    QTreeView* view = nullptr;
     switch (ui->netlistViews->currentIndex()) {
         case 0: {
             view = m_netlistView;
@@ -71,10 +71,12 @@ void Netlist::setCurrentViewExpandState(bool state) {
             Q_ASSERT(false);
     }
 
-    if (state) {
-        view->expandAll();
-    } else {
-        view->collapseAll();
+    if (view) {
+        if (state) {
+            view->expandAll();
+        } else {
+            view->collapseAll();
+        }
     }
 }
 

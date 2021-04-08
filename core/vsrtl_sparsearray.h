@@ -17,6 +17,8 @@ namespace core {
  */
 class SparseArray {
 public:
+    virtual ~SparseArray() {}
+
     virtual void writeMem(VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
         // writes value from the given address start, and up to $size bytes of
         // $value

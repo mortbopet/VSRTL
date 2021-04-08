@@ -14,7 +14,7 @@ namespace vsrtl {
 
 VSRTL_VT_U decodePortRadixValue(const SimPort& port, const Radix type, const QString& valueString) {
     bool ok = false;
-    VSRTL_VT_U value;
+    VSRTL_VT_U value = 0;
     switch (type) {
         case Radix::Hex: {
             value = valueString.toULong(&ok, 16);

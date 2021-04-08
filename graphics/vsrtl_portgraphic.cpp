@@ -207,6 +207,7 @@ QPointF PortGraphic::getInputPoint() const {
             return QPointF(0, m_type == PortType::in ? s_portGridWidth * GRID_SIZE : 0);
         }
     }
+    Q_UNREACHABLE();
 }
 
 QPointF PortGraphic::getOutputPoint() const {
@@ -224,6 +225,7 @@ QPointF PortGraphic::getOutputPoint() const {
             return QPointF(0, m_type == PortType::out ? s_portGridWidth * GRID_SIZE : 0);
         }
     }
+    Q_UNREACHABLE();
 }
 
 void PortGraphic::updatePenColor() {

@@ -183,7 +183,7 @@ public:
         try {
             std::string storedName = getComponent()->getName();
             archive(cereal::make_nvp("Top name", storedName));
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
@@ -195,7 +195,7 @@ public:
                 if (expanded != isExpanded()) {
                     setExpanded(expanded);
                 }
-            } catch (cereal::Exception e) {
+            } catch (const cereal::Exception& e) {
                 /// @todo: build an error report
             }
         }
@@ -205,14 +205,14 @@ public:
             QRect r = getCurrentComponentRect();
             archive(cereal::make_nvp("Rect", r));
             adjust(r);
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
         // Serialize rotation
         try {
             archive(cereal::make_nvp("rot", m_gridRotation));
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
         }
 
         // Serialize ports
@@ -220,7 +220,7 @@ public:
             for (const auto& p : pm) {
                 try {
                     archive(cereal::make_nvp(p->getPort()->getName(), *p));
-                } catch (cereal::Exception e) {
+                } catch (const cereal::Exception& e) {
                     /// @todo: build an error report
                 }
             }
@@ -232,7 +232,7 @@ public:
             for (auto& p : m_inputPorts) {
                 try {
                     archive(cereal::make_nvp(p->getPort()->getName() + "_in_wire", *p->getOutputWire()));
-                } catch (cereal::Exception e) {
+                } catch (const cereal::Exception& e) {
                     /// @todo: build an error report
                 }
             }
@@ -241,7 +241,7 @@ public:
             for (const auto& c : m_subcomponents) {
                 try {
                     archive(cereal::make_nvp(c->getComponent()->getName(), *c));
-                } catch (cereal::Exception e) {
+                } catch (const cereal::Exception& e) {
                     /// @todo: build an error report
                 }
             }
@@ -255,7 +255,7 @@ public:
             for (auto& p : m_outputPorts) {
                 try {
                     archive(cereal::make_nvp(p->getPort()->getName() + "_out_wire", *p->getOutputWire()));
-                } catch (cereal::Exception e) {
+                } catch (const cereal::Exception& e) {
                     /// @todo: build an error report
                 }
             }
@@ -268,7 +268,7 @@ public:
                 QPoint p = pos().toPoint();
                 archive(cereal::make_nvp("Pos", p));
                 setPos(p);
-            } catch (cereal::Exception e) {
+            } catch (const cereal::Exception& e) {
                 /// @todo: build an error report
             }
 
@@ -278,7 +278,7 @@ public:
                 archive(cereal::make_nvp("Visible", v));
                 archive(cereal::make_nvp("User hidden", m_userHidden));
                 setVisible(v && !m_userHidden);
-            } catch (cereal::Exception e) {
+            } catch (const cereal::Exception& e) {
                 /// @todo: build an error report
             }
         }
@@ -292,7 +292,7 @@ public:
         // Serialize component name label
         try {
             archive(cereal::make_nvp("Name label", *m_label));
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
@@ -310,7 +310,7 @@ public:
                     }
                 }
             }
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 

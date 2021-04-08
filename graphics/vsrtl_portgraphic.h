@@ -156,14 +156,14 @@ public:
         // Serialize port name label
         try {
             archive(cereal::make_nvp("Label", *m_label));
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
         // Serialize port value label
         try {
             archive(cereal::make_nvp("ValueLabel", *m_valueLabel));
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
@@ -172,7 +172,7 @@ public:
             bool visible = m_portWidthLabel->isVisible();
             archive(cereal::make_nvp("PortWidthVisible", visible));
             setPortWidthVisible(visible);
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
@@ -180,7 +180,7 @@ public:
         try {
             archive(cereal::make_nvp("UserHidden", m_userHidden));
             setUserVisible(!userHidden());
-        } catch (cereal::Exception e) {
+        } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
