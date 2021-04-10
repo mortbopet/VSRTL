@@ -38,7 +38,7 @@ In papers and reports, please refer to VSRTL as follows: 'Morten Borup Petersen.
 ```
 @MISC{VSRTL,
 	author = {Morten Borup Petersen},
-	title = {VSRTL},
+	title = {VSRTL: Visual Simulation of Register Transfer Logic},
 	howpublished = "\url{https://github.com/mortbopet/VSRTL}"
 }
 ```
