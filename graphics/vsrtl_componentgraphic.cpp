@@ -557,7 +557,7 @@ void ComponentGraphic::paintIndicator(QPainter* painter, PortGraphic* p, QColor 
     QRectF chordRect(-dotSize / 2, -dotSize / 2, dotSize, dotSize);
     chordRect.translate(mapFromItem(p, inPort ? p->getOutputPoint() : p->getInputPoint()));
 
-    int startAngle;
+    int startAngle = 0;
     // clang-format off
     switch(p->getSide()){
         case Side::Top : startAngle = 0; break;
