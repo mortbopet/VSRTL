@@ -14,10 +14,10 @@
 namespace vsrtl {
 namespace core {
 
-// An ADDRESSSPACE instance defines a distinct address space, implemented by a sparse array. Multiple memory
-// components may be linked to the same sparse array to provide separate access ports to a shared address space.
-#define ADDRESSSPACE(name) SparseArray* name = this->createMemory<SparseArray>()
-#define ADDRESSSPACEMM(name) SparseArrayMM* name = this->createMemory<SparseArrayMM>()
+// An ADDRESSSPACE instance defines a distinct address space. Multiple memory
+// components may be linked to the same address space to provide separate access ports to a shared address space.
+#define ADDRESSSPACE(name) AddressSpace* name = this->createMemory<AddressSpace>()
+#define ADDRESSSPACEMM(name) AddressSpaceMM* name = this->createMemory<AddressSpaceMM>()
 
 /**
  * @brief The Design class
@@ -196,7 +196,7 @@ public:
 
     template <typename T>
     T* createMemory() {
-        static_assert(std::is_base_of<SparseArray, T>::value);
+        static_assert(std::is_base_of<AddressSpace, T>::value);
         auto sptr = std::make_unique<T>();
         auto* ptr = sptr.get();
         m_memories.push_back(std::move(sptr));
@@ -222,7 +222,7 @@ private:
     std::map<SimComponent*, std::vector<SimComponent*>> m_componentGraph;
     std::set<RegisterBase*> m_registers;
     std::set<ClockedComponent*> m_clockedComponents;
-    std::vector<std::unique_ptr<SparseArray>> m_memories;
+    std::vector<std::unique_ptr<AddressSpace>> m_memories;
 
     bool m_isVerifiedAndInitialized = false;
     std::vector<PortBase*> m_propagationStack;

@@ -12,13 +12,16 @@ namespace vsrtl {
 namespace core {
 
 /**
- * @brief The SparseArray class
- *  A sparse array datastructure used to describe a byte-addressable memory of unbounded size (up to UINT32_MAX keys).
+ * @brief The AddressSpace class
+ * The AddressSpace class manages a sparse array datastructure used to describe a byte-addressable memory of unbounded
+ * size (up to UINT32_MAX keys), intended for use as instruction/data memory. Furthermore, initialization memories can
+ * be added, which will be re-written to the sparse array upon resetting the memory.
+ *
  */
-class SparseArray {
+class AddressSpace {
 public:
     enum class RegionType { Program, IO };
-    virtual ~SparseArray() {}
+    virtual ~AddressSpace() {}
 
     virtual void writeMem(VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
         // writes value from the given address start, and up to $size bytes of
@@ -78,7 +81,7 @@ public:
 
 private:
     std::unordered_map<VSRTL_VT_U, uint8_t> m_data;
-    std::vector<SparseArray> m_initializationMemories;
+    std::vector<AddressSpace> m_initializationMemories;
 };
 
 struct IOFunctors {
@@ -101,11 +104,11 @@ struct IOFunctors {
 };
 
 /**
- * @brief The BussedSparseMM class
- * Extends the sparse array with the capabilites of having separate memory regions in the address space wherein
+ * @brief The AddressSpaceMM class
+ * Extends the AddressSpace with the capabilites of having separate memory regions in the address space wherein
  * read/writes should be forwarded to somewhere else. Used for registerring memory-mapped peripherals.
  */
-class SparseArrayMM : public SparseArray {
+class AddressSpaceMM : public AddressSpace {
 public:
     struct MMapValue {
         uint32_t base;
@@ -117,7 +120,7 @@ public:
         if (auto* mmapregion = findMMapRegion(address)) {
             mmapregion->io.ioWrite(address - mmapregion->base, value, size);
         } else {
-            SparseArray::writeMem(address, value, size);
+            AddressSpace::writeMem(address, value, size);
         }
     }
 
@@ -125,7 +128,7 @@ public:
         if (auto* mmapregion = findMMapRegion(address)) {
             return mmapregion->io.ioRead(address - mmapregion->base, width);
         } else {
-            return SparseArray::readMem(address, width);
+            return AddressSpace::readMem(address, width);
         }
     }
 
@@ -133,7 +136,7 @@ public:
         if (auto* mmapregion = findMMapRegion(address)) {
             return mmapregion->io.ioRead(address - mmapregion->base, width);
         } else {
-            return SparseArray::readMemConst(address, width);
+            return AddressSpace::readMemConst(address, width);
         }
     }
 
