@@ -27,6 +27,8 @@ public:
     BaseMemory() {}
 
     void setMemory(SparseArray* mem) { m_memory = mem; }
+    const SparseArray* memory() const { return m_memory; }
+    virtual SparseArray::RegionType accessRegion() const = 0;
 
     VSRTL_VT_U read(VSRTL_VT_U address) { return m_memory->readMem(byteIndexed ? address : address << 2); }
 
@@ -44,6 +46,9 @@ public:
     SetGraphicsType(Component);
     WrMemory(std::string name, SimComponent* parent) : ClockedComponent(name, parent) {}
     void reset() override { m_reverseStack.clear(); }
+    SparseArray::RegionType accessRegion() const override {
+        return this->memory()->regionType(addr.template value<VSRTL_VT_U>());
+    }
 
     void save() override {
         const bool writeEnable = static_cast<bool>(wr_en);
@@ -115,6 +120,10 @@ public:
         data_out << [=] { return this->read(addr.template value<VSRTL_VT_U>()); };
     }
 
+    SparseArray::RegionType accessRegion() const override {
+        return this->memory()->regionType(addr.template value<VSRTL_VT_U>());
+    }
+
     INPUTPORT(addr, addrWidth);
     OUTPUTPORT(data_out, dataWidth);
 };
@@ -137,6 +146,12 @@ public:
         _wr_mem->setMemory(mem);
         _rd_mem->setMemory(mem);
     }
+
+    SparseArray::RegionType accessRegion() const {
+        return this->memory()->regionType(addr.template value<VSRTL_VT_U>());
+    }
+
+    const SparseArray* memory() const { return _wr_mem->memory(); }
 
     SUBCOMPONENT(_rd_mem, TYPE(RdMemory<addrWidth, dataWidth, byteIndexed>));
     SUBCOMPONENT(_wr_mem, TYPE(WrMemory<addrWidth, dataWidth, byteIndexed>));

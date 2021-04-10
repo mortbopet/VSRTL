@@ -17,6 +17,7 @@ namespace core {
  */
 class SparseArray {
 public:
+    enum class RegionType { Program, IO };
     virtual ~SparseArray() {}
 
     virtual void writeMem(VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
@@ -47,6 +48,7 @@ public:
     }
 
     virtual bool contains(uint32_t address) const { return m_data.count(address) > 0; }
+    virtual RegionType regionType(uint32_t /* address */) const { return RegionType::Program; }
 
     /**
      * @brief addInitializationMemory
@@ -135,18 +137,27 @@ public:
         }
     }
 
+    RegionType regionType(uint32_t address) const override {
+        if (auto* mmapregion = findMMapRegion(address)) {
+            (void)mmapregion;
+            return RegionType::IO;
+        } else {
+            return RegionType::Program;
+        }
+    }
+
     /**
      * @brief addRegion
      * Registers a memory mapped region at @param start with @param size.
      */
-    void addRegion(VSRTL_VT_U baseAddr, unsigned size, const IOFunctors& io) {
+    void addIORegion(VSRTL_VT_U baseAddr, unsigned size, const IOFunctors& io) {
         // Assert that there lies no memory regions within the region that we are about to insert
         assert(findMMapRegion(baseAddr) == nullptr && findMMapRegion(baseAddr + size - 1) == nullptr &&
                "Tried to add memory mapped region which overlaps with some other region");
         assert(size > 0);
         m_mmapRegions[baseAddr + size - 1] = MMapValue{baseAddr, size, io};
     }
-    void removeRegion(VSRTL_VT_U baseAddr, unsigned size) {
+    void removeIORegion(VSRTL_VT_U baseAddr, unsigned size) {
         auto it = m_mmapRegions.find(baseAddr + size - 1);
         assert(it != m_mmapRegions.end() && "Tried to remove non-existing memory mapped region");
         m_mmapRegions.erase(it);
