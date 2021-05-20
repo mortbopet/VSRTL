@@ -55,7 +55,7 @@ bool NetlistModel::setData(const QModelIndex& index, const QVariant& value, int)
 
 void NetlistModel::invalidate() {
     // Data changed within Design, invalidate value column
-    dataChanged(index(0, ValueColumn), index(rowCount(), ValueColumn), {Qt::DisplayRole});
+    emit dataChanged(index(0, ValueColumn), index(rowCount(), ValueColumn), {Qt::DisplayRole});
 }
 
 QModelIndex NetlistModel::lookupIndexForComponent(SimComponent* c) const {

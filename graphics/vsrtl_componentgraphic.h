@@ -95,9 +95,9 @@ private slots:
      * Slot called when position of grid component changed through the grid-layer (ie. through place and route).
      */
     void handleGridPosChange(const QPoint pos);
-    void handlePortPosChanged(const SimPort* port);
+    void handlePortPosChanged(const vsrtl::SimPort* port);
     void updateGeometry();
-    void setIndicatorState(PortGraphic* p, bool enabled);
+    void setIndicatorState(vsrtl::PortGraphic* p, bool enabled);
 
     // Called by vsrtl_core components linked via signal/slot mechanism
     void updateSlot() { update(); }

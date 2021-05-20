@@ -90,10 +90,12 @@ void Netlist::updateSelection(const std::vector<SimComponent*>& selected) {
 
 namespace {
 void getIndexComponentPtr(const QItemSelection& selected, std::vector<SimComponent*>& c_v) {
-    for (const auto& sel : selected.indexes()) {
+    const auto indexes = selected.indexes();
+    for (const auto& sel : qAsConst(indexes)) {
         auto* c = static_cast<NetlistTreeItem*>(sel.internalPointer())->m_component;
-        if (c)
+        if (c) {
             c_v.push_back(c);
+        }
     }
 }
 }  // namespace

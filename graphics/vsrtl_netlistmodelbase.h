@@ -36,6 +36,7 @@ public:
         if (!parentItem)
             parentItem = rootItem;
 
+        Q_ASSERT(rootItem);
         T* childItem = static_cast<T*>(parentItem->child(row));
         if (childItem) {
             auto i = createIndex(row, column, childItem);
@@ -52,6 +53,7 @@ public:
         auto* childItem = getTreeItem(index);
         auto* parentItem = childItem->parent();
 
+        Q_ASSERT(rootItem);
         if (parentItem == rootItem)
             return QModelIndex();
 

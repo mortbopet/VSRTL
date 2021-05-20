@@ -84,7 +84,7 @@ public:
 signals:
     void gridRectChanged();
     void gridPosChanged(QPoint);
-    void portPosChanged(const SimPort* p);
+    void portPosChanged(const vsrtl::SimPort* p);
 
 protected:
     int m_gridRotation = 0;  // Rotation angle, in the range [0, 360[ in intervals of 90 deg.

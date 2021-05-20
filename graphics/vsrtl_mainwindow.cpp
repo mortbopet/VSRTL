@@ -87,7 +87,7 @@ void MainWindow::createToolbar() {
     QAction* clockTimerAct = new QAction(startTimerIcon, "Auto Clock", this);
     clockTimerAct->setCheckable(true);
     clockTimerAct->setChecked(false);
-    connect(clockTimerAct, &QAction::triggered, [=] {
+    connect(clockTimerAct, &QAction::triggered, this, [=] {
         if (timer->isActive()) {
             timer->stop();
             clockTimerAct->setIcon(startTimerIcon);

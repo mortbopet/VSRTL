@@ -138,7 +138,7 @@ void ComponentGraphic::resetWires() {
             }
         }
         // Clear wires from this components input ports
-        for (const auto& p : m_inputPorts) {
+        for (const auto& p : qAsConst(m_inputPorts)) {
             p->getOutputWire()->clearWirePoints();
         }
     }
@@ -450,7 +450,7 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
         // Output port wires are implicitely redrawn given that the wire is a child of $this. We need to manually signal
         // the wires going to the input ports of this component, to redraw
         if (m_initialized) {
-            for (const auto& inputPort : m_inputPorts) {
+            for (const auto& inputPort : qAsConst(m_inputPorts)) {
                 if (!inputPort->getPort()->isConstant())
                     inputPort->getPort()->getInputPort()->getGraphic<PortGraphic>()->updateWireGeometry();
             }
@@ -482,9 +482,9 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     painter->save();
     QColor color;
     if (static_cast<VSRTLScene*>(scene())->darkmode()) {
-        color = hasSubcomponents() && isExpanded() ? QColor(QColor(Qt::darkGray).darker()) : QColor("#80848a");
+        color = hasSubcomponents() && isExpanded() ? QColor(QColor(Qt::darkGray).darker()) : QColor(0x80848a);
     } else {
-        color = hasSubcomponents() && isExpanded() ? QColor("#ecf0f1") : QColor(Qt::white);
+        color = hasSubcomponents() && isExpanded() ? QColor(0xecf0f1) : QColor(Qt::white);
     }
 
     QColor fillColor = (option->state & QStyle::State_Selected) ? color.darker(150) : color;

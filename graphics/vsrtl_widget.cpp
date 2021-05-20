@@ -93,7 +93,8 @@ VSRTLWidget::~VSRTLWidget() {
 void VSRTLWidget::handleSceneSelectionChanged() {
     std::vector<SimComponent*> selectedComponents;
     std::vector<SimPort*> selectedPorts;
-    for (const auto& i : m_scene->selectedItems()) {
+    const auto selectedItems = m_scene->selectedItems();
+    for (auto* i : qAsConst(selectedItems)) {
         ComponentGraphic* i_c = dynamic_cast<ComponentGraphic*>(i);
         if (i_c) {
             selectedComponents.push_back(i_c->getComponent());
@@ -179,7 +180,8 @@ void VSRTLWidget::clock() {
 void VSRTLWidget::handleRunFinished() {
     // Since the design does not emit signals during running, we need to manually tell all labels to reset their text
     // value, given that labels manually must have their text updated (ie. text is not updated in the redraw call).
-    for (const auto& item : m_scene->items()) {
+    const auto sceneItems = m_scene->items();
+    for (auto* item : qAsConst(sceneItems)) {
         if (auto* label = dynamic_cast<Label*>(item)) {
             label->updateText();
         }

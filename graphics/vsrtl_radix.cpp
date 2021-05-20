@@ -149,6 +149,7 @@ QMenu* createPortRadixMenu(const SimPort* port, Radix& type) {
             if (!port->isEnumPort()) {
                 throw std::runtime_error("Port is not an Enum port");
             }
+            Q_ASSERT(enumTypeAction);
             enumTypeAction->setChecked(true);
             break;
         }

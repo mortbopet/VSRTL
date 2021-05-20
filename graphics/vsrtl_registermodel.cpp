@@ -64,7 +64,7 @@ bool RegisterTreeItem::setData(int, const QVariant& value, int) {
 
 void RegisterModel::invalidate() {
     // Data changed within Design, invalidate value column
-    dataChanged(index(0, ValueColumn), index(rowCount(), ValueColumn), {Qt::DisplayRole});
+    emit dataChanged(index(0, ValueColumn), index(rowCount(), ValueColumn), {Qt::DisplayRole});
 }
 
 RegisterModel::RegisterModel(SimDesign* arch, QObject* parent)
