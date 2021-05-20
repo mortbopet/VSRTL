@@ -54,7 +54,7 @@ public:
 
     SimComponent* m_component = nullptr;
     SimPort* m_port = nullptr;
-    PortDirection m_direction;
+    PortDirection m_direction = PortDirection::Input;
     QMenu* m_radixMenu = nullptr;
     Radix m_radix = Radix::Hex;
 };

@@ -55,7 +55,8 @@ public slots:
     void reverse();
 
     // Selections which are imposed on the scene from external objects (ie. selecting items in the netlist)
-    void handleSelectionChanged(const std::vector<SimComponent*>& selected, std::vector<SimComponent*>& deselected);
+    void handleSelectionChanged(const std::vector<SimComponent*>& selected,
+                                const std::vector<SimComponent*>& deselected);
 
 signals:
     void runFinished();

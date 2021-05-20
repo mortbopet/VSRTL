@@ -80,7 +80,7 @@ bool NetlistModel::indexIsRegisterOutputPortValue(const QModelIndex& index) cons
         auto* item = getTreeItem(index);
         auto* parentItem = static_cast<NetlistTreeItem*>(item->parent());
         auto* parentComponent = parentItem->m_component;
-        if (parentItem && parentComponent) {
+        if (parentComponent) {
             if (dynamic_cast<SimSynchronous*>(parentComponent)) {
                 // Parent is register, check if current index is an output port
                 if (item->m_port && item->m_direction == PortDirection::Output) {

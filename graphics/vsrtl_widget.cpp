@@ -111,7 +111,7 @@ void VSRTLWidget::handleSceneSelectionChanged() {
 }  // namespace vsrtl
 
 void VSRTLWidget::handleSelectionChanged(const std::vector<SimComponent*>& selected,
-                                         std::vector<SimComponent*>& deselected) {
+                                         const std::vector<SimComponent*>& deselected) {
     // Block signals from scene to disable selectionChange emission.
     m_scene->blockSignals(true);
     for (const auto& c : selected) {

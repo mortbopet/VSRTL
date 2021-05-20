@@ -15,9 +15,8 @@
 
 namespace vsrtl {
 
-Label::Label(const QString& text, QGraphicsItem* parent, int fontSize) : GraphicsBaseItem(parent) {
-    m_font = QFont("Roboto", fontSize);
-
+Label::Label(const QString& text, QGraphicsItem* parent, int fontSize)
+    : GraphicsBaseItem(parent), m_font(QFont("Roboto", fontSize)) {
     setMoveable();
     setText(text);
 }

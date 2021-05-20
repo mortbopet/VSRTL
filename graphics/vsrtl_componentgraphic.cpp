@@ -501,7 +501,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         width += 1;
 
     pen.setWidth(width);
-    painter->setBrush(QBrush(fillColor.darker(option->state & QStyle::State_Sunken ? 120 : 100)));
+    painter->setBrush(QBrush(fillColor.darker((option->state & QStyle::State_Sunken) ? 120 : 100)));
     painter->setPen(pen);
     painter->drawPath(m_shape);
 
