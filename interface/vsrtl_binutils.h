@@ -27,14 +27,14 @@ inline T signextend(const T x, unsigned B) {
     return (x << m) >> m;
 }
 
-constexpr inline unsigned generateBitmask(int n) {
+constexpr unsigned generateBitmask(int n) {
     if (n == 0) {
         return 0;
     }
     return static_cast<unsigned>((1UL << n) - 1);
 }
 
-constexpr inline uint32_t bitcount(int n) {
+constexpr uint32_t bitcount(int n) {
     unsigned count = 0;
     while (n > 0) {
         count += 1;
@@ -62,11 +62,11 @@ inline std::array<bool, width> buildUnsignedArr(uint32_t v) {
     return r;
 }
 
-constexpr inline unsigned floorlog2(unsigned x) {
+constexpr unsigned floorlog2(unsigned x) {
     return x == 1 ? 0 : 1 + floorlog2(x >> 1);
 }
 
-constexpr inline unsigned ceillog2(unsigned x) {
+constexpr unsigned ceillog2(unsigned x) {
     return x == 1 || x == 0 ? 1 : floorlog2(x - 1) + 1;
 }
 
