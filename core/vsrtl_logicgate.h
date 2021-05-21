@@ -19,9 +19,9 @@ class And : public LogicGate<W, nInputs> {
 public:
     SetGraphicsType(And) And(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] {
-            auto v = this->in[0]->template value<VSRTL_VT_U>();
+            auto v = this->in[0]->uValue();
             for (unsigned i = 1; i < this->in.size(); i++) {
-                v = v & this->in[i]->template value<VSRTL_VT_U>();
+                v = v & this->in[i]->uValue();
             }
             return v;
         };
@@ -33,9 +33,9 @@ class Nand : public LogicGate<W, nInputs> {
 public:
     SetGraphicsType(Nand) Nand(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] {
-            auto v = this->in[0]->template value<VSRTL_VT_U>();
+            auto v = this->in[0]->uValue();
             for (unsigned i = 1; i < this->in.size(); i++) {
-                v = v & this->in[i]->template value<VSRTL_VT_U>();
+                v = v & this->in[i]->uValue();
             }
             return ~v;
         };
@@ -48,9 +48,9 @@ public:
     SetGraphicsType(Or);
     Or(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] {
-            auto v = this->in[0]->template value<VSRTL_VT_U>();
+            auto v = this->in[0]->uValue();
             for (unsigned i = 1; i < this->in.size(); i++) {
-                v = v | this->in[i]->template value<VSRTL_VT_U>();
+                v = v | this->in[i]->uValue();
             }
             return v;
         };
@@ -63,9 +63,9 @@ public:
     SetGraphicsType(Xor);
     Xor(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] {
-            auto v = this->in[0]->template value<VSRTL_VT_U>();
+            auto v = this->in[0]->uValue();
             for (unsigned i = 1; i < this->in.size(); i++) {
-                v = v ^ this->in[i]->template value<VSRTL_VT_U>();
+                v = v ^ this->in[i]->uValue();
             }
             return v;
         };
@@ -77,7 +77,7 @@ class Not : public LogicGate<W, nInputs> {
 public:
     SetGraphicsType(Not);
     Not(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
-        this->out << [=] { return ~this->in[0]->template value<VSRTL_VT_U>(); };
+        this->out << [=] { return ~this->in[0]->uValue(); };
     }
 };
 

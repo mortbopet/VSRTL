@@ -32,10 +32,10 @@ public:
 
 private:
     VSRTL_VT_U calculateOutput() {
-        const auto uop1 = op1.template value<VSRTL_VT_U>();
-        const auto uop2 = op2.template value<VSRTL_VT_U>();
-        const auto _op1 = op1.template value<VSRTL_VT_S>();
-        const auto _op2 = op2.template value<VSRTL_VT_S>();
+        const auto uop1 = op1.uValue();
+        const auto uop2 = op2.uValue();
+        const auto _op1 = op1.sValue();
+        const auto _op2 = op2.sValue();
         Switch(ctrl, ALU_OPCODE) {
             case ALU_OPCODE::ADD:
                 return uop1 + uop2;

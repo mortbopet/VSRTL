@@ -24,7 +24,7 @@ void tst_rannumgen::functionalTest() {
     // Clock the circuit n times
     for (int i = 0; i < 10; i++) {
         a.clock();
-        VSRTL_VT_U circuit_val = a.rngResReg->out.template value<VSRTL_VT_U>();
+        VSRTL_VT_U circuit_val = a.rngResReg->out.uValue();
         QVERIFY(circuit_val == seed);
         seed = xorshift(seed);
     }

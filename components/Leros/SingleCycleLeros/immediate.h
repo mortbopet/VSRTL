@@ -13,9 +13,9 @@ class Immediate : public Component {
 public:
     Immediate(std::string name, SimComponent* parent) : Component(name, parent) {
         imm << [=] {
-            const auto imm8 = instr.value<VSRTL_VT_U>() & 0xFF;
+            const auto imm8 = instr.uValue() & 0xFF;
             const auto simm8 = signextend<VSRTL_VT_S, 8>(imm8);
-            const auto imm12 = instr.value<VSRTL_VT_U>() & 0xFFF;
+            const auto imm12 = instr.uValue() & 0xFFF;
             Switch(ctrl, imm_op) {
                 case imm_op::nop:
                     return VSRTL_VT_S(0);

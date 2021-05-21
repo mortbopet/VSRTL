@@ -77,13 +77,8 @@ public:
             *this >> *p;
     }
 
-    template <typename T>
-    T value() const {
-        return static_cast<T>(signextend<T, W>(m_value));
-    }
-
-    VSRTL_VT_U uValue() const override { return value<VSRTL_VT_U>(); }
-    VSRTL_VT_S sValue() const override { return value<VSRTL_VT_S>(); }
+    VSRTL_VT_U uValue() const override { return m_value & generateBitmask(W); }
+    VSRTL_VT_S sValue() const override { return static_cast<VSRTL_VT_S>(signextend<VSRTL_VT_S, W>(m_value)); }
     unsigned int getWidth() const override { return W; }
 
     explicit operator VSRTL_VT_S() const { return signextend<VSRTL_VT_S, W>(m_value); }
@@ -93,7 +88,7 @@ public:
         if (m_propagationFunction) {
             m_value = m_propagationFunction();
         } else {
-            m_value = getInputPort<Port<W>>()->template value<VSRTL_VT_U>();
+            m_value = getInputPort<Port<W>>()->uValue();
         }
         if (m_value != prePropagateValue) {
             // Signal all watcher of this port that the port value changed
@@ -146,9 +141,7 @@ public:
     EnumPort(std::string name, Component* parent) : Port<W>(name, parent) {}
 
     bool isEnumPort() const override { return true; }
-    std::string valueToEnumString() const override {
-        return E_t::_from_integral(this->template value<VSRTL_VT_U>())._to_string();
-    }
+    std::string valueToEnumString() const override { return E_t::_from_integral(this->uValue())._to_string(); }
     VSRTL_VT_U enumStringToValue(const char* str) const override { return E_t::_from_string(str); }
 };
 

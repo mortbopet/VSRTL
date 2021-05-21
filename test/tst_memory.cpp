@@ -100,7 +100,7 @@ void tst_memory::functionalTest() {
     for (int i = 0; i < n; i++)
         a.clock();
 
-    QVERIFY(a.mem->data_out.template value<uint32_t>() == n / 2);
+    QVERIFY(a.mem->data_out.uValue() == n / 2);
 }
 
 void tst_memory::repeatedWriteSameIdxSync() {
@@ -111,7 +111,7 @@ void tst_memory::repeatedWriteSameIdxSync() {
     const int n = 10;
     // Clock the circuit n times
     for (unsigned i = 0; i < n; i++) {
-        QVERIFY(a.mem->data_out.template value<uint32_t>() == i);
+        QVERIFY(a.mem->data_out.uValue() == i);
         a.clock();
     }
 }

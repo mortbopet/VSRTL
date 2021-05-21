@@ -23,7 +23,7 @@ inline T signextend(const T x) {
 // Runtime signextension
 template <typename T>
 inline T signextend(const T x, unsigned B) {
-    int const m = CHAR_BIT * sizeof(T) - B;
+    const int m = CHAR_BIT * sizeof(T) - B;
     return (x << m) >> m;
 }
 
@@ -31,7 +31,7 @@ constexpr inline unsigned generateBitmask(int n) {
     if (n == 0) {
         return 0;
     }
-    return static_cast<unsigned>((1 << n) - 1);
+    return static_cast<unsigned>((1UL << n) - 1);
 }
 
 constexpr inline uint32_t bitcount(int n) {

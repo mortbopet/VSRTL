@@ -13,7 +13,7 @@ class Adder : public Component {
 public:
     SetGraphicsType(Adder);
     Adder(std::string name, SimComponent* parent) : Component(name, parent) {
-        out << [=] { return op1.template value<VSRTL_VT_S>() + op2.template value<VSRTL_VT_S>(); };
+        out << [=] { return op1.sValue() + op2.sValue(); };
     }
 
     INPUTPORT(op1, W);

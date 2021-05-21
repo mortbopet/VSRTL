@@ -55,7 +55,7 @@ QVariant RegisterTreeItem::data(int column, int role) const {
 bool RegisterTreeItem::setData(int, const QVariant& value, int) {
     if (index.column() == RegisterModel::ValueColumn) {
         if (m_register) {
-            m_design->setSynchronousValue(m_register->getSynchronous(), 0, value.value<VSRTL_VT_U>());
+            m_design->setSynchronousValue(m_register->getSynchronous(), 0, value.value<uint32_t>());
             return true;
         }
     }

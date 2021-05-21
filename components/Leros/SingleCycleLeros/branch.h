@@ -17,13 +17,13 @@ public:
                 case br_op::br:
                     return true;
                 case br_op::brp:
-                    return acc.value<VSRTL_VT_S>() >= 0;
+                    return acc.sValue() >= 0;
                 case br_op::brn:
-                    return acc.value<VSRTL_VT_S>() < 0;
+                    return acc.sValue() < 0;
                 case br_op::brz:
-                    return acc.value<VSRTL_VT_S>() == 0;
+                    return acc.sValue() == 0;
                 case br_op::brnz:
-                    return acc.value<VSRTL_VT_S>() != 0;
+                    return acc.sValue() != 0;
                 case br_op::nop:
                 default:
                     return false;

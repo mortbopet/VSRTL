@@ -12,10 +12,10 @@ namespace leros {
 class Decode : public Component {
 public:
     Decode(std::string name, SimComponent* parent) : Component(name, parent) {
-        lowByte << [=] { return instr.template value<VSRTL_VT_U>() & 0xFF; };
+        lowByte << [=] { return instr.uValue() & 0xFF; };
 
         op << [=] {
-            const uint8_t instruction = instr.value<VSRTL_VT_U>() >> 8;
+            const uint8_t instruction = instr.uValue() >> 8;
 
             // clang-format off
             switch ((instruction >> 4) & 0xF) {

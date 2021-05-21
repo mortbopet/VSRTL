@@ -120,7 +120,7 @@ public:
 
     void save() override {
         saveToStack();
-        m_savedValue = in.template value<VSRTL_VT_U>();
+        m_savedValue = in.uValue();
     }
 
     void forceValue(VSRTL_VT_U /* addr */, VSRTL_VT_U value) override {
@@ -173,7 +173,7 @@ public:
             if (clear.uValue()) {
                 this->m_savedValue = 0;
             } else {
-                this->m_savedValue = this->in.template value<VSRTL_VT_U>();
+                this->m_savedValue = this->in.uValue();
             }
         }
     }
@@ -188,9 +188,6 @@ public:
     SetGraphicsType(Register);
 
     ShiftRegister(std::string name, SimComponent* parent) : RegisterBase(name, parent) {
-        setSpecialPort("in", getIn());
-        setSpecialPort("out", getOut());
-
         stages.setTooltip("Number of shift register stages");
         stages.setOptions({1, 100});
         stages.changed.Connect(this, &ShiftRegister::stagesChanged);
@@ -217,7 +214,7 @@ public:
         }
         // Rotate to the right and store new value as first register
         std::rotate(m_savedValues.rbegin(), m_savedValues.rbegin() + 1, m_savedValues.rend());
-        m_savedValues.at(0) = in.template value<VSRTL_VT_U>();
+        m_savedValues.at(0) = in.uValue();
     }
 
     void forceValue(VSRTL_VT_U /* addr */, VSRTL_VT_U value) override {

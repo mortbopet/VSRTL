@@ -46,14 +46,12 @@ public:
     SetGraphicsType(Component);
     WrMemory(std::string name, SimComponent* parent) : ClockedComponent(name, parent) {}
     void reset() override { m_reverseStack.clear(); }
-    AddressSpace::RegionType accessRegion() const override {
-        return this->memory()->regionType(addr.template value<VSRTL_VT_U>());
-    }
+    AddressSpace::RegionType accessRegion() const override { return this->memory()->regionType(addr.uValue()); }
 
     void save() override {
         const bool writeEnable = static_cast<bool>(wr_en);
-        const VSRTL_VT_U addr_v = addr.template value<VSRTL_VT_U>();
-        const VSRTL_VT_U data_in_v = data_in.template value<VSRTL_VT_U>();
+        const VSRTL_VT_U addr_v = addr.uValue();
+        const VSRTL_VT_U data_in_v = data_in.uValue();
         const VSRTL_VT_U data_out_v = this->read(addr_v);
         auto ev = MemoryEviction({writeEnable, addr_v, data_out_v, wr_width.uValue()});
         saveToStack(ev);
@@ -100,7 +98,7 @@ template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = tru
 class MemorySyncRd : public WrMemory<addrWidth, dataWidth, byteIndexed> {
 public:
     MemorySyncRd(std::string name, SimComponent* parent) : WrMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {
-        data_out << [=] { return this->read(this->addr.template value<VSRTL_VT_U>()); };
+        data_out << [=] { return this->read(this->addr.uValue()); };
     }
 
     OUTPUTPORT(data_out, dataWidth);
@@ -117,12 +115,14 @@ class RdMemory : public Component, public BaseMemory<addrWidth, dataWidth, byteI
 public:
     SetGraphicsType(ClockedComponent);
     RdMemory(std::string name, SimComponent* parent) : Component(name, parent) {
-        data_out << [=] { return this->read(addr.template value<VSRTL_VT_U>()); };
+        data_out << [=] {
+            auto _addr = addr.uValue();
+            auto val = this->read(_addr);
+            return val;
+        };
     }
 
-    AddressSpace::RegionType accessRegion() const override {
-        return this->memory()->regionType(addr.template value<VSRTL_VT_U>());
-    }
+    AddressSpace::RegionType accessRegion() const override { return this->memory()->regionType(addr.uValue()); }
 
     INPUTPORT(addr, addrWidth);
     OUTPUTPORT(data_out, dataWidth);
@@ -147,9 +147,7 @@ public:
         _rd_mem->setMemory(mem);
     }
 
-    AddressSpace::RegionType accessRegion() const {
-        return this->memory()->regionType(addr.template value<VSRTL_VT_U>());
-    }
+    AddressSpace::RegionType accessRegion() const { return this->memory()->regionType(addr.uValue()); }
 
     const AddressSpace* memory() const { return _wr_mem->memory(); }
 

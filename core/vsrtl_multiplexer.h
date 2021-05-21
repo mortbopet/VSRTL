@@ -24,7 +24,7 @@ class Multiplexer : public MultiplexerBase {
 public:
     Multiplexer(std::string name, SimComponent* parent) : MultiplexerBase(name, parent) {
         setSpecialPort("select", &select);
-        out << [=] { return ins.at(select.template value<VSRTL_VT_U>())->template value<VSRTL_VT_U>(); };
+        out << [=] { return ins.at(select.uValue())->uValue(); };
     }
 
     std::vector<PortBase*> getIns() override {
@@ -76,7 +76,7 @@ public:
         for (auto v : E_t::_values()) {
             m_enumToPort[v] = this->ins.at(v);
         }
-        out << [=] { return ins.at(select.uValue())->template value<VSRTL_VT_U>(); };
+        out << [=] { return ins.at(select.uValue())->uValue(); };
     }
 
     Port<W>& get(unsigned enumIdx) {

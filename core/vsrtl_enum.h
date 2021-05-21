@@ -12,7 +12,7 @@ namespace core {
 
 #define Enum(name, ...) BETTER_ENUM(name, int, __VA_ARGS__);
 
-#define Switch(signal, enumname) switch (signal.value<unsigned int>())
+#define Switch(signal, enumname) switch (signal.uValue())
 
 }  // namespace core
 }  // namespace vsrtl
