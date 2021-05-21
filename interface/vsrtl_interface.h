@@ -113,7 +113,7 @@ public:
         if constexpr (std::is_same<T, SimPort>::value) {
             return this;
         } else {
-            return dynamic_cast<T*>(this);
+            return static_cast<T*>(this);
         }
     }
 
