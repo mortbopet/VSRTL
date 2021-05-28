@@ -37,6 +37,11 @@ PortPoint::PortPoint(QGraphicsItem* parent) : GraphicsBaseItem(parent) {
     setAcceptHoverEvents(false);
     setFlag(ItemSendsScenePositionChanges, true);
     m_portParent = dynamic_cast<PortGraphic*>(parent);
+
+    m_shape = QPainterPath();
+    m_shape.addEllipse({0, 0}, WIRE_WIDTH * 1.5, WIRE_WIDTH * 1.5);
+    m_shape.setFillRule(Qt::WindingFill);
+    m_br = m_shape.boundingRect().adjusted(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
 }
 
 QVariant PortPoint::itemChange(GraphicsItemChange change, const QVariant& value) {
@@ -54,13 +59,10 @@ QVariant PortPoint::itemChange(GraphicsItemChange change, const QVariant& value)
 }
 
 QRectF PortPoint::boundingRect() const {
-    return shape().boundingRect().adjusted(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
+    return m_br;
 }
 QPainterPath PortPoint::shape() const {
-    QPainterPath path;
-    path.addEllipse({0, 0}, WIRE_WIDTH * 1.5, WIRE_WIDTH * 1.5);
-    path.setFillRule(Qt::WindingFill);
-    return path;
+    return m_shape;
 }
 
 void PortPoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget*) {
@@ -86,7 +88,7 @@ void PortPoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
         pen.setWidth(1);
         painter->drawPath(shape());
     }
-    painter->fillPath(shape(), QBrush(fillColor.darker(option->state & QStyle::State_Sunken ? 120 : 100)));
+    painter->fillPath(shape(), QBrush(fillColor.darker((option->state & QStyle::State_Sunken) ? 120 : 100)));
 
     if (m_draggedOnThis != nullptr) {
         pen.setColor(Qt::red);

@@ -55,6 +55,10 @@ protected:
     WirePoint* m_draggedOnThis = nullptr;
     std::vector<WireSegment*> m_outputWires;
 
+    // Cached shape and bounding rect
+    QPainterPath m_shape;
+    QRectF m_br;
+
 private:
     PortGraphic* m_portParent = nullptr;
 };
