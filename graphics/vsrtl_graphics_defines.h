@@ -1,6 +1,7 @@
 #ifndef VSRTL_GRAPHICS_DEFINES_H
 #define VSRTL_GRAPHICS_DEFINES_H
 
+#include <QColor>
 #include <QMetaType>
 
 #include "../interface/vsrtl.h"
@@ -22,13 +23,13 @@ enum class PortType { in, out };
 
 enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99 };
 
-#define WIRE_DEFAULT_COLOR QColor(0x636363)
-#define WIRE_SELECTED_COLOR QColor(0xFEF160)
-#define WIRE_BOOLHIGH_COLOR QColor(0x6EEB83)
-#define WIRE_HIGH_COLOR QColor(0xFFD52E)
-#define BACKGROUND_COLOR QColor(0x222222)
-#define BUTTON_COLLAPSE_COLOR QColor(0x6bc8ff)
-#define BUTTON_EXPAND_COLOR QColor(0x26a65b)
+constexpr QColor WIRE_DEFAULT_COLOR = {0x63, 0x63, 0x63};
+constexpr QColor WIRE_SELECTED_COLOR = {0xFE, 0xF1, 0x60};
+constexpr QColor WIRE_BOOLHIGH_COLOR = {0x6E, 0xEB, 0x83};
+constexpr QColor WIRE_HIGH_COLOR = {0xFF, 0xD5, 0x2E};
+constexpr QColor BACKGROUND_COLOR = {0x22, 0x22, 0x22};
+constexpr QColor BUTTON_COLLAPSE_COLOR = {0x6b, 0xc8, 0xff};
+constexpr QColor BUTTON_EXPAND_COLOR = {0x26, 0xa6, 0x5b};
 
 #define GRID_SIZE 14
 

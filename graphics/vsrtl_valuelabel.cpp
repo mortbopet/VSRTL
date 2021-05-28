@@ -22,7 +22,7 @@ void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* option
         const bool darkmode = static_cast<VSRTLScene*>(scene())->darkmode();
 
         QRectF textRect = shape().boundingRect();
-        painter->fillRect(textRect, darkmode ? QColor(0x454545) : Qt::white);
+        painter->fillRect(textRect, darkmode ? QColor{0x45, 0x45, 0x45} : QColorConstants::White);
         painter->setBrush(Qt::NoBrush);
         painter->setPen(QPen(Qt::black, 1));
         painter->drawRect(textRect);

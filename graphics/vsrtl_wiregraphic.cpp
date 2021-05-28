@@ -79,7 +79,7 @@ void PortPoint::paint(QPainter* painter, const QStyleOptionGraphicsItem* option,
     painter->save();
     QPen pen = getPen();
 
-    QColor fillColor = (option->state & QStyle::State_Selected) ? QColor(Qt::yellow) : pen.color();
+    QColor fillColor = (option->state & QStyle::State_Selected) ? QColorConstants::Yellow : pen.color();
     if (option->state & QStyle::State_MouseOver)
         fillColor = fillColor.lighter(125);
 

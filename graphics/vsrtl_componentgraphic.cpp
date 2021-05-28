@@ -19,6 +19,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QColor>
 #include <QFileDialog>
 #include <QGraphicsProxyWidget>
 #include <QGraphicsScene>
@@ -482,9 +483,9 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     painter->save();
     QColor color;
     if (static_cast<VSRTLScene*>(scene())->darkmode()) {
-        color = hasSubcomponents() && isExpanded() ? QColor(QColor(Qt::darkGray).darker()) : QColor(0x80848a);
+        color = hasSubcomponents() && isExpanded() ? QColorConstants::DarkGray.darker() : QColor{0x80, 0x84, 0x8a};
     } else {
-        color = hasSubcomponents() && isExpanded() ? QColor(0xecf0f1) : QColor(Qt::white);
+        color = hasSubcomponents() && isExpanded() ? QColor{0xec, 0xf0, 0xf1} : QColorConstants::White;
     }
 
     QColor fillColor = (option->state & QStyle::State_Selected) ? color.darker(150) : color;
