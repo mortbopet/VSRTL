@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "Signals/Signal.h"
-#include "vsrtl.h"
+#include "vsrtl_defines.h"
 #include "vsrtl_gfxobjecttypes.h"
 #include "vsrtl_parameter.h"
 

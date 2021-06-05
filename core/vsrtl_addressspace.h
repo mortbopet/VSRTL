@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../interface/vsrtl.h"
+#include "../interface/vsrtl_defines.h"
 
 namespace vsrtl {
 namespace core {
@@ -50,15 +50,15 @@ public:
         return value;
     }
 
-    virtual bool contains(uint32_t address) const { return m_data.count(address) > 0; }
-    virtual RegionType regionType(uint32_t /* address */) const { return RegionType::Program; }
+    virtual bool contains(const VSRTL_VT_U& address) const { return m_data.count(address) > 0; }
+    virtual RegionType regionType(const VSRTL_VT_U& /* address */) const { return RegionType::Program; }
 
     /**
      * @brief addInitializationMemory
      * The specified program will be added as a memory segment which will be loaded into this memory once it is reset.
      */
     template <typename T>
-    void addInitializationMemory(const VSRTL_VT_U startAddr, T* program, size_t n) {
+    void addInitializationMemory(const VSRTL_VT_U& startAddr, T* program, const size_t& n) {
         auto& mem = m_initializationMemories.emplace_back();
         VSRTL_VT_U addr = startAddr;
         for (size_t i = 0; i < n; i++) {
@@ -92,7 +92,7 @@ struct IOFunctors {
      * - @param 2: value to write
      * - @param 3: byte-width of write
      */
-    std::function<void(uint32_t, uint32_t, uint32_t)> ioWrite;
+    std::function<void(VSRTL_VT_U, VSRTL_VT_U, VSRTL_VT_U)> ioWrite;
     /**
      * @brief ioRead
      * Function pointer to an IO read function.
@@ -100,7 +100,7 @@ struct IOFunctors {
      * - @param 3: byte-width of read
      * - @return read value from peripheral
      */
-    std::function<uint32_t(uint32_t, uint32_t)> ioRead;
+    std::function<VSRTL_VT_U(VSRTL_VT_U, VSRTL_VT_U)> ioRead;
 };
 
 /**
@@ -111,7 +111,7 @@ struct IOFunctors {
 class AddressSpaceMM : public AddressSpace {
 public:
     struct MMapValue {
-        uint32_t base;
+        VSRTL_VT_U base;
         unsigned size;
         IOFunctors io;
     };
@@ -140,7 +140,7 @@ public:
         }
     }
 
-    RegionType regionType(uint32_t address) const override {
+    RegionType regionType(const VSRTL_VT_U& address) const override {
         if (auto* mmapregion = findMMapRegion(address)) {
             (void)mmapregion;
             return RegionType::IO;
@@ -153,14 +153,14 @@ public:
      * @brief addRegion
      * Registers a memory mapped region at @param start with @param size.
      */
-    void addIORegion(VSRTL_VT_U baseAddr, unsigned size, const IOFunctors& io) {
+    void addIORegion(const VSRTL_VT_U& baseAddr, const unsigned& size, const IOFunctors& io) {
         // Assert that there lies no memory regions within the region that we are about to insert
         assert(findMMapRegion(baseAddr) == nullptr && findMMapRegion(baseAddr + size - 1) == nullptr &&
                "Tried to add memory mapped region which overlaps with some other region");
         assert(size > 0);
         m_mmapRegions[baseAddr + size - 1] = MMapValue{baseAddr, size, io};
     }
-    void removeIORegion(VSRTL_VT_U baseAddr, unsigned size) {
+    void removeIORegion(const VSRTL_VT_U& baseAddr, const unsigned& size) {
         auto it = m_mmapRegions.find(baseAddr + size - 1);
         assert(it != m_mmapRegions.end() && "Tried to remove non-existing memory mapped region");
         m_mmapRegions.erase(it);
@@ -171,7 +171,7 @@ public:
      * Attempts to locate the memory mapped region which @param address resides in. If located, returns I/O capabilities
      * to this region, else returns nullptr.
      */
-    const MMapValue* findMMapRegion(VSRTL_VT_U address) const {
+    const MMapValue* findMMapRegion(const VSRTL_VT_U& address) const {
         if (m_mmapRegions.empty()) {
             return nullptr;
         }
@@ -193,7 +193,7 @@ private:
      * base address of the region), however, this logic works better with std::map::lower_bound. Value represents the
      * size of the region (used to determine indexing into the region) as well as I/O functions.
      */
-    std::map<uint32_t, MMapValue> m_mmapRegions;
+    std::map<VSRTL_VT_U, MMapValue> m_mmapRegions;
 };
 
 }  // namespace core

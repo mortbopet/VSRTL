@@ -16,7 +16,7 @@ public:
             if (t == ShiftType::sl) {
                 return in.uValue() << shamt;
             } else if (t == ShiftType::sra) {
-                return static_cast<VSRTL_VT_U>(in.sValue() >> shamt);
+                return VT_U(in.sValue() >> shamt);
             } else if (t == ShiftType::srl) {
                 return in.uValue() >> shamt;
             } else {

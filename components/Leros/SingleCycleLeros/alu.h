@@ -33,11 +33,11 @@ public:
                 case alu_op::loadi:
                     return op2s;
                 case alu_op::loadhi:
-                    return static_cast<VSRTL_VT_S>((op2s & 0xFFFFFF00) | (op1s & 0xFF));
+                    return VT_S((op2s & 0xFFFFFF00) | (op1s & 0xFF));
                 case alu_op::loadh2i:
-                    return static_cast<VSRTL_VT_S>((op2s & 0xFFFF0000) | (op1s & 0xFFFF));
+                    return VT_S((op2s & 0xFFFF0000) | (op1s & 0xFFFF));
                 case alu_op::loadh3i:
-                    return static_cast<VSRTL_VT_S>((op2s & 0xFF000000) | (op1s & 0xFFFFFF));
+                    return VT_S((op2s & 0xFF000000) | (op1s & 0xFFFFFF));
                 default:
                     throw std::runtime_error("Unknown ALU op");
             }

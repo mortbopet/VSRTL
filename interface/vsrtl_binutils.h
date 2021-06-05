@@ -8,6 +8,8 @@
 #include <vector>
 #include "limits.h"
 
+#include "vsrtl_defines.h"
+
 namespace vsrtl {
 
 // Sign extension of arbitrary bitfield size.
@@ -27,14 +29,17 @@ inline T signextend(const T x, unsigned B) {
     return (x << m) >> m;
 }
 
-constexpr unsigned generateBitmask(int n) {
+constexpr VSRTL_VT_U generateBitmask(const VSRTL_VT_U& n) {
+    if (n >= (sizeof(VSRTL_VT_U) * CHAR_BIT)) {
+        return VT_U(VT_S(-1));
+    }
     if (n == 0) {
         return 0;
     }
-    return static_cast<unsigned>((1UL << n) - 1);
+    return VT_U((1UL << n) - 1);
 }
 
-constexpr uint32_t bitcount(int n) {
+constexpr unsigned bitcount(VSRTL_VT_U n) {
     unsigned count = 0;
     while (n > 0) {
         count += 1;
@@ -43,17 +48,17 @@ constexpr uint32_t bitcount(int n) {
     return count;
 }
 
-template <uint32_t width>
-inline uint32_t accBVec(const std::array<bool, width>& v) {
-    uint32_t r = 0;
+template <unsigned width, typename T>
+inline T accBVec(const std::array<bool, width>& v) {
+    T r = 0;
     for (auto i = 0; i < width; i++) {
         r |= v[i] << i;
     }
     return r;
 }
 
-template <unsigned int width>
-inline std::array<bool, width> buildUnsignedArr(uint32_t v) {
+template <unsigned width>
+inline std::array<bool, width> buildUnsignedArr(VSRTL_VT_U v) {
     std::array<bool, width> r;
     for (size_t i = 0; i < width; i++) {
         r[i] = v & 0b1;
@@ -62,11 +67,13 @@ inline std::array<bool, width> buildUnsignedArr(uint32_t v) {
     return r;
 }
 
-constexpr unsigned floorlog2(unsigned x) {
+template <typename T>
+constexpr T floorlog2(const T& x) {
     return x == 1 ? 0 : 1 + floorlog2(x >> 1);
 }
 
-constexpr unsigned ceillog2(unsigned x) {
+template <typename T>
+constexpr const T ceillog2(const T& x) {
     return x == 1 || x == 0 ? 1 : floorlog2(x - 1) + 1;
 }
 

@@ -10,7 +10,7 @@
 #include <type_traits>
 
 #include "../interface/vsrtl_binutils.h"
-#include "vsrtl_defines.h"
+#include "../interface/vsrtl_interface.h"
 
 namespace vsrtl {
 namespace core {
@@ -78,7 +78,7 @@ public:
     }
 
     VSRTL_VT_U uValue() const override { return m_value & generateBitmask(W); }
-    VSRTL_VT_S sValue() const override { return static_cast<VSRTL_VT_S>(signextend<VSRTL_VT_S, W>(m_value)); }
+    VSRTL_VT_S sValue() const override { return signextend<VSRTL_VT_S, W>(m_value); }
     unsigned int getWidth() const override { return W; }
 
     explicit operator VSRTL_VT_S() const { return signextend<VSRTL_VT_S, W>(m_value); }

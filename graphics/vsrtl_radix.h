@@ -2,7 +2,7 @@
 #define VSRTL_Radix_H
 
 #include <QRegExp>
-#include "../interface/vsrtl.h"
+#include "../interface/vsrtl_defines.h"
 
 QT_FORWARD_DECLARE_CLASS(QString)
 QT_FORWARD_DECLARE_CLASS(QMenu)

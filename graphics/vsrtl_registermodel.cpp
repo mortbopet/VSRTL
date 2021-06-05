@@ -55,7 +55,7 @@ QVariant RegisterTreeItem::data(int column, int role) const {
 bool RegisterTreeItem::setData(int, const QVariant& value, int) {
     if (index.column() == RegisterModel::ValueColumn) {
         if (m_register) {
-            m_design->setSynchronousValue(m_register->getSynchronous(), 0, value.value<uint32_t>());
+            m_design->setSynchronousValue(m_register->getSynchronous(), 0, value.value<VSRTL_VT_U>());
             return true;
         }
     }
@@ -98,7 +98,7 @@ bool RegisterModel::setData(const QModelIndex& index, const QVariant& var, int r
     auto* item = getTreeItem(index);
     if (item) {
         VSRTL_VT_U value = decodePortRadixValue(*item->m_port, item->m_radix, var.toString());
-        return item->setData(index.column(), value, role);
+        return item->setData(index.column(), QVariant::fromValue(value), role);
     }
 
     return false;
