@@ -20,6 +20,6 @@ constexpr VSRTL_VT_U VT_U(const T& v) {
 }
 template <typename T>
 constexpr VSRTL_VT_S VT_S(const T& v) {
-    return VT_S(v);
+    return static_cast<VSRTL_VT_S>(v);
 }
 }  // namespace vsrtl
