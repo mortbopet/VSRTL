@@ -187,8 +187,9 @@ private:
 };
 
 #define TYPE(...) __VA_ARGS__
-#define SUBCOMPONENT(name, type, ...) type* name = create_component<type>(#name, ##__VA_ARGS__)
-#define SUBCOMPONENTS(name, type, n, ...) std::vector<type*> name = create_components<type>(#name, n, ##__VA_ARGS__)
+#define SUBCOMPONENT(name, type, ...) type* name = SimComponent::create_component<type>(#name, ##__VA_ARGS__)
+#define SUBCOMPONENTS(name, type, n, ...) \
+    std::vector<type*> name = SimComponent::create_components<type>(#name, n, ##__VA_ARGS__)
 #define PARAMETER(name, type, initial) Parameter<type>& name = this->template createParameter<type>(#name, initial)
 
 namespace {
