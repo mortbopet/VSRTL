@@ -21,7 +21,7 @@ struct MemoryEviction {
     VSRTL_VT_U width;
 };
 
-template <unsigned addrWidth, unsigned dataWidth, bool byteIndexed = true>
+template <bool byteIndexed = true>
 class BaseMemory {
 public:
     BaseMemory() {}
@@ -36,12 +36,17 @@ public:
         m_memory->writeMem(byteIndexed ? address : address << 2, value, size);
     }
 
+    // Width-independent accessors to memory in- and output signals.
+    virtual VSRTL_VT_U addressSig() const = 0;
+    virtual VSRTL_VT_U wrEnSig() const = 0;
+    virtual VSRTL_VT_U opSig() const { return 0; };
+
 protected:
     AddressSpace* m_memory = nullptr;
 };
 
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
-class WrMemory : public ClockedComponent, public BaseMemory<addrWidth, dataWidth, byteIndexed> {
+class WrMemory : public ClockedComponent, public BaseMemory<byteIndexed> {
 public:
     SetGraphicsType(Component);
     WrMemory(std::string name, SimComponent* parent) : ClockedComponent(name, parent) {}
@@ -68,6 +73,9 @@ public:
             m_reverseStack.pop_front();
         }
     }
+
+    virtual VSRTL_VT_U addressSig() const override { return addr.uValue(); };
+    virtual VSRTL_VT_U wrEnSig() const override { return wr_en.uValue(); };
 
     void forceValue(VSRTL_VT_U address, VSRTL_VT_U value) override { this->write(address, value); }
 
@@ -108,7 +116,7 @@ private:
 };
 
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
-class RdMemory : public Component, public BaseMemory<addrWidth, dataWidth, byteIndexed> {
+class RdMemory : public Component, public BaseMemory<byteIndexed> {
     template <unsigned int, unsigned int>
     friend class Memory;
 
@@ -123,6 +131,9 @@ public:
     }
 
     AddressSpace::RegionType accessRegion() const override { return this->memory()->regionType(addr.uValue()); }
+
+    virtual VSRTL_VT_U addressSig() const override { return addr.uValue(); };
+    virtual VSRTL_VT_U wrEnSig() const override { return 0; };
 
     INPUTPORT(addr, addrWidth);
     OUTPUTPORT(data_out, dataWidth);
