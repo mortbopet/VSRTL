@@ -78,10 +78,10 @@ public:
     }
 
     VSRTL_VT_U uValue() const override { return m_value & generateBitmask(W); }
-    VSRTL_VT_S sValue() const override { return signextend<VSRTL_VT_S, W>(m_value); }
+    VSRTL_VT_S sValue() const override { return signextend<W>(m_value); }
     unsigned int getWidth() const override { return W; }
 
-    explicit operator VSRTL_VT_S() const { return signextend<VSRTL_VT_S, W>(m_value); }
+    explicit operator VSRTL_VT_S() const { return signextend<W>(m_value); }
 
     void setPortValue() override {
         auto prePropagateValue = m_value;

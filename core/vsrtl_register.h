@@ -125,7 +125,7 @@ public:
 
     void forceValue(VSRTL_VT_U /* addr */, VSRTL_VT_U value) override {
         // Sign-extension with unsigned type forces width truncation to m_width bits
-        m_savedValue = signextend<VSRTL_VT_U, W>(value);
+        m_savedValue = signextend<W>(value);
         // Forced values are a modification of the current state and thus not pushed onto the reverse stack
     }
 

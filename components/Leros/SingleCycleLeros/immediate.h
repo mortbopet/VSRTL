@@ -14,7 +14,7 @@ public:
     Immediate(std::string name, SimComponent* parent) : Component(name, parent) {
         imm << [=] {
             const auto imm8 = instr.uValue() & 0xFF;
-            const auto simm8 = signextend<VSRTL_VT_S, 8>(imm8);
+            const auto simm8 = signextend<8>(imm8);
             const auto imm12 = instr.uValue() & 0xFFF;
             Switch(ctrl, imm_op) {
                 case imm_op::nop:
@@ -24,7 +24,7 @@ public:
                 case imm_op::shl2:
                     return simm8 << 2;
                 case imm_op::branch:
-                    return signextend<VSRTL_VT_S, 12>(imm12) << 1;
+                    return signextend<12>(imm12) << 1;
                 case imm_op::loadi:
                     return simm8;
                 case imm_op::loadhi:

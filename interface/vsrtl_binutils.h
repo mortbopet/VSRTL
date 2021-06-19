@@ -14,19 +14,19 @@ namespace vsrtl {
 
 // Sign extension of arbitrary bitfield size.
 // Courtesy of http://graphics.stanford.edu/~seander/bithacks.html#FixedSignExtend
-template <typename T, unsigned B>
-inline T signextend(const T x) {
+template <unsigned B, typename T>
+inline VSRTL_VT_S signextend(const T x) {
     struct {
-        T x : B;
+        VSRTL_VT_S x : B;
     } s;
     return s.x = x;
 }
 
 // Runtime signextension
 template <typename T>
-inline T signextend(const T x, unsigned B) {
+inline VSRTL_VT_S signextend(const T x, unsigned B) {
     const int m = CHAR_BIT * sizeof(T) - B;
-    return (x << m) >> m;
+    return static_cast<VSRTL_VT_S>(x << m) >> m;
 }
 
 constexpr VSRTL_VT_U generateBitmask(const VSRTL_VT_U& n) {
