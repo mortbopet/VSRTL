@@ -39,6 +39,13 @@ public:
 
     const std::string& getName() const { return m_name; }
     const std::string& getDisplayName() const { return m_displayName.empty() ? m_name : m_displayName; }
+    const std::string getHierName() const {
+        if (m_parent) {
+            return m_parent->getHierName() + "->" + getName();
+        } else {
+            return getName();
+        }
+    }
 
     template <typename T = SimBase>
     T* getParent() const {
