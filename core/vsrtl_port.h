@@ -77,7 +77,14 @@ public:
             *this >> *p;
     }
 
-    VSRTL_VT_U uValue() const override { return m_value & generateBitmask(W); }
+    VSRTL_VT_U uValue() const override {
+        // There seems to be an MSVC bug lurking here;
+        // if using "return m_value & generateBitmask(W)", "0" will always be returned (i am assuming the constexpr
+        // bitmask is getting applied incorrectly). However, creating a separate variable for the mask seems to do work
+        // correctly.
+        constexpr VSRTL_VT_U mask = generateBitmask(W);
+        return m_value & mask;
+    }
     VSRTL_VT_S sValue() const override { return signextend<W>(m_value); }
     unsigned int getWidth() const override { return W; }
 
