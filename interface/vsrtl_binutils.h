@@ -5,7 +5,9 @@
 #include <cstdint>
 #include <functional>
 #include <stdexcept>
+#include <type_traits>
 #include <vector>
+
 #include "limits.h"
 
 #include "vsrtl_defines.h"
@@ -14,19 +16,21 @@ namespace vsrtl {
 
 // Sign extension of arbitrary bitfield size.
 // Courtesy of http://graphics.stanford.edu/~seander/bithacks.html#FixedSignExtend
-template <unsigned B, typename T>
-inline VSRTL_VT_S signextend(const T x) {
+template <unsigned B, typename T, typename T2 = VSRTL_VT_S>
+inline T2 signextend(const T x) {
+    static_assert(std::is_signed<T2>::value, "T2 must be signed type");
     struct {
-        VSRTL_VT_S x : B;
+        T2 x : B;
     } s;
     return s.x = x;
 }
 
 // Runtime signextension
-template <typename T>
-inline VSRTL_VT_S signextend(const T x, unsigned B) {
-    const int m = CHAR_BIT * sizeof(T) - B;
-    return static_cast<VSRTL_VT_S>(x << m) >> m;
+template <typename T, typename T2 = VSRTL_VT_S>
+inline T2 signextend(const T x, unsigned B) {
+    static_assert(std::is_signed<T2>::value, "T2 must be signed type");
+    const int m = CHAR_BIT * sizeof(T2) - B;
+    return (static_cast<T2>(x) << m) >> m;
 }
 
 template <unsigned n>
