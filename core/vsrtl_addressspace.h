@@ -23,28 +23,28 @@ public:
     enum class RegionType { Program, IO };
     virtual ~AddressSpace() {}
 
-    virtual void writeMem(VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
+    virtual void writeMem(VSRTL_VT_U address, VSRTL_VT_U value, int bytes) {
         // writes value from the given address start, and up to $size bytes of
         // $value
-        for (int i = 0; i < size; i++) {
-            m_data[address + i] = value & 0xff;
+        for (int i = 0; i < bytes; i++) {
+            m_data[address++] = value & 0xFF;
             value >>= 8;
         }
     }
 
-    virtual VSRTL_VT_U readMem(VSRTL_VT_U address, unsigned width = 4) {
+    virtual VSRTL_VT_U readMem(VSRTL_VT_U address, unsigned bytes) {
         VSRTL_VT_U value = 0;
-        for (unsigned i = 0; i < width; i++) {
-            value |= m_data[address++] << (i * CHAR_BIT);
+        for (unsigned i = 0; i < bytes; i++) {
+            value |= static_cast<VSRTL_VT_U>(m_data[address++]) << (i * CHAR_BIT);
         }
 
         return value;
     }
 
-    virtual VSRTL_VT_U readMemConst(VSRTL_VT_U address, unsigned width = 4) const {
+    virtual VSRTL_VT_U readMemConst(VSRTL_VT_U address, unsigned bytes) const {
         VSRTL_VT_U value = 0;
-        for (unsigned i = 0; i < width; i++) {
-            value |= contains(address) ? m_data.at(address) << (i * CHAR_BIT) : 0;
+        for (unsigned i = 0; i < bytes; i++) {
+            value |= contains(address) ? static_cast<VSRTL_VT_U>(m_data.at(address)) << (i * CHAR_BIT) : 0;
             address++;
         }
         return value;

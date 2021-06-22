@@ -30,10 +30,12 @@ public:
     const AddressSpace* memory() const { return m_memory; }
     virtual AddressSpace::RegionType accessRegion() const = 0;
 
-    VSRTL_VT_U read(VSRTL_VT_U address) { return m_memory->readMem(byteIndexed ? address : address << 2); }
+    VSRTL_VT_U read(VSRTL_VT_U address, int size, unsigned wordShift) {
+        return m_memory->readMem(byteIndexed ? address : address << wordShift, size);
+    }
 
-    void write(VSRTL_VT_U address, VSRTL_VT_U value, int size = sizeof(VSRTL_VT_U)) {
-        m_memory->writeMem(byteIndexed ? address : address << 2, value, size);
+    void write(VSRTL_VT_U address, VSRTL_VT_U value, int size, unsigned wordShift) {
+        m_memory->writeMem(byteIndexed ? address : address << wordShift, value, size);
     }
 
     // Width-independent accessors to memory in- and output signals.
@@ -54,21 +56,25 @@ public:
     AddressSpace::RegionType accessRegion() const override { return this->memory()->regionType(addr.uValue()); }
 
     void save() override {
+        constexpr unsigned wordshift = ceillog2((byteIndexed ? addrWidth : dataWidth) / CHAR_BIT);
         const bool writeEnable = static_cast<bool>(wr_en);
         const VSRTL_VT_U addr_v = addr.uValue();
         const VSRTL_VT_U data_in_v = data_in.uValue();
-        const VSRTL_VT_U data_out_v = this->read(addr_v);
-        auto ev = MemoryEviction({writeEnable, addr_v, data_out_v, wr_width.uValue()});
+        const VSRTL_VT_U data_out_v = this->read(addr_v, dataWidth / CHAR_BIT, wordshift);
+        const VSRTL_VT_U wr_width_v = wr_width.uValue();
+        auto ev = MemoryEviction({writeEnable, addr_v, data_out_v, wr_width_v});
         saveToStack(ev);
-        if (writeEnable)
-            this->write(addr_v, data_in_v, wr_width.uValue());
+        if (writeEnable) {
+            this->write(addr_v, data_in_v, wr_width_v, wordshift);
+        }
     }
 
     void reverse() override {
         if (m_reverseStack.size() > 0) {
             auto lastEviction = m_reverseStack.front();
             if (lastEviction.writeEnable) {
-                this->write(lastEviction.addr, lastEviction.data, lastEviction.width);
+                this->write(lastEviction.addr, lastEviction.data, lastEviction.width,
+                            ceillog2((byteIndexed ? addrWidth : dataWidth) / CHAR_BIT));
             }
             m_reverseStack.pop_front();
         }
@@ -77,11 +83,13 @@ public:
     virtual VSRTL_VT_U addressSig() const override { return addr.uValue(); };
     virtual VSRTL_VT_U wrEnSig() const override { return wr_en.uValue(); };
 
-    void forceValue(VSRTL_VT_U address, VSRTL_VT_U value) override { this->write(address, value); }
+    void forceValue(VSRTL_VT_U address, VSRTL_VT_U value) override {
+        this->write(address, value, dataWidth / CHAR_BIT, ceillog2((byteIndexed ? addrWidth : dataWidth) / CHAR_BIT));
+    }
 
     INPUTPORT(addr, addrWidth);
     INPUTPORT(data_in, dataWidth);
-    INPUTPORT(wr_width, ceillog2(dataWidth / 8 + 1));  // # bytes
+    INPUTPORT(wr_width, ceillog2(dataWidth / CHAR_BIT + 1));  // # bytes
     INPUTPORT(wr_en, 1);
 
 protected:
@@ -106,7 +114,10 @@ template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = tru
 class MemorySyncRd : public WrMemory<addrWidth, dataWidth, byteIndexed> {
 public:
     MemorySyncRd(std::string name, SimComponent* parent) : WrMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {
-        data_out << [=] { return this->read(this->addr.uValue()); };
+        data_out << [=] {
+            return this->read(this->addr.uValue(), dataWidth / CHAR_BIT,
+                              ceillog2((byteIndexed ? addrWidth : dataWidth) / CHAR_BIT));
+        };
     }
 
     OUTPUTPORT(data_out, dataWidth);
@@ -125,7 +136,8 @@ public:
     RdMemory(std::string name, SimComponent* parent) : Component(name, parent) {
         data_out << [=] {
             auto _addr = addr.uValue();
-            auto val = this->read(_addr);
+            auto val =
+                this->read(_addr, dataWidth / CHAR_BIT, ceillog2((byteIndexed ? addrWidth : dataWidth) / CHAR_BIT));
             return val;
         };
     }
@@ -168,7 +180,7 @@ public:
     INPUTPORT(addr, addrWidth);
     INPUTPORT(data_in, dataWidth);
     INPUTPORT(wr_en, 1);
-    INPUTPORT(wr_width, ceillog2(dataWidth / 8 + 1));  // # bytes
+    INPUTPORT(wr_width, ceillog2(dataWidth / CHAR_BIT + 1));  // # bytes
     OUTPUTPORT(data_out, dataWidth);
 };
 
