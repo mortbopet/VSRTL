@@ -31,6 +31,10 @@ ComponentGraphic* VSRTLView::lookupGraphicForComponent(const SimComponent* c) {
 }
 
 void VSRTLView::zoomToFit(const QGraphicsItem* tlc) {
+    if (tlc == nullptr) {
+        return;
+    }
+
     fitInView(tlc->boundingRect(), Qt::KeepAspectRatio);
     const auto m = transform();
 

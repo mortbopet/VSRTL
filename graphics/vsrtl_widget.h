@@ -86,7 +86,7 @@ private:
     VSRTLView* m_view;
     VSRTLScene* m_scene;
 
-    SimDesign* m_design;
+    SimDesign* m_design = nullptr;
 };
 
 }  // namespace vsrtl
