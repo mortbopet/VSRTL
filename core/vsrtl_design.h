@@ -1,8 +1,8 @@
 #ifndef VSRTL_DESIGN_H
 #define VSRTL_DESIGN_H
 
+#include "../interface/vsrtl_defines.h"
 #include "vsrtl_component.h"
-#include "vsrtl_defines.h"
 #include "vsrtl_memory.h"
 #include "vsrtl_register.h"
 

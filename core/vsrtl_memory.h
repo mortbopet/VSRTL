@@ -3,9 +3,9 @@
 
 #include "vsrtl_addressspace.h"
 #include "vsrtl_component.h"
-#include "vsrtl_defines.h"
 #include "vsrtl_register.h"
 
+#include "../interface/vsrtl_defines.h"
 #include "../interface/vsrtl_gfxobjecttypes.h"
 
 #include <cstdint>
