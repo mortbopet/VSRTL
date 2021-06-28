@@ -44,7 +44,10 @@ public:
     virtual VSRTL_VT_U readMemConst(VSRTL_VT_U address, unsigned bytes) const {
         VSRTL_VT_U value = 0;
         for (unsigned i = 0; i < bytes; i++) {
-            value |= contains(address) ? static_cast<VSRTL_VT_U>(m_data.at(address)) << (i * CHAR_BIT) : 0;
+            auto it = m_data.find(address);
+            if (it != m_data.end()) {
+                value |= static_cast<VSRTL_VT_U>(it->second) << (i * CHAR_BIT);
+            }
             address++;
         }
         return value;
