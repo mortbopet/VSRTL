@@ -47,7 +47,7 @@ void operator>>(VSRTL_VT_S c, Port<W>& toThis) {
     // created constant
     auto* parent = toThis.getParent()->template getParent<SimComponent>();
     auto* constant = parent->template create_component<Constant<W>>(
-        "constant #" + std::to_string(parent->reserveConstantId()) + "v:" + std::to_string(c), c);
+        "constant id" + std::to_string(parent->reserveConstantId()) + "v" + std::to_string(c), c);
     constant->out >> toThis;
 }
 
