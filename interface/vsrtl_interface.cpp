@@ -1,6 +1,10 @@
 #include "vsrtl_interface.h"
 
 namespace vsrtl {
+void SimPort::queueVcdVarChange() {
+    getDesign()->queueVcdVarChange(this);
+}
+
 SimDesign* SimBase::getDesign() {
     if (m_design)
         return m_design;

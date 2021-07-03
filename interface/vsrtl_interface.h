@@ -15,6 +15,7 @@
 #include "vsrtl_defines.h"
 #include "vsrtl_gfxobjecttypes.h"
 #include "vsrtl_parameter.h"
+#include "vsrtl_vcdfile.h"
 
 namespace vsrtl {
 
@@ -84,6 +85,8 @@ struct BaseSorter {
 };
 
 class SimPort : public SimBase {
+    friend class SimDesign;
+
 public:
     enum class Direction { in, out };
     SimPort(std::string name, SimBase* parent) : SimBase(name, parent) {}
@@ -173,6 +176,11 @@ public:
         return portsInConnection;
     }
 
+    void writeVar(VCDFile& file) {
+        m_vcdId = file.varDef(getName(), getWidth());
+        file.varInitVal(m_vcdId, uValue());
+    }
+
     /** @todo: Figure out whether these should be defined in the interface */
     /**
      * @brief stringValue
@@ -182,6 +190,7 @@ public:
     virtual bool isEnumPort() const { return false; }
     virtual std::string valueToEnumString() const { throw std::runtime_error("This is not an enum port!"); }
     virtual VSRTL_VT_U enumStringToValue(const char*) const { throw std::runtime_error("This is not an enum port!"); }
+    const std::string& vcdId() const { return m_vcdId; }
 
     Gallant::Signal0<> changed;
 
@@ -190,7 +199,9 @@ protected:
     SimPort* m_inputPort = nullptr;
 
 private:
+    void queueVcdVarChange();
     bool m_traversingConnection = false;
+    std::string m_vcdId;
 };
 
 #define TYPE(...) __VA_ARGS__
@@ -388,6 +399,16 @@ public:
                             [name](const auto& p) { return p->getName() == name; }) == container.end();
     }
 
+    void writeScope(VCDFile& file) {
+        auto d = file.scopeDef(getName());
+        for (const auto& p : getAllPorts()) {
+            p->writeVar(file);
+        }
+        for (const auto& sc : m_subcomponents) {
+            sc->writeScope(file);
+        }
+    }
+
     template <typename T>
     T* cast() {
         static_assert(std::is_base_of<SimComponent, T>::value, "Must cast to a simulator-specific component type");
@@ -465,6 +486,10 @@ public:
         if (clockedSignalsEnabled()) {
             designWasClocked.Emit();
         }
+
+        if (vcdDump()) {
+            dumpVcdVarChanges();
+        }
     }
 
     /**
@@ -501,6 +526,10 @@ public:
         if (clockedSignalsEnabled()) {
             designWasReset.Emit();
         }
+
+        if (m_dumpVcdFiles) {
+            resetVcdFile();
+        }
     }
 
     /**
@@ -535,7 +564,84 @@ public:
 
     long long getCycleCount() const { return m_cycleCount; }
 
+    /**
+     * @brief vcdDump
+     * @param enabled; enables dumping of all ports to a vcd file. For each port in the circuit, we connect an
+     * additional slot which will queue a notice to this top-level Design that the variable change is to be written to
+     * the VCD file.
+     */
+    void vcdDump(bool enabled) {
+        m_dumpVcdFiles = enabled;
+        std::map<SimComponent*, std::vector<SimComponent*>> componentGraph;
+        getComponentGraph(componentGraph);
+        for (const auto& compIt : componentGraph) {
+            for (const auto& port : compIt.first->getAllPorts()) {
+                port->changed.Disconnect(port, &SimPort::queueVcdVarChange);
+                if (enabled) {
+                    port->changed.Connect(port, &SimPort::queueVcdVarChange);
+                }
+            }
+        }
+    }
+
+    /**
+     * @brief vcdDump
+     * @returns whether the simulation is dumped to a .vcd file.
+     */
+    bool vcdDump() const { return m_dumpVcdFiles; }
+
+    /**
+     * @brief resetVcdFile
+     * Prepares a new VCD file for the circuit. A header is written containing all ports in the design, as vcd
+     * variables, scoped by the SimComponent hierarchy wherein they reside.
+     */
+    void resetVcdFile() {
+        m_vcdFile = std::make_unique<VCDFile>(getName() + ".vcd");
+        {
+            auto def1 = m_vcdFile->writeHeader();
+            auto def2 = m_vcdFile->scopeDef("TOP");
+            m_vcdClkId = m_vcdFile->varDef("clk", 1);
+            for (const auto& it : m_subcomponents) {
+                it->writeScope(*m_vcdFile);
+            }
+        };
+        { auto def3 = m_vcdFile->dumpVars(); }
+        m_vcdFile->writeTime(getCycleCount() * 2);
+        m_vcdVarChangeQueue.clear();
+    }
+
     virtual void setSynchronousValue(SimSynchronous* c, VSRTL_VT_U addr, VSRTL_VT_U value) = 0;
+
+    /**
+     * @brief queueVcdVarChange
+     * Caled by @param port to enqueue a notice of the fact that the port has changed its value in the current cycle.
+     */
+    void queueVcdVarChange(const SimPort* port) {
+        if (m_vcdVarChangeQueue.count(port) != 0) {
+            throw std::runtime_error("Multiple changes for port " + port->getHierName() + " during a single cycle");
+        }
+        m_vcdVarChangeQueue.insert(port);
+    }
+
+    /**
+     * @brief dumpVcdVarChanges
+     * Increments simulation time in the .vcd file and dumps all enqueued variable changes to the file.
+     */
+    void dumpVcdVarChanges() {
+        m_vcdFile->writeVarChange(m_vcdClkId, 1);
+
+        for (const auto& port : m_vcdVarChangeQueue) {
+            m_vcdFile->writeVarChange(port->vcdId(), port->uValue());
+        }
+
+        m_vcdVarChangeQueue.clear();
+
+        m_vcdFile->writeTime(getCycleCount() * 2);
+        m_vcdFile->writeVarChange(m_vcdClkId, 0);
+        m_vcdFile->writeTime(getCycleCount() * 2 + 1);
+
+        m_vcdFile->flush();
+    }
 
     /**
      * @brief clocked, reversed & reset signals
@@ -552,6 +658,12 @@ protected:
 
 private:
     bool m_emitsClockedSignals = true;
+
+    // VCD dump members
+    std::unique_ptr<VCDFile> m_vcdFile;
+    std::set<const SimPort*> m_vcdVarChangeQueue;
+    std::string m_vcdClkId;
+    bool m_dumpVcdFiles = false;
 
 #ifndef NDEBUG
     long long m_cycleCountPre = 0;
