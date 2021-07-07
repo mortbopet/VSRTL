@@ -24,7 +24,7 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     m_pen.setCapStyle(Qt::RoundCap);
     setAcceptHoverEvents(true);
 
-    m_label = new Label(QString::fromStdString(m_port->getDisplayName()), this, 8);
+    m_label = std::make_unique<Label>(this, QString::fromStdString(m_port->getDisplayName()), 8);
     m_label->setVisible(false);
 
     if (m_port->isEnumPort()) {
@@ -59,11 +59,11 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
                                        dynamic_cast<ComponentGraphic*>(parentItem()->parentItem()));
     }
 
-    m_valueLabel = new ValueLabel(m_radix, this, this);
+    m_valueLabel = std::make_unique<ValueLabel>(this, m_radix, this);
     m_valueLabel->setVisible(false);
     m_valueLabel->moveBy(3, -6);  // start position (may be dragged)
 
-    m_portWidthLabel = new Label(QString::number(port->getWidth() - 1) + ":0", this, 7);
+    m_portWidthLabel = std::make_unique<Label>(this, QString::number(port->getWidth() - 1) + ":0", 7);
     m_portWidthLabel->setMoveable(false);
     m_portWidthLabel->setHoverable(false);
     m_portWidthLabel->setFlags(m_portWidthLabel->flags() &

@@ -12,7 +12,7 @@ namespace vsrtl {
 class Label : public GraphicsBaseItem<QGraphicsTextItem> {
     Q_OBJECT
 public:
-    Label(const QString& text, QGraphicsItem* parent, int fontSize = 12);
+    Label(QGraphicsItem* parent, const QString& text, int fontSize = 12);
 
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;

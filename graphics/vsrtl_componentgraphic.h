@@ -154,7 +154,7 @@ protected:
     QMap<SimPort*, PortGraphic*> m_inputPorts;
     QMap<SimPort*, PortGraphic*> m_outputPorts;
 
-    Label* m_label = nullptr;
+    std::unique_ptr<Label> m_label;
 
     // Rectangles
     QPainterPath m_shape;

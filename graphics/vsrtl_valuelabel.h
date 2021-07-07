@@ -13,7 +13,7 @@ class PortGraphic;
 
 class ValueLabel : public Label {
 public:
-    ValueLabel(Radix& type, const PortGraphic* port, QGraphicsItem* parent);
+    ValueLabel(QGraphicsItem* parent, Radix& type, const PortGraphic* port);
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;

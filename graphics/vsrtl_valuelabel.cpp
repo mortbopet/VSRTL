@@ -9,8 +9,8 @@
 
 namespace vsrtl {
 
-ValueLabel::ValueLabel(Radix& type, const PortGraphic* port, QGraphicsItem* parent)
-    : Label("", parent, 10), m_type(type), m_port(port) {
+ValueLabel::ValueLabel(QGraphicsItem* parent, Radix& type, const PortGraphic* port)
+    : Label(parent, "", 10), m_type(type), m_port(port) {
     setFlag(ItemIsSelectable, true);
     setAcceptHoverEvents(true);
 }

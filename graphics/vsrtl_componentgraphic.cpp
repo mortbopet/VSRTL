@@ -68,7 +68,7 @@ void ComponentGraphic::initialize() {
     setAcceptHoverEvents(true);
     setMoveable();
 
-    m_label = new Label(QString::fromStdString(m_component->getDisplayName()), this);
+    m_label = std::make_unique<Label>(this, QString::fromStdString(m_component->getDisplayName()));
 
     // Create IO ports of Component
     for (const auto& p_in : m_component->getPorts<SimPort::Direction::in, SimPort>()) {

@@ -10,6 +10,7 @@
 #include "../interface/vsrtl_interface.h"
 
 #include "cereal/cereal.hpp"
+#include "cereal/types/memory.hpp"
 
 #include <QFont>
 #include <QPen>
@@ -134,15 +135,15 @@ private:
     WireGraphic* m_outputWire = nullptr;
     WireGraphic* m_inputWire = nullptr;
 
-    ValueLabel* m_valueLabel = nullptr;
+    std::unique_ptr<ValueLabel> m_valueLabel = nullptr;
 
     Radix m_radix = Radix::Hex;
 
     std::unique_ptr<QPropertyAnimation> m_colorAnimation;
 
     Side m_side = Side::Right;
-    Label* m_label = nullptr;
-    Label* m_portWidthLabel = nullptr;
+    std::unique_ptr<Label> m_label;
+    std::unique_ptr<Label> m_portWidthLabel;
     QString m_widthText;
     QFont m_font;
     QPen m_pen;
