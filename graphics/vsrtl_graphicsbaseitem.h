@@ -125,6 +125,15 @@ public:
         }
         m_prePos = curPos;
 
+        if (change == QGraphicsItem::ItemSelectedChange) {
+            if (value.toBool()) {
+                m_preZLayer = T::zValue();
+                T::setZValue(VSRTLScene::Z_Selected);
+            } else {
+                T::setZValue(m_preZLayer);
+            }
+        }
+
         return QGraphicsItem::itemChange(change, value);
     }
 
@@ -138,6 +147,10 @@ protected:
 
     // State-change preservation needed for Item#HasChanged value difference calculations
     QPointF m_prePos;
+
+private:
+    // Buffer Z-layer value in between selection state changes
+    qreal m_preZLayer;
 };
 
 }  // namespace vsrtl
