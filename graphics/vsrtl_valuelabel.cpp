@@ -14,6 +14,11 @@ ValueLabel::ValueLabel(QGraphicsItem* parent, const std::shared_ptr<Radix>& radi
     setFlag(ItemIsSelectable, true);
     setAcceptHoverEvents(true);
     updateText();
+
+    m_showLineToPortAction = new QAction("Always show line to port");
+    m_showLineToPortAction->setCheckable(true);
+    m_showLineToPortAction->setChecked(false);
+    QObject::connect(m_showLineToPortAction, &QAction::triggered, [this] { createLineToPort(); });
 }
 
 void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
@@ -40,12 +45,12 @@ void ValueLabel::updateLine() {
 }
 
 QLineF ValueLabel::lineToPort() const {
-    const QRectF textRect = mapRectToItem(parentItem(), shape().boundingRect());
+    const QRectF textRect = shape().boundingRect();
     QLineF shortestLine;
     qreal minLength = qInf();
     for (const auto& corner :
          {textRect.topLeft(), textRect.topRight(), textRect.bottomLeft(), textRect.bottomRight()}) {
-        const auto line = QLineF(corner, parentItem()->mapFromScene(m_port->scenePos()));
+        const auto line = QLineF(corner, mapFromScene(m_port->scenePos()));
         if (line.length() < minLength) {
             shortestLine = line;
             minLength = line.length();
@@ -62,7 +67,7 @@ void ValueLabel::mouseMoveEvent(QGraphicsSceneMouseEvent* e) {
 
 void ValueLabel::createLineToPort() {
     if (!m_lineToPort) {
-        m_lineToPort = new QGraphicsLineItem(lineToPort(), parentItem());
+        m_lineToPort = new QGraphicsLineItem(lineToPort(), this);
         m_lineToPort->setZValue(VSRTLScene::Z_ValueLabelHoverLine);
         QPen pen = m_lineToPort->pen();
         pen.setStyle(Qt::DashLine);
@@ -77,7 +82,7 @@ void ValueLabel::hoverEnterEvent(QGraphicsSceneHoverEvent* e) {
 }
 
 void ValueLabel::hoverLeaveEvent(QGraphicsSceneHoverEvent* e) {
-    if (!m_alwaysShowLineToPort) {
+    if (!m_showLineToPortAction->isChecked()) {
         delete m_lineToPort;
         m_lineToPort = nullptr;
     }
@@ -87,6 +92,11 @@ void ValueLabel::hoverLeaveEvent(QGraphicsSceneHoverEvent* e) {
 QVariant ValueLabel::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (change == QGraphicsItem::ItemPositionHasChanged) {
         updateLine();
+    } else if (change == GraphicsItemChange::ItemVisibleChange) {
+        if (m_port->m_showValueAction && !m_port->m_showValueAction->isChecked()) {
+            // Reject visibility change - the value label has deliberatly been turned off
+            return QVariant();
+        }
     }
     return Label::itemChange(change, value);
 }
@@ -99,21 +109,8 @@ void ValueLabel::setLocked(bool) {
 void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
     menu.addMenu(createPortRadixMenu(m_port->getPort(), *m_radix));
-
-    QAction* showLabel = menu.addAction("Show value");
-    showLabel->setCheckable(true);
-    showLabel->setChecked(isVisible());
-    QObject::connect(showLabel, &QAction::triggered, [this](bool checked) { setVisible(checked); });
-    menu.addAction(showLabel);
-
-    QAction* showLineToPort = menu.addAction("Always show line to port");
-    showLineToPort->setCheckable(true);
-    showLineToPort->setChecked(m_alwaysShowLineToPort);
-    QObject::connect(showLineToPort, &QAction::triggered, [this](bool checked) {
-        m_alwaysShowLineToPort = checked;
-        createLineToPort();
-    });
-    menu.addAction(showLineToPort);
+    menu.addAction(m_port->m_showValueAction);
+    menu.addAction(m_showLineToPortAction);
 
     menu.exec(event->screenPos());
 

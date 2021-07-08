@@ -26,6 +26,8 @@ class PortPoint;
 class PortGraphic : public QObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
     Q_PROPERTY(QColor penColor MEMBER m_penColor)
+    friend class ValueLabel;
+    friend class VSRTLScene;
 
 public:
     PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent = nullptr);
@@ -154,6 +156,11 @@ private:
     QPen m_oldPen;  // Pen which was previously used for paint(). If a change between m_oldPen and m_pen is seen, this
                     // triggers redrawing of the connected wires
 
+    QAction* m_showValueAction = nullptr;
+    QAction* m_showWidthAction = nullptr;
+    QAction* m_showLabelAction = nullptr;
+    QAction* m_showAction = nullptr;
+
 public:
     template <class Archive>
     void serialize(Archive& archive) {
@@ -173,9 +180,9 @@ public:
 
         // Serialize port width label visibility
         try {
-            bool visible = m_portWidthLabel->isVisible();
+            bool visible = m_showWidthAction->isChecked();
             archive(cereal::make_nvp("PortWidthVisible", visible));
-            setPortWidthVisible(visible);
+            m_showWidthAction->setChecked(visible);
         } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }

@@ -67,7 +67,7 @@ private:
     /* Applies T::F to all items in the scene of type F, using the supplied arguments, if predicate returns
      * true */
     template <typename T, typename F, typename... Args>
-    void predicatedExecOnItems(std::function<bool(const T*)> pred, F f, Args... args) {
+    void predicatedExecOnItems(std::function<bool(const T*)> pred, F&& f, Args... args) {
         const auto sceneItems = items();
         for (auto* c : qAsConst(sceneItems)) {
             if (auto* t_c = dynamic_cast<T*>(c)) {

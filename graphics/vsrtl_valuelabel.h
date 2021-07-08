@@ -30,10 +30,10 @@ private:
     QLineF lineToPort() const;
     void updateLine();
 
-    bool m_alwaysShowLineToPort = false;
     std::shared_ptr<Radix> m_radix;
     const PortGraphic* m_port = nullptr;
     QGraphicsLineItem* m_lineToPort = nullptr;
+    QAction* m_showLineToPortAction = nullptr;
 };
 
 }  // namespace vsrtl

@@ -25,12 +25,6 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     setAcceptHoverEvents(true);
     ComponentGraphic* directParent = static_cast<ComponentGraphic*>(parentItem());
 
-    m_label = createVirtualChild<Label>({VirtualChildLink::Position, VirtualChildLink::Visibility},
-                                        QString::fromStdString(m_port->getDisplayName()), 8);
-    directParent->addVirtualChild(VirtualChildLink::Position, m_label);  // Also move when direct parent moves
-    m_label->setVisible(false);
-    m_label->setZValue(VSRTLScene::Z_PortLabel);
-
     m_radix = std::make_shared<Radix>(Radix::Hex);
     if (m_port->isEnumPort()) {
         // By default, display Enum value if underlying port is enum
@@ -69,6 +63,13 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
             new WireGraphic(scopeParent, this, m_port->getOutputPorts(), WireGraphic::WireType::ComponentOutput);
     }
 
+    // Setup labels
+    m_label = createVirtualChild<Label>({VirtualChildLink::Position, VirtualChildLink::Visibility},
+                                        QString::fromStdString(m_port->getDisplayName()), 8);
+    directParent->addVirtualChild(VirtualChildLink::Position, m_label);  // Also move when direct parent moves
+    m_label->setVisible(false);
+    m_label->setZValue(VSRTLScene::Z_PortLabel);
+
     m_valueLabel =
         createVirtualChild<ValueLabel>({VirtualChildLink::Visibility, VirtualChildLink::Position}, m_radix, this);
     m_valueLabel->setVisible(false);
@@ -83,6 +84,29 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     m_portWidthLabel->setFlags(m_portWidthLabel->flags() &
                                ~(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable));
     m_portWidthLabel->setZValue(VSRTLScene::Z_PortWidth);
+
+    // Setup actions
+    m_showValueAction = new QAction("Show value");
+    m_showValueAction->setCheckable(true);
+    m_showValueAction->setChecked(m_valueLabel->isVisible());
+    connect(m_showValueAction, &QAction::triggered, this, &PortGraphic::setValueLabelVisible);
+
+    m_showWidthAction = new QAction("Show width");
+    m_showWidthAction->setCheckable(true);
+    m_showWidthAction->setChecked(m_portWidthLabel->isVisible());
+    connect(m_showWidthAction, &QAction::triggered, this, &PortGraphic::setPortWidthVisible);
+    m_showLabelAction = new QAction("Show label");
+    m_showLabelAction->setCheckable(true);
+    m_showLabelAction->setChecked(m_label->isVisible());
+    connect(m_showLabelAction, &QAction::triggered, [this](bool checked) {
+        m_label->setVisible(checked);
+        m_label->setLocked(false);
+    });
+
+    m_showAction = new QAction("Show port");
+    m_showAction->setCheckable(true);
+    m_showAction->setChecked(!userHidden());
+    connect(m_showAction, &QAction::triggered, this, &PortGraphic::setUserVisible);
 
     updateGeometry();
 }
@@ -104,6 +128,7 @@ void PortGraphic::updateSlot() {
 void PortGraphic::setValueLabelVisible(bool visible) {
     Q_ASSERT(m_valueLabel);
     if (!userHidden() || m_valueLabel->isVisible()) {
+        m_showValueAction->setChecked(visible);
         m_valueLabel->setVisible(visible);
         updateSlot();
     }
@@ -168,32 +193,13 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
 
     if (!userHidden()) {
-        QAction* showValueAction = menu.addAction("Show value");
-        showValueAction->setCheckable(true);
-        showValueAction->setChecked(m_valueLabel->isVisible());
-        connect(showValueAction, &QAction::triggered, this, &PortGraphic::setValueLabelVisible);
-        menu.addAction(showValueAction);
+        menu.addAction(m_showValueAction);
     }
 
     if (!isLocked()) {
-        QAction* showWidthAction = menu.addAction("Show width");
-        showWidthAction->setCheckable(true);
-        showWidthAction->setChecked(m_portWidthLabel->isVisible());
-        connect(showWidthAction, &QAction::triggered, this, &PortGraphic::setPortWidthVisible);
-        menu.addAction(showWidthAction);
-        QAction* showLabelAction = menu.addAction("Show label");
-        showLabelAction->setCheckable(true);
-        showLabelAction->setChecked(m_label->isVisible());
-        connect(showLabelAction, &QAction::triggered, [this](bool checked) {
-            m_label->setVisible(checked);
-            m_label->setLocked(false);
-        });
-        menu.addAction(showLabelAction);
-
-        QAction* showAction = menu.addAction("Show port");
-        showAction->setCheckable(true);
-        showAction->setChecked(!userHidden());
-        connect(showAction, &QAction::triggered, this, &PortGraphic::setUserVisible);
+        menu.addAction(m_showWidthAction);
+        menu.addAction(m_showLabelAction);
+        menu.addAction(m_showAction);
     }
 
     menu.exec(event->screenPos());
