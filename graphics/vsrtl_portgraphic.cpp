@@ -70,9 +70,8 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     }
 
     m_valueLabel =
-        createVirtualChild<ValueLabel>({VirtualChildLink::Position, VirtualChildLink::Visibility}, m_radix, this);
+        createVirtualChild<ValueLabel>({VirtualChildLink::Visibility, VirtualChildLink::Position}, m_radix, this);
     m_valueLabel->setVisible(false);
-    m_valueLabel->moveBy(3, -6);                                              // start position (may be dragged)
     directParent->addVirtualChild(VirtualChildLink::Position, m_valueLabel);  // Also move when direct parent moves
     m_valueLabel->setZValue(VSRTLScene::Z_ValueLabel);
 
@@ -319,7 +318,6 @@ void PortGraphic::setPortVisible(bool visible) {
     if (m_inputWire && m_type == PortType::in) {
         // Inform wires terminating in this port to set their visibility based on this ports visibility
         m_inputWire->setWiresVisibleToPort(m_inputPortPoint, visible && m_sourceVisible && !m_userHidden);
-
     }
 
     else if (m_type == PortType::out) {

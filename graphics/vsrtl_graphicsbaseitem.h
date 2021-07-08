@@ -50,13 +50,6 @@ public:
         return parent->moduleParent();
     }
 
-    /**
-     * @brief The VirtualChildLink struct
-     * Defines which changes to mirror in the virtual child
-     */
-    enum VirtualChildLink { Position = 0b1, Visibility = 0b10 };
-    Q_DECLARE_FLAGS(VirtualChildLinks, VirtualChildLink);
-
     template <typename T_C, typename... Args>
     T_C* createVirtualChild(const VirtualChildLinks& link, Args... args) {
         auto* parent = moduleParent();
@@ -67,11 +60,6 @@ public:
         ptr->setPos(p);
         addVirtualChild(link, ptr);
         return ptr;
-    }
-
-    void addVirtualChild(const VirtualChildLinks& link, QGraphicsItem* child) {
-        Q_ASSERT(m_virtualChildren.count(child) == 0);
-        m_virtualChildren[child] = link;
     }
 
     void setLocked(bool locked) override {
@@ -109,22 +97,39 @@ public:
     QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant& value) override {
         const auto curPos = T::pos();
         const auto dp = curPos - m_prePos;
+
+        // Propagate completed state changes to virtual children
         if (!isSerializing() &&
             ((change == QGraphicsItem::ItemPositionHasChanged) || (change == QGraphicsItem::ItemVisibleHasChanged))) {
             // Propagate geometry state changes to virtual children
             if (m_virtualChildren.size() != 0) {
                 const bool vis = T::isVisible();
-                for (const auto& vt : m_virtualChildren) {
+                for (auto& vt : m_virtualChildren) {
                     if (change == QGraphicsItem::ItemPositionHasChanged && vt.second.testFlag(Position)) {
-                        vt.first->moveBy(dp.x(), dp.y());
+                        dynamic_cast<QGraphicsItem*>(vt.first)->moveBy(dp.x(), dp.y());
                     } else if (change == QGraphicsItem::ItemVisibleHasChanged && vt.second.testFlag(Visibility)) {
-                        vt.first->setVisible(vis);
+                        dynamic_cast<QGraphicsItem*>(vt.first)->setVisible(vis);
                     }
                 }
             }
         }
         m_prePos = curPos;
 
+        // Decide state change based on virtual parent status
+        if (!isSerializing() && (change == QGraphicsItem::ItemVisibleChange)) {
+            bool virtualParentsVisible = true;
+            for (const auto& vp : m_virtualParents) {
+                if (vp.second.testFlag(Visibility)) {
+                    virtualParentsVisible &= dynamic_cast<QGraphicsItem*>(vp.first)->isVisible();
+                }
+            }
+            if (!virtualParentsVisible) {
+                // reject visibility change event
+                return QVariant();
+            }
+        }
+
+        // Handle Z level based on selection state
         if (change == QGraphicsItem::ItemSelectedChange) {
             if (value.toBool()) {
                 m_preZLayer = T::zValue();
@@ -138,13 +143,6 @@ public:
     }
 
 protected:
-    /**
-     * @brief m_virtualChildren
-     * Virtual children are items which have no QGraphicsItem child/parent relationship to this item, but who should
-     * mirror position and visibility changes made to this object.
-     */
-    std::map<QGraphicsItem*, VirtualChildLinks> m_virtualChildren;
-
     // State-change preservation needed for Item#HasChanged value difference calculations
     QPointF m_prePos;
 

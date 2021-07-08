@@ -7,6 +7,13 @@ namespace vsrtl {
 
 class GraphicsBase {
 public:
+    /**
+     * @brief The VirtualChildLink struct
+     * Defines which changes to mirror in the virtual child
+     */
+    enum VirtualChildLink { Position = 0b1, Visibility = 0b10 };
+    Q_DECLARE_FLAGS(VirtualChildLinks, VirtualChildLink);
+
     GraphicsBase() {}
     virtual ~GraphicsBase() {}
 
@@ -36,7 +43,21 @@ public:
     virtual void setSerializing(bool state) = 0;
     bool isSerializing() const { return m_isSerializing; }
 
+    void addVirtualChild(const VirtualChildLinks& link, GraphicsBase* child) {
+        Q_ASSERT(m_virtualChildren.count(child) == 0);
+        m_virtualChildren[child] = link;
+        child->m_virtualParents[this] = link;
+    }
+
 protected:
+    /**
+     * @brief m_virtualChildren
+     * Virtual children are items which have no QGraphicsItem child/parent relationship to this item, but who should
+     * mirror position and visibility changes made to this object.
+     */
+    std::map<GraphicsBase*, VirtualChildLinks> m_virtualChildren;
+    std::map<GraphicsBase*, VirtualChildLinks> m_virtualParents;
+
     bool m_initialized = false;
     bool m_isMoveable = false;
 
