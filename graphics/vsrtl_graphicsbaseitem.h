@@ -20,12 +20,16 @@ void recurseToChildren(GraphicsBaseItem<T>* parent, const F& func) {
     }
 }
 
+/**
+ * Base type can be any QGraphicsItem derived type. This is useful if leveraging already available items such as
+ * QGraphicsTextItem etc..
+ */
 template <typename T = QGraphicsItem>
 class GraphicsBaseItem : public GraphicsBase, public T {
     static_assert(std::is_base_of<QGraphicsItem, T>::value, "GraphicsBaseItem must derive from QGraphicsItem");
 
 public:
-    GraphicsBaseItem(QGraphicsItem* parent) : T(parent) {}
+    GraphicsBaseItem(QGraphicsItem* parent) : T(parent) { T::setFlag(QGraphicsItem::ItemSendsGeometryChanges); }
 
     void postSceneConstructionInitialize1() override {
         recurseToChildren(this, [](GraphicsBase* child) { child->postSceneConstructionInitialize1(); });
@@ -34,6 +38,40 @@ public:
         recurseToChildren(this, [](GraphicsBase* child) { child->postSceneConstructionInitialize2(); });
 
         m_initialized = true;
+    }
+
+    /**
+     * @brief moduleParent
+     * @return the first SimComponent which encloses this GraphicsBaseItem
+     */
+    virtual GraphicsBaseItem<QGraphicsItem>* moduleParent() {
+        auto* parent = dynamic_cast<GraphicsBaseItem<QGraphicsItem>*>(T::parentItem());
+        Q_ASSERT(parent);
+        return parent->moduleParent();
+    }
+
+    /**
+     * @brief The VirtualChildLink struct
+     * Defines which changes to mirror in the virtual child
+     */
+    enum VirtualChildLink { Position = 0b1, Visibility = 0b10 };
+    Q_DECLARE_FLAGS(VirtualChildLinks, VirtualChildLink);
+
+    template <typename T_C, typename... Args>
+    T_C* createVirtualChild(const VirtualChildLinks& link, Args... args) {
+        auto* parent = moduleParent();
+        Q_ASSERT(parent);
+        auto ptr = new T_C(parent, args...);
+        // Set initial position to (0,0) in this components coordinate system
+        const auto p = T::mapToItem(parent, QPointF(0, 0));
+        ptr->setPos(p);
+        addVirtualChild(link, ptr);
+        return ptr;
+    }
+
+    void addVirtualChild(const VirtualChildLinks& link, QGraphicsItem* child) {
+        Q_ASSERT(m_virtualChildren.count(child) == 0);
+        m_virtualChildren[child] = link;
     }
 
     void setLocked(bool locked) override {
@@ -61,6 +99,45 @@ public:
             }
         }
     }
+
+    virtual uint32_t layoutVersion() const {
+        auto* parent = dynamic_cast<GraphicsBaseItem<QGraphicsItem>*>(T::parentItem());
+        Q_ASSERT(parent);
+        return parent->layoutVersion();
+    }
+
+    QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant& value) override {
+        const auto curPos = T::pos();
+        const auto dp = curPos - m_prePos;
+        if (!isSerializing() &&
+            ((change == QGraphicsItem::ItemPositionHasChanged) || (change == QGraphicsItem::ItemVisibleHasChanged))) {
+            // Propagate geometry state changes to virtual children
+            if (m_virtualChildren.size() != 0) {
+                const bool vis = T::isVisible();
+                for (const auto& vt : m_virtualChildren) {
+                    if (change == QGraphicsItem::ItemPositionHasChanged && vt.second.testFlag(Position)) {
+                        vt.first->moveBy(dp.x(), dp.y());
+                    } else if (change == QGraphicsItem::ItemVisibleHasChanged && vt.second.testFlag(Visibility)) {
+                        vt.first->setVisible(vis);
+                    }
+                }
+            }
+        }
+        m_prePos = curPos;
+
+        return QGraphicsItem::itemChange(change, value);
+    }
+
+protected:
+    /**
+     * @brief m_virtualChildren
+     * Virtual children are items which have no QGraphicsItem child/parent relationship to this item, but who should
+     * mirror position and visibility changes made to this object.
+     */
+    std::map<QGraphicsItem*, VirtualChildLinks> m_virtualChildren;
+
+    // State-change preservation needed for Item#HasChanged value difference calculations
+    QPointF m_prePos;
 };
 
 }  // namespace vsrtl

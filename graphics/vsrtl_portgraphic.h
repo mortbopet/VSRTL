@@ -135,15 +135,18 @@ private:
     WireGraphic* m_outputWire = nullptr;
     WireGraphic* m_inputWire = nullptr;
 
-    std::unique_ptr<ValueLabel> m_valueLabel = nullptr;
+    ValueLabel* m_valueLabel = nullptr;
 
-    Radix m_radix = Radix::Hex;
+    /**
+     * @brief The radix is shared between the port and the value label.
+     */
+    std::shared_ptr<Radix> m_radix;
 
     std::unique_ptr<QPropertyAnimation> m_colorAnimation;
 
     Side m_side = Side::Right;
-    std::unique_ptr<Label> m_label;
-    std::unique_ptr<Label> m_portWidthLabel;
+    Label* m_label = nullptr;
+    Label* m_portWidthLabel = nullptr;
     QString m_widthText;
     QFont m_font;
     QPen m_pen;

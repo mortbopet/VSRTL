@@ -61,10 +61,16 @@ void ComponentGraphic::verifySpecialSignals() const {
     }
 }
 
+GraphicsBaseItem<QGraphicsItem>* ComponentGraphic::moduleParent() {
+    auto* parent = dynamic_cast<GraphicsBaseItem<QGraphicsItem>*>(parentItem());
+    Q_ASSERT(parent);
+    return parent;
+}
+
 void ComponentGraphic::initialize() {
     Q_ASSERT(scene() != nullptr);
 
-    setFlags(ItemIsSelectable | ItemSendsScenePositionChanges);
+    setFlags(ItemIsSelectable | ItemSendsScenePositionChanges | flags());
     setAcceptHoverEvents(true);
     setMoveable();
 
@@ -119,7 +125,6 @@ void ComponentGraphic::createSubcomponents() {
         }
         nc->initialize();
         nc->setParentItem(this);
-        nc->m_parentComponentGraphic = this;
         m_subcomponents.push_back(nc);
         if (!isExpanded()) {
             nc->hide();
@@ -149,6 +154,13 @@ void ComponentGraphic::loadLayoutFile(const QString& fileName) {
     std::ifstream file(fileName.toStdString());
     cereal::JSONInputArchive archive(file);
     m_isTopLevelSerializedComponent = true;
+
+    try {
+        archive(CEREAL_NVP(m_layoutVersion));
+    } catch (const cereal::Exception& e) {
+        // No layout version
+        m_layoutVersion = 0;
+    }
 
     try {
         archive(cereal::make_nvp("ComponentGraphic", *this));
@@ -187,6 +199,8 @@ void ComponentGraphic::saveLayout() {
     /// compilers, but would directly indicate the underlying type of which this layout is compatible with...
     m_isTopLevelSerializedComponent = true;
     try {
+        m_layoutVersion = LatestLayoutVersion - 1;
+        archive(CEREAL_NVP(m_layoutVersion));
         archive(cereal::make_nvp("ComponentGraphic", *this));
     } catch (const cereal::Exception& e) {
         /// @todo: build an error report
@@ -256,8 +270,8 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
         auto* indicatorMenu = menu.addMenu("Indicators");
         for (const auto& portmap : {m_inputPorts, m_outputPorts}) {
             for (const auto& p : portmap) {
-                // Value indicators for boolean signals. Boolean indicators will be visible even if the port responsible
-                // for the indicator gets hidden.
+                // Value indicators for boolean signals. Boolean indicators will be visible even if the port
+                // responsible for the indicator gets hidden.
                 if (p->getPort()->getWidth() == 1) {
                     auto* indicatorAction = indicatorMenu->addAction(QString::fromStdString(p->getPort()->getName()));
                     indicatorAction->setCheckable(true);
@@ -318,9 +332,9 @@ void ComponentGraphic::setExpanded(bool state) {
         for (const auto& c : m_subcomponents) {
             c->setVisible(areWeExpanded && !c->userHidden());
         }
-        // We are not hiding the input ports of a component, because these should always be drawn. However, a input port
-        // of an expandable component has wires drawin inside the component, which must be hidden aswell, such that they
-        // do not accept mouse events nor are drawn.
+        // We are not hiding the input ports of a component, because these should always be drawn. However, a input
+        // port of an expandable component has wires drawin inside the component, which must be hidden aswell, such
+        // that they do not accept mouse events nor are drawn.
         for (const auto& w : m_wires) {
             w->setVisible(areWeExpanded);
         }
@@ -344,8 +358,8 @@ void ComponentGraphic::updateGeometry() {
 
     // Apply rotation around center of shape. All shape points are defined in grid [x,y] in [0:1], so rotate around
     // [0.5, 0.5]
-    // Next, separately apply the scaling through a secondary matrix (The transformation gets a lot simpler like this,
-    // rather than composing translation + rotation +translation + scaling in a single matrix.
+    // Next, separately apply the scaling through a secondary matrix (The transformation gets a lot simpler like
+    // this, rather than composing translation + rotation +translation + scaling in a single matrix.
     QTransform t;
     QMatrix mat;
     mat.scale(sceneRect.width(), sceneRect.height());
@@ -401,8 +415,8 @@ void ComponentGraphic::updateGeometry() {
 }
 
 bool ComponentGraphic::handlePortGraphicMoveAttempt(const PortGraphic* port, const QPointF& newBorderPos) {
-    // Port will report its new position in its portGraphic coordinates. Transfor to this (the port parent) coordinate
-    // system and attempt to adjust port position.
+    // Port will report its new position in its portGraphic coordinates. Transfor to this (the port parent)
+    // coordinate system and attempt to adjust port position.
 
     const QPoint adjustedPos = sceneToGrid(mapFromItem(port, newBorderPos).toPoint());
     return adjustPort(port->getPort(), adjustedPos);
@@ -445,11 +459,14 @@ void ComponentGraphic::setLocked(bool locked) {
     GraphicsBaseItem::setLocked(locked);
 }
 
-QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
+QVariant ComponentGraphic::itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant& value) {
+    Q_ASSERT((flags() & QGraphicsItem::ItemSendsGeometryChanges) &&
+             "Need ItemSendsGeometryChanges for ItemPositionHasChanged");
+
     // @todo implement snapping inside parent component
     if (change == ItemPositionChange && scene()) {
-        // Output port wires are implicitely redrawn given that the wire is a child of $this. We need to manually signal
-        // the wires going to the input ports of this component, to redraw
+        // Output port wires are implicitely redrawn given that the wire is a child of $this. We need to manually
+        // signal the wires going to the input ports of this component, to redraw
         if (m_initialized) {
             for (const auto& inputPort : qAsConst(m_inputPorts)) {
                 if (!inputPort->getPort()->isConstant())
@@ -458,9 +475,9 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
         }
 
         if (parentIsPlacing()) {
-            // New position has been validated (and set) through the grid layer, and the grid component has >already<
-            // been moved to its new position. This slot is called through the move signal of the gridComponent, emitted
-            // during place and route.
+            // New position has been validated (and set) through the grid layer, and the grid component has
+            // >already< been moved to its new position. This slot is called through the move signal of the
+            // gridComponent, emitted during place and route.
             return value;
         } else {
             /// Parent is not placing, @p value represents a QPointF in parent scene coordinates. Go through
@@ -476,7 +493,7 @@ QVariant ComponentGraphic::itemChange(GraphicsItemChange change, const QVariant&
         }
     }
 
-    return QGraphicsItem::itemChange(change, value);
+    return GraphicsBaseItem::itemChange(change, value);
 }
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {

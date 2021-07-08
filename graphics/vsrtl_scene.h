@@ -15,6 +15,12 @@ class WirePoint;
 
 class VSRTLScene : public QGraphicsScene {
 public:
+    /**
+     * @brief The ZLayer enum
+     * Defines the ordering of different items in the scene. Items with higher Z values will be drawn above items with
+     * lower Z values.
+     */
+    enum ZLayer { Z_Component = 0, Z_PortWidth, Z_PortLabel, Z_ValueLabel };
     VSRTLScene(QObject* parent = nullptr);
 
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;

@@ -55,7 +55,7 @@ QVariant PortPoint::itemChange(GraphicsItemChange change, const QVariant& value)
         }
     }
 
-    return QGraphicsItem::itemChange(change, value);
+    return GraphicsBaseItem::itemChange(change, value);
 }
 
 QRectF PortPoint::boundingRect() const {
@@ -330,7 +330,7 @@ QVariant WireSegment::itemChange(GraphicsItemChange change, const QVariant& valu
         m_parent->getFromPort()->itemChange(change, value);
     }
 
-    return QGraphicsItem::itemChange(change, value);
+    return GraphicsBaseItem::itemChange(change, value);
 }
 
 // --------------------------------------------------------------------------------
@@ -403,7 +403,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     pointToRemove->deleteLater();
 }
 
-WireGraphic::WireGraphic(PortGraphic* from, const std::vector<SimPort*>& to, WireType type, ComponentGraphic* parent)
+WireGraphic::WireGraphic(ComponentGraphic* parent, PortGraphic* from, const std::vector<SimPort*>& to, WireType type)
     : GraphicsBaseItem(parent), m_parent(parent), m_fromPort(from), m_toPorts(to), m_type(type) {
     m_parent->registerWire(this);
     setFlag(QGraphicsItem::ItemHasNoContents, true);

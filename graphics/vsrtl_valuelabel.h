@@ -13,7 +13,7 @@ class PortGraphic;
 
 class ValueLabel : public Label {
 public:
-    ValueLabel(QGraphicsItem* parent, Radix& type, const PortGraphic* port);
+    ValueLabel(QGraphicsItem* parent, const std::shared_ptr<Radix>& radix, const PortGraphic* port);
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
@@ -23,7 +23,7 @@ public:
     void setLocked(bool locked) override;
 
 private:
-    Radix& m_type;
+    std::shared_ptr<Radix> m_radix;
     const PortGraphic* m_port = nullptr;
 };
 

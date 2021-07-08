@@ -73,6 +73,8 @@ public:
     void setExpanded(bool isExpanded);
     void registerWire(WireGraphic* wire);
 
+    GraphicsBaseItem<QGraphicsItem>* moduleParent() override;
+
     /**
      * @brief setUserVisible
      * Called whenever the user enables the visibility of a component.
@@ -113,7 +115,7 @@ protected:
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;
     void hoverMoveEvent(QGraphicsSceneHoverEvent* event) override;
-    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
+    QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant& value) override;
     void paintIndicator(QPainter* painter, PortGraphic* port, QColor color);
 
     enum class GeometryChange {
@@ -141,7 +143,6 @@ protected:
 
     std::set<PortGraphic*> m_indicators;
     std::vector<ComponentGraphic*> m_subcomponents;
-    ComponentGraphic* m_parentComponentGraphic = nullptr;
 
     /**
      * @brief m_wires
@@ -174,6 +175,18 @@ public slots:
     void parameterDialogTriggered();
 
 public:
+    // Bump this when making logic-changing modifications to the serialization logic
+    enum LayoutVersions { NoLayoutVersion, v1, LatestLayoutVersion };
+    uint32_t m_layoutVersion = 0;
+
+    uint32_t layoutVersion() const override {
+        if (m_isTopLevelSerializedComponent) {
+            return m_layoutVersion;
+        } else {
+            return GraphicsBaseItem::layoutVersion();
+        }
+    }
+
     template <class Archive>
     void serialize(Archive& archive) {
         setSerializing(true);

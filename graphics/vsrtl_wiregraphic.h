@@ -132,7 +132,7 @@ public:
     enum class MergeType { CannotMerge, MergeSinkWithSource, MergeSourceWithSink, MergeParallelSinks };
     enum class WireType { BorderOutput, ComponentOutput };
 
-    WireGraphic(PortGraphic* from, const std::vector<SimPort*>& to, WireType type, ComponentGraphic* parent);
+    WireGraphic(ComponentGraphic* parent, PortGraphic* from, const std::vector<SimPort*>& to, WireType type);
 
     QRectF boundingRect() const override { return QRectF(); }
     const QPen& getPen();

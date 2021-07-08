@@ -23,13 +23,18 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     m_pen.setWidth(WIRE_WIDTH);
     m_pen.setCapStyle(Qt::RoundCap);
     setAcceptHoverEvents(true);
+    ComponentGraphic* directParent = static_cast<ComponentGraphic*>(parentItem());
 
-    m_label = std::make_unique<Label>(this, QString::fromStdString(m_port->getDisplayName()), 8);
+    m_label = createVirtualChild<Label>({VirtualChildLink::Position, VirtualChildLink::Visibility},
+                                        QString::fromStdString(m_port->getDisplayName()), 8);
+    directParent->addVirtualChild(VirtualChildLink::Position, m_label);  // Also move when direct parent moves
     m_label->setVisible(false);
+    m_label->setZValue(VSRTLScene::Z_PortLabel);
 
+    m_radix = std::make_shared<Radix>(Radix::Hex);
     if (m_port->isEnumPort()) {
         // By default, display Enum value if underlying port is enum
-        m_radix = Radix::Enum;
+        *m_radix = Radix::Enum;
     }
 
     // Connect changes from simulator through our signal translation mechanism, see doc wrt. simChanged
@@ -51,23 +56,34 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     m_outputPortPoint = new PortPoint(this);
     m_outputPortPoint->setPos(getOutputPoint());
 
+    ComponentGraphic* scopeParent = nullptr;
+
     if (m_type == PortType::in) {
-        m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), WireGraphic::WireType::BorderOutput,
-                                       dynamic_cast<ComponentGraphic*>(parentItem()));
+        scopeParent = directParent;
+        m_outputWire =
+            new WireGraphic(scopeParent, this, m_port->getOutputPorts(), WireGraphic::WireType::BorderOutput);
     } else {
-        m_outputWire = new WireGraphic(this, m_port->getOutputPorts(), WireGraphic::WireType::ComponentOutput,
-                                       dynamic_cast<ComponentGraphic*>(parentItem()->parentItem()));
+        // Output wires exists in the domain in between different components in the PARENT of the parent of this port.
+        scopeParent = dynamic_cast<ComponentGraphic*>(moduleParent());
+        m_outputWire =
+            new WireGraphic(scopeParent, this, m_port->getOutputPorts(), WireGraphic::WireType::ComponentOutput);
     }
 
-    m_valueLabel = std::make_unique<ValueLabel>(this, m_radix, this);
+    m_valueLabel =
+        createVirtualChild<ValueLabel>({VirtualChildLink::Position, VirtualChildLink::Visibility}, m_radix, this);
     m_valueLabel->setVisible(false);
-    m_valueLabel->moveBy(3, -6);  // start position (may be dragged)
+    m_valueLabel->moveBy(3, -6);                                              // start position (may be dragged)
+    directParent->addVirtualChild(VirtualChildLink::Position, m_valueLabel);  // Also move when direct parent moves
+    m_valueLabel->setZValue(VSRTLScene::Z_ValueLabel);
 
-    m_portWidthLabel = std::make_unique<Label>(this, QString::number(port->getWidth() - 1) + ":0", 7);
+    m_portWidthLabel = createVirtualChild<Label>({VirtualChildLink::Position, VirtualChildLink::Visibility},
+                                                 QString::number(port->getWidth() - 1) + ":0", 7);
     m_portWidthLabel->setMoveable(false);
     m_portWidthLabel->setHoverable(false);
+    directParent->addVirtualChild(VirtualChildLink::Position, m_portWidthLabel);  // Also move when direct parent moves
     m_portWidthLabel->setFlags(m_portWidthLabel->flags() &
                                ~(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable));
+    m_portWidthLabel->setZValue(VSRTLScene::Z_PortWidth);
 
     updateGeometry();
 }
@@ -77,6 +93,7 @@ void PortGraphic::emitSimChanged() {
 }
 
 void PortGraphic::updateSlot() {
+    Q_ASSERT(m_valueLabel);
     updatePen();
     update();
 
@@ -86,6 +103,7 @@ void PortGraphic::updateSlot() {
 }
 
 void PortGraphic::setValueLabelVisible(bool visible) {
+    Q_ASSERT(m_valueLabel);
     if (!userHidden() || m_valueLabel->isVisible()) {
         m_valueLabel->setVisible(visible);
         updateSlot();
@@ -93,6 +111,7 @@ void PortGraphic::setValueLabelVisible(bool visible) {
 }
 
 void PortGraphic::setPortWidthVisible(bool visible) {
+    Q_ASSERT(m_portWidthLabel);
     m_portWidthLabel->setVisible(visible);
     update();
 }
@@ -127,18 +146,19 @@ void PortGraphic::propagateRedraw() {
  * initialized, given that updatePen() will trigger a redraw of wires
  */
 void PortGraphic::postSceneConstructionInitialize2() {
-    if (!m_inputWire)
+    if (!m_inputWire) {
         updatePen();
+    }
 
     if (m_port->isConstant()) {
         // For constant ports, we by default display the value of the port
         m_valueLabel->show();
-        m_radix = m_port->getWidth() == 1 ? Radix::Unsigned : Radix::Signed;
+        *m_radix = m_port->getWidth() == 1 ? Radix::Unsigned : Radix::Signed;
+        updateSlot();  // propagate radix change to value label
 
-        // Update the ValueLabel (Letting it resize to its final value) and position it next to the port
-        updateSlot();
         const auto br = m_valueLabel->boundingRect();
-        m_valueLabel->setPos({-br.width() - boundingRect().width(), -br.height() / 2});
+        m_valueLabel->setPos(
+            mapToItem(m_valueLabel->parentItem(), {-br.width() - boundingRect().width(), -br.height() / 2}));
 
         // Initial port color is implicitely set by triggering the wire animation
         m_colorAnimation->start(QPropertyAnimation::KeepWhenStopped);
@@ -278,7 +298,7 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
 }
 
 QString PortGraphic::getTooltipString() const {
-    return QString::fromStdString(m_port->getDisplayName() + ":\n") + encodePortRadixValue(m_port, m_radix);
+    return QString::fromStdString(m_port->getDisplayName() + ":\n") + encodePortRadixValue(m_port, *m_radix);
 }
 
 QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& value) {
@@ -290,7 +310,7 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
         setPortVisible(value.toBool());
     }
 
-    return QGraphicsItem::itemChange(change, value);
+    return GraphicsBaseItem::itemChange(change, value);
 }
 
 void PortGraphic::setPortVisible(bool visible) {
@@ -359,6 +379,10 @@ void PortGraphic::updateGeometry() {
     prepareGeometryChange();
 
     m_boundingRect.setTopLeft({0, 0});
+
+    // Note: When changing m_portWidthLabel positions, this is done with respect to its parent (m_portWidthLabel is only
+    // a virtual child of this port).
+    QPointF pDiff;
     switch (m_side) {
         case Side::Left:
         case Side::Right: {
@@ -368,10 +392,8 @@ void PortGraphic::updateGeometry() {
             m_boundingRect.setWidth(GRID_SIZE * s_portGridWidth);
 
             const qreal vDiff = std::abs(GRID_SIZE / 2 - m_portWidthLabel->boundingRect().height() / 2);
-
-            m_portWidthLabel->setPos(m_side == Side::Left ? QPointF{-m_portWidthLabel->boundingRect().width(), -vDiff}
-                                                          : QPointF{0, -vDiff});
-
+            pDiff =
+                m_side == Side::Left ? QPointF{-m_portWidthLabel->boundingRect().width(), -vDiff} : QPointF{0, -vDiff};
             break;
         }
         case Side::Top:
@@ -382,13 +404,13 @@ void PortGraphic::updateGeometry() {
             m_boundingRect.setHeight(GRID_SIZE * s_portGridWidth);
 
             const qreal vDiff = std::abs(GRID_SIZE / 2 - m_portWidthLabel->boundingRect().height() / 2);
-            m_portWidthLabel->setPos(m_side == Side::Top
-                                         ? QPointF{0, -m_portWidthLabel->boundingRect().height() + vDiff}
+            pDiff = (m_side == Side::Top ? QPointF{0, -m_portWidthLabel->boundingRect().height() + vDiff}
                                          : QPointF{0, -vDiff});
-
             break;
         }
     }
+    m_portWidthLabel->setPos(mapToItem(m_portWidthLabel->parentItem(), pDiff));
+
     // The shape of the component is defined as the above created rectangle
     m_shape = QPainterPath();
     m_shape.addPolygon(m_boundingRect);

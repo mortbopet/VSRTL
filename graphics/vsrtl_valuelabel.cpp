@@ -9,10 +9,11 @@
 
 namespace vsrtl {
 
-ValueLabel::ValueLabel(QGraphicsItem* parent, Radix& type, const PortGraphic* port)
-    : Label(parent, "", 10), m_type(type), m_port(port) {
+ValueLabel::ValueLabel(QGraphicsItem* parent, const std::shared_ptr<Radix>& radix, const PortGraphic* port)
+    : Label(parent, "", 10), m_radix(radix), m_port(port) {
     setFlag(ItemIsSelectable, true);
     setAcceptHoverEvents(true);
+    updateText();
 }
 
 void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
@@ -43,7 +44,7 @@ void ValueLabel::setLocked(bool) {
 
 void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
-    menu.addMenu(createPortRadixMenu(m_port->getPort(), m_type));
+    menu.addMenu(createPortRadixMenu(m_port->getPort(), *m_radix));
 
     QAction* showLabel = menu.addAction("Show value");
     showLabel->setCheckable(true);
@@ -58,7 +59,7 @@ void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 }
 
 void ValueLabel::updateText() {
-    setPlainText(encodePortRadixValue(m_port->getPort(), m_type));
+    setPlainText(encodePortRadixValue(m_port->getPort(), *m_radix));
     applyFormatChanges();
 }
 
