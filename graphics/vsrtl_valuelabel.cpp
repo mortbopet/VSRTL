@@ -33,8 +33,62 @@ void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* option
     Label::paint(painter, option, w);
 }
 
-void ValueLabel::hoverMoveEvent(QGraphicsSceneHoverEvent*) {
+void ValueLabel::updateLine() {
+    if (m_lineToPort) {
+        m_lineToPort->setLine(lineToPort());
+    }
+}
+
+QLineF ValueLabel::lineToPort() const {
+    const QRectF textRect = mapRectToItem(parentItem(), shape().boundingRect());
+    QLineF shortestLine;
+    qreal minLength = qInf();
+    for (const auto& corner :
+         {textRect.topLeft(), textRect.topRight(), textRect.bottomLeft(), textRect.bottomRight()}) {
+        const auto line = QLineF(corner, parentItem()->mapFromScene(m_port->scenePos()));
+        if (line.length() < minLength) {
+            shortestLine = line;
+            minLength = line.length();
+        }
+    }
+
+    return shortestLine;
+}
+
+void ValueLabel::mouseMoveEvent(QGraphicsSceneMouseEvent* e) {
+    updateLine();
+    Label::mouseMoveEvent(e);
+}
+
+void ValueLabel::createLineToPort() {
+    if (!m_lineToPort) {
+        m_lineToPort = new QGraphicsLineItem(lineToPort(), parentItem());
+        m_lineToPort->setZValue(VSRTLScene::Z_ValueLabelHoverLine);
+        QPen pen = m_lineToPort->pen();
+        pen.setStyle(Qt::DashLine);
+        m_lineToPort->setPen(pen);
+    }
+}
+
+void ValueLabel::hoverEnterEvent(QGraphicsSceneHoverEvent* e) {
     setToolTip(m_port->getTooltipString());
+    createLineToPort();
+    Label::hoverEnterEvent(e);
+}
+
+void ValueLabel::hoverLeaveEvent(QGraphicsSceneHoverEvent* e) {
+    if (!m_alwaysShowLineToPort) {
+        delete m_lineToPort;
+        m_lineToPort = nullptr;
+    }
+    Label::hoverLeaveEvent(e);
+}
+
+QVariant ValueLabel::itemChange(GraphicsItemChange change, const QVariant& value) {
+    if (change == QGraphicsItem::ItemPositionHasChanged) {
+        updateLine();
+    }
+    return Label::itemChange(change, value);
 }
 
 void ValueLabel::setLocked(bool) {
@@ -51,6 +105,15 @@ void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     showLabel->setChecked(isVisible());
     QObject::connect(showLabel, &QAction::triggered, [this](bool checked) { setVisible(checked); });
     menu.addAction(showLabel);
+
+    QAction* showLineToPort = menu.addAction("Always show line to port");
+    showLineToPort->setCheckable(true);
+    showLineToPort->setChecked(m_alwaysShowLineToPort);
+    QObject::connect(showLineToPort, &QAction::triggered, [this](bool checked) {
+        m_alwaysShowLineToPort = checked;
+        createLineToPort();
+    });
+    menu.addAction(showLineToPort);
 
     menu.exec(event->screenPos());
 
