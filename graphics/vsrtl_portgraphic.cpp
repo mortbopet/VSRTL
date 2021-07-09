@@ -85,7 +85,6 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
 
     m_showAction = std::make_shared<QAction>("Show port");
     m_showAction->setCheckable(true);
-    m_showAction->setChecked(!userHidden());
     connect(m_showAction.get(), &QAction::toggled, this, &PortGraphic::setUserVisible);
 
     // Setup labels
@@ -201,6 +200,7 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     if (!isLocked()) {
         menu.addAction(m_showWidthAction.get());
         menu.addAction(m_showLabelAction.get());
+        m_showAction->setChecked(!userHidden());
         menu.addAction(m_showAction.get());
     }
 
