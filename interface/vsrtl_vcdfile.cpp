@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <ctime>
 #include <iomanip>
+#include <sstream>
 
 namespace vsrtl {
 
