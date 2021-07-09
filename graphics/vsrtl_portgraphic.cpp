@@ -88,23 +88,21 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
     connect(m_showAction.get(), &QAction::toggled, this, &PortGraphic::setUserVisible);
 
     // Setup labels
-    m_label = createVirtualChild<Label>({VirtualChildLink::Position, VirtualChildLink::Visibility},
-                                        QString::fromStdString(m_port->getDisplayName()), m_showLabelAction, 8);
-    directParent->addVirtualChild(VirtualChildLink::Position, m_label);  // Also move when direct parent moves
+    m_label = new Label(directParent, QString::fromStdString(m_port->getDisplayName()), m_showLabelAction, 8);
+    addVirtualChild({VirtualChildLink::Visibility, VirtualChildLink::Position}, m_label);
     m_label->setVisible(false);
     m_label->setZValue(VSRTLScene::Z_PortLabel);
 
-    m_valueLabel = createVirtualChild<ValueLabel>({VirtualChildLink::Visibility, VirtualChildLink::Position}, m_radix,
-                                                  this, m_showValueAction);
+    m_valueLabel = createModuleChild<ValueLabel>({VirtualChildLink::Visibility, VirtualChildLink::Position}, m_radix,
+                                                 this, m_showValueAction);
     m_valueLabel->setVisible(false);
     directParent->addVirtualChild(VirtualChildLink::Position, m_valueLabel);  // Also move when direct parent moves
     m_valueLabel->setZValue(VSRTLScene::Z_ValueLabel);
 
-    m_portWidthLabel = createVirtualChild<Label>({VirtualChildLink::Position, VirtualChildLink::Visibility},
-                                                 QString::number(port->getWidth() - 1) + ":0", m_showWidthAction, 7);
+    m_portWidthLabel = new Label(directParent, QString::number(port->getWidth() - 1) + ":0", m_showWidthAction, 7);
+    addVirtualChild({VirtualChildLink::Visibility, VirtualChildLink::Position}, m_portWidthLabel);
     m_portWidthLabel->setMoveable(false);
     m_portWidthLabel->setHoverable(false);
-    directParent->addVirtualChild(VirtualChildLink::Position, m_portWidthLabel);  // Also move when direct parent moves
     m_portWidthLabel->setFlags(m_portWidthLabel->flags() &
                                ~(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable));
     m_portWidthLabel->setZValue(VSRTLScene::Z_PortWidth);

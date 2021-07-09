@@ -51,7 +51,7 @@ public:
     }
 
     template <typename T_C, typename... Args>
-    T_C* createVirtualChild(const VirtualChildLinks& link, Args... args) {
+    T_C* createModuleChild(const VirtualChildLinks& link, Args... args) {
         auto* parent = moduleParent();
         Q_ASSERT(parent);
         auto ptr = new T_C(parent, args...);
