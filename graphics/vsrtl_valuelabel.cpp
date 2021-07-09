@@ -9,16 +9,17 @@
 
 namespace vsrtl {
 
-ValueLabel::ValueLabel(QGraphicsItem* parent, const std::shared_ptr<Radix>& radix, const PortGraphic* port)
-    : Label(parent, "", 10), m_radix(radix), m_port(port) {
+ValueLabel::ValueLabel(QGraphicsItem* parent, const std::shared_ptr<Radix>& radix, const PortGraphic* port,
+                       std::shared_ptr<QAction> visibilityAction)
+    : Label(parent, "", visibilityAction, 10), m_radix(radix), m_port(port) {
     setFlag(ItemIsSelectable, true);
     setAcceptHoverEvents(true);
     updateText();
 
-    m_showLineToPortAction = new QAction("Always show line to port");
+    m_showLineToPortAction = std::make_unique<QAction>("Always show line to port");
     m_showLineToPortAction->setCheckable(true);
     m_showLineToPortAction->setChecked(false);
-    QObject::connect(m_showLineToPortAction, &QAction::triggered, [this] { createLineToPort(); });
+    QObject::connect(m_showLineToPortAction.get(), &QAction::triggered, [this] { createLineToPort(); });
 }
 
 void ValueLabel::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
@@ -92,11 +93,6 @@ void ValueLabel::hoverLeaveEvent(QGraphicsSceneHoverEvent* e) {
 QVariant ValueLabel::itemChange(GraphicsItemChange change, const QVariant& value) {
     if (change == QGraphicsItem::ItemPositionHasChanged) {
         updateLine();
-    } else if (change == GraphicsItemChange::ItemVisibleChange) {
-        if (m_port->m_showValueAction && !m_port->m_showValueAction->isChecked()) {
-            // Reject visibility change - the value label has deliberatly been turned off
-            return QVariant();
-        }
     }
     return Label::itemChange(change, value);
 }
@@ -109,8 +105,8 @@ void ValueLabel::setLocked(bool) {
 void ValueLabel::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
     menu.addMenu(createPortRadixMenu(m_port->getPort(), *m_radix));
-    menu.addAction(m_port->m_showValueAction);
-    menu.addAction(m_showLineToPortAction);
+    menu.addAction(m_visibilityAction.get());
+    menu.addAction(m_showLineToPortAction.get());
 
     menu.exec(event->screenPos());
 

@@ -13,7 +13,8 @@ class PortGraphic;
 
 class ValueLabel : public Label {
 public:
-    ValueLabel(QGraphicsItem* parent, const std::shared_ptr<Radix>& radix, const PortGraphic* port);
+    ValueLabel(QGraphicsItem* parent, const std::shared_ptr<Radix>& radix, const PortGraphic* port,
+               std::shared_ptr<QAction> visibilityAction = {});
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
@@ -33,7 +34,7 @@ private:
     std::shared_ptr<Radix> m_radix;
     const PortGraphic* m_port = nullptr;
     QGraphicsLineItem* m_lineToPort = nullptr;
-    QAction* m_showLineToPortAction = nullptr;
+    std::unique_ptr<QAction> m_showLineToPortAction;
 };
 
 }  // namespace vsrtl

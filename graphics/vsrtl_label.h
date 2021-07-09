@@ -12,12 +12,14 @@ namespace vsrtl {
 class Label : public GraphicsBaseItem<QGraphicsTextItem> {
     Q_OBJECT
 public:
-    Label(QGraphicsItem* parent, const QString& text, int fontSize = 12);
+    Label(QGraphicsItem* parent, const QString& text, std::shared_ptr<QAction> visibilityAction = {},
+          int fontSize = 12);
 
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget*) override;
     QPainterPath shape() const override;
+    QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
 
     void setHoverable(bool enabled);
     void setText(const QString& text);
@@ -37,9 +39,10 @@ public:
     void serialize(Archive& archive) {
         prepareGeometryChange();
         try {
-            bool v = isVisible();
+            bool v = m_visibilityAction->isChecked();
             archive(cereal::make_nvp("Visible", v));
-            setVisible(v);
+            m_visibilityAction->setChecked(v);
+
         } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
@@ -104,6 +107,7 @@ protected:
     QFont m_font;
     bool m_defaultColorOverridden = false;
     Qt::Alignment m_alignment = Qt::AlignCenter;
+    std::shared_ptr<QAction> m_visibilityAction;
 };
 
 }  // namespace vsrtl

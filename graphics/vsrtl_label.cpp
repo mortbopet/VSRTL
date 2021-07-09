@@ -15,8 +15,17 @@
 
 namespace vsrtl {
 
-Label::Label(QGraphicsItem* parent, const QString& text, int fontSize)
+Label::Label(QGraphicsItem* parent, const QString& text, std::shared_ptr<QAction> visibilityAction, int fontSize)
     : GraphicsBaseItem(parent), m_font(QFont("Roboto", fontSize)) {
+    if (!visibilityAction) {
+        m_visibilityAction = std::make_shared<QAction>("Show label");
+        m_visibilityAction->setCheckable(true);
+        m_visibilityAction->setChecked(false);
+        connect(m_visibilityAction.get(), &QAction::toggled, [=](bool checked) { setVisible(checked); });
+    } else {
+        m_visibilityAction = visibilityAction;
+    }
+
     setMoveable();
     setText(text);
 }
@@ -57,13 +66,22 @@ QPainterPath Label::shape() const {
     }
 }
 
+QVariant Label::itemChange(GraphicsItemChange change, const QVariant& value) {
+    if (change == GraphicsItemChange::ItemVisibleChange) {
+        if (m_visibilityAction && !m_visibilityAction->isChecked()) {
+            // Reject visibility change - the value label has deliberatly been turned off
+            return QVariant();
+        }
+    }
+    return GraphicsBaseItem::itemChange(change, value);
+}
+
 void Label::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
     if (!isLocked()) {
         auto* editAction = menu.addAction("Edit label");
         connect(editAction, &QAction::triggered, this, &Label::editTriggered);
-        auto* hideAction = menu.addAction("Hide label");
-        connect(hideAction, &QAction::triggered, [=] { setVisible(false); });
+        menu.addAction(m_visibilityAction.get());
     }
 
     menu.exec(event->screenPos());

@@ -156,41 +156,28 @@ private:
     QPen m_oldPen;  // Pen which was previously used for paint(). If a change between m_oldPen and m_pen is seen, this
                     // triggers redrawing of the connected wires
 
-    QAction* m_showValueAction = nullptr;
-    QAction* m_showWidthAction = nullptr;
-    QAction* m_showLabelAction = nullptr;
-    QAction* m_showAction = nullptr;
+    std::shared_ptr<QAction> m_showValueAction = nullptr;
+    std::shared_ptr<QAction> m_showWidthAction = nullptr;
+    std::shared_ptr<QAction> m_showLabelAction = nullptr;
+    std::shared_ptr<QAction> m_showAction = nullptr;
 
 public:
     template <class Archive>
     void serialize(Archive& archive) {
-        // Serialize port name label
+        // Serialize labels
         try {
             archive(cereal::make_nvp("Label", *m_label));
-        } catch (const cereal::Exception& e) {
-            /// @todo: build an error report
-        }
-
-        // Serialize port value label
-        try {
             archive(cereal::make_nvp("ValueLabel", *m_valueLabel));
+            archive(cereal::make_nvp("UserHidden", m_userHidden));
+            setUserVisible(!userHidden());
         } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }
 
-        // Serialize port width label visibility
         try {
             bool visible = m_showWidthAction->isChecked();
             archive(cereal::make_nvp("PortWidthVisible", visible));
             m_showWidthAction->setChecked(visible);
-        } catch (const cereal::Exception& e) {
-            /// @todo: build an error report
-        }
-
-        // Serialize port visibility state
-        try {
-            archive(cereal::make_nvp("UserHidden", m_userHidden));
-            setUserVisible(!userHidden());
         } catch (const cereal::Exception& e) {
             /// @todo: build an error report
         }

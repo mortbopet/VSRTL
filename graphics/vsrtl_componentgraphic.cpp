@@ -74,7 +74,12 @@ void ComponentGraphic::initialize() {
     setAcceptHoverEvents(true);
     setMoveable();
 
-    m_label = std::make_unique<Label>(this, QString::fromStdString(m_component->getDisplayName()));
+    m_labelVisibilityAction = std::make_shared<QAction>("Show label");
+    m_labelVisibilityAction->setCheckable(true);
+    m_labelVisibilityAction->setChecked(true);
+    connect(m_labelVisibilityAction.get(), &QAction::toggled, [=](bool checked) { m_label->setVisible(checked); });
+
+    m_label = new Label(this, QString::fromStdString(m_component->getDisplayName()), m_labelVisibilityAction);
 
     // Create IO ports of Component
     for (const auto& p_in : m_component->getPorts<SimPort::Direction::in, SimPort>()) {
@@ -303,9 +308,7 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     }
 
     if (!isLocked()) {
-        bool labelVisible = m_label->isVisible();
-        auto* labelVisibilityAction = menu.addAction(labelVisible ? "Hide label" : "Show label");
-        connect(labelVisibilityAction, &QAction::triggered, [=] { m_label->setVisible(!labelVisible); });
+        menu.addAction(m_labelVisibilityAction.get());
     }
 
     menu.exec(event->screenPos());

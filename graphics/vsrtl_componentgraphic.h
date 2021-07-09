@@ -155,7 +155,8 @@ protected:
     QMap<SimPort*, PortGraphic*> m_inputPorts;
     QMap<SimPort*, PortGraphic*> m_outputPorts;
 
-    std::unique_ptr<Label> m_label;
+    Label* m_label;
+    std::shared_ptr<QAction> m_labelVisibilityAction;
 
     // Rectangles
     QPainterPath m_shape;
@@ -228,6 +229,34 @@ public:
         } catch (const cereal::Exception& e) {
         }
 
+        // If this is not a top level component, we should serialize its position within its parent component
+        if (!m_isTopLevelSerializedComponent) {
+            // Serealize position within parent component
+            try {
+                QPoint p = pos().toPoint();
+                archive(cereal::make_nvp("Pos", p));
+                setPos(p);
+            } catch (const cereal::Exception& e) {
+                /// @todo: build an error report
+            }
+
+            // Serialize visibility state
+            try {
+                bool v = isVisible();
+                archive(cereal::make_nvp("Visible", v));
+                archive(cereal::make_nvp("User hidden", m_userHidden));
+                setVisible(v && !m_userHidden);
+            } catch (const cereal::Exception& e) {
+                /// @todo: build an error report
+            }
+        }
+
+        /** Serialize port positions
+         * @todo this is right now done through GridComponent. In reality, all serialization of grid-component logic
+         * (size, positions etc.) should be performed in the grid component.
+         */
+        serializeBorder(archive);
+
         // Serialize ports
         for (const auto& pm : {m_inputPorts, m_outputPorts}) {
             for (const auto& p : pm) {
@@ -273,34 +302,6 @@ public:
                 }
             }
         }
-
-        // If this is not a top level component, we should serialize its position within its parent component
-        if (!m_isTopLevelSerializedComponent) {
-            // Serealize position within parent component
-            try {
-                QPoint p = pos().toPoint();
-                archive(cereal::make_nvp("Pos", p));
-                setPos(p);
-            } catch (const cereal::Exception& e) {
-                /// @todo: build an error report
-            }
-
-            // Serialize visibility state
-            try {
-                bool v = isVisible();
-                archive(cereal::make_nvp("Visible", v));
-                archive(cereal::make_nvp("User hidden", m_userHidden));
-                setVisible(v && !m_userHidden);
-            } catch (const cereal::Exception& e) {
-                /// @todo: build an error report
-            }
-        }
-
-        /** Serialize port positions
-         * @todo this is right now done through GridComponent. In reality, all serialization of grid-component logic
-         * (size, positions etc.) should be performed in the grid component.
-         */
-        serializeBorder(archive);
 
         // Serialize component name label
         try {

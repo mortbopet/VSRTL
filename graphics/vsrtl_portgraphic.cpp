@@ -63,50 +63,51 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
             new WireGraphic(scopeParent, this, m_port->getOutputPorts(), WireGraphic::WireType::ComponentOutput);
     }
 
+    // Setup actions
+    m_showValueAction = std::make_shared<QAction>("Show value");
+    m_showValueAction->setCheckable(true);
+    m_showValueAction->setChecked(false);
+    connect(m_showValueAction.get(), &QAction::toggled, this, &PortGraphic::setValueLabelVisible);
+
+    m_showWidthAction = std::make_shared<QAction>("Show width");
+    m_showWidthAction->setCheckable(true);
+    m_showWidthAction->setChecked(true);
+    connect(m_showWidthAction.get(), &QAction::toggled, this, &PortGraphic::setPortWidthVisible);
+
+    m_showLabelAction = std::make_shared<QAction>("Show label");
+    m_showLabelAction->setCheckable(true);
+    m_showLabelAction->setChecked(true);
+    connect(m_showLabelAction.get(), &QAction::toggled, [this](bool checked) {
+        m_label->setVisible(checked);
+        m_label->setLocked(false);
+    });
+
+    m_showAction = std::make_shared<QAction>("Show port");
+    m_showAction->setCheckable(true);
+    m_showAction->setChecked(!userHidden());
+    connect(m_showAction.get(), &QAction::toggled, this, &PortGraphic::setUserVisible);
+
     // Setup labels
     m_label = createVirtualChild<Label>({VirtualChildLink::Position, VirtualChildLink::Visibility},
-                                        QString::fromStdString(m_port->getDisplayName()), 8);
+                                        QString::fromStdString(m_port->getDisplayName()), m_showLabelAction, 8);
     directParent->addVirtualChild(VirtualChildLink::Position, m_label);  // Also move when direct parent moves
     m_label->setVisible(false);
     m_label->setZValue(VSRTLScene::Z_PortLabel);
 
-    m_valueLabel =
-        createVirtualChild<ValueLabel>({VirtualChildLink::Visibility, VirtualChildLink::Position}, m_radix, this);
+    m_valueLabel = createVirtualChild<ValueLabel>({VirtualChildLink::Visibility, VirtualChildLink::Position}, m_radix,
+                                                  this, m_showValueAction);
     m_valueLabel->setVisible(false);
     directParent->addVirtualChild(VirtualChildLink::Position, m_valueLabel);  // Also move when direct parent moves
     m_valueLabel->setZValue(VSRTLScene::Z_ValueLabel);
 
     m_portWidthLabel = createVirtualChild<Label>({VirtualChildLink::Position, VirtualChildLink::Visibility},
-                                                 QString::number(port->getWidth() - 1) + ":0", 7);
+                                                 QString::number(port->getWidth() - 1) + ":0", m_showWidthAction, 7);
     m_portWidthLabel->setMoveable(false);
     m_portWidthLabel->setHoverable(false);
     directParent->addVirtualChild(VirtualChildLink::Position, m_portWidthLabel);  // Also move when direct parent moves
     m_portWidthLabel->setFlags(m_portWidthLabel->flags() &
                                ~(QGraphicsItem::ItemIsSelectable | QGraphicsItem::ItemIsMovable));
     m_portWidthLabel->setZValue(VSRTLScene::Z_PortWidth);
-
-    // Setup actions
-    m_showValueAction = new QAction("Show value");
-    m_showValueAction->setCheckable(true);
-    m_showValueAction->setChecked(m_valueLabel->isVisible());
-    connect(m_showValueAction, &QAction::triggered, this, &PortGraphic::setValueLabelVisible);
-
-    m_showWidthAction = new QAction("Show width");
-    m_showWidthAction->setCheckable(true);
-    m_showWidthAction->setChecked(m_portWidthLabel->isVisible());
-    connect(m_showWidthAction, &QAction::triggered, this, &PortGraphic::setPortWidthVisible);
-    m_showLabelAction = new QAction("Show label");
-    m_showLabelAction->setCheckable(true);
-    m_showLabelAction->setChecked(m_label->isVisible());
-    connect(m_showLabelAction, &QAction::triggered, [this](bool checked) {
-        m_label->setVisible(checked);
-        m_label->setLocked(false);
-    });
-
-    m_showAction = new QAction("Show port");
-    m_showAction->setCheckable(true);
-    m_showAction->setChecked(!userHidden());
-    connect(m_showAction, &QAction::triggered, this, &PortGraphic::setUserVisible);
 
     updateGeometry();
 }
@@ -193,13 +194,13 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     QMenu menu;
 
     if (!userHidden()) {
-        menu.addAction(m_showValueAction);
+        menu.addAction(m_showValueAction.get());
     }
 
     if (!isLocked()) {
-        menu.addAction(m_showWidthAction);
-        menu.addAction(m_showLabelAction);
-        menu.addAction(m_showAction);
+        menu.addAction(m_showWidthAction.get());
+        menu.addAction(m_showLabelAction.get());
+        menu.addAction(m_showAction.get());
     }
 
     menu.exec(event->screenPos());

@@ -99,8 +99,7 @@ public:
         const auto dp = curPos - m_prePos;
 
         // Propagate completed state changes to virtual children
-        if (!isSerializing() &&
-            ((change == QGraphicsItem::ItemPositionHasChanged) || (change == QGraphicsItem::ItemVisibleHasChanged))) {
+        if ((change == QGraphicsItem::ItemPositionHasChanged) || (change == QGraphicsItem::ItemVisibleHasChanged)) {
             // Propagate geometry state changes to virtual children
             if (m_virtualChildren.size() != 0) {
                 const bool vis = T::isVisible();
