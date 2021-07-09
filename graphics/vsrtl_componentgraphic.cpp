@@ -130,6 +130,7 @@ void ComponentGraphic::createSubcomponents() {
         }
         nc->initialize();
         nc->setParentItem(this);
+        nc->setZValue(VSRTLScene::Z_Component);
         m_subcomponents.push_back(nc);
         if (!isExpanded()) {
             nc->hide();

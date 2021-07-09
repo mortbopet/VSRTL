@@ -62,6 +62,7 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
         m_outputWire =
             new WireGraphic(scopeParent, this, m_port->getOutputPorts(), WireGraphic::WireType::ComponentOutput);
     }
+    m_outputWire->setZValue(VSRTLScene::Z_Wires);
 
     // Setup actions
     m_showValueAction = std::make_shared<QAction>("Show value");
