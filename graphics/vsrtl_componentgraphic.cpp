@@ -67,7 +67,7 @@ GraphicsBaseItem<QGraphicsItem>* ComponentGraphic::moduleParent() {
     return parent;
 }
 
-void ComponentGraphic::initialize() {
+void ComponentGraphic::initialize(bool doPlaceAndRoute) {
     Q_ASSERT(scene() != nullptr);
 
     setFlags(ItemIsSelectable | ItemSendsScenePositionChanges | flags());
@@ -96,7 +96,9 @@ void ComponentGraphic::initialize() {
         connect(m_expandButton, &ComponentButton::toggled, [this](bool expanded) { setExpanded(expanded); });
 
         createSubcomponents();
-        placeAndRouteSubcomponents();
+        if (doPlaceAndRoute) {
+            placeAndRouteSubcomponents();
+        }
     }
 
     connect(this, &GridComponent::gridRectChanged, this, &ComponentGraphic::updateGeometry);

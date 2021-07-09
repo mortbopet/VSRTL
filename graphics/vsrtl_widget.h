@@ -29,7 +29,7 @@ public:
     void expandAllComponents(ComponentGraphic* fromThis = nullptr);
     ComponentGraphic* getTopLevelComponent() { return m_topLevelComponent; }
 
-    void setDesign(SimDesign* design);
+    void setDesign(SimDesign* design, bool doPlaceAndRoute = false);
     void clearDesign();
     bool isReversible();
 
@@ -78,7 +78,7 @@ private:
 
     std::atomic<bool> m_stop = false;
 
-    void initializeDesign();
+    void initializeDesign(bool doPlaceAndRoute);
     Ui::VSRTLWidget* ui;
 
     ComponentGraphic* m_topLevelComponent = nullptr;

@@ -62,7 +62,7 @@ public:
      */
     virtual void paintOverlay(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) {}
 
-    void initialize();
+    void initialize(bool placeAndRoute = false);
     bool restrictSubcomponentPositioning() const { return m_restrictSubcomponentPositioning; }
     std::vector<ComponentGraphic*>& getGraphicSubcomponents() { return m_subcomponents; }
     ComponentGraphic* getParent() const;

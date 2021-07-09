@@ -62,10 +62,10 @@ void VSRTLWidget::clearDesign() {
     m_design = nullptr;
 }
 
-void VSRTLWidget::setDesign(SimDesign* design) {
+void VSRTLWidget::setDesign(SimDesign* design, bool doPlaceAndRoute) {
     clearDesign();
     m_design = design;
-    initializeDesign();
+    initializeDesign(doPlaceAndRoute);
     setLocked(m_scene->isLocked());
     setDarkmode(m_scene->darkmode());
 }
@@ -126,7 +126,7 @@ void VSRTLWidget::handleSelectionChanged(const std::vector<SimComponent*>& selec
     m_scene->blockSignals(false);
 }
 
-void VSRTLWidget::initializeDesign() {
+void VSRTLWidget::initializeDesign(bool doPlaceAndRoute) {
     // Verify the design in case user forgot to
     m_design->verifyAndInitialize();
 
@@ -135,7 +135,7 @@ void VSRTLWidget::initializeDesign() {
     // item has been added to the scene.
     m_topLevelComponent = new ComponentGraphic(m_design, nullptr);
     addComponent(m_topLevelComponent);
-    m_topLevelComponent->initialize();
+    m_topLevelComponent->initialize(doPlaceAndRoute);
     // At this point, all graphic items have been created, and the post scene construction initialization may take
     // place. Similar to the initialize call, postSceneConstructionInitialization will recurse through the entire tree
     // which is the graphics items in the scene.
