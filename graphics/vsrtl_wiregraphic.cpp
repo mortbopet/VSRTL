@@ -256,7 +256,6 @@ void WireSegment::geometryModified() {
 
     // The shape of the line is defined as a box of WIRE_WIDTH around the entire line between the two end points. Except
     // for WIRE_WIDTH/2 at the edges of the line, wherein we would like to be able to click on a potential WirePoint.
-    setVisible(true);
     m_cachedShape = QPainterPath();
     p1_mod = m_cachedLine.pointAt(WIRE_WIDTH / m_cachedLine.length());
     p2_mod = m_cachedLine.pointAt((m_cachedLine.length() - WIRE_WIDTH) / m_cachedLine.length());
@@ -270,7 +269,6 @@ geometryModified_invalidate:
     m_cachedShape = QPainterPath();
     m_cachedLine = QLine();
     m_cachedBoundingRect = QRectF();
-    setVisible(false);
     return;
 }
 
