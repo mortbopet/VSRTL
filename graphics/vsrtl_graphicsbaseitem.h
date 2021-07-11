@@ -78,9 +78,11 @@ public:
     }
 
     bool isLocked() const override {
-        auto* p = dynamic_cast<VSRTLScene*>(T::scene());
-        Q_ASSERT(p);
-        return p->isLocked();
+        if (auto* p = dynamic_cast<VSRTLScene*>(T::scene())) {
+            return p->isLocked();
+        } else {
+            return false;
+        }
     }
 
     void setSerializing(bool state) override {

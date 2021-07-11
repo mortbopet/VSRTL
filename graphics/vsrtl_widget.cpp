@@ -150,11 +150,12 @@ void VSRTLWidget::expandAllComponents(ComponentGraphic* fromThis) {
     if (fromThis == nullptr)
         fromThis = m_topLevelComponent;
 
+    fromThis->setExpanded(true);
+
     // Components are expanded and routed from leaf nodes and up
     for (const auto& sub : fromThis->getGraphicSubcomponents())
         expandAllComponents(sub);
 
-    fromThis->setExpanded(true);
     fromThis->placeAndRouteSubcomponents();
 }
 

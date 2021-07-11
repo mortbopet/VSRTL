@@ -95,7 +95,7 @@ void ComponentGraphic::initialize(bool doPlaceAndRoute) {
         m_expandButton = new ComponentButton(this);
         connect(m_expandButton, &ComponentButton::toggled, [this](bool expanded) { setExpanded(expanded); });
 
-        createSubcomponents();
+        createSubcomponents(doPlaceAndRoute);
         if (doPlaceAndRoute) {
             placeAndRouteSubcomponents();
         }
@@ -117,7 +117,7 @@ void ComponentGraphic::initialize(bool doPlaceAndRoute) {
  * @brief ComponentGraphic::createSubcomponents
  * In charge of hide()ing subcomponents if the parent component (this) is not expanded
  */
-void ComponentGraphic::createSubcomponents() {
+void ComponentGraphic::createSubcomponents(bool doPlaceAndRoute) {
     for (const auto& c : m_component->getSubComponents()) {
         ComponentGraphic* nc;
         auto typeId = c->getGraphicsID();
@@ -130,7 +130,7 @@ void ComponentGraphic::createSubcomponents() {
         } else {
             nc = new ComponentGraphic(c, this);
         }
-        nc->initialize();
+        nc->initialize(doPlaceAndRoute);
         nc->setParentItem(this);
         nc->setZValue(VSRTLScene::Z_Component);
         m_subcomponents.push_back(nc);
@@ -336,7 +336,13 @@ void ComponentGraphic::setExpanded(bool state) {
     if (m_expandButton != nullptr) {
         m_expandButton->setChecked(areWeExpanded);
         for (const auto& c : m_subcomponents) {
-            c->setVisible(areWeExpanded && !c->userHidden());
+            const bool visible = areWeExpanded && !c->userHidden();
+            if (visible) {
+                c->setParentItem(this);
+            } else {
+                scene()->removeItem(c);
+            }
+            c->setVisible(visible);
         }
         // We are not hiding the input ports of a component, because these should always be drawn. However, a input
         // port of an expandable component has wires drawin inside the component, which must be hidden aswell, such

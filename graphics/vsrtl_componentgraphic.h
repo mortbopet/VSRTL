@@ -126,7 +126,7 @@ protected:
         ChildJustExpanded,
         ChildJustCollapsed,
     };
-    void createSubcomponents();
+    void createSubcomponents(bool doPlaceAndRoute);
     QRectF sceneGridRect() const;
 
     bool m_restrictSubcomponentPositioning = false;
