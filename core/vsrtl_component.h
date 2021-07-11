@@ -256,13 +256,6 @@ protected:
         return ports;
     }
 
-    void verifyIsUniquePortName(const std::string& name) {
-        if (!(isUniqueName(name, m_outputPorts) && isUniqueName(name, m_inputPorts))) {
-            throw std::runtime_error("Duplicate port name: '" + name + "' in component: '" + getName() +
-                                     "'. Port names must be unique.");
-        }
-    }
-
     std::vector<const PortBase*> m_sensitivityList;
     PropagationState m_propagationState = PropagationState::unpropagated;
 };

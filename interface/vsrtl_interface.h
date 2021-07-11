@@ -11,7 +11,7 @@
 #include <typeindex>
 #include <vector>
 
-#include "Signals/Signal.h"
+#include "Signal.h"
 #include "vsrtl_defines.h"
 #include "vsrtl_gfxobjecttypes.h"
 #include "vsrtl_parameter.h"
@@ -242,7 +242,9 @@ public:
         static_assert(std::is_base_of<SimComponent, T>::value, "Must cast to a simulator-specific component type");
         std::vector<T*> v;
         for (const auto& s : m_inputPorts) {
-            v.push_back(s->getInputPort()->getParent<T>());
+            if (auto* inputPort = s->getInputPort()) {
+                v.push_back(inputPort->getParent<T>());
+            }
         }
         return v;
     }
@@ -377,6 +379,13 @@ public:
             parameters.push_back(p.get());
         }
         return parameters;
+    }
+
+    void verifyIsUniquePortName(const std::string& name) {
+        if (!(isUniqueName(name, m_outputPorts) && isUniqueName(name, m_inputPorts))) {
+            throw std::runtime_error("Duplicate port name: '" + name + "' in component: '" + getName() +
+                                     "'. Port names must be unique.");
+        }
     }
 
     void verifyIsUniqueComponentName(const std::string& name) {

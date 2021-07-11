@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "Signals/Signal.h"
+#include "Signal.h"
 
 namespace vsrtl {
 

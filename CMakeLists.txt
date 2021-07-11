@@ -26,6 +26,8 @@ include_directories(${Qt5Widgets_INCLUDE_DIRS})
 include_directories(${Qt5Core_INCLUDE_DIRS})
 
 include_directories(SYSTEM external/cereal/include)
+include_directories(SYSTEM external/Signals)
+
 
 ######################################################################
 ## Code Coverage Configuration
