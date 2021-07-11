@@ -542,7 +542,8 @@ public:
      * @brief verifyAndInitialize
      * Any post-construction initialization should be included in this function.
      */
-    virtual void verifyAndInitialize() = 0;
+    virtual void verifyAndInitialize() { m_isVerifiedAndInitialized = true; }
+    bool isVerifiedAndInitialized() const { return m_isVerifiedAndInitialized; }
 
     /**
      * m_emitsSignals related functions
@@ -658,6 +659,7 @@ protected:
 
 private:
     bool m_emitsClockedSignals = true;
+    bool m_isVerifiedAndInitialized = false;
 
     // VCD dump members
     std::unique_ptr<VCDFile> m_vcdFile;

@@ -33,7 +33,7 @@ public:
      * @pre A call to propagate() must be done, to set the initial state of the circuit
      */
     void clock() override {
-        if (!m_isVerifiedAndInitialized) {
+        if (!isVerifiedAndInitialized()) {
             throw std::runtime_error("Design was not verified and initialized before clocking.");
         }
 
@@ -50,7 +50,7 @@ public:
 
     void reverse() override {
         if (canReverse()) {
-            if (!m_isVerifiedAndInitialized) {
+            if (!isVerifiedAndInitialized()) {
                 throw std::runtime_error("Design was not verified and initialized before reversing.");
             }
             // Clock registers
@@ -125,7 +125,7 @@ public:
      * propagates the circuit to set the initial state.
      */
     void verifyAndInitialize() override {
-        if (m_isVerifiedAndInitialized)
+        if (isVerifiedAndInitialized())
             return;
 
         createComponentGraph();
@@ -155,7 +155,7 @@ public:
         // @todo this should be changed, such that ports initially have a value of "X" until they are assigned
         reset();
 
-        m_isVerifiedAndInitialized = true;
+        SimDesign::verifyAndInitialize();
     }
 
     bool cycleUtil(SimComponent* c, std::map<SimComponent*, bool>& visited,
@@ -224,7 +224,6 @@ private:
     std::set<ClockedComponent*> m_clockedComponents;
     std::vector<std::unique_ptr<AddressSpace>> m_memories;
 
-    bool m_isVerifiedAndInitialized = false;
     std::vector<PortBase*> m_propagationStack;
 };
 
