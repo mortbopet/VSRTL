@@ -35,7 +35,6 @@ std::vector<std::string> getPortParentNameSeq(SimPort* p) {
 
 PortPoint::PortPoint(QGraphicsItem* parent) : GraphicsBaseItem(parent) {
     setAcceptHoverEvents(false);
-    setFlag(ItemSendsScenePositionChanges, true);
     m_portParent = dynamic_cast<PortGraphic*>(parent);
 
     m_shape = QPainterPath();
@@ -44,15 +43,23 @@ PortPoint::PortPoint(QGraphicsItem* parent) : GraphicsBaseItem(parent) {
     m_br = m_shape.boundingRect().adjusted(-WIRE_WIDTH, -WIRE_WIDTH, WIRE_WIDTH, WIRE_WIDTH);
 }
 
+void PortPoint::modulePositionHasChanged() {
+    portPosChanged();
+}
+
+void PortPoint::portPosChanged() {
+    // Propagate a redraw call to all segments connecting to this
+    if (m_inputWire) {
+        m_inputWire->geometryModified();
+    }
+    for (const auto& wire : m_outputWires) {
+        wire->geometryModified();
+    }
+}
+
 QVariant PortPoint::itemChange(GraphicsItemChange change, const QVariant& value) {
-    if (change == QGraphicsItem::ItemPositionHasChanged || change == QGraphicsItem::ItemScenePositionHasChanged) {
-        // Propagate a redraw call to all segments connecting to this
-        if (m_inputWire) {
-            m_inputWire->geometryModified();
-        }
-        for (const auto& wire : m_outputWires) {
-            wire->geometryModified();
-        }
+    if (change == QGraphicsItem::ItemPositionHasChanged) {
+        portPosChanged();
     }
 
     return GraphicsBaseItem::itemChange(change, value);

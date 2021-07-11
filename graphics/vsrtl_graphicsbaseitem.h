@@ -29,7 +29,12 @@ class GraphicsBaseItem : public GraphicsBase, public T {
     static_assert(std::is_base_of<QGraphicsItem, T>::value, "GraphicsBaseItem must derive from QGraphicsItem");
 
 public:
-    GraphicsBaseItem(QGraphicsItem* parent) : T(parent) { T::setFlag(QGraphicsItem::ItemSendsGeometryChanges); }
+    GraphicsBaseItem(QGraphicsItem* parent) : T(parent) {
+        T::setFlag(QGraphicsItem::ItemSendsGeometryChanges);
+        // Always ensure that this is off - scene position changes absolutely kills performance when we have many nested
+        // components.
+        T::setFlag(QGraphicsItem::ItemSendsScenePositionChanges, false);
+    }
 
     void postSceneConstructionInitialize1() override {
         recurseToChildren(this, [](GraphicsBase* child) { child->postSceneConstructionInitialize1(); });
@@ -95,6 +100,8 @@ public:
     }
 
     QVariant itemChange(QGraphicsItem::GraphicsItemChange change, const QVariant& value) override {
+        Q_ASSERT((T::flags() & QGraphicsItem::ItemSendsScenePositionChanges) == 0 &&
+                 "ItemSendsScenePositionChanges should never be enabled - kills performance");
         const auto curPos = T::pos();
         const auto dp = curPos - m_prePos;
 
@@ -140,6 +147,15 @@ public:
 
         return QGraphicsItem::itemChange(change, value);
     }
+
+    /**
+     * @brief modulePositionChanged
+     * This function adds the capabilities of QGraphicsItem::ItemScenePositionHasChanged restricted to within the scope
+     * of a module and its direct children, drawn inside the module. By avoiding to use the itemScenePos change
+     * infrastructure, we gain a massive speedup, while still being able to notify the correct entities that module
+     * position has changed.
+     */
+    virtual void modulePositionHasChanged() {}
 
 protected:
     // State-change preservation needed for Item#HasChanged value difference calculations

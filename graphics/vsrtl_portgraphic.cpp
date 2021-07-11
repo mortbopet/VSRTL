@@ -206,6 +206,12 @@ void PortGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     m_valueLabel->updateText();
 }
 
+void PortGraphic::modulePositionHasChanged() {
+    // Notify in- and output points that they have been moved within the module
+    m_inputPortPoint->modulePositionHasChanged();
+    m_outputPortPoint->modulePositionHasChanged();
+}
+
 void PortGraphic::setInputWire(WireGraphic* wire) {
     // Set wire is called during post scene construction initialization, wherein WireGraphic's will register with its
     // destination ports (inputs)
@@ -313,6 +319,10 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
 
     if (change == QGraphicsItem::ItemVisibleChange) {
         setPortVisible(value.toBool());
+    }
+
+    if (change == QGraphicsItem::ItemPositionHasChanged) {
+        modulePositionHasChanged();
     }
 
     return GraphicsBaseItem::itemChange(change, value);

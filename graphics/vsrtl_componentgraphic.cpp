@@ -70,7 +70,7 @@ GraphicsBaseItem<QGraphicsItem>* ComponentGraphic::moduleParent() {
 void ComponentGraphic::initialize(bool doPlaceAndRoute) {
     Q_ASSERT(scene() != nullptr);
 
-    setFlags(ItemIsSelectable | ItemSendsScenePositionChanges | flags());
+    setFlags(ItemIsSelectable | flags());
     setAcceptHoverEvents(true);
     setMoveable();
 
@@ -475,8 +475,11 @@ QVariant ComponentGraphic::itemChange(QGraphicsItem::GraphicsItemChange change, 
         // signal the wires going to the input ports of this component, to redraw
         if (m_initialized) {
             for (const auto& inputPort : qAsConst(m_inputPorts)) {
-                if (!inputPort->getPort()->isConstant())
-                    inputPort->getPort()->getInputPort()->getGraphic<PortGraphic>()->updateWireGeometry();
+                if (!inputPort->getPort()->isConstant()) {
+                    if (auto* simInputPort = inputPort->getPort()->getInputPort()) {
+                        simInputPort->getGraphic<PortGraphic>()->updateWireGeometry();
+                    }
+                }
             }
         }
 
@@ -495,6 +498,15 @@ QVariant ComponentGraphic::itemChange(QGraphicsItem::GraphicsItemChange change, 
             } else {
                 // Move was unsuccessfull, keep current positioning
                 return pos();
+            }
+        }
+    }
+
+    if (change == ItemPositionHasChanged) {
+        // Notify ports that their position inside the module has changed
+        for (const auto& portmap : {m_inputPorts, m_outputPorts}) {
+            for (const auto& p : portmap) {
+                p->modulePositionHasChanged();
             }
         }
     }

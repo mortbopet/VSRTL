@@ -50,6 +50,8 @@ public:
     void setInputWire(WireSegment* wire) { m_inputWire = wire; }
     void clearInputWire() { m_inputWire = nullptr; }
 
+    void modulePositionHasChanged() override;
+
 protected:
     WireSegment* m_inputWire = nullptr;
     WirePoint* m_draggedOnThis = nullptr;
@@ -60,6 +62,8 @@ protected:
     QRectF m_br;
 
 private:
+    void portPosChanged();
+
     PortGraphic* m_portParent = nullptr;
 };
 
