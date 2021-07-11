@@ -10,6 +10,8 @@
 
 #include "components/Leros/SingleCycleLeros/SingleCycleLeros.h"
 
+#include "vlt/vlt_design.h"
+
 #include <chrono>
 
 #include <QDebug>
@@ -20,7 +22,8 @@ int main(int argc, char** argv) {
 
     Q_INIT_RESOURCE(vsrtl_icons);
 
-    vsrtl::AdderAndReg design;
+    // vsrtl::AdderAndReg design;
+    vsrtl::vlt::Design design("/home/morten/Downloads/Cores-SweRV/tools/obj_dir/Vtb_top.xml");
 
     vsrtl::MainWindow w(design);
 

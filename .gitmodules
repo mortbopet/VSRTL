@@ -7,3 +7,6 @@
 [submodule "external/cereal"]
 	path = external/cereal
 	url = https://github.com/USCiLab/cereal.git
+[submodule "external/pugixml"]
+	path = external/pugixml
+	url = https://github.com/zeux/pugixml.git

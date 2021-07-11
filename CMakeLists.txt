@@ -28,6 +28,7 @@ include_directories(${Qt5Core_INCLUDE_DIRS})
 include_directories(SYSTEM external/cereal/include)
 include_directories(SYSTEM external/Signals)
 
+add_subdirectory(external/pugixml)
 
 ######################################################################
 ## Code Coverage Configuration
@@ -57,6 +58,8 @@ set(VSRTL_INTERFACE_LIB ${PROJECT_NAME}_int_lib CACHE INTERNAL "")
 add_subdirectory(interface)
 set(VSRTL_CORE_LIB ${PROJECT_NAME}_core_lib CACHE INTERNAL "")
 add_subdirectory(core)
+set(VSRTL_VLT_LIB ${PROJECT_NAME}_vlt_lib CACHE INTERNAL "")
+add_subdirectory(vlt)
 set(VSRTL_GRAPHICS_LIB ${PROJECT_NAME}_gfx_lib CACHE INTERNAL "")
 add_subdirectory(graphics)
 set(VSRTL_COMPONENTS_LIB ${PROJECT_NAME}_cmp_lib CACHE INTERNAL "")
@@ -73,5 +76,10 @@ if(VSRTL_BUILD_APP)
     set(APP_NAME VSRTL)
     add_executable(${APP_NAME} app.cpp)
     target_link_libraries(${APP_NAME} Qt5::Core Qt5::Widgets)
-    target_link_libraries(${APP_NAME} ${VSRTL_CORE_LIB} ${VSRTL_GRAPHICS_LIB} ${VSRTL_COMPONENTS_LIB})
+    target_link_libraries(${APP_NAME}
+        ${VSRTL_CORE_LIB}
+        ${VSRTL_GRAPHICS_LIB}
+        ${VSRTL_COMPONENTS_LIB}
+        ${VSRTL_VLT_LIB}
+    )
 endif()
