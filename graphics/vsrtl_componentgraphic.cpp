@@ -52,6 +52,9 @@ void ComponentGraphic::verifySpecialSignals() const {
     // Ensure that all special signals required by the graphics type of this component has been set by the simulator
     // component
     auto* type = m_component->getGraphicsType();
+    if (!type) {
+        throw std::runtime_error("No graphics type registerred for component " + m_component->getHierName());
+    }
     for (const auto& typeID : type->specialPortIDs()) {
         if (m_component->getSpecialPort(typeID) == nullptr) {
             m_component->throwError(
