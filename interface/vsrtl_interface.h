@@ -274,6 +274,18 @@ public:
     }
 
     template <typename T = SimPort>
+    std::vector<T*> getOutputPorts() const {
+        static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
+        return getPorts<SimPort::Direction::out, T>();
+    }
+
+    template <typename T = SimPort>
+    std::vector<T*> getInputPorts() const {
+        static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
+        return getPorts<SimPort::Direction::in, T>();
+    }
+
+    template <typename T = SimPort>
     T* findPort(const std::string& name) const {
         T* p_ptr = nullptr;
         for (const auto& p : getAllPorts<T>()) {
