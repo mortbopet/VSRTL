@@ -45,7 +45,7 @@ public:
      * @return String identifier for the component type
      */
 
-    std::type_index getGraphicsID() const override { return GraphicsIDFor(Component); }
+    const GraphicsType* getGraphicsType() const override { return GraphicsTypeFor(Component); }
     virtual void resetPropagation() {
         if (m_propagationState == PropagationState::unpropagated) {
             // Constants (components with no inputs) are always propagated

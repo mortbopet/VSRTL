@@ -183,7 +183,7 @@ bool GridComponent::updateSubcomponentBoundingRect() {
 }
 
 void GridComponent::setInitialRect() {
-    const auto preferredRect = ShapeRegister::getComponentPreferredRect(m_component->getGraphicsID());
+    const auto preferredRect = ShapeRegister::getTypePreferredRect(m_component->getGraphicsType());
 
     auto initialRect = getContractedMinimumGridRect();
     if (preferredRect == QRect()) {

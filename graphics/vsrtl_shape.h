@@ -35,20 +35,20 @@ public:
         QRect min_rect = QRect();
     };
 
-    static QPainterPath getComponentShape(const std::type_index& component, const QTransform& transform) {
+    static QPainterPath getTypeShape(const GraphicsType* type, const QTransform& transform) {
         // If no shape has been registered for the base component type, revert to displaying as a "SimComponent"
-        if (!get().m_componentShapes.count(component)) {
-            return get().m_componentShapes[GraphicsIDFor(Component)].shapeFunc(transform);
+        if (!get().m_typeShapes.count(type)) {
+            return get().m_typeShapes[GraphicsTypeFor(Component)].shapeFunc(transform);
         }
-        return get().m_componentShapes[component].shapeFunc(transform);
+        return get().m_typeShapes[type].shapeFunc(transform);
     }
 
-    static QRect getComponentPreferredRect(const std::type_index& component) {
+    static QRect getTypePreferredRect(const GraphicsType* type) {
         // If no shape has been registered for the base component type, revert to displaying as a "SimComponent"
-        if (!get().m_componentShapes.count(component)) {
-            return get().m_componentShapes[GraphicsIDFor(Component)].min_rect;
+        if (!get().m_typeShapes.count(type)) {
+            return get().m_typeShapes[GraphicsTypeFor(Component)].min_rect;
         }
-        return get().m_componentShapes[component].min_rect;
+        return get().m_typeShapes[type].min_rect;
     }
 
 private:
@@ -57,15 +57,15 @@ private:
         return sr;
     }
 
-    void registerComponentShape(const std::type_index& component, const Shape& shape) {
-        Q_ASSERT(!m_componentShapes.count(component));
+    void registerTypeShape(const GraphicsType* type, const Shape& shape) {
+        Q_ASSERT(!m_typeShapes.count(type));
         Q_ASSERT(shape.min_rect.topLeft() == QPoint(0, 0));
 
         // Ensure that minimum rectangle is snapping to the grid
-        m_componentShapes[component] = shape;
+        m_typeShapes[type] = shape;
     }
 
-    std::map<std::type_index, Shape> m_componentShapes;
+    std::map<const GraphicsType*, Shape> m_typeShapes;
 };
 
 }  // namespace vsrtl

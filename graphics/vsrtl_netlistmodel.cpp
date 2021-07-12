@@ -95,7 +95,7 @@ bool NetlistModel::indexIsRegisterOutputPortValue(const QModelIndex& index) cons
 void NetlistModel::loadDesignRecursive(NetlistTreeItem* parent, SimComponent* component) {
     // Subcomponents
     for (const auto& subcomponent : component->getSubComponents()) {
-        if (subcomponent->getGraphicsID() == GraphicsIDFor(Constant)) {
+        if (subcomponent->getGraphicsType() == GraphicsTypeFor(Constant)) {
             // Do not display constants in the netlist
             continue;
         }

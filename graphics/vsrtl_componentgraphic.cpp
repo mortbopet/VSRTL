@@ -120,10 +120,10 @@ void ComponentGraphic::initialize(bool doPlaceAndRoute) {
 void ComponentGraphic::createSubcomponents(bool doPlaceAndRoute) {
     for (const auto& c : m_component->getSubComponents()) {
         ComponentGraphic* nc;
-        auto typeId = c->getGraphicsID();
-        if (typeId == GraphicsIDFor(Multiplexer)) {
+        auto type = c->getGraphicsType();
+        if (type == GraphicsTypeFor(Multiplexer)) {
             nc = new MultiplexerGraphic(c, this);
-        } else if (typeId == GraphicsIDFor(Constant)) {
+        } else if (type == GraphicsTypeFor(Constant)) {
             // Don't create a distinct ComponentGraphic for constants - these will be drawn next to the port connecting
             // to it
             continue;
@@ -376,7 +376,7 @@ void ComponentGraphic::updateGeometry() {
     QMatrix mat;
     mat.scale(sceneRect.width(), sceneRect.height());
     t.translate(0.5, 0.5).rotate(gridRotation()).translate(-0.5, -0.5);
-    m_shape = mat.map(ShapeRegister::getComponentShape(m_component->getGraphicsID(), t));
+    m_shape = mat.map(ShapeRegister::getTypeShape(m_component->getGraphicsType(), t));
 
     // Position the expand-button
     if (hasSubcomponents()) {

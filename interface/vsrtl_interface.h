@@ -230,8 +230,7 @@ public:
      * class.
      * @return String identifier for the component type
      */
-    virtual std::type_index getGraphicsID() const { return GraphicsIDFor(Component); }
-    virtual const GraphicsType* getGraphicsType() const { return GraphycsTypeForComponent(Component)::get(); }
+    virtual const GraphicsType* getGraphicsType() const { return GraphicsTypeForComponent(Component)::get(); }
 
     /**
      * getInput&OutputComponents does not return a set, although it naturally should. In partitioning the circuit
@@ -272,6 +271,18 @@ public:
                 ports.push_back(p->cast<T>());
         }
         return ports;
+    }
+
+    template <typename T = SimPort>
+    T* findPort(const std::string& name) const {
+        T* p_ptr = nullptr;
+        for (const auto& p : getAllPorts<T>()) {
+            if (p->getName() == name) {
+                p_ptr = p;
+                break;
+            }
+        }
+        return p_ptr;
     }
 
     template <typename T = SimPort>

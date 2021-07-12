@@ -21,30 +21,28 @@ public:
     virtual ~GraphicsType() {}
 };
 
-#define GraphycsTypeForComponent(name) name##GraphicsType
+#define GraphicsTypeForComponent(name) name##GraphicsType
 
-#define DefineGraphicsType(type, requiredSpecialPorts)                                                             \
-    class GraphycsTypeForComponent(type) : public GraphicsType {                                                   \
-    public:                                                                                                        \
-        static std::type_index getGraphicsID() { return std::type_index(typeid(GraphycsTypeForComponent(type))); } \
-        const std::vector<std::string> specialPortIDs() const override { return requiredSpecialPorts; }            \
-        static GraphicsType* get() {                                                                               \
-            static GraphycsTypeForComponent(type) instance;                                                        \
-            return &instance;                                                                                      \
-        }                                                                                                          \
-        std::string getName() const override { return #type; }                                                     \
-                                                                                                                   \
-    private:                                                                                                       \
-        GraphycsTypeForComponent(type)() {}                                                                        \
+#define DefineGraphicsType(type, requiredSpecialPorts)                                                  \
+    class GraphicsTypeForComponent(type) : public GraphicsType {                                        \
+    public:                                                                                             \
+        const std::vector<std::string> specialPortIDs() const override { return requiredSpecialPorts; } \
+        static const GraphicsType* get() {                                                              \
+            static GraphicsTypeForComponent(type) instance;                                             \
+            return &instance;                                                                           \
+        }                                                                                               \
+        std::string getName() const override { return #type; }                                          \
+                                                                                                        \
+    private:                                                                                            \
+        GraphicsTypeForComponent(type)() {}                                                             \
     }
 
-#define GraphicsIDFor(type) (GraphycsTypeForComponent(type)::getGraphicsID())
+#define GraphicsTypeFor(type) (GraphicsTypeForComponent(type)::get())
 
 // All simulator components should use the following macro for defining how the component type should be drawn. Any of
 // the supported objects listed below may be specified.
-#define SetGraphicsType(name)                                                      \
-    std::type_index getGraphicsID() const override { return GraphicsIDFor(name); } \
-    const GraphicsType* getGraphicsType() const override { return GraphycsTypeForComponent(name)::get(); }
+#define SetGraphicsType(name) \
+    const GraphicsType* getGraphicsType() const override { return GraphicsTypeForComponent(name)::get(); }
 
 #define L(...) __VA_ARGS__
 
