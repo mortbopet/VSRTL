@@ -99,7 +99,8 @@ DefineGraphicsType(Nand, {});
 DefineGraphicsType(Or, {});
 DefineGraphicsType(Xor, {});
 DefineGraphicsType(Not, {});
-DefineGraphicsType(Multiplexer, {"select"});
+#define GFX_MUX_SELECT ("select")
+DefineGraphicsType(Multiplexer, {GFX_MUX_SELECT});
 DefineGraphicsType(ALU, {});
 DefineGraphicsType(Adder, {});
 

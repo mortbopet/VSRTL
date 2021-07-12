@@ -309,6 +309,10 @@ public:
 
     void verifyHasSpecialPortID(const std::string& id) const {
         const auto* type = getGraphicsType();
+        if (!type) {
+            throwError("No graphics type registerred for component '" + getHierName() + "'");
+        }
+
         if (!type->hasSpecialPortID(id)) {
             throwError("Special port ID '" + id + "' is not a special port of the graphics type '" + type->getName() +
                        "'");

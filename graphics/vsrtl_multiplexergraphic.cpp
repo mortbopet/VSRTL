@@ -12,7 +12,7 @@ MultiplexerGraphic::MultiplexerGraphic(SimComponent* c, ComponentGraphic* parent
 
 SimPort* MultiplexerGraphic::getSelect() {
     // Simulator component must have set the select port to special port 0
-    return m_component->getSpecialPort("select");
+    return m_component->getSpecialPort(GFX_MUX_SELECT);
 }
 
 void MultiplexerGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
