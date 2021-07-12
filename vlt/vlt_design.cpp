@@ -128,11 +128,14 @@ void Design::loadModule(Component* parent, const pugi::xml_node& mod, const std:
 static const std::map<std::string, std::string> c_vltToOpType = {{"and", "and"},
                                                                  {"or", "or"},
                                                                  {"not", "not"},
-                                                                 {"xor", "xor"}};
+                                                                 {"xor", "xor"},
+                                                                 {"sel", "multiplexer"}};
 class Op : public Component {
 public:
     Op(const std::string& name, SimComponent* parent, const GraphicsType* graphicsType)
-        : Component(name, parent), m_graphicsType(graphicsType) {}
+        : Component(name, parent), m_graphicsType(graphicsType) {
+        assert(graphicsType != nullptr);
+    }
     const GraphicsType* getGraphicsType() const override { return m_graphicsType; }
 
 private:
@@ -157,18 +160,32 @@ Port* Design::loadExpr(Component* parent, const pugi::xml_node& expr) {
     if (exprType == "varref") {
         return findPort<Port>(expr.attribute("name").as_string());
     } else if (c_vltToOpType.count(exprType)) {
-        auto* op = parent->create_component<Op>(parent->addSuffix(exprType), GraphicsTypeFromName::get(exprType));
+        // General operations with some in- and outputs
+
+        auto* op = parent->create_component<Op>(parent->addSuffix(exprType),
+                                                GraphicsTypeFromName::get(c_vltToOpType.at(exprType)));
+        const unsigned width = typeWidth(expr.attribute("dtype_id").as_uint());
         int i = 0;
         // For each input, create a new port in the op component, and connect the port to the result of further
         // evaluating the expression
         for (auto child : expr.children()) {
-            auto& port = op->createInputPort("in" + std::to_string(i), typeWidth(expr.attribute("dtype_id").as_uint()));
+            auto& port = op->createInputPort("in" + std::to_string(i), width);
             auto* fromPort = loadExpr(parent, child);
             if (fromPort) {
                 *fromPort >> port;
             }
             i++;
         }
+
+        // Multiplexers
+        if (exprType == "sel") {
+            // Select signal is expected to be the 1st signal under the "sel" tag.
+            op->setSpecialPort(GFX_MUX_SELECT, op->getInputPorts().at(0));
+        }
+
+        // Output port
+        return &op->createOutputPort("", width);
+
     } else if (exprType == "const") {
         auto* constant_cmp = parent->create_component<Constant>(parent->addSuffix(expr.attribute("name").as_string()),
                                                                 typeWidth(expr.attribute("dtype_id").as_uint()));
