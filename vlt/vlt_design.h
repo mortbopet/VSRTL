@@ -67,8 +67,8 @@ private:
     // XML loading functions
     void loadDesign();
     void loadTypeTable(const pugi::xml_node& typetable);
-    void loadModule(Component* parent, const pugi::xml_node& mod, const std::string& instanceName = {});
-    void loadPin(Component* comp, const pugi::xml_node& pin);
+    Component* loadInstance(Component* parent, const pugi::xml_node& mod, const std::string& instanceName = {});
+    void loadVar(Component* comp, const pugi::xml_node& pin);
     void loadAssignments(Component* comp, const pugi::xml_node& mod);
     void loadContAssign(Component* comp, const pugi::xml_node& contassign);
     Port* loadExpr(Component* parent, const pugi::xml_node& expr);

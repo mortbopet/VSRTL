@@ -64,15 +64,20 @@ void Design::loadTypeTable(const pugi::xml_node& typetable) {
     }
 }
 
-void Design::loadPin(Component* comp, const pugi::xml_node& pin) {
-    const auto dir = std::string(pin.attribute(VLT_DIR).as_string());
+void Design::loadVar(Component* comp, const pugi::xml_node& pin) {
     const auto pinName = pin.attribute(VLT_PORT_NAME).as_string();
     const auto typeId = pin.attribute("dtype_id").as_uint();
+    const auto dir = std::string(pin.attribute(VLT_DIR).as_string());
+    const auto varType = std::string(pin.attribute("vartype").as_string());
     const auto& width = typeWidth(typeId);
     if (dir == "input") {
         comp->createInputPort(pinName, width);
     } else if (dir == "output") {
         comp->createOutputPort(pinName, width);
+    } else if (varType == "logic") {
+        // Create outstanding port assignments for each logic variable. Eventually, these must be assigned to some
+        // output port of a component
+        comp->addVar(pinName, nullptr);
     }
 }
 
@@ -91,10 +96,16 @@ pugi::xml_node Design::findModuleNode(const std::string& name) {
  * @param mod
  * @param instanceName
  *
+ * Three components are in flight during loadInstance:
+ * - parent: The parent component which instantiated the component that is currently being instantiated
+ * - component: The component currently being instantiated
+ * - subcomponent: components being instantiated by the currently instantiating component
+ *
  * @note: This could be done more cleverly, i.e., a module should only be created once, and then copied when
  * instantiated.
+ *
  */
-void Design::loadModule(Component* parent, const pugi::xml_node& mod, const std::string& instanceName) {
+Component* Design::loadInstance(Component* parent, const pugi::xml_node& mod, const std::string& instanceName) {
     const auto modName = instanceName.empty() ? mod.attribute(VLT_MODULE_NAME).as_string() : instanceName;
 
     Component* component = nullptr;
@@ -104,11 +115,9 @@ void Design::loadModule(Component* parent, const pugi::xml_node& mod, const std:
         component = parent->create_component<Component>(instanceName);
     }
 
-    // Load pins
+    // Load vars
     for (pugi::xml_node var : mod.children(VLT_VAR)) {
-        if (var.attribute(VLT_DIR)) {
-            loadPin(component, var);
-        }
+        loadVar(component, var);
     }
 
     // Load instantiated entities
@@ -116,11 +125,40 @@ void Design::loadModule(Component* parent, const pugi::xml_node& mod, const std:
         const auto instName = instance.attribute(VLT_INSTANCE_NAME).as_string();
         const auto defName = instance.attribute(VLT_INSTANCE_DEFNAME).as_string();
         // const auto defId = nextModuleId(defName);
-        loadModule(component, findModuleNode(defName), instName);
+        auto* subComponent = loadInstance(component, findModuleNode(defName), instName);
+
+        // Load port assignments to instanciated entity
+        for (pugi::xml_node port : instance.children("port")) {
+            const auto direction = std::string(port.attribute("direction").as_string());
+            auto* subCompPort = subComponent->findPort<Port>(port.attribute("name").as_string());
+            if (!subCompPort) {
+                std::cout << "Ports for " << subComponent->getHierName() << " were: " << std::endl;
+                for (const auto& p : subComponent->getAllPorts()) {
+                    std::cout << "\t" << p->getHierName() << std::endl;
+                }
+            }
+            if (port.children().empty()) {
+                // Port is unassigned
+                continue;
+            }
+
+            auto* assignedVar = loadExpr(component, *port.children().begin());
+            if (subCompPort && assignedVar) {
+                if (direction == "in") {
+                    *assignedVar >> *subCompPort;
+                } else if (direction == "out") {
+                    *subCompPort >> *assignedVar;
+                } else {
+                    throw std::runtime_error("Unknown direction for port");
+                }
+            }
+        }
     }
 
     // Load assignments
     loadAssignments(component, mod);
+
+    return component;
 }
 
 /* Conversion between VLT expression identifiers and the named graphics type of VSRTL. These are generally the same,
@@ -159,11 +197,24 @@ Port* Design::loadExpr(Component* parent, const pugi::xml_node& expr) {
 
     if (exprType == "varref") {
         return findPort<Port>(expr.attribute("name").as_string());
-    } else if (c_vltToOpType.count(exprType)) {
+    } else if (exprType == "const") {
+        auto* constant_cmp = parent->create_component<Constant>(parent->addSuffix(expr.attribute("name").as_string()),
+                                                                typeWidth(expr.attribute("dtype_id").as_uint()));
+        return constant_cmp->output;
+
+    } else {
         // General operations with some in- and outputs
 
-        auto* op = parent->create_component<Op>(parent->addSuffix(exprType),
-                                                GraphicsTypeFromName::get(c_vltToOpType.at(exprType)));
+        GraphicsType const* gfxType = nullptr;
+        auto gfxTypeIt = c_vltToOpType.find(exprType);
+        if (gfxTypeIt != c_vltToOpType.end()) {
+            gfxType = GraphicsTypeFromName::get(gfxTypeIt->second);
+        } else {
+            // Default - just show as a component
+            gfxType = GraphicsTypeFromName::get("component");
+        }
+
+        auto* op = parent->create_component<Op>(parent->addSuffix(exprType), gfxType);
         const unsigned width = typeWidth(expr.attribute("dtype_id").as_uint());
         int i = 0;
         // For each input, create a new port in the op component, and connect the port to the result of further
@@ -185,16 +236,6 @@ Port* Design::loadExpr(Component* parent, const pugi::xml_node& expr) {
 
         // Output port
         return &op->createOutputPort("", width);
-
-    } else if (exprType == "const") {
-        auto* constant_cmp = parent->create_component<Constant>(parent->addSuffix(expr.attribute("name").as_string()),
-                                                                typeWidth(expr.attribute("dtype_id").as_uint()));
-        return constant_cmp->output;
-
-    }
-
-    else {
-        throwWarning("Unhandled expression type '" + exprType + "'");
     }
 
     return nullptr;
@@ -238,7 +279,7 @@ void Design::loadDesign() {
 
     m_netlist = doc.child(VLT_ROOT).child(VLT_NETLIST);
     loadTypeTable(m_netlist.child(VLT_TYPETABLE));
-    loadModule(nullptr, m_netlist.find_child_by_attribute(VLT_MODULE, VLT_TOPMODULE, "1"));
+    loadInstance(nullptr, m_netlist.find_child_by_attribute(VLT_MODULE, VLT_TOPMODULE, "1"));
 }
 
 void Design::clock() {

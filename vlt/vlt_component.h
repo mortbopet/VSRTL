@@ -21,11 +21,18 @@ public:
      * this component.
      */
     std::string addSuffix(const std::string& type);
+    Port* portForVar(const std::string& var);
+    void addVar(const std::string& var, Port*);
 
 private:
     Port& createPort(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container, unsigned width);
 
     std::map<std::string, unsigned> m_componentSuffixes;
+    /**
+     * @brief m_vars
+     * Mapping from Verilator <var> tags to the associated port.
+     */
+    std::map<std::string, Port*> m_vars;
 };
 }  // namespace vlt
 }  // namespace vsrtl

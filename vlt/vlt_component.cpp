@@ -25,5 +25,18 @@ std::string Component::addSuffix(const std::string& type) {
     return type + "_" + std::to_string(m_componentSuffixes[type]++);
 }
 
+Port* Component::portForVar(const std::string& var) {
+    auto it = m_vars.find(var);
+    if (it != m_vars.end()) {
+        return it->second;
+    } else {
+        return nullptr;
+    }
+}
+
+void Component::addVar(const std::string& var, Port* p) {
+    m_vars[var] = p;
+}
+
 }  // namespace vlt
 }  // namespace vsrtl
