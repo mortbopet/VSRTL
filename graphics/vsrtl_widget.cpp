@@ -134,7 +134,6 @@ void VSRTLWidget::initializeDesign(bool doPlaceAndRoute) {
     // ports, wires etc. within the design. This is done through the initialize call, which must be called after the
     // item has been added to the scene.
     m_topLevelComponent = new ComponentGraphic(m_design, nullptr);
-    addComponent(m_topLevelComponent);
     m_topLevelComponent->initialize(doPlaceAndRoute);
     // At this point, all graphic items have been created, and the post scene construction initialization may take
     // place. Similar to the initialize call, postSceneConstructionInitialization will recurse through the entire tree
@@ -144,6 +143,10 @@ void VSRTLWidget::initializeDesign(bool doPlaceAndRoute) {
 
     // Expand top widget
     m_topLevelComponent->setExpanded(true);
+
+    // Add top level component to scene at the end. Do _not_ move this before initialization - initialization will be
+    // massively slowed down if items are modified while already in the scene.
+    addComponent(m_topLevelComponent);
 }
 
 void VSRTLWidget::expandAllComponents(ComponentGraphic* fromThis) {

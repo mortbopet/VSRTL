@@ -71,8 +71,6 @@ GraphicsBaseItem<QGraphicsItem>* ComponentGraphic::moduleParent() {
 }
 
 void ComponentGraphic::initialize(bool doPlaceAndRoute) {
-    Q_ASSERT(scene() != nullptr);
-
     setFlags(ItemIsSelectable | flags());
     setAcceptHoverEvents(true);
     setMoveable();
@@ -342,8 +340,8 @@ void ComponentGraphic::setExpanded(bool state) {
             const bool visible = areWeExpanded && !c->userHidden();
             if (visible) {
                 c->setParentItem(this);
-            } else {
-                scene()->removeItem(c);
+            } else if (auto* scenep = scene()) {
+                scenep->removeItem(c);
             }
             c->setVisible(visible);
         }
