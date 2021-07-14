@@ -33,26 +33,14 @@ inline T2 signextend(const T x, unsigned B) {
     return (static_cast<T2>(x) << m) >> m;
 }
 
-template <unsigned n>
-constexpr VSRTL_VT_U generateBitmask() {
-    static_assert(n <= (sizeof(VSRTL_VT_U) * CHAR_BIT), "Invalid bitmask");
-    if constexpr (n >= (sizeof(VSRTL_VT_U) * CHAR_BIT)) {
-        return VT_U(VT_S(-1));
-    } else if (n == 0) {
-        return 0;
-    } else {
-        return VT_U((1ULL << n) - 1);
-    }
-}
-
-constexpr VSRTL_VT_U generateBitmask(const VSRTL_VT_U& n) {
+constexpr VSRTL_VT_U generateBitmask(VSRTL_VT_U n) {
     if (n >= (sizeof(VSRTL_VT_U) * CHAR_BIT)) {
         return VT_U(VT_S(-1));
     }
     if (n == 0) {
         return 0;
     }
-    return VT_U((1UL << n) - 1);
+    return VT_U((VT_U(1) << n) - 1);
 }
 
 constexpr unsigned bitcount(VSRTL_VT_U n) {
