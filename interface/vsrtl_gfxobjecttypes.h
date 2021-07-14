@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <typeindex>
 #include <typeinfo>
