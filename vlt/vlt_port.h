@@ -7,7 +7,7 @@ namespace vlt {
 
 class Port : public SimPort {
 public:
-    Port(const std::string& name, unsigned width, SimComponent* parent);
+    Port(const std::string& name, unsigned width, PortType type, SimComponent* parent);
 
     unsigned int getWidth() const override { return m_width; }
     VSRTL_VT_U uValue() const override { return isConstant() ? m_constantValue : 0; }

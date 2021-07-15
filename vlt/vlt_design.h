@@ -3,7 +3,11 @@
 #include "../interface/vsrtl_defines.h"
 #include "../interface/vsrtl_interface.h"
 
+#include "vlt_component.h"
+
 #include "pugixml.hpp"
+
+#include <variant>
 
 namespace vsrtl {
 namespace vlt {
@@ -71,7 +75,9 @@ private:
     void loadVar(Component* comp, const pugi::xml_node& pin);
     void loadAssignments(Component* comp, const pugi::xml_node& mod);
     void loadContAssign(Component* comp, const pugi::xml_node& contassign);
+
     Port* loadExpr(Component* parent, const pugi::xml_node& expr);
+    Port* loadExprErroring(Component* parent, const pugi::xml_node& expr);
     pugi::xml_node findModuleNode(const std::string& name);
     pugi::xml_node m_netlist;
 };

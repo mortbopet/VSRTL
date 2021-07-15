@@ -9,11 +9,13 @@ class Port;
 
 class Component : public SimComponent {
 public:
+    using VarRef = std::string;
     SetGraphicsType(Component);
     Component(const std::string& displayName, SimComponent* parent);
 
-    Port& createInputPort(const std::string& name, unsigned width);
-    Port& createOutputPort(const std::string& name, unsigned width);
+    Port& createInputPort(const VarRef& name, unsigned width);
+    Port& createOutputPort(const VarRef& name, unsigned width);
+    Port& createSignal(const VarRef& name, unsigned width);
 
     /**
      * @brief getSuffix
@@ -21,18 +23,17 @@ public:
      * this component.
      */
     std::string addSuffix(const std::string& type);
-    Port* portForVar(const std::string& var);
-    void addVar(const std::string& var, Port*);
 
 private:
-    Port& createPort(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container, unsigned width);
+    Port& createPort(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container, unsigned width,
+                     vsrtl::SimPort::PortType);
 
     std::map<std::string, unsigned> m_componentSuffixes;
     /**
      * @brief m_vars
      * Mapping from Verilator <var> tags to the associated port.
      */
-    std::map<std::string, Port*> m_vars;
+    std::map<VarRef, Port*> m_vars;
 };
 }  // namespace vlt
 }  // namespace vsrtl

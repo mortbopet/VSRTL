@@ -75,9 +75,7 @@ void Design::loadVar(Component* comp, const pugi::xml_node& pin) {
     } else if (dir == "output") {
         comp->createOutputPort(pinName, width);
     } else if (varType == "logic") {
-        // Create outstanding port assignments for each logic variable. Eventually, these must be assigned to some
-        // output port of a component
-        comp->addVar(pinName, nullptr);
+        comp->createSignal(pinName, width);
     }
 }
 
@@ -110,9 +108,9 @@ Component* Design::loadInstance(Component* parent, const pugi::xml_node& mod, co
 
     Component* component = nullptr;
     if (!parent) {
-        component = this->create_component<Component>(instanceName);
+        component = this->create_component<Component>(modName);
     } else {
-        component = parent->create_component<Component>(instanceName);
+        component = parent->create_component<Component>(modName);
     }
 
     // Load vars
@@ -142,7 +140,7 @@ Component* Design::loadInstance(Component* parent, const pugi::xml_node& mod, co
                 continue;
             }
 
-            auto* assignedVar = loadExpr(component, *port.children().begin());
+            auto* assignedVar = loadExprErroring(component, *port.children().begin());
             if (subCompPort && assignedVar) {
                 if (direction == "in") {
                     *assignedVar >> *subCompPort;
@@ -192,16 +190,31 @@ public:
     Port* output;
 };
 
+Port* Design::loadExprErroring(Component* parent, const pugi::xml_node& expr) {
+    const std::string exprName = std::string(expr.attribute("name").as_string());
+
+    auto* port = loadExpr(parent, expr);
+    if (!port) {
+        throw std::runtime_error("Could not find port or signal '" + exprName + "' in component '" + getHierName() +
+                                 "'");
+    }
+    return port;
+}
+
 Port* Design::loadExpr(Component* parent, const pugi::xml_node& expr) {
     const std::string exprType = std::string(expr.name());
+    const std::string exprName = std::string(expr.attribute("name").as_string());
 
     if (exprType == "varref") {
-        return findPort<Port>(expr.attribute("name").as_string());
+        if (auto* ioPort = parent->findPort<Port>(exprName)) {
+            return ioPort;
+        } else if (auto* signal = parent->findSignal<Port>(exprName)) {
+            return signal;
+        }
     } else if (exprType == "const") {
         auto* constant_cmp = parent->create_component<Constant>(parent->addSuffix(expr.attribute("name").as_string()),
                                                                 typeWidth(expr.attribute("dtype_id").as_uint()));
         return constant_cmp->output;
-
     } else {
         // General operations with some in- and outputs
 
@@ -221,7 +234,7 @@ Port* Design::loadExpr(Component* parent, const pugi::xml_node& expr) {
         // evaluating the expression
         for (auto child : expr.children()) {
             auto& port = op->createInputPort("in" + std::to_string(i), width);
-            auto* fromPort = loadExpr(parent, child);
+            auto* fromPort = loadExprErroring(parent, child);
             if (fromPort) {
                 *fromPort >> port;
             }
@@ -257,11 +270,9 @@ void Design::loadContAssign(Component* comp, const pugi::xml_node& contassign) {
         i++;
     }
 
-    fromPort = loadExpr(comp, from);
-    toPort = loadExpr(comp, to);
-    if (fromPort && toPort) {
-        *fromPort >> *toPort;
-    }
+    fromPort = loadExprErroring(comp, from);
+    toPort = loadExprErroring(comp, to);
+    *fromPort >> *toPort;
 }
 
 void Design::loadAssignments(Component* comp, const pugi::xml_node& mod) {

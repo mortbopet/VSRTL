@@ -2,40 +2,32 @@
 
 #include "vlt_port.h"
 
+#include <stdexcept>
+
 namespace vsrtl {
 namespace vlt {
 Component::Component(const std::string& displayName, SimComponent* parent) : SimComponent(displayName, parent) {}
 
-Port& Component::createInputPort(const std::string& name, unsigned width) {
-    return createPort(name, m_inputPorts, width);
+Port& Component::createInputPort(const VarRef& name, unsigned width) {
+    return createPort(name, m_inputPorts, width, vsrtl::SimPort::PortType::in);
 }
-Port& Component::createOutputPort(const std::string& name, unsigned width) {
-    return createPort(name, m_outputPorts, width);
+Port& Component::createOutputPort(const VarRef& name, unsigned width) {
+    return createPort(name, m_outputPorts, width, vsrtl::SimPort::PortType::out);
+}
+Port& Component::createSignal(const VarRef& name, unsigned width) {
+    return createPort(name, m_signals, width, vsrtl::SimPort::PortType::signal);
 }
 
-Port& Component::createPort(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container,
-                            unsigned width) {
+Port& Component::createPort(VarRef name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container, unsigned width,
+                            vsrtl::SimPort::PortType type) {
     verifyIsUniquePortName(name);
-    Port* port = static_cast<Port*>((*container.emplace(std::make_unique<Port>(name, width, this)).first).get());
+    Port* port = static_cast<Port*>((*container.emplace(std::make_unique<Port>(name, width, type, this)).first).get());
 
     return *port;
 }
 
 std::string Component::addSuffix(const std::string& type) {
     return type + "_" + std::to_string(m_componentSuffixes[type]++);
-}
-
-Port* Component::portForVar(const std::string& var) {
-    auto it = m_vars.find(var);
-    if (it != m_vars.end()) {
-        return it->second;
-    } else {
-        return nullptr;
-    }
-}
-
-void Component::addVar(const std::string& var, Port* p) {
-    m_vars[var] = p;
 }
 
 }  // namespace vlt

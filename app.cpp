@@ -23,7 +23,8 @@ int main(int argc, char** argv) {
     Q_INIT_RESOURCE(vsrtl_icons);
 
     // vsrtl::AdderAndReg design;
-    vsrtl::vlt::Design design("/home/morten/Downloads/Cores-SweRV/tools/obj_dir/Vtb_top.xml");
+    // vsrtl::vlt::Design design("/home/morten/Downloads/Cores-SweRV/tools/obj_dir/Vtb_top.xml");
+    vsrtl::vlt::Design design("/home/morten/Work/verilator/bin/obj_dir/testbench_verilator_dir/Vpicorv32_axi.xml");
 
     vsrtl::MainWindow w(design);
 
