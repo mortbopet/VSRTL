@@ -161,11 +161,8 @@ Component* Design::loadInstance(Component* parent, const pugi::xml_node& mod, co
 
 /* Conversion between VLT expression identifiers and the named graphics type of VSRTL. These are generally the same,
  * but a mapping is maintained since they are logically referring to different things */
-static const std::map<std::string, std::string> c_vltToOpType = {{"and", "and"},
-                                                                 {"or", "or"},
-                                                                 {"not", "not"},
-                                                                 {"xor", "xor"},
-                                                                 {"sel", "multiplexer"}};
+static const std::map<std::string, std::string> c_vltToOpType = {
+    {"and", "and"}, {"or", "or"}, {"not", "not"}, {"xor", "xor"}, {"sel", "multiplexer"}, {"cond", "multiplexer"}};
 class Op : public Component {
 public:
     Op(const std::string& name, SimComponent* parent, const GraphicsType* graphicsType)
@@ -242,7 +239,7 @@ Port* Design::loadExpr(Component* parent, const pugi::xml_node& expr) {
         }
 
         // Multiplexers
-        if (exprType == "sel") {
+        if (exprType == "sel" || exprType == "cond") {
             // Select signal is expected to be the 1st signal under the "sel" tag.
             op->setSpecialPort(GFX_MUX_SELECT, op->getInputPorts().at(0));
         }
