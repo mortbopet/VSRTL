@@ -51,9 +51,9 @@ public:
             // Constants (components with no inputs) are always propagated
         } else {
             m_propagationState = PropagationState::unpropagated;
-            for (const auto& i : getPorts<SimPort::Direction::in, PortBase>())
+            for (const auto& i : getPorts<SimPort::PortType::in, PortBase>())
                 i->resetPropagation();
-            for (const auto& o : getPorts<SimPort::Direction::out, PortBase>())
+            for (const auto& o : getPorts<SimPort::PortType::out, PortBase>())
                 o->resetPropagation();
         }
     }
@@ -63,21 +63,21 @@ public:
 
     template <unsigned int W, typename E_t = void>
     Port<W>& createInputPort(std::string name) {
-        return createPort<W, E_t>(name, m_inputPorts);
+        return createPort<W, E_t>(name, m_inputPorts, vsrtl::SimPort::PortType::in);
     }
     template <unsigned int W, typename E_t = void>
     Port<W>& createOutputPort(std::string name) {
-        return createPort<W, E_t>(name, m_outputPorts);
+        return createPort<W, E_t>(name, m_outputPorts, vsrtl::SimPort::PortType::out);
     }
 
     template <unsigned int W>
     std::vector<Port<W>*> createInputPorts(std::string name, unsigned int n) {
-        return createPorts<W>(name, m_inputPorts, n);
+        return createPorts<W>(name, m_inputPorts, vsrtl::SimPort::PortType::in, n);
     }
 
     template <unsigned int W>
     std::vector<Port<W>*> createOutputPorts(std::string name, unsigned int n) {
-        return createPorts<W>(name, m_outputPorts, n);
+        return createPorts<W>(name, m_outputPorts, vsrtl::SimPort::PortType::out, n);
     }
 
     void propagateComponent(std::vector<PortBase*>& propagationStack) {
@@ -89,7 +89,7 @@ public:
             // Registers are implicitely clocked by calling propagate() on its output ports.
             /** @remark register <must> be saved before propagateComponent reaches the register ! */
             m_propagationState = PropagationState::propagated;
-            for (const auto& s : getPorts<SimPort::Direction::out, PortBase>()) {
+            for (const auto& s : getPorts<SimPort::PortType::out, PortBase>()) {
                 s->propagate(propagationStack);
             }
         } else {
@@ -152,7 +152,7 @@ public:
             // not the case, the function will return. Iff the circuit is correctly connected, this component will at a
             // later point be visited, given that the input port which is currently not yet propagated, will become
             // propagated at some point, signalling its connected components to propagate.
-            for (const auto& input : getPorts<SimPort::Direction::in, PortBase>()) {
+            for (const auto& input : getPorts<SimPort::PortType::in, PortBase>()) {
                 if (!input->isPropagated())
                     return;
             }
@@ -167,7 +167,7 @@ public:
 
             // At this point, all input ports are assured to be propagated. In this case, it is safe to propagate
             // the outputs of the component.
-            for (const auto& s : getPorts<SimPort::Direction::out, PortBase>()) {
+            for (const auto& s : getPorts<SimPort::PortType::out, PortBase>()) {
                 s->propagate(propagationStack);
             }
             m_propagationState = PropagationState::propagated;
@@ -180,7 +180,7 @@ public:
         }
 
         // Signal all connected components of the current component to propagate
-        for (const auto& out : getPorts<SimPort::Direction::out, PortBase>()) {
+        for (const auto& out : getPorts<SimPort::PortType::out, PortBase>()) {
             for (const auto& in : out->getOutputPorts()) {
                 // With the input port of the connected component propagated, the parent component may be propagated.
                 // This will succeed if all input components to the parent component has been propagated.
@@ -208,19 +208,19 @@ public:
         if (m_inputPorts.size() == 0 && !hasSubcomponents() && m_sensitivityList.empty()) {
             // Component has no input ports - ie. component is a constant. propagate all output ports and set component
             // as propagated.
-            for (const auto& p : getPorts<SimPort::Direction::out, PortBase>())
+            for (const auto& p : getPorts<SimPort::PortType::out, PortBase>())
                 p->propagateConstant();
             m_propagationState = PropagationState::propagated;
         }
     }
 
     virtual void verifyComponent() const {
-        for (const auto& ip : getPorts<SimPort::Direction::in, PortBase>()) {
+        for (const auto& ip : getPorts<SimPort::PortType::in, PortBase>()) {
             if (!ip->isConnected()) {
                 throw std::runtime_error("Component: '" + getName() + "' has unconnected input '" + ip->getName());
             }
         }
-        for (const auto& op : getPorts<SimPort::Direction::out, PortBase>()) {
+        for (const auto& op : getPorts<SimPort::PortType::out, PortBase>()) {
             if (!op->isConnected()) {
                 throw std::runtime_error("Component: '" + getName() + "' has unconnected output '" + op->getName());
             }
@@ -229,28 +229,29 @@ public:
 
 protected:
     template <unsigned int W, typename E_t = void>
-    Port<W>& createPort(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container) {
+    Port<W>& createPort(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container,
+                        vsrtl::SimPort::PortType type) {
         verifyIsUniquePortName(name);
         Port<W>* port;
         if constexpr (std::is_void<E_t>::value) {
-            port = static_cast<Port<W>*>((*container.emplace(std::make_unique<Port<W>>(name, this)).first).get());
+            port = static_cast<Port<W>*>((*container.emplace(std::make_unique<Port<W>>(name, this, type)).first).get());
         } else {
-            port =
-                static_cast<Port<W>*>((*container.emplace(std::make_unique<EnumPort<W, E_t>>(name, this)).first).get());
+            port = static_cast<Port<W>*>(
+                (*container.emplace(std::make_unique<EnumPort<W, E_t>>(name, this, type)).first).get());
         }
         return *port;
     }
 
     template <unsigned int W>
     std::vector<Port<W>*> createPorts(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container,
-                                      unsigned int n) {
+                                      vsrtl::SimPort::PortType type, unsigned int n) {
         std::vector<Port<W>*> ports;
         Port<W>* port;
         for (unsigned int i = 0; i < n; i++) {
             std::string i_name = name + "_" + std::to_string(i);
             verifyIsUniquePortName(i_name);
             port = static_cast<Port<W>*>(
-                (*container.emplace(std::make_unique<Port<W>>(i_name.c_str(), this)).first).get());
+                (*container.emplace(std::make_unique<Port<W>>(i_name.c_str(), this, type)).first).get());
             ports.push_back(port);
         }
         return ports;

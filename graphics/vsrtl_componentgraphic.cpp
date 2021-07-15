@@ -83,11 +83,11 @@ void ComponentGraphic::initialize(bool doPlaceAndRoute) {
     m_label = new Label(this, QString::fromStdString(m_component->getDisplayName()), m_labelVisibilityAction);
 
     // Create IO ports of Component
-    for (const auto& p_in : m_component->getPorts<SimPort::Direction::in, SimPort>()) {
-        m_inputPorts[p_in] = new PortGraphic(p_in, PortType::in, this);
+    for (const auto& p_in : m_component->getInputPorts<SimPort>()) {
+        m_inputPorts[p_in] = new PortGraphic(p_in, vsrtl::SimPort::PortType::in, this);
     }
-    for (const auto& p_out : m_component->getPorts<SimPort::Direction::out, SimPort>()) {
-        m_outputPorts[p_out] = new PortGraphic(p_out, PortType::out, this);
+    for (const auto& p_out : m_component->getOutputPorts<SimPort>()) {
+        m_outputPorts[p_out] = new PortGraphic(p_out, vsrtl::SimPort::PortType::out, this);
     }
 
     m_restrictSubcomponentPositioning = false;
@@ -484,7 +484,9 @@ QVariant ComponentGraphic::itemChange(QGraphicsItem::GraphicsItemChange change, 
             for (const auto& inputPort : qAsConst(m_inputPorts)) {
                 if (!inputPort->getPort()->isConstant()) {
                     if (auto* simInputPort = inputPort->getPort()->getInputPort()) {
-                        simInputPort->getGraphic<PortGraphic>()->updateWireGeometry();
+                        if (auto* graphic = simInputPort->getGraphic<PortGraphic>()) {
+                            graphic->updateWireGeometry();
+                        }
                     }
                 }
             }
@@ -596,7 +598,7 @@ void ComponentGraphic::paintIndicator(QPainter* painter, PortGraphic* p, QColor 
     painter->setBrush(color);
     painter->setPen(pen);
 
-    const bool inPort = p->getPortType() == PortType::in;
+    const bool inPort = p->getPortType() == vsrtl::SimPort::PortType::in;
     QRectF chordRect(-dotSize / 2, -dotSize / 2, dotSize, dotSize);
     chordRect.translate(mapFromItem(p, inPort ? p->getOutputPoint() : p->getInputPoint()));
 

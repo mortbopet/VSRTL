@@ -17,7 +17,7 @@ QList<QMenu*> RegisterTreeItem::getActions() const {
 
 void RegisterTreeItem::setRegister(SimComponent* reg) {
     m_register = reg;
-    setPort(m_register->getPorts<SimPort::Direction::out>()[0]);
+    setPort(m_register->getPorts<SimPort::PortType::out>()[0]);
     m_name = QString::fromStdString(reg->getName());
 }
 

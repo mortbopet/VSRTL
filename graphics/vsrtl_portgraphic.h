@@ -30,7 +30,7 @@ class PortGraphic : public QObject, public GraphicsBaseItem<QGraphicsItem> {
     friend class VSRTLScene;
 
 public:
-    PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent = nullptr);
+    PortGraphic(SimPort* port, vsrtl::SimPort::PortType type, QGraphicsItem* parent = nullptr);
 
     QRectF boundingRect() const override;
     QPainterPath shape() const override;
@@ -65,7 +65,9 @@ public:
     WireGraphic* getOutputWire() { return m_outputWire; }
     void updateInputWire();
     void updateWireGeometry();
-    PortPoint* getPortPoint(PortType t) { return t == PortType::in ? m_inputPortPoint : m_outputPortPoint; }
+    PortPoint* getPortPoint(vsrtl::SimPort::PortType t) {
+        return t == vsrtl::SimPort::PortType::in ? m_inputPortPoint : m_outputPortPoint;
+    }
     QString getTooltipString() const;
 
     bool userHidden() const { return m_userHidden; }
@@ -74,7 +76,7 @@ public:
     QPointF getInputPoint() const;
     QPointF getOutputPoint() const;
 
-    PortType getPortType() const { return m_type; }
+    vsrtl::SimPort::PortType getPortType() const { return m_type; }
     void setValueLabelVisible(bool visible);
     void setPortWidthVisible(bool visible);
 
@@ -129,7 +131,7 @@ private:
     QPainterPath m_shape;
     QRectF m_textRect;
 
-    PortType m_type;
+    vsrtl::SimPort::PortType m_type;
     SimPort* m_port = nullptr;
 
     // Used for allowing WireSegments to join up with a port

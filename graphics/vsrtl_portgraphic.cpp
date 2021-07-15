@@ -16,7 +16,7 @@ namespace vsrtl {
 
 constexpr int s_portGridWidth = 1;
 
-PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
+PortGraphic::PortGraphic(SimPort* port, vsrtl::SimPort::PortType type, QGraphicsItem* parent)
     : GraphicsBaseItem(parent), m_type(type), m_port(port) {
     port->registerGraphic(this);
     m_font = QFont("Monospace", 8);
@@ -52,7 +52,7 @@ PortGraphic::PortGraphic(SimPort* port, PortType type, QGraphicsItem* parent)
 
     ComponentGraphic* scopeParent = nullptr;
 
-    if (m_type == PortType::in) {
+    if (m_type == vsrtl::SimPort::PortType::in) {
         scopeParent = directParent;
         m_outputWire =
             new WireGraphic(scopeParent, this, m_port->getOutputPorts(), WireGraphic::WireType::BorderOutput);
@@ -158,8 +158,9 @@ void PortGraphic::setSide(Side side) {
 
 void PortGraphic::propagateRedraw() {
     m_port->traverseToSinks([=](SimPort* port) {
-        auto* portGraphic = port->getGraphic<PortGraphic>();
-        portGraphic->redraw();
+        if (auto* portGraphic = port->getGraphic<PortGraphic>()) {
+            portGraphic->redraw();
+        }
     });
 }
 
@@ -226,16 +227,16 @@ QRectF PortGraphic::boundingRect() const {
 QPointF PortGraphic::getInputPoint() const {
     switch (m_side) {
         case Side::Right: {
-            return QPointF(m_type == PortType::in ? s_portGridWidth * GRID_SIZE : 0, 0);
+            return QPointF(m_type == vsrtl::SimPort::PortType::in ? s_portGridWidth * GRID_SIZE : 0, 0);
         }
         case Side::Left: {
-            return QPointF(m_type == PortType::in ? -s_portGridWidth * GRID_SIZE : 0, 0);
+            return QPointF(m_type == vsrtl::SimPort::PortType::in ? -s_portGridWidth * GRID_SIZE : 0, 0);
         }
         case Side::Top: {
-            return QPointF(0, m_type == PortType::in ? -s_portGridWidth * GRID_SIZE : 0);
+            return QPointF(0, m_type == vsrtl::SimPort::PortType::in ? -s_portGridWidth * GRID_SIZE : 0);
         }
         case Side::Bottom: {
-            return QPointF(0, m_type == PortType::in ? s_portGridWidth * GRID_SIZE : 0);
+            return QPointF(0, m_type == vsrtl::SimPort::PortType::in ? s_portGridWidth * GRID_SIZE : 0);
         }
     }
     Q_UNREACHABLE();
@@ -244,16 +245,16 @@ QPointF PortGraphic::getInputPoint() const {
 QPointF PortGraphic::getOutputPoint() const {
     switch (m_side) {
         case Side::Right: {
-            return QPointF(m_type == PortType::out ? s_portGridWidth * GRID_SIZE : 0, 0);
+            return QPointF(m_type == vsrtl::SimPort::PortType::out ? s_portGridWidth * GRID_SIZE : 0, 0);
         }
         case Side::Left: {
-            return QPointF(m_type == PortType::out ? -s_portGridWidth * GRID_SIZE : 0, 0);
+            return QPointF(m_type == vsrtl::SimPort::PortType::out ? -s_portGridWidth * GRID_SIZE : 0, 0);
         }
         case Side::Top: {
-            return QPointF(0, m_type == PortType::out ? -s_portGridWidth * GRID_SIZE : 0);
+            return QPointF(0, m_type == vsrtl::SimPort::PortType::out ? -s_portGridWidth * GRID_SIZE : 0);
         }
         case Side::Bottom: {
-            return QPointF(0, m_type == PortType::out ? s_portGridWidth * GRID_SIZE : 0);
+            return QPointF(0, m_type == vsrtl::SimPort::PortType::out ? s_portGridWidth * GRID_SIZE : 0);
         }
     }
     Q_UNREACHABLE();
@@ -289,7 +290,7 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
         // Traverse to root, and only execute when no input wire is present. This signifies that the root source
         // port has been reached
         auto* portGraphic = node->getGraphic<PortGraphic>();
-        if (!portGraphic->m_inputWire) {
+        if (portGraphic && !portGraphic->m_inputWire) {
             if (aboutToBeDeselected || aboutToBeSelected) {
                 portGraphic->m_signalSelected = aboutToBeSelected;
             }
@@ -331,16 +332,19 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
 void PortGraphic::setPortVisible(bool visible) {
     m_inputPortPoint->setVisible(visible);
     m_outputPortPoint->setVisible(visible);
-    if (m_inputWire && m_type == PortType::in) {
+    if (m_inputWire && m_type == vsrtl::SimPort::PortType::in) {
         // Inform wires terminating in this port to set their visibility based on this ports visibility
         m_inputWire->setWiresVisibleToPort(m_inputPortPoint, visible && m_sourceVisible && !m_userHidden);
     }
 
-    else if (m_type == PortType::out) {
+    else if (m_type == vsrtl::SimPort::PortType::out) {
         // hide all input ports of other components which this port is the source of.
         for (const auto& p_conn : m_port->getOutputPorts()) {
             auto* portParent = p_conn->getParent();
             auto* portGraphic = p_conn->getGraphic<PortGraphic>();
+            if (!portGraphic) {
+                continue;
+            }
 
             const bool isNestedComponent = portParent == m_port->getParent<SimComponent>()->getParent<SimComponent>();
 
@@ -467,7 +471,7 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
         switch (m_side) {
             case Side::Left:
             case Side::Right: {
-                int dir = m_type == PortType::out ? -1 : 1;
+                int dir = m_type == vsrtl::SimPort::PortType::out ? -1 : 1;
                 dir *= m_side == Side::Right ? -1 : 1;
 
                 start.rx() = start.x() + dir * d / 2;
@@ -479,7 +483,7 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
 
             case Side::Bottom:
             case Side::Top: {
-                int dir = m_type == PortType::in ? -1 : 1;
+                int dir = m_type == vsrtl::SimPort::PortType::in ? -1 : 1;
                 dir *= m_side == Side::Top ? -1 : 1;
 
                 start.ry() = start.y() + dir * d / 2;

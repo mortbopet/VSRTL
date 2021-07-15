@@ -120,7 +120,7 @@ void VSRTLScene::setLocked(bool lock) {
     }
 }
 
-void VSRTLScene::setPortValuesVisibleForType(PortType t, bool visible) {
+void VSRTLScene::setPortValuesVisibleForType(vsrtl::SimPort::PortType t, bool visible) {
     predicatedExecOnItems<PortGraphic>([t](const PortGraphic* p) { return p->getPortType() == t; },
                                        &PortGraphic::setValueLabelVisible, visible);
 }
@@ -142,10 +142,12 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
     // ==================== Port modifying actions ====================
     auto* portMenu = menu.addMenu("Ports");
     auto* showValuesAction = portMenu->addAction("Show all values");
-    connect(showValuesAction, &QAction::triggered, [=] { this->setPortValuesVisibleForType(PortType::out, true); });
+    connect(showValuesAction, &QAction::triggered,
+            [=] { this->setPortValuesVisibleForType(vsrtl::SimPort::PortType::out, true); });
 
     auto* hideValuesAction = portMenu->addAction("Hide all values");
-    connect(hideValuesAction, &QAction::triggered, [=] { this->setPortValuesVisibleForType(PortType::out, false); });
+    connect(hideValuesAction, &QAction::triggered,
+            [=] { this->setPortValuesVisibleForType(vsrtl::SimPort::PortType::out, false); });
 
     auto* showWidthsAction = portMenu->addAction("Show all widths");
     connect(showWidthsAction, &QAction::triggered, [=] { this->setPortWidthsVisible(true); });

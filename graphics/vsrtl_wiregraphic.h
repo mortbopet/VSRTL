@@ -203,7 +203,7 @@ public:
         clearWires();
 
         std::map<int, PortPoint*> idxToPointPtr;
-        idxToPointPtr[from.first] = m_fromPort->getPortPoint(PortType::out);
+        idxToPointPtr[from.first] = m_fromPort->getPortPoint(vsrtl::SimPort::PortType::out);
 
         // Locate output ports from the layout indicies
         for (const auto& iter : idxToOutportNameSeq) {
@@ -212,7 +212,7 @@ public:
             for (const auto& p : m_toGraphicPorts) {
                 const auto nameSeq = getPortParentNameSeq(p->getPort());
                 if (nameSeq == iter.second) {
-                    point = p->getPortPoint(PortType::in);
+                    point = p->getPortPoint(vsrtl::SimPort::PortType::in);
                     idxToPointPtr[iter.first] = point;
                     break;
                 }
@@ -244,10 +244,11 @@ public:
         // is applied on has been made). Construct all missing wires between the source port
         for (const auto& p : m_toGraphicPorts) {
             const auto iter = std::find_if(idxToPointPtr.begin(), idxToPointPtr.end(), [=](const auto& itp) {
-                return itp.second == p->getPortPoint(PortType::in);
+                return itp.second == p->getPortPoint(vsrtl::SimPort::PortType::in);
             });
             if (iter == idxToPointPtr.end()) {
-                createSegment(m_fromPort->getPortPoint(PortType::out), p->getPortPoint(PortType::in));
+                createSegment(m_fromPort->getPortPoint(vsrtl::SimPort::PortType::out),
+                              p->getPortPoint(vsrtl::SimPort::PortType::in));
             }
         }
 
@@ -277,7 +278,7 @@ public:
             // @todo: this is not sufficient, ports may be named identically.
             // It should be a hierarchical list including its parent components
             idxToOutportNameSeq[i] = getPortParentNameSeq(p->getPort());
-            outportToIdx[p->getPortPoint(PortType::in)] = i;
+            outportToIdx[p->getPortPoint(vsrtl::SimPort::PortType::in)] = i;
             i++;
         }
         archive(cereal::make_nvp("To ports", idxToOutportNameSeq));
@@ -301,7 +302,7 @@ public:
             int startIdx = 0;
             int endIdx = 0;
 
-            if (m_fromPort->getPortPoint(PortType::out) == start) {
+            if (m_fromPort->getPortPoint(vsrtl::SimPort::PortType::out) == start) {
                 startIdx = 0;
             } else if (outportToIdx.count(start)) {
                 startIdx = outportToIdx[start];

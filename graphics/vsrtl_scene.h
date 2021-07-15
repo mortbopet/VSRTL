@@ -5,6 +5,7 @@
 #include <QGraphicsScene>
 #include <QPainter>
 
+#include "../interface/vsrtl_interface.h"
 #include "vsrtl_graphics_defines.h"
 
 #include <functional>
@@ -28,7 +29,7 @@ public:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
     void drawBackground(QPainter* painter, const QRectF& rect) override;
 
-    void setPortValuesVisibleForType(PortType t, bool visible);
+    void setPortValuesVisibleForType(vsrtl::SimPort::PortType t, bool visible);
     void setPortWidthsVisible(bool visible);
     void setLocked(bool locked);
 

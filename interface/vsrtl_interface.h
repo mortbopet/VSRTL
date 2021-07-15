@@ -58,7 +58,7 @@ public:
     template <typename T>
     void registerGraphic(T* obj) {
         if (m_graphicObject != nullptr) {
-            throw std::runtime_error("Graphic object already registered");
+            throw std::runtime_error("Graphic object already registered for '" + getHierName() + "'");
         }
         m_graphicObject = obj;
     }
@@ -88,8 +88,8 @@ class SimPort : public SimBase {
     friend class SimDesign;
 
 public:
-    enum class Direction { in, out };
-    SimPort(std::string name, SimBase* parent) : SimBase(name, parent) {}
+    enum class PortType { in, out, signal };
+    SimPort(std::string name, SimBase* parent, PortType type) : SimBase(name, parent), m_type(type) {}
     virtual ~SimPort() {}
     virtual unsigned int getWidth() const = 0;
     virtual VSRTL_VT_U uValue() const = 0;
@@ -191,6 +191,7 @@ public:
     virtual std::string valueToEnumString() const { throw std::runtime_error("This is not an enum port!"); }
     virtual VSRTL_VT_U enumStringToValue(const char*) const { throw std::runtime_error("This is not an enum port!"); }
     const std::string& vcdId() const { return m_vcdId; }
+    PortType type() const { return m_type; }
 
     Gallant::Signal0<> changed;
 
@@ -202,6 +203,11 @@ private:
     void queueVcdVarChange();
     bool m_traversingConnection = false;
     std::string m_vcdId;
+    /**
+     * @brief m_type
+     * @note: The type of the port determines the type of the port with respect to the component that instantiated it.
+     */
+    PortType m_type;
 };
 
 #define TYPE(...) __VA_ARGS__
@@ -259,15 +265,18 @@ public:
         return v;
     }
 
-    template <SimPort::Direction d, typename T = SimPort>
+    template <SimPort::PortType d, typename T = SimPort>
     std::vector<T*> getPorts() const {
         static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
         std::vector<T*> ports;
-        if constexpr (d == SimPort::Direction::in) {
+        if constexpr (d == SimPort::PortType::in) {
             for (const auto& p : m_inputPorts)
                 ports.push_back(p->cast<T>());
-        } else {
+        } else if constexpr (d == SimPort::PortType::out) {
             for (const auto& p : m_outputPorts)
+                ports.push_back(p->cast<T>());
+        } else if constexpr (d == SimPort::PortType::signal) {
+            for (const auto& p : m_signals)
                 ports.push_back(p->cast<T>());
         }
         return ports;
@@ -276,13 +285,13 @@ public:
     template <typename T = SimPort>
     std::vector<T*> getOutputPorts() const {
         static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
-        return getPorts<SimPort::Direction::out, T>();
+        return getPorts<SimPort::PortType::out, T>();
     }
 
     template <typename T = SimPort>
     std::vector<T*> getInputPorts() const {
         static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
-        return getPorts<SimPort::Direction::in, T>();
+        return getPorts<SimPort::PortType::in, T>();
     }
 
     template <typename T = SimPort>
@@ -298,13 +307,31 @@ public:
     }
 
     template <typename T = SimPort>
+    T* findSignal(const std::string& name) const {
+        T* p_ptr = nullptr;
+        for (const auto& p : getSignals<T>()) {
+            if (p->getName() == name) {
+                p_ptr = p;
+                break;
+            }
+        }
+        return p_ptr;
+    }
+
+    template <typename T = SimPort>
     std::vector<T*> getAllPorts() const {
         static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
         std::vector<T*> ports;
-        for (auto portsForDir : {getPorts<SimPort::Direction::in, T>(), getPorts<SimPort::Direction::out, T>()}) {
+        for (auto portsForDir : {getPorts<SimPort::PortType::in, T>(), getPorts<SimPort::PortType::out, T>()}) {
             ports.insert(ports.end(), portsForDir.begin(), portsForDir.end());
         }
         return ports;
+    }
+
+    template <typename T = SimPort>
+    std::vector<T*> getSignals() const {
+        static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
+        return getPorts<SimPort::PortType::signal, T>();
     }
 
     void verifyHasSpecialPortID(const std::string& id) const {
@@ -470,8 +497,10 @@ public:
 protected:
     // Ports and subcomponents should be maintained as sorted sets based on port and component names, ensuring
     // consistent ordering between executions
-    std::set<std::unique_ptr<SimPort>, PortBaseCompT> m_outputPorts;
-    std::set<std::unique_ptr<SimPort>, PortBaseCompT> m_inputPorts;
+    using PortSet = std::set<std::unique_ptr<SimPort>, PortBaseCompT>;
+    PortSet m_outputPorts;
+    PortSet m_inputPorts;
+    PortSet m_signals;
     std::set<std::unique_ptr<SimComponent>, ComponentCompT> m_subcomponents;
     std::set<std::unique_ptr<ParameterBase>> m_parameters;
     std::map<std::string, SimPort*> m_specialPorts;

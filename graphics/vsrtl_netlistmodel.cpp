@@ -114,10 +114,10 @@ void NetlistModel::loadDesignRecursive(NetlistTreeItem* parent, SimComponent* co
     }
 
     // I/O ports of component
-    for (const auto& input : component->getPorts<SimPort::Direction::in>()) {
+    for (const auto& input : component->getPorts<SimPort::PortType::in>()) {
         addPortToComponent(input, parent, PortDirection::Input);
     }
-    for (const auto& output : component->getPorts<SimPort::Direction::out>()) {
+    for (const auto& output : component->getPorts<SimPort::PortType::out>()) {
         addPortToComponent(output, parent, PortDirection::Output);
     }
 }

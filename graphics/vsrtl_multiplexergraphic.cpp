@@ -19,7 +19,7 @@ void MultiplexerGraphic::paintOverlay(QPainter* painter, const QStyleOptionGraph
     // Mark input IO with circles, highlight selected input with green
     painter->save();
 
-    const auto inputPorts = m_component->getPorts<SimPort::Direction::in>();
+    const auto inputPorts = m_component->getPorts<SimPort::PortType::in>();
     const auto* select = getSelect();
     const unsigned int index = select->uValue();
     Q_ASSERT(static_cast<long>(index) < m_inputPorts.size());

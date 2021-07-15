@@ -572,12 +572,21 @@ SimComponent* WireGraphic::getParentComponent() const {
  * attached input- and output ports
  */
 void WireGraphic::postSceneConstructionInitialize1() {
-    for (const auto& toPort : m_toPorts) {
-        m_toGraphicPorts.push_back(toPort->getGraphic<PortGraphic>());
-    }
+    std::function<void(SimPort*)> addGraphicToPort = [&](SimPort* portPtr) {
+        if (auto* portGraphic = portPtr->getGraphic<PortGraphic>()) {
+            m_toGraphicPorts.push_back(portGraphic);
+        }
+        if (portPtr->type() == vsrtl::SimPort::PortType::signal) {
+            for (auto toPort : portPtr->getOutputPorts()) {
+                // Signals are only relevant for the underlying circuit - traverse to the output ports of the signal
+                addGraphicToPort(toPort);
+            }
+        }
+    };
 
-    // Assert that all ports were found in the scene
-    Q_ASSERT(m_toGraphicPorts.size() == m_toPorts.size());
+    for (const auto& toPort : m_toPorts) {
+        addGraphicToPort(toPort);
+    }
 
     // Make the wire destination ports aware of this WireGraphic, and create wire segments between all source and sink
     // ports.
@@ -585,16 +594,17 @@ void WireGraphic::postSceneConstructionInitialize1() {
         sink->setInputWire(this);
         // Create a rectilinear segment between the the closest point managed by this wire and the sink destination
         std::pair<qreal, PortPoint*> fromPoint;
-        const QPointF sinkPos = sink->getPortPoint(PortType::in)->scenePos();
-        fromPoint.first = (sinkPos - m_fromPort->getPortPoint(PortType::out)->scenePos()).manhattanLength();
-        fromPoint.second = m_fromPort->getPortPoint(PortType::out);
+        const QPointF sinkPos = sink->getPortPoint(vsrtl::SimPort::PortType::in)->scenePos();
+        fromPoint.first =
+            (sinkPos - m_fromPort->getPortPoint(vsrtl::SimPort::PortType::out)->scenePos()).manhattanLength();
+        fromPoint.second = m_fromPort->getPortPoint(vsrtl::SimPort::PortType::out);
         for (const auto& p : m_points) {
             const qreal len = (sinkPos - p->scenePos()).manhattanLength();
             if (len < fromPoint.first) {
                 fromPoint = {len, p};
             }
         }
-        createRectilinearSegments(fromPoint.second, sink->getPortPoint(PortType::in));
+        createRectilinearSegments(fromPoint.second, sink->getPortPoint(vsrtl::SimPort::PortType::in));
     }
 
     GraphicsBaseItem::postSceneConstructionInitialize1();

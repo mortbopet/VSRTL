@@ -75,7 +75,7 @@ void VSRTLWidget::zoomToFit() {
 }
 
 void VSRTLWidget::setOutputPortValuesVisible(bool visible) {
-    m_scene->setPortValuesVisibleForType(PortType::out, visible);
+    m_scene->setPortValuesVisibleForType(vsrtl::SimPort::PortType::out, visible);
 }
 
 void VSRTLWidget::setDarkmode(bool enabled) {

@@ -27,10 +27,10 @@ public:
     ComponentBorder(const SimComponent* c) {
         std::set<SimPort*> placedPorts;
 
-        for (const auto& p : c->getPorts<SimPort::Direction::in>()) {
+        for (const auto& p : c->getPorts<SimPort::PortType::in>()) {
             initPlacePortOnSide(Side::Left, p, placedPorts);
         }
-        for (const auto& p : c->getPorts<SimPort::Direction::out>()) {
+        for (const auto& p : c->getPorts<SimPort::PortType::out>()) {
             initPlacePortOnSide(Side::Right, p, placedPorts);
         }
     }
