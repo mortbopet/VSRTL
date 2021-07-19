@@ -266,9 +266,9 @@ public:
     }
 
     template <typename T = SimComponent>
-    std::set<T*> getConnectedComponents() const {
+    std::vector<T*> getConnectedComponents() const {
         static_assert(std::is_base_of<SimComponent, T>::value, "Must cast to a simulator-specific component type");
-        std::set<T*> v;
+        std::vector<T*> v;
         auto ins = getInputComponents<T>();
         auto outs = getOutputComponents<T>();
         std::copy(ins.begin(), ins.end(), std::inserter(v, v.end()));

@@ -2,15 +2,20 @@
 #define VSRTL_PLACEROUTE_H
 
 #include <QPointF>
+
 #include <map>
 #include <vector>
+
+#include "vsrtl_routing.h"
 
 namespace vsrtl {
 
 class GridComponent;
 
-enum class PlaceAlg { TopologicalSort, ASAP };
+enum class PlaceAlg { ASAP, Topological1D, MinCut };
 enum class RouteAlg { Direct };
+
+using PlacementFunct = std::function<Placement(const std::vector<GridComponent*>&)>;
 /**
  * @brief The PlaceRoute class
  * Singleton class for containing the various place & route algorithms.
@@ -27,14 +32,14 @@ public:
     void setPlacementAlgorithm(PlaceAlg alg) { m_placementAlgorithm = alg; }
     void setRoutingAlgorithm(RouteAlg alg) { m_routingAlgorithm = alg; }
 
-    /** @todo: Return a data structure which may be interpreted by the calling GridComponent to place its
-     * subcomponents and draw the signal paths. For now, just return a structure suitable for placement*/
-    std::map<GridComponent*, QPoint> placeAndRoute(const std::vector<GridComponent*>& components) const;
+    static void placeAndRoute(const std::vector<GridComponent*>& components);
 
 private:
-    PlaceRoute() {}
+    PlaceRoute();
 
-    PlaceAlg m_placementAlgorithm = PlaceAlg::ASAP;
+    std::map<PlaceAlg, PlacementFunct> m_placementAlgorithms;
+
+    PlaceAlg m_placementAlgorithm = PlaceAlg::Topological1D;
     RouteAlg m_routingAlgorithm = RouteAlg::Direct;
 };
 }  // namespace vsrtl

@@ -1,0 +1,312 @@
+#include "vsrtl_routing.h"
+
+namespace vsrtl {
+
+NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
+    auto netlist = std::make_unique<Netlist>();
+    for (const auto& routingComponent : placement.components) {
+        for (const auto& outputPort : routingComponent.gridComponent->getComponent()->getOutputPorts()) {
+            // Note: terminal position currently is fixed to right => output, left => input
+            auto net = std::make_unique<Net>();
+            NetNode source;
+            source.gridComponent = routingComponent.gridComponent;
+
+            // Get source port grid position
+            source.region = regionMap.lookup(routingComponent.gridComponent->getPortGridPos(outputPort), Edge::Right);
+            Q_ASSERT(source.region != nullptr);
+            for (const auto& sinkPort : outputPort->getOutputPorts()) {
+                NetNode sink;
+                sink.gridComponent = sinkPort->getGraphic<GridComponent>();
+                // Lookup routing component for sink component graphic
+                auto rc_i = std::find_if(placement.components.begin(), placement.components.end(),
+                                         [&sink](const auto& rc) { return rc.gridComponent == sink.gridComponent; });
+
+                if (rc_i == placement.components.end()) {
+                    /** @todo: connected port is the parent component (i.e., an in- or output port of the parent
+                     * component */
+                    continue;
+                }
+
+                // Get sink port grid position
+                sink.region = regionMap.lookup(sink.gridComponent->getPortGridPos(sinkPort), Edge::Left);
+                Q_ASSERT(sink.region != nullptr);
+                net->push_back(std::make_unique<Route>(source, sink));
+            }
+            netlist->push_back(std::move(net));
+        }
+    }
+    return netlist;
+}
+
+RoutingRegions createConnectivityGraph(Placement& placement) {
+    // Check that a valid placement was received (all components contained within the chip boundary)
+    std::vector<QRect> rects;
+    std::transform(placement.components.begin(), placement.components.end(), std::back_inserter(rects),
+                   [](const auto& c) { return c.rect(); });
+    Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(rects)));
+    // Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
+
+    std::vector<std::unique_ptr<RoutingRegion>> regions;
+    const auto& chipRect = placement.chipRect;
+
+    QList<Line> hz_bounding_lines, vt_bounding_lines, hz_region_lines, vt_region_lines;
+
+    // Get horizontal and vertical bounding rectangle lines for all components on chip
+    for (const auto& r : placement.components) {
+        hz_bounding_lines << getEdge(r.rect(), Edge::Top) << getEdge(r.rect(), Edge::Bottom);
+        vt_bounding_lines << getEdge(r.rect(), Edge::Left) << getEdge(r.rect(), Edge::Right);
+    }
+
+    // ============== Component edge extrusion =================
+    // This step extrudes the horizontal and vertical bounding rectangle lines for each component on the chip. The
+    // extrusion will extend the line in each direction, until an obstacle is met (chip edges or other components)
+
+    // Extrude horizontal lines
+    for (const auto& h_line : hz_bounding_lines) {
+        // Stretch line to chip boundary
+        Line stretchedLine = Line({chipRect.left(), h_line.p1().y()}, {chipRect.width(), h_line.p1().y()});
+
+        // Narrow line until no boundaries are met
+        for (const auto& v_line : vt_bounding_lines) {
+            QPoint intersectPoint;
+            if (stretchedLine.intersect(v_line, intersectPoint, IntersectType::Cross)) {
+                // Contract based on point closest to original line segment
+                if ((intersectPoint - h_line.p1()).manhattanLength() <
+                    (intersectPoint - h_line.p2()).manhattanLength()) {
+                    stretchedLine.setP1(intersectPoint);
+                } else {
+                    stretchedLine.setP2(intersectPoint);
+                }
+            }
+        }
+
+        // Add the stretched and now boundary analyzed line to the region lines
+        if (!hz_region_lines.contains(stretchedLine))
+            hz_region_lines << stretchedLine;
+    }
+
+    // Extrude vertical lines
+    for (const auto& line : vt_bounding_lines) {
+        // Stretch line to chip boundary
+        Line stretchedLine = Line({line.p1().x(), chipRect.top()}, {line.p1().x(), chipRect.height()});
+
+        // Narrow line until no boundaries are met
+        for (const auto& h_line : hz_bounding_lines) {
+            QPoint intersectPoint;
+            // Intersecting lines must cross each other. This avoids intersections with a rectangles own sides
+            if (h_line.intersect(stretchedLine, intersectPoint, IntersectType::Cross)) {
+                // Contract based on point closest to original line segment
+                if ((intersectPoint - line.p1()).manhattanLength() < (intersectPoint - line.p2()).manhattanLength()) {
+                    stretchedLine.setP1(intersectPoint);
+                } else {
+                    stretchedLine.setP2(intersectPoint);
+                }
+            }
+        }
+
+        // Add the stretched and now boundary analyzed line to the vertical region lines
+        if (!vt_region_lines.contains(stretchedLine))
+            vt_region_lines << stretchedLine;
+    }
+
+    // Add chip boundaries to region lines
+    hz_region_lines << getEdge(chipRect, Edge::Top) << getEdge(chipRect, Edge::Bottom);
+    vt_region_lines << getEdge(chipRect, Edge::Left) << getEdge(chipRect, Edge::Right);
+
+    // Sort bounding lines
+    // Top to bottom
+    std::sort(hz_region_lines.begin(), hz_region_lines.end(),
+              [](const auto& a, const auto& b) { return a.p1().y() < b.p1().y(); });
+    // Left to right
+    std::sort(vt_region_lines.begin(), vt_region_lines.end(),
+              [](const auto& a, const auto& b) { return a.p1().x() < b.p1().x(); });
+
+    // ============ Routing region creation =================== //
+
+    // Maintain a map of regions around each intersecion point in the graph. This will aid in connecting the graph after
+    // the regions are found
+    std::map<QPoint, RegionGroup> regionGroups;
+
+    // Bounding lines are no longer needed
+    hz_bounding_lines.clear();
+    vt_bounding_lines.clear();
+
+    // Find intersections between horizontal and vertical region lines, and create corresponding routing regions.
+    QPoint regionBottomLeft, regionBottomRight, regionTopLeft;
+    QPoint regionBottom, regionTop;
+    Line* topHzLine = nullptr;
+    for (int hi = 1; hi < hz_region_lines.size(); hi++) {
+        for (int vi = 1; vi < vt_region_lines.size(); vi++) {
+            const auto& vt_region_line = vt_region_lines[vi];
+            const auto& hz_region_line = hz_region_lines[hi];
+            if (hz_region_line.intersect(vt_region_line, regionBottom, IntersectType::OnEdge)) {
+                // Intersection found (bottom left or right point of region)
+
+                // 1. Locate the point above the current intersection point (top right of region)
+                for (int hi_rev = hi - 1; hi_rev >= 0; hi_rev--) {
+                    topHzLine = &hz_region_lines[hi_rev];
+                    if (topHzLine->intersect(vt_region_line, regionTop, IntersectType::OnEdge)) {
+                        // Intersection found (top left or right point of region)
+                        break;
+                    }
+                }
+                // Determine whether bottom right or bottom left point was found
+                if (vt_region_line.p1().x() == hz_region_line.p1().x()) {
+                    // Bottom left corner was found
+                    regionBottomLeft = regionBottom;
+                    // Locate bottom right of region
+                    for (int vi_rev = vi + 1; vi_rev < vt_region_lines.size(); vi_rev++) {
+                        if (hz_region_line.intersect(vt_region_lines[vi_rev], regionBottomRight,
+                                                     IntersectType::OnEdge)) {
+                            break;
+                        }
+                    }
+                } else {
+                    // Bottom right corner was found.
+                    // Check whether topHzLine terminates in the topRightCorner - in this case, there can be no routing
+                    // region here (the region would pass into a component). No check is done for when the bottom left
+                    // corner is found,given that the algorithm iterates from vertical lines, left to right.
+                    if (topHzLine->p1().x() == regionBottom.x()) {
+                        continue;
+                    }
+                    regionBottomRight = regionBottom;
+                    // Locate bottom left of region
+                    for (int vi_rev = vi - 1; vi_rev >= 0; vi_rev--) {
+                        if (hz_region_line.intersect(vt_region_lines[vi_rev], regionBottomLeft,
+                                                     IntersectType::OnEdge)) {
+                            break;
+                        }
+                    }
+                }
+
+                // Set top left coordinate
+                regionTopLeft = QPoint(regionBottomLeft.x(), regionTop.y());
+
+                // Check whether the region is enclosing a component.
+                // Note: (1,1) is subtracted from the bottom right corner to transform the coordinates into the QRect
+                // expected format of the bottom-right corner
+                QRect newRegionRect = QRect(regionTopLeft, regionBottomRight);
+
+                // Check whether the new region is the same as one of the components
+                if (std::find_if(placement.components.begin(), placement.components.end(),
+                                 [&newRegionRect](const auto& routingComponent) {
+                                     return newRegionRect == routingComponent.rect();
+                                 }) == placement.components.end()) {
+                    // New region was not a component, check if new region has already been added
+                    if (std::find_if(regions.begin(), regions.end(), [&newRegionRect](const auto& region) {
+                            return region.get()->rect() == newRegionRect;
+                        }) == regions.end())
+
+                        // This is a new routing region
+                        regions.push_back(std::make_unique<RoutingRegion>(newRegionRect));
+                    RoutingRegion* newRegion = regions.rbegin()->get();
+
+                    // Add region to regionGroups
+                    regionGroups[newRegionRect.topLeft()].setRegion(Corner::BottomRight, newRegion);
+                    regionGroups[newRegionRect.bottomLeft()].setRegion(Corner::TopRight, newRegion);
+                    regionGroups[newRegionRect.topRight()].setRegion(Corner::BottomLeft, newRegion);
+                    regionGroups[newRegionRect.bottomRight()].setRegion(Corner::TopLeft, newRegion);
+                }
+            }
+        }
+    }
+
+    // =================== Connectivity graph connection ========================== //
+    for (auto& iter : regionGroups) {
+        RegionGroup& group = iter.second;
+        group.connectRegions();
+    }
+
+    // ======================= Routing Region Association ======================= //
+    for (auto& rc : placement.components) {
+        // The algorithm have failed if regionGroups does not contain an entry for each corner of all routing components
+        Q_ASSERT(regionGroups.count(rc.rect().topLeft()));
+        Q_ASSERT(regionGroups.count(rc.rect().topRight()));
+        Q_ASSERT(regionGroups.count(rc.rect().bottomRight()));
+        Q_ASSERT(regionGroups.count(rc.rect().bottomLeft()));
+        rc.topRegion = regionGroups[rc.rect().topLeft()].topright;
+        rc.leftRegion = regionGroups[rc.rect().topLeft()].bottomleft;
+        rc.rightRegion = regionGroups[rc.rect().topRight()].bottomright;
+        rc.bottomRegion = regionGroups[rc.rect().bottomLeft()].bottomright;
+    }
+
+    return regions;
+}
+
+void RegionGroup::setRegion(Corner c, RoutingRegion* region) {
+    switch (c) {
+        case Corner::BottomLeft: {
+            bottomleft = region;
+            return;
+        }
+        case Corner::BottomRight: {
+            bottomright = region;
+            return;
+        }
+        case Corner::TopLeft: {
+            topleft = region;
+            return;
+        }
+        case Corner::TopRight: {
+            topright = region;
+            return;
+        }
+    }
+}
+
+void RoutingRegion::setRegion(Edge e, RoutingRegion* region) {
+    switch (e) {
+        case Edge::Top: {
+            top = region;
+            return;
+        }
+        case Edge::Bottom: {
+            bottom = region;
+            return;
+        }
+        case Edge::Left: {
+            left = region;
+            return;
+        }
+        case Edge::Right: {
+            right = region;
+            return;
+        }
+    }
+}
+
+const std::vector<RoutingRegion*> RoutingRegion::adjacentRegions() {
+    return {top, bottom, left, right};
+}
+
+void RoutingRegion::registerRoute(Route* r, Direction d) {
+    if (d == Direction::Horizontal) {
+        horizontalRoutes.push_back(r);
+    } else {
+        verticalRoutes.push_back(r);
+    }
+}
+
+void RoutingRegion::assignRoutes() {
+    return;
+    /*
+    const float hz_diff = static_cast<float>(h_cap) / (horizontalRoutes.size() + 1);
+    const float vt_diff = static_cast<float>(v_cap) / (verticalRoutes.size() + 1);
+    float hz_pos = hz_diff;
+    float vt_pos = vt_diff;
+    for (const auto& route : horizontalRoutes) {
+        assignedRoutes[route] = {Direction::Horizontal, hz_pos};
+        hz_pos += hz_diff;
+    }
+    for (const auto& route : verticalRoutes) {
+        assignedRoutes[route] = {Direction::Horizontal, vt_pos};
+        vt_pos += vt_diff;
+    }
+*/
+}
+
+}  // namespace vsrtl
+
+bool operator<(const QPoint& lhs, const QPoint& rhs) {
+    return (lhs.x() < rhs.x()) || ((lhs.x() == rhs.x()) && (lhs.y() < rhs.y()));
+}

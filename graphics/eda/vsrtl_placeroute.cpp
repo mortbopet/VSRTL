@@ -1,10 +1,16 @@
 #include "vsrtl_placeroute.h"
-#include "vsrtl_component.h"
-#include "vsrtl_graphics_defines.h"
-#include "vsrtl_gridcomponent.h"
 
 #include <deque>
 #include <map>
+
+#include "vsrtl_component.h"
+#include "vsrtl_geometry.h"
+#include "vsrtl_graphics_defines.h"
+#include "vsrtl_graphics_util.h"
+#include "vsrtl_gridcomponent.h"
+
+#include "vsrtl_astar.h"
+#include "vsrtl_mincutplacement.cpp"
 
 namespace vsrtl {
 
@@ -71,8 +77,8 @@ std::map<int, std::set<SimComponent*>> ASAPSchedule(const std::vector<GridCompon
     return schedule;
 }
 
-std::map<GridComponent*, QPoint> ASAPPlacement(const std::vector<GridComponent*>& components) {
-    std::map<GridComponent*, QPoint> placements;
+Placement ASAPPlacement(const std::vector<GridComponent*>& components) {
+    Placement placements;
     const auto asapSchedule = ASAPSchedule(components);
 
     // 1. create a width of each column
@@ -94,7 +100,9 @@ std::map<GridComponent*, QPoint> ASAPPlacement(const std::vector<GridComponent*>
     for (const auto& iter : asapSchedule) {
         for (const auto& c : iter.second) {
             auto* g = c->getGraphic<GridComponent>();
-            placements[g] = QPoint(x, y);
+            auto routable = RoutingComponent(g);
+            routable.pos = QPoint(x, y);
+            placements.components.push_back(routable);
             y += g->getCurrentComponentRect().height() + COMPONENT_COLUMN_MARGIN;
         }
         x += columnWidths[iter.first] + 2 * COMPONENT_COLUMN_MARGIN;
@@ -104,31 +112,76 @@ std::map<GridComponent*, QPoint> ASAPPlacement(const std::vector<GridComponent*>
     return placements;
 }
 
-std::map<GridComponent*, QPoint> topologicalSortPlacement(const std::vector<GridComponent*>& components) {
-    std::map<GridComponent*, QPoint> placements;
+Placement topologicalSortPlacement(const std::vector<GridComponent*>& components) {
+    Placement placements;
     std::deque<SimComponent*> sortedComponents = topologicalSort(components);
 
     // Position components
     QPoint pos = QPoint(SUBCOMPONENT_INDENT, SUBCOMPONENT_INDENT);  // Start a bit offset from the parent borders
     for (const auto& c : sortedComponents) {
         auto* g = c->getGraphic<GridComponent>();
-        placements[g] = pos;
+        auto routable = RoutingComponent(g);
+        routable.pos = pos;
+        placements.components.push_back(routable);
         pos.rx() += g->getCurrentComponentRect().width() + COMPONENT_COLUMN_MARGIN;
     }
 
     return placements;
 }
 
-std::map<GridComponent*, QPoint> PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) const {
-    switch (m_placementAlgorithm) {
-        case PlaceAlg::TopologicalSort: {
-            return topologicalSortPlacement(components);
+PlaceRoute::PlaceRoute() {
+    m_placementAlgorithms[PlaceAlg::ASAP] = &ASAPPlacement;
+    m_placementAlgorithms[PlaceAlg::Topological1D] = &topologicalSortPlacement;
+    m_placementAlgorithms[PlaceAlg::MinCut] = &MinCutPlacement;
+
+    m_placementAlgorithm = PlaceAlg::ASAP;
+}
+
+void PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
+    // Placement
+    Placement placement = get()->m_placementAlgorithms.at(get()->m_placementAlgorithm)(components);
+
+    for (const auto& p : placement.components) {
+        p.gridComponent->move(p.pos);
+    }
+
+    // Connectivity graph: Transform current components into a placement format suitable for creating the connectivity
+    // graph
+    placement.chipRect = placement.componentBoundingRect();
+    // Add margins to chip rect to allow routing on right- and bottom borders
+    placement.chipRect.adjust(-placement.chipRect.width() / 4, -placement.chipRect.height() / 4,
+                              placement.chipRect.width() / 4, placement.chipRect.height() / 4);
+    auto cGraph = createConnectivityGraph(placement);
+
+    // Indexable region map
+    const auto regionMap = RegionMap(cGraph);
+
+    // ======================= ROUTING ======================= //
+    // Define a heuristic cost function for routing regions
+    const auto rrHeuristic = [](RoutingRegion* start, RoutingRegion* goal) {
+        return (goal->rect().center() - start->rect().center()).manhattanLength();
+    };
+    auto netlist = createNetlist(placement, regionMap);
+
+    // Route via. a* search between start- and stop nodes, using the available routing regions
+    for (auto& net : *netlist) {
+        if (net->size() == 0) {
+            // Skip empty nets
+            continue;
         }
-        case PlaceAlg::ASAP: {
-            return ASAPPlacement(components);
+
+        // Find a route to each start-stop pair in the net
+        for (auto& route : *net) {
+            route->path = AStar<RoutingRegion>(route->start.region, route->end.region, &RoutingRegion::adjacentRegions,
+                                               rrHeuristic);
         }
     }
-    Q_UNREACHABLE();
+
+    // During findRoute, all routes have registered to their routing regions. With knowledge of how many routes occupy
+    // each routing region, a route is assigned a lane within the routing region
+    for (const auto& region : cGraph) {
+        region->assignRoutes();
+    }
 }
 
 }  // namespace vsrtl

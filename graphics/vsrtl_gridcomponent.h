@@ -55,6 +55,7 @@ public:
     bool adjustPort(SimPort* port, QPoint pos);
 
     PortPos getPortPos(const SimPort* port) const;
+    QPoint getPortGridPos(const SimPort* port) const;
     std::vector<unsigned> getFreePortPositions(Side s);
 
     bool parentIsPlacing() const;

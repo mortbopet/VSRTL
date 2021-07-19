@@ -1,12 +1,12 @@
 #include "vsrtl_componentgraphic.h"
 
+#include "eda/vsrtl_placeroute.h"
 #include "vsrtl_componentbutton.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_label.h"
 #include "vsrtl_multiplexergraphic.h"
 #include "vsrtl_parameterdialog.h"
-#include "vsrtl_placeroute.h"
 #include "vsrtl_portgraphic.h"
 #include "vsrtl_scene.h"
 #include "vsrtl_wiregraphic.h"
@@ -97,9 +97,6 @@ void ComponentGraphic::initialize(bool doPlaceAndRoute) {
         connect(m_expandButton, &ComponentButton::toggled, [this](bool expanded) { setExpanded(expanded); });
 
         createSubcomponents(doPlaceAndRoute);
-        if (doPlaceAndRoute) {
-            placeAndRouteSubcomponents();
-        }
     }
 
     connect(this, &GridComponent::gridRectChanged, this, &ComponentGraphic::updateGeometry);
@@ -112,6 +109,10 @@ void ComponentGraphic::initialize(bool doPlaceAndRoute) {
 
     updateGeometry();
     spreadPorts();
+
+    if (hasSubcomponents() && doPlaceAndRoute) {
+        placeAndRouteSubcomponents();
+    }
 }
 
 /**

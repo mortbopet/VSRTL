@@ -53,17 +53,6 @@ auto trueBottom(const RectType& r) {
 }
 
 template <typename RectType>
-RectType boundingRectOfRects(const RectType& r1, const RectType& r2) {
-    qreal top, bottom, right, left;
-    left = r1.left() < r2.left() ? r1.left() : r2.left();
-    right = trueRight(r1) > trueRight(r2) ? trueRight(r1) : trueRight(r2);
-    top = r1.top() < r2.top() ? r1.top() : r2.top();
-    bottom = trueBottom(r1) > trueBottom(r2) ? trueBottom(r1) : trueBottom(r2);
-
-    return RectType(left, top, right - left, bottom - top);
-}
-
-template <typename RectType>
 bool snapRectToInnerRect(const RectType& inner, RectType& snapping) {
     bool snap_r, snap_b;
     snap_r = false;
@@ -100,6 +89,17 @@ bool snapRectToOuterRect(const RectType& outer, RectType& snapping) {
 }
 
 template <typename RectType>
+RectType boundingRectOfRects(const RectType& r1, const RectType& r2) {
+    qreal top, bottom, right, left;
+    left = r1.left() < r2.left() ? r1.left() : r2.left();
+    right = trueRight(r1) > trueRight(r2) ? trueRight(r1) : trueRight(r2);
+    top = r1.top() < r2.top() ? r1.top() : r2.top();
+    bottom = trueBottom(r1) > trueBottom(r2) ? trueBottom(r1) : trueBottom(r2);
+
+    return RectType(left, top, right - left, bottom - top);
+}
+
+template <typename RectType>
 RectType boundingRectOfRects(const std::vector<RectType>& rects) {
     if (rects.size() == 0) {
         return RectType();
@@ -107,6 +107,30 @@ RectType boundingRectOfRects(const std::vector<RectType>& rects) {
     RectType boundingRect = rects.at(0);
     for (unsigned i = 1; i < rects.size(); i++) {
         boundingRect = boundingRectOfRects<RectType>(boundingRect, rects.at(i));
+    }
+    return boundingRect;
+}
+
+template <typename RectType, typename T, typename F>
+RectType boundingRectOfRectsFM(const std::vector<T>& objs, F&& rectFunc) {
+    if (objs.size() == 0) {
+        return RectType();
+    }
+    RectType boundingRect = (objs.at(0).*rectFunc)();
+    for (unsigned i = 1; i < objs.size(); i++) {
+        boundingRect = boundingRectOfRects<RectType>(boundingRect, (objs.at(i).*rectFunc)());
+    }
+    return boundingRect;
+}
+
+template <typename RectType, typename T>
+RectType boundingRectOfRectsF(const std::vector<T>& objs, const std::function<RectType(const T&)>& rectFunc) {
+    if (objs.size() == 0) {
+        return RectType();
+    }
+    RectType boundingRect = rectFunc(objs.at(0));
+    for (unsigned i = 1; i < objs.size(); i++) {
+        boundingRect = boundingRectOfRects<RectType>(boundingRect, rectFunc(objs.at(i)));
     }
     return boundingRect;
 }

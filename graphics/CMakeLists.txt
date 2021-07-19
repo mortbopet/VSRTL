@@ -1,7 +1,13 @@
 cmake_minimum_required(VERSION 3.9)
 
-file(GLOB LIB_SOURCES *.cpp)
-file(GLOB LIB_HEADERS *.h)
+file(GLOB LIB_SOURCES
+    *.cpp
+    eda/*.cpp
+)
+file(GLOB LIB_HEADERS
+    *.h
+    eda/*.h
+)
 
 ######################################################################
 ## GUI setup

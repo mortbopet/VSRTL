@@ -1,8 +1,8 @@
 ﻿#include "vsrtl_gridcomponent.h"
 
+#include "eda/vsrtl_placeroute.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
-#include "vsrtl_placeroute.h"
 
 #include <math.h>
 
@@ -116,10 +116,7 @@ bool GridComponent::move(const QPoint& pos) {
 
 void GridComponent::placeAndRouteSubcomponents() {
     m_isPlacing = true;
-    const auto& placements = PlaceRoute::get()->placeAndRoute(getGridSubcomponents());
-    for (const auto& p : placements) {
-        p.first->move(p.second);
-    }
+    PlaceRoute::placeAndRoute(getGridSubcomponents());
     m_isPlacing = false;
     updateSubcomponentBoundingRect();
 }
@@ -251,6 +248,29 @@ void GridComponent::updateCurrentComponentRect(int dx, int dy) {
 
 PortPos GridComponent::getPortPos(const SimPort* port) const {
     return m_border->getPortPos(port);
+}
+
+QPoint GridComponent::getPortGridPos(const SimPort* port) const {
+    auto portIdx = m_border->getPortPos(port);
+    auto rect = getCurrentComponentRect();
+    QPoint portPos = rect.topLeft();
+    switch (portIdx.side) {
+        case Side::Top:
+            portPos.rx() += portIdx.index;
+            break;
+        case Side::Left:
+            portPos.ry() += portIdx.index;
+            break;
+        case Side::Right:
+            portPos.rx() += rect.width();
+            portPos.ry() += portIdx.index;
+            break;
+        case Side::Bottom:
+            portPos.ry() += rect.height();
+            portPos.rx() += portIdx.index;
+            break;
+    }
+    return portPos;
 }
 
 std::vector<unsigned> GridComponent::getFreePortPositions(Side s) {
