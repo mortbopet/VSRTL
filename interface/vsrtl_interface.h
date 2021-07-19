@@ -265,6 +265,17 @@ public:
         return v;
     }
 
+    template <typename T = SimComponent>
+    std::set<T*> getConnectedComponents() const {
+        static_assert(std::is_base_of<SimComponent, T>::value, "Must cast to a simulator-specific component type");
+        std::set<T*> v;
+        auto ins = getInputComponents<T>();
+        auto outs = getOutputComponents<T>();
+        std::copy(ins.begin(), ins.end(), std::inserter(v, v.end()));
+        std::copy(outs.begin(), outs.end(), std::inserter(v, v.end()));
+        return v;
+    }
+
     template <SimPort::PortType d, typename T = SimPort>
     std::vector<T*> getPorts() const {
         static_assert(std::is_base_of<SimPort, T>::value, "Must cast to a simulator-specific port type");
