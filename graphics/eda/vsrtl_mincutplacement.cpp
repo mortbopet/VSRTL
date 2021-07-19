@@ -59,7 +59,7 @@ public:
             const QPoint pos = (offset - QPoint(w / 2, h / 2));
             RoutingComponent rc(gridComponent);
             rc.pos = pos;
-            placement.components.push_back(rc);
+            placement.components.push_back(std::make_shared<RoutingComponent>(rc));
         }
     }
 

@@ -11,6 +11,20 @@ enum class Direction { Horizontal, Vertical };
 enum class Corner { TopLeft, TopRight, BottomRight, BottomLeft };
 enum class IntersectType { Cross, OnEdge };
 
+inline Direction edgeToDirection(const Edge e) {
+    switch (e) {
+        case Edge::Top:
+            return Direction::Vertical;
+        case Edge::Bottom:
+            return Direction::Vertical;
+        case Edge::Left:
+            return Direction::Horizontal;
+        case Edge::Right:
+            return Direction::Horizontal;
+    }
+    Q_UNREACHABLE();
+}
+
 /**
  * @brief The Line class
  * Simple orthogonal line class with integer coordinates. Similar to QLine, however, this does not carry the strange

@@ -15,65 +15,6 @@ namespace vsrtl {
 
 class RoutingRegion;
 
-struct NetNode {
-    GridComponent* gridComponent = nullptr;
-    RoutingRegion* region = nullptr;
-};
-
-struct Route {
-    Route(NetNode s, NetNode e) : start(s), end(e) {}
-    NetNode start;
-    NetNode end;
-    std::vector<RoutingRegion*> path;
-};
-
-class RoutingRegion {
-public:
-    RoutingRegion(QRect rect) : r(rect), h_cap(rect.width()), v_cap(rect.height()) {}
-
-    const QRect& rect() { return r; }
-    const std::vector<RoutingRegion*> adjacentRegions();
-    void setRegion(Edge, RoutingRegion*);
-    void assignRoutes();
-    void registerRoute(Route*, Direction);
-
-    static inline bool cmpRoutingRegPtr(RoutingRegion* a, RoutingRegion* b) {
-        if ((a == nullptr && b != nullptr) || (b == nullptr && a != nullptr))
-            return false;
-        if (a == nullptr && b == nullptr)
-            return true;
-        return a->r == b->r;
-    }
-
-    bool operator==(const RoutingRegion& lhs) const {
-        if (!cmpRoutingRegPtr(top, lhs.top))
-            return false;
-        if (!cmpRoutingRegPtr(bottom, lhs.bottom))
-            return false;
-        if (!cmpRoutingRegPtr(left, lhs.left))
-            return false;
-        if (!cmpRoutingRegPtr(right, lhs.right))
-            return false;
-
-        return r == lhs.r;
-    }
-
-private:
-    std::vector<Route*> verticalRoutes, horizontalRoutes;
-
-    // Adjacent region groups
-    RoutingRegion* top = nullptr;
-    RoutingRegion* bottom = nullptr;
-    RoutingRegion* left = nullptr;
-    RoutingRegion* right = nullptr;
-
-    QRect r;    // Region size and position
-    int h_cap;  // Horizontal capacity of routing region
-    int v_cap;  // Vertical capacity of routing region
-    int h_used = 0;
-    int v_used = 0;
-};
-
 class RoutingComponent {
 public:
     RoutingComponent(GridComponent* c) : gridComponent(c) {}
@@ -88,6 +29,72 @@ public:
     RoutingRegion* leftRegion = nullptr;
     RoutingRegion* rightRegion = nullptr;
     RoutingRegion* bottomRegion = nullptr;
+};
+
+struct NetNode {
+    std::shared_ptr<RoutingComponent> routingComponent;
+    RoutingRegion* region = nullptr;
+    SimPort* port = nullptr;
+};
+
+struct Route {
+    Route(NetNode s, NetNode e) : start(s), end(e) {}
+    NetNode start;
+    NetNode end;
+    std::vector<RoutingRegion*> path;
+};
+
+class RoutingRegion {
+public:
+    struct RoutePath {
+        RoutingRegion* region = nullptr;
+        Direction dir;
+        int idx;
+        QPoint from() const;
+        QPoint to() const;
+    };
+    RoutingRegion(QRect rect) : r(rect), h_cap(rect.width()), v_cap(rect.height()) {}
+
+    const QRect& rect() { return r; }
+    const std::vector<RoutingRegion*> adjacentRegions();
+    /**
+     * @brief adjacentRegion
+     * @param rr
+     * @param valid
+     * @return the edge which @p rr abutts to this routing region. If not abutting, @p valid is set to false.
+     */
+    Edge adjacentRegion(const RoutingRegion* rr, bool& valid) const;
+
+    void setRegion(Edge, RoutingRegion*);
+    void assignRoutes();
+    RoutePath getPath(Route* route) const;
+    void registerRoute(Route*, Direction);
+
+    static inline bool cmpRoutingRegPtr(RoutingRegion* a, RoutingRegion* b) {
+        if ((a == nullptr && b != nullptr) || (b == nullptr && a != nullptr))
+            return false;
+        if (a == nullptr && b == nullptr)
+            return true;
+        return a->r == b->r;
+    }
+
+    bool operator==(const RoutingRegion& lhs) const;
+
+private:
+    std::vector<Route*> verticalRoutes, horizontalRoutes;
+    std::map<Route*, RoutePath> assignedRoutes;
+
+    // Adjacent region groups
+    RoutingRegion* top = nullptr;
+    RoutingRegion* bottom = nullptr;
+    RoutingRegion* left = nullptr;
+    RoutingRegion* right = nullptr;
+
+    QRect r;    // Region size and position
+    int h_cap;  // Horizontal capacity of routing region
+    int v_cap;  // Vertical capacity of routing region
+    int h_used = 0;
+    int v_used = 0;
 };
 
 /**
@@ -128,9 +135,12 @@ public:
 
 struct Placement {
     QRect chipRect;
-    std::vector<RoutingComponent> components;
+    std::vector<std::shared_ptr<RoutingComponent>> components;
     QRect componentBoundingRect() const {
-        return boundingRectOfRectsFM<QRect, RoutingComponent>(components, &RoutingComponent::rect);
+        std::function<QRect(const std::shared_ptr<RoutingComponent>&)> f = [](const auto& rr) {
+            return rr.get()->rect();
+        };
+        return boundingRectOfRectsF<QRect>(components, f);
     }
 };
 

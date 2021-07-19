@@ -8,6 +8,8 @@
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_gridcomponent.h"
+#include "vsrtl_portgraphic.h"
+#include "vsrtl_wiregraphic.h"
 
 #include "vsrtl_astar.h"
 #include "vsrtl_mincutplacement.cpp"
@@ -102,7 +104,7 @@ Placement ASAPPlacement(const std::vector<GridComponent*>& components) {
             auto* g = c->getGraphic<GridComponent>();
             auto routable = RoutingComponent(g);
             routable.pos = QPoint(x, y);
-            placements.components.push_back(routable);
+            placements.components.push_back(std::make_shared<RoutingComponent>(routable));
             y += g->getCurrentComponentRect().height() + COMPONENT_COLUMN_MARGIN;
         }
         x += columnWidths[iter.first] + 2 * COMPONENT_COLUMN_MARGIN;
@@ -122,7 +124,7 @@ Placement topologicalSortPlacement(const std::vector<GridComponent*>& components
         auto* g = c->getGraphic<GridComponent>();
         auto routable = RoutingComponent(g);
         routable.pos = pos;
-        placements.components.push_back(routable);
+        placements.components.push_back(std::make_shared<RoutingComponent>(routable));
         pos.rx() += g->getCurrentComponentRect().width() + COMPONENT_COLUMN_MARGIN;
     }
 
@@ -137,13 +139,35 @@ PlaceRoute::PlaceRoute() {
     m_placementAlgorithm = PlaceAlg::ASAP;
 }
 
+void PlaceRoute::assignRoutes(NetlistPtr& netlist) const {
+    for (const auto& net : *netlist.get()) {
+        for (const auto& route : *net.get()) {
+            Q_ASSERT(route->start.port != nullptr && route->end.port != nullptr);
+            auto startPort = route->start.port->getGraphic<PortGraphic>();
+            auto endPort = route->end.port->getGraphic<PortGraphic>();
+
+            Q_ASSERT(startPort);
+            auto* wire = startPort->getOutputWire();
+            wire->clearWirePoints();
+            Q_ASSERT(wire->getWires().size() == 0);
+            WireSegment* seg = wire->createSegment(startPort->getPortPoint(SimPort::PortType::out),
+                                                   endPort->getPortPoint(SimPort::PortType::in));
+
+            for (const auto& region : route->path) {
+                auto path = region->getPath(route.get());
+                auto [newPoint1, newSeg1] = wire->createWirePointOnSeg(path.from(), seg);
+                auto [newPoint2, newSeg2] = wire->createWirePointOnSeg(path.to(), newSeg1);
+                Q_UNUSED(newPoint1);
+                Q_UNUSED(newPoint2);
+                seg = newSeg2;
+            }
+        }
+    }
+}
+
 void PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
     // Placement
     Placement placement = get()->m_placementAlgorithms.at(get()->m_placementAlgorithm)(components);
-
-    for (const auto& p : placement.components) {
-        p.gridComponent->move(p.pos);
-    }
 
     // Connectivity graph: Transform current components into a placement format suitable for creating the connectivity
     // graph
@@ -174,7 +198,33 @@ void PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
         for (auto& route : *net) {
             route->path = AStar<RoutingRegion>(route->start.region, route->end.region, &RoutingRegion::adjacentRegions,
                                                rrHeuristic);
+            // For each region that the route passes through, register the route and its direction within it
+
+            RoutingRegion* preRegion = nullptr;
+            bool valid;
+            for (unsigned i = 0; i < route->path.size(); i++) {
+                const bool lastRegion = i == (route->path.size() - 1);
+                RoutingRegion* curRegion = route->path.at(i);
+
+                if (preRegion) {
+                    auto edge = preRegion->adjacentRegion(curRegion, valid);
+                    Q_ASSERT(valid);
+                    preRegion->registerRoute(route.get(), edgeToDirection(edge));
+                    if (lastRegion) {
+                        curRegion->registerRoute(route.get(), edgeToDirection(edge));
+                    }
+                } else if (lastRegion) {
+                    // Directly abutting regions
+                    curRegion->registerRoute(route.get(), Direction::Horizontal);
+                }
+                preRegion = curRegion;
+            }
         }
+    }
+
+    // Move components to their final positions
+    for (const auto& p : placement.components) {
+        p->gridComponent->move(p->pos);
     }
 
     // During findRoute, all routes have registered to their routing regions. With knowledge of how many routes occupy
@@ -182,6 +232,9 @@ void PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
     for (const auto& region : cGraph) {
         region->assignRoutes();
     }
+
+    // Apply assigned routes
+    get()->assignRoutes(netlist);
 }
 
 }  // namespace vsrtl

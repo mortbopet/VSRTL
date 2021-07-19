@@ -36,6 +36,7 @@ public:
 
 private:
     PlaceRoute();
+    void assignRoutes(NetlistPtr& netlist) const;
 
     std::map<PlaceAlg, PlacementFunct> m_placementAlgorithms;
 

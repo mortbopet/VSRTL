@@ -5,30 +5,36 @@ namespace vsrtl {
 NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
     auto netlist = std::make_unique<Netlist>();
     for (const auto& routingComponent : placement.components) {
-        for (const auto& outputPort : routingComponent.gridComponent->getComponent()->getOutputPorts()) {
+        for (const auto& outputPort : routingComponent->gridComponent->getComponent()->getOutputPorts()) {
             // Note: terminal position currently is fixed to right => output, left => input
             auto net = std::make_unique<Net>();
             NetNode source;
-            source.gridComponent = routingComponent.gridComponent;
+            source.port = outputPort;
+            source.routingComponent = routingComponent;
 
             // Get source port grid position
-            source.region = regionMap.lookup(routingComponent.gridComponent->getPortGridPos(outputPort), Edge::Right);
+            source.region = regionMap.lookup(routingComponent->gridComponent->getPortGridPos(outputPort), Edge::Right);
             Q_ASSERT(source.region != nullptr);
             for (const auto& sinkPort : outputPort->getOutputPorts()) {
                 NetNode sink;
-                sink.gridComponent = sinkPort->getGraphic<GridComponent>();
+                sink.port = sinkPort;
+                GridComponent* sinkGridComponent = sinkPort->getParent()->getGraphic<GridComponent>();
+                Q_ASSERT(sinkGridComponent);
                 // Lookup routing component for sink component graphic
-                auto rc_i = std::find_if(placement.components.begin(), placement.components.end(),
-                                         [&sink](const auto& rc) { return rc.gridComponent == sink.gridComponent; });
+                auto rc_i = std::find_if(
+                    placement.components.begin(), placement.components.end(),
+                    [&sinkGridComponent](const auto& rc) { return rc->gridComponent == sinkGridComponent; });
 
                 if (rc_i == placement.components.end()) {
                     /** @todo: connected port is the parent component (i.e., an in- or output port of the parent
                      * component */
                     continue;
                 }
+                sink.routingComponent = *rc_i;
 
                 // Get sink port grid position
-                sink.region = regionMap.lookup(sink.gridComponent->getPortGridPos(sinkPort), Edge::Left);
+                sink.region =
+                    regionMap.lookup(sink.routingComponent->gridComponent->getPortGridPos(sinkPort), Edge::Left);
                 Q_ASSERT(sink.region != nullptr);
                 net->push_back(std::make_unique<Route>(source, sink));
             }
@@ -42,7 +48,7 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
     std::vector<QRect> rects;
     std::transform(placement.components.begin(), placement.components.end(), std::back_inserter(rects),
-                   [](const auto& c) { return c.rect(); });
+                   [](const auto& c) { return c->rect(); });
     Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(rects)));
     // Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
 
@@ -53,8 +59,8 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
 
     // Get horizontal and vertical bounding rectangle lines for all components on chip
     for (const auto& r : placement.components) {
-        hz_bounding_lines << getEdge(r.rect(), Edge::Top) << getEdge(r.rect(), Edge::Bottom);
-        vt_bounding_lines << getEdge(r.rect(), Edge::Left) << getEdge(r.rect(), Edge::Right);
+        hz_bounding_lines << getEdge(r->rect(), Edge::Top) << getEdge(r->rect(), Edge::Bottom);
+        vt_bounding_lines << getEdge(r->rect(), Edge::Left) << getEdge(r->rect(), Edge::Right);
     }
 
     // ============== Component edge extrusion =================
@@ -190,7 +196,7 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
                 // Check whether the new region is the same as one of the components
                 if (std::find_if(placement.components.begin(), placement.components.end(),
                                  [&newRegionRect](const auto& routingComponent) {
-                                     return newRegionRect == routingComponent.rect();
+                                     return newRegionRect == routingComponent->rect();
                                  }) == placement.components.end()) {
                     // New region was not a component, check if new region has already been added
                     if (std::find_if(regions.begin(), regions.end(), [&newRegionRect](const auto& region) {
@@ -220,14 +226,14 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
     // ======================= Routing Region Association ======================= //
     for (auto& rc : placement.components) {
         // The algorithm have failed if regionGroups does not contain an entry for each corner of all routing components
-        Q_ASSERT(regionGroups.count(rc.rect().topLeft()));
-        Q_ASSERT(regionGroups.count(rc.rect().topRight()));
-        Q_ASSERT(regionGroups.count(rc.rect().bottomRight()));
-        Q_ASSERT(regionGroups.count(rc.rect().bottomLeft()));
-        rc.topRegion = regionGroups[rc.rect().topLeft()].topright;
-        rc.leftRegion = regionGroups[rc.rect().topLeft()].bottomleft;
-        rc.rightRegion = regionGroups[rc.rect().topRight()].bottomright;
-        rc.bottomRegion = regionGroups[rc.rect().bottomLeft()].bottomright;
+        Q_ASSERT(regionGroups.count(rc->rect().topLeft()));
+        Q_ASSERT(regionGroups.count(rc->rect().topRight()));
+        Q_ASSERT(regionGroups.count(rc->rect().bottomRight()));
+        Q_ASSERT(regionGroups.count(rc->rect().bottomLeft()));
+        rc->topRegion = regionGroups[rc->rect().topLeft()].topright;
+        rc->leftRegion = regionGroups[rc->rect().topLeft()].bottomleft;
+        rc->rightRegion = regionGroups[rc->rect().topRight()].bottomright;
+        rc->bottomRegion = regionGroups[rc->rect().bottomLeft()].bottomright;
     }
 
     return regions;
@@ -254,6 +260,12 @@ void RegionGroup::setRegion(Corner c, RoutingRegion* region) {
     }
 }
 
+RoutingRegion::RoutePath RoutingRegion::getPath(Route* route) const {
+    auto it = assignedRoutes.find(route);
+    Q_ASSERT(it != assignedRoutes.end());
+    return it->second;
+}
+
 void RoutingRegion::setRegion(Edge e, RoutingRegion* region) {
     switch (e) {
         case Edge::Top: {
@@ -275,8 +287,69 @@ void RoutingRegion::setRegion(Edge e, RoutingRegion* region) {
     }
 }
 
+QPoint RoutingRegion::RoutePath::from() const {
+    const auto r = region->rect();
+    /** @todo: direction needs to be changed to north/south/east/west, else this doesn't make sense*/
+    QPoint p;
+    switch (dir) {
+        case Direction::Horizontal:
+            p = r.topLeft() + QPoint{0, idx};
+            break;
+        case Direction::Vertical:
+            p = r.topLeft() + QPoint{idx, 0};
+            break;
+            /*
+        case Direction::North:
+            p = r.bottomLeft() + QPoint{idx, 0};
+            break;
+        case Direction::West:
+            p = r.topRight() + QPoint{0, idx};
+            break;
+*/
+    }
+    return p;
+}
+
+QPoint RoutingRegion::RoutePath::to() const {
+    const auto r = region->rect();
+    /** @todo: direction needs to be changed to north/south/east/west, else this doesn't make sense*/
+    QPoint p;
+    switch (dir) {
+        case Direction::Horizontal:
+            p = r.topRight() + QPoint{0, idx};
+            break;
+        case Direction::Vertical:
+            p = r.bottomLeft() + QPoint{idx, 0};
+            break;
+            /*
+        case Direction::North:
+            p = r.bottomLeft() + QPoint{idx, 0};
+            break;
+        case Direction::West:
+            p = r.topRight() + QPoint{0, idx};
+            break;
+*/
+    }
+    return p;
+}
+
 const std::vector<RoutingRegion*> RoutingRegion::adjacentRegions() {
     return {top, bottom, left, right};
+}
+
+Edge RoutingRegion::adjacentRegion(const RoutingRegion* rr, bool& valid) const {
+    valid = true;
+    if (rr == top) {
+        return Edge::Top;
+    } else if (rr == right) {
+        return Edge::Right;
+    } else if (rr == left) {
+        return Edge::Left;
+    } else if (rr == bottom) {
+        return Edge::Bottom;
+    }
+    valid = false;
+    return Edge();
 }
 
 void RoutingRegion::registerRoute(Route* r, Direction d) {
@@ -287,22 +360,32 @@ void RoutingRegion::registerRoute(Route* r, Direction d) {
     }
 }
 
+bool RoutingRegion::operator==(const RoutingRegion& lhs) const {
+    if (!cmpRoutingRegPtr(top, lhs.top))
+        return false;
+    if (!cmpRoutingRegPtr(bottom, lhs.bottom))
+        return false;
+    if (!cmpRoutingRegPtr(left, lhs.left))
+        return false;
+    if (!cmpRoutingRegPtr(right, lhs.right))
+        return false;
+
+    return r == lhs.r;
+}
+
 void RoutingRegion::assignRoutes() {
-    return;
-    /*
     const float hz_diff = static_cast<float>(h_cap) / (horizontalRoutes.size() + 1);
     const float vt_diff = static_cast<float>(v_cap) / (verticalRoutes.size() + 1);
     float hz_pos = hz_diff;
     float vt_pos = vt_diff;
     for (const auto& route : horizontalRoutes) {
-        assignedRoutes[route] = {Direction::Horizontal, hz_pos};
+        assignedRoutes[route] = {this, Direction::Horizontal, static_cast<int>(hz_pos)};
         hz_pos += hz_diff;
     }
     for (const auto& route : verticalRoutes) {
-        assignedRoutes[route] = {Direction::Horizontal, vt_pos};
+        assignedRoutes[route] = {this, Direction::Vertical, static_cast<int>(vt_pos)};
         vt_pos += vt_diff;
     }
-*/
 }
 
 }  // namespace vsrtl

@@ -131,6 +131,7 @@ private:
 class WireGraphic : public QObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
     friend class PortGraphic;
+    friend class PlaceRoute;
 
 public:
     enum class MergeType { CannotMerge, MergeSinkWithSource, MergeSourceWithSink, MergeParallelSinks };
@@ -147,6 +148,7 @@ public:
     PortGraphic* getFromPort() const { return m_fromPort; }
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }
     std::pair<WirePoint*, WireSegment*> createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment);
+    const std::set<WireSegment*>& getWires() const { return m_wires; }
     void removeWirePoint(WirePoint* point);
 
     /**
