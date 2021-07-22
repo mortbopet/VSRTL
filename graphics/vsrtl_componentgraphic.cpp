@@ -129,16 +129,10 @@ void ComponentGraphic::applyRouteRes() {
                 Q_ASSERT(wire->getWires().size() == 0);
                 WireSegment* seg = wire->createSegment(startPort->getPortPoint(SimPort::PortType::out),
                                                        endPort->getPortPoint(SimPort::PortType::in));
-
                 for (const auto& region : route->path) {
-                    auto path = region->getPath(route.get());
-                    const auto from = path.from();
-                    const auto to = path.to();
-                    auto [newPoint1, newSeg1] = wire->createWirePointOnSeg(gridToScene(from), seg);
-                    auto [newPoint2, newSeg2] = wire->createWirePointOnSeg(gridToScene(to), newSeg1);
+                    auto [newPoint1, newSeg1] = wire->createWirePointOnSeg(gridToScene(region->rect().center()), seg);
                     Q_UNUSED(newPoint1);
-                    Q_UNUSED(newPoint2);
-                    seg = newSeg2;
+                    seg = newSeg1;
                 }
             }
         }
@@ -634,6 +628,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             auto sceneGridRect = gridToScene(rr.get()->rect().adjusted(0, 0, -1, -1));
             sceneGridRect.moveTo(rr.get()->rect().topLeft() * GRID_SIZE);
             painter->drawRect(sceneGridRect);
+            painter->drawText(gridToScene(rr.get()->rect().topLeft()), QString::number(rr->id()));
         }
         /*
 

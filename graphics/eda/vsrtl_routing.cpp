@@ -215,11 +215,15 @@ RoutingRegionsPtr createConnectivityGraph(Placement& placement) {
                 // Check whether the region is enclosing a component.
                 QRect newRegionRect = QRect(regionTopLeft, regionBottomRight);
 
-                // Check whether the new region is the same as one of the components
-                if (std::find_if(placement.components.begin(), placement.components.end(),
-                                 [&newRegionRect](const auto& routingComponent) {
-                                     return newRegionRect == routingComponent->rect();
-                                 }) == placement.components.end()) {
+                // Check whether the new region encloses a component
+                const auto componentInRegionIt = std::find_if(placement.components.begin(), placement.components.end(),
+                                                              [&newRegionRect](const auto& routingComponent) {
+                                                                  QRect rrect = routingComponent->rect();
+                                                                  rrect.setBottomRight(realBottomRight(rrect));
+                                                                  return newRegionRect == rrect;
+                                                              });
+
+                if (componentInRegionIt == placement.components.end()) {
                     // New region was not a component, check if new region has already been added
                     if (std::find_if(regions->regions.begin(), regions->regions.end(),
                                      [&newRegionRect](const auto& region) {
