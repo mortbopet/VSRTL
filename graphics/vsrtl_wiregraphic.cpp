@@ -313,9 +313,11 @@ void WireSegment::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
     painter->setPen(m_parent->getPen());
     painter->drawLine(m_cachedLine);
     painter->restore();
-#ifdef VSRTL_DEBUG_DRAW
-    DRAW_BOUNDING_RECT(painter)
-#endif
+    /*
+    #ifdef VSRTL_DEBUG_DRAW
+        DRAW_BOUNDING_RECT(painter)
+    #endif
+    */
 }
 
 void WireSegment::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {

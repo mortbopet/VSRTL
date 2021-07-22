@@ -15,6 +15,7 @@
 #include "vsrtl_mincutplacement.cpp"
 
 namespace vsrtl {
+namespace eda {
 
 /**
  * @brief topologicalSortUtil
@@ -139,46 +140,22 @@ PlaceRoute::PlaceRoute() {
     m_placementAlgorithm = PlaceAlg::ASAP;
 }
 
-void PlaceRoute::assignRoutes(NetlistPtr& netlist) const {
-    for (const auto& net : *netlist.get()) {
-        for (const auto& route : *net.get()) {
-            Q_ASSERT(route->start.port != nullptr && route->end.port != nullptr);
-            auto startPort = route->start.port->getGraphic<PortGraphic>();
-            auto endPort = route->end.port->getGraphic<PortGraphic>();
-
-            Q_ASSERT(startPort);
-            auto* wire = startPort->getOutputWire();
-            wire->clearWirePoints();
-            Q_ASSERT(wire->getWires().size() == 0);
-            WireSegment* seg = wire->createSegment(startPort->getPortPoint(SimPort::PortType::out),
-                                                   endPort->getPortPoint(SimPort::PortType::in));
-
-            for (const auto& region : route->path) {
-                auto path = region->getPath(route.get());
-                auto [newPoint1, newSeg1] = wire->createWirePointOnSeg(path.from(), seg);
-                auto [newPoint2, newSeg2] = wire->createWirePointOnSeg(path.to(), newSeg1);
-                Q_UNUSED(newPoint1);
-                Q_UNUSED(newPoint2);
-                seg = newSeg2;
-            }
-        }
-    }
-}
-
-void PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
+PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
     // Placement
     Placement placement = get()->m_placementAlgorithms.at(get()->m_placementAlgorithm)(components);
 
     // Connectivity graph: Transform current components into a placement format suitable for creating the connectivity
     // graph
     placement.chipRect = placement.componentBoundingRect();
+    // Expand chiprect slightly, to reach (0,0) topleft and give equal spacing to the other faces.
+    const int hSpacing = placement.chipRect.x();
+    const int vSpacing = placement.chipRect.y();
     // Add margins to chip rect to allow routing on right- and bottom borders
-    placement.chipRect.adjust(-placement.chipRect.width() / 4, -placement.chipRect.height() / 4,
-                              placement.chipRect.width() / 4, placement.chipRect.height() / 4);
+    placement.chipRect.adjust(-hSpacing, -vSpacing, hSpacing, vSpacing);
     auto cGraph = createConnectivityGraph(placement);
 
     // Indexable region map
-    const auto regionMap = RegionMap(cGraph);
+    const auto regionMap = RegionMap(*cGraph);
 
     // ======================= ROUTING ======================= //
     // Define a heuristic cost function for routing regions
@@ -222,19 +199,18 @@ void PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
         }
     }
 
-    // Move components to their final positions
-    for (const auto& p : placement.components) {
-        p->gridComponent->move(p->pos);
-    }
-
     // During findRoute, all routes have registered to their routing regions. With knowledge of how many routes occupy
     // each routing region, a route is assigned a lane within the routing region
-    for (const auto& region : cGraph) {
+    for (const auto& region : cGraph->regions) {
         region->assignRoutes();
     }
 
-    // Apply assigned routes
-    get()->assignRoutes(netlist);
+    PRResult result;
+    result.placement = placement;
+    result.regions = std::move(cGraph);
+    result.netlist = std::move(netlist);
+    return result;
 }
 
+}  // namespace eda
 }  // namespace vsrtl

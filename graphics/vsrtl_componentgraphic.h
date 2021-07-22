@@ -5,6 +5,7 @@
 #include <QToolButton>
 
 #include "../interface/vsrtl_gfxobjecttypes.h"
+#include "eda/vsrtl_placeroute.h"
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphics_util.h"
 #include "vsrtl_graphicsbase.h"
@@ -18,29 +19,7 @@
 #include "cereal/cereal.hpp"
 #include "cereal/types/set.hpp"
 
-#include <qmath.h>
-
 namespace vsrtl {
-
-static inline qreal snapToGrid(qreal v) {
-    return round(v / GRID_SIZE) * GRID_SIZE;
-}
-
-static inline QRectF gridToScene(QRect gridRect) {
-    // Scales a rectangle in grid coordinates to scene coordinates
-    QRectF sceneGridRect;
-    sceneGridRect.setWidth(gridRect.width() * GRID_SIZE);
-    sceneGridRect.setHeight(gridRect.height() * GRID_SIZE);
-    return sceneGridRect;
-}
-
-static inline QPoint sceneToGrid(QPointF p) {
-    return (p / GRID_SIZE).toPoint();
-}
-
-static inline QPointF gridToScene(QPoint p) {
-    return p * GRID_SIZE;
-}
 
 class PortGraphic;
 class ComponentButton;
@@ -140,6 +119,8 @@ protected:
      */
     bool m_userHidden = false;
     bool userHidden() const { return m_userHidden; }
+
+    virtual void applyRouteRes() override;
 
     std::set<PortGraphic*> m_indicators;
     std::vector<ComponentGraphic*> m_subcomponents;

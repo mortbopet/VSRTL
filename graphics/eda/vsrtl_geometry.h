@@ -1,10 +1,12 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
+#include <QLine>
 #include <QPoint>
 #include <QRect>
 
 namespace vsrtl {
+namespace eda {
 
 enum class Edge { Top, Bottom, Left, Right };
 enum class Direction { Horizontal, Vertical };
@@ -28,7 +30,7 @@ inline Direction edgeToDirection(const Edge e) {
 /**
  * @brief The Line class
  * Simple orthogonal line class with integer coordinates. Similar to QLine, however, this does not carry the strange
- * "historical" artifacts which are present in QLine.
+ * "historical" artifacts which are present in QLine (see QLine documentation)
  */
 class Line {
 public:
@@ -43,6 +45,8 @@ public:
     constexpr void setP1(const QPoint& p) { m_p1 = p; }
     constexpr void setP2(const QPoint& p) { m_p2 = p; }
     constexpr Direction orientation() const { return m_orientation; }
+    Line adjusted(const QPoint& dp1, const QPoint& dp2) const { return Line(p1() + dp1, p2() + dp2); }
+    QLine toQLine() const { return QLine(p1(), p2()); }
     bool intersect(const Line& other, QPoint& p, IntersectType type) const {
         Q_ASSERT(orientation() != other.orientation());
         const Line *hz, *vt;
@@ -85,24 +89,38 @@ private:
     Direction m_orientation;
 };
 
-constexpr inline Line getEdge(const QRect& rect, Edge e) {
+// The following functions fixes the "historical reason" for incorrect corner coordinates in QRect (see QRect
+// documentation).
+inline QPoint realTopRight(const QRect& rect) {
+    return rect.topRight() + QPoint(1, 0);
+}
+
+inline QPoint realBottomRight(const QRect& rect) {
+    return rect.bottomRight() + QPoint(1, 1);
+}
+inline QPoint realBottomLeft(const QRect& rect) {
+    return rect.bottomLeft() + QPoint(0, 1);
+}
+
+inline Line getEdge(const QRect& rect, Edge e) {
     switch (e) {
         case Edge::Top: {
-            return Line(rect.topLeft(), rect.topRight());
+            return Line(rect.topLeft(), realTopRight(rect));
         }
         case Edge::Bottom: {
-            return Line(rect.bottomLeft(), rect.bottomRight());
+            return Line(realBottomLeft(rect), realBottomRight(rect));
         }
         case Edge::Left: {
-            return Line(rect.topLeft(), rect.bottomLeft());
+            return Line(rect.topLeft(), realBottomLeft(rect));
         }
         case Edge::Right: {
-            return Line(rect.topRight(), rect.bottomRight());
+            return Line(realTopRight(rect), realBottomRight(rect));
         }
     }
     Q_UNREACHABLE();
 }
 
+}  // namespace eda
 }  // namespace vsrtl
 
 #endif  // GEOMETRY_H

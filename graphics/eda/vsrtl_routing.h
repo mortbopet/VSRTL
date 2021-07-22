@@ -5,13 +5,16 @@
 #include <map>
 #include <vector>
 
-#include "../vsrtl_gridcomponent.h"
 #include "vsrtl_geometry.h"
 #include "vsrtl_graphics_util.h"
 
 // Various data-structures used during routing
 
 namespace vsrtl {
+class GridComponent;
+class SimPort;
+
+namespace eda {
 
 class RoutingRegion;
 
@@ -20,11 +23,11 @@ public:
     RoutingComponent(GridComponent* c) : gridComponent(c) {}
     GridComponent* gridComponent;
     QPoint pos;
-    QRect rect() const {
-        auto r = gridComponent->getCurrentComponentRect();
-        r.moveTo(pos);
-        return r;
-    }
+    QRect rect() const;
+    /**
+     * @brief topRegion
+     * Routing regions on each face of this component
+     */
     RoutingRegion* topRegion = nullptr;
     RoutingRegion* leftRegion = nullptr;
     RoutingRegion* rightRegion = nullptr;
@@ -144,8 +147,17 @@ struct Placement {
     }
 };
 
-using RoutingRegions = std::vector<std::unique_ptr<RoutingRegion>>;
-RoutingRegions createConnectivityGraph(Placement& placement);
+#define WRAP_UNIQUEPTR(type) using type##Ptr = std::unique_ptr<type>;
+struct RoutingRegions {
+    std::vector<std::unique_ptr<RoutingRegion>> regions;
+
+    // For debugging
+    std::vector<Line> stretchedLines;
+    std::vector<Line> regionLines;
+};
+
+WRAP_UNIQUEPTR(RoutingRegions)
+RoutingRegionsPtr createConnectivityGraph(Placement& placement);
 
 /**
  * @brief The RegionMap class
@@ -156,7 +168,7 @@ public:
     RegionMap(const RoutingRegions& regions) {
         // Regions will be mapped to their lower-right corner in terms of indexing operations.
         // This is given the user of std::map::lower_bound to determine the map index
-        for (const auto& region : regions) {
+        for (const auto& region : regions.regions) {
             const auto& bottomRight = region->rect().bottomRight();
             regionMap[bottomRight.x()][bottomRight.y()] = region.get();
         }
@@ -185,7 +197,6 @@ public:
     std::map<int, std::map<int, RoutingRegion*>> regionMap;
 };
 
-#define WRAP_UNIQUEPTR(type) using type##Ptr = std::unique_ptr<type>;
 using Net = std::vector<std::unique_ptr<Route>>;
 WRAP_UNIQUEPTR(Net)
 using Netlist = std::vector<NetPtr>;
@@ -193,6 +204,13 @@ WRAP_UNIQUEPTR(Netlist)
 
 NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap);
 
+struct PRResult {
+    Placement placement;
+    RoutingRegionsPtr regions;
+    NetlistPtr netlist;
+};
+
+}  // namespace eda
 }  // namespace vsrtl
 
 bool operator<(const QPoint& lhs, const QPoint& rhs);

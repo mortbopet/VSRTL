@@ -1,6 +1,15 @@
 #include "vsrtl_routing.h"
 
+#include "vsrtl_gridcomponent.h"
+
 namespace vsrtl {
+namespace eda {
+
+QRect RoutingComponent::rect() const {
+    auto r = gridComponent->getCurrentComponentRect();
+    r.moveTo(pos);
+    return r;
+}
 
 NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
     auto netlist = std::make_unique<Netlist>();
@@ -44,15 +53,15 @@ NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
     return netlist;
 }
 
-RoutingRegions createConnectivityGraph(Placement& placement) {
+RoutingRegionsPtr createConnectivityGraph(Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
     std::vector<QRect> rects;
     std::transform(placement.components.begin(), placement.components.end(), std::back_inserter(rects),
                    [](const auto& c) { return c->rect(); });
     Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(rects)));
-    // Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
+    Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
 
-    std::vector<std::unique_ptr<RoutingRegion>> regions;
+    RoutingRegionsPtr regions = std::make_unique<RoutingRegions>();
     const auto& chipRect = placement.chipRect;
 
     QList<Line> hz_bounding_lines, vt_bounding_lines, hz_region_lines, vt_region_lines;
@@ -70,7 +79,10 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
     // Extrude horizontal lines
     for (const auto& h_line : hz_bounding_lines) {
         // Stretch line to chip boundary
-        Line stretchedLine = Line({chipRect.left(), h_line.p1().y()}, {chipRect.width(), h_line.p1().y()});
+        Line stretchedLine = Line({chipRect.left(), h_line.p1().y()}, {chipRect.right() + 1, h_line.p1().y()});
+
+        // Record the stretched line for debugging
+        regions->stretchedLines.push_back(stretchedLine);
 
         // Narrow line until no boundaries are met
         for (const auto& v_line : vt_bounding_lines) {
@@ -94,7 +106,10 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
     // Extrude vertical lines
     for (const auto& line : vt_bounding_lines) {
         // Stretch line to chip boundary
-        Line stretchedLine = Line({line.p1().x(), chipRect.top()}, {line.p1().x(), chipRect.height()});
+        Line stretchedLine = Line({line.p1().x(), chipRect.top()}, {line.p1().x(), chipRect.bottom() + 1});
+
+        // Record the stretched line for debugging
+        regions->stretchedLines.push_back(stretchedLine);
 
         // Narrow line until no boundaries are met
         for (const auto& h_line : hz_bounding_lines) {
@@ -115,9 +130,13 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
             vt_region_lines << stretchedLine;
     }
 
-    // Add chip boundaries to region lines
+    // Add chip boundaries to region lines. The chiprect cannot use RoutingComponent::rect so we'll manually adjust the
+    // edge lines.
     hz_region_lines << getEdge(chipRect, Edge::Top) << getEdge(chipRect, Edge::Bottom);
     vt_region_lines << getEdge(chipRect, Edge::Left) << getEdge(chipRect, Edge::Right);
+
+    regions->regionLines.insert(regions->regionLines.end(), hz_region_lines.begin(), hz_region_lines.end());
+    regions->regionLines.insert(regions->regionLines.end(), vt_region_lines.begin(), vt_region_lines.end());
 
     // Sort bounding lines
     // Top to bottom
@@ -189,8 +208,6 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
                 regionTopLeft = QPoint(regionBottomLeft.x(), regionTop.y());
 
                 // Check whether the region is enclosing a component.
-                // Note: (1,1) is subtracted from the bottom right corner to transform the coordinates into the QRect
-                // expected format of the bottom-right corner
                 QRect newRegionRect = QRect(regionTopLeft, regionBottomRight);
 
                 // Check whether the new region is the same as one of the components
@@ -199,13 +216,14 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
                                      return newRegionRect == routingComponent->rect();
                                  }) == placement.components.end()) {
                     // New region was not a component, check if new region has already been added
-                    if (std::find_if(regions.begin(), regions.end(), [&newRegionRect](const auto& region) {
-                            return region.get()->rect() == newRegionRect;
-                        }) == regions.end())
+                    if (std::find_if(regions->regions.begin(), regions->regions.end(),
+                                     [&newRegionRect](const auto& region) {
+                                         return region.get()->rect() == newRegionRect;
+                                     }) == regions->regions.end())
 
                         // This is a new routing region
-                        regions.push_back(std::make_unique<RoutingRegion>(newRegionRect));
-                    RoutingRegion* newRegion = regions.rbegin()->get();
+                        regions->regions.push_back(std::make_unique<RoutingRegion>(newRegionRect));
+                    RoutingRegion* newRegion = regions->regions.rbegin()->get();
 
                     // Add region to regionGroups
                     regionGroups[newRegionRect.topLeft()].setRegion(Corner::BottomRight, newRegion);
@@ -226,14 +244,15 @@ RoutingRegions createConnectivityGraph(Placement& placement) {
     // ======================= Routing Region Association ======================= //
     for (auto& rc : placement.components) {
         // The algorithm have failed if regionGroups does not contain an entry for each corner of all routing components
-        Q_ASSERT(regionGroups.count(rc->rect().topLeft()));
-        Q_ASSERT(regionGroups.count(rc->rect().topRight()));
-        Q_ASSERT(regionGroups.count(rc->rect().bottomRight()));
-        Q_ASSERT(regionGroups.count(rc->rect().bottomLeft()));
-        rc->topRegion = regionGroups[rc->rect().topLeft()].topright;
-        rc->leftRegion = regionGroups[rc->rect().topLeft()].bottomleft;
-        rc->rightRegion = regionGroups[rc->rect().topRight()].bottomright;
-        rc->bottomRegion = regionGroups[rc->rect().bottomLeft()].bottomright;
+        const auto rect = rc->rect();
+        Q_ASSERT(regionGroups.count(rect.topLeft()));
+        Q_ASSERT(regionGroups.count(realTopRight(rect)));
+        Q_ASSERT(regionGroups.count(realBottomRight(rect)));
+        Q_ASSERT(regionGroups.count(realBottomLeft(rect)));
+        rc->topRegion = regionGroups[rect.topLeft()].topright;
+        rc->leftRegion = regionGroups[rect.topLeft()].bottomleft;
+        rc->rightRegion = regionGroups[realTopRight(rect)].bottomright;
+        rc->bottomRegion = regionGroups[realBottomLeft(rect)].bottomright;
     }
 
     return regions;
@@ -388,6 +407,7 @@ void RoutingRegion::assignRoutes() {
     }
 }
 
+}  // namespace eda
 }  // namespace vsrtl
 
 bool operator<(const QPoint& lhs, const QPoint& rhs) {

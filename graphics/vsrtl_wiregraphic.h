@@ -131,7 +131,6 @@ private:
 class WireGraphic : public QObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
     friend class PortGraphic;
-    friend class PlaceRoute;
 
 public:
     enum class MergeType { CannotMerge, MergeSinkWithSource, MergeSourceWithSink, MergeParallelSinks };
@@ -150,6 +149,9 @@ public:
     std::pair<WirePoint*, WireSegment*> createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment);
     const std::set<WireSegment*>& getWires() const { return m_wires; }
     void removeWirePoint(WirePoint* point);
+    WirePoint* createWirePoint();
+    void moveWirePoint(PortPoint* point, const QPointF scenePos);
+    WireSegment* createSegment(PortPoint* start, PortPoint* end);
 
     /**
      * @brief clearWirePoints
@@ -328,9 +330,6 @@ public:
 
 private:
     SimComponent* getParentComponent() const;
-    WirePoint* createWirePoint();
-    void moveWirePoint(PortPoint* point, const QPointF scenePos);
-    WireSegment* createSegment(PortPoint* start, PortPoint* end);
     void createRectilinearSegments(PortPoint* start, PortPoint* end);
 
     ComponentGraphic* m_parent = nullptr;

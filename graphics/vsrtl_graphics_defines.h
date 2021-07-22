@@ -1,8 +1,11 @@
 #ifndef VSRTL_GRAPHICS_DEFINES_H
 #define VSRTL_GRAPHICS_DEFINES_H
 
+#include <qmath.h>
 #include <QColor>
+#include <QLine>
 #include <QMetaType>
+#include <QRectF>
 
 #include "../interface/vsrtl_defines.h"
 
@@ -30,6 +33,30 @@ constexpr QColor BUTTON_COLLAPSE_COLOR = {0x6b, 0xc8, 0xff};
 constexpr QColor BUTTON_EXPAND_COLOR = {0x26, 0xa6, 0x5b};
 
 #define GRID_SIZE 14
+
+static inline qreal snapToGrid(qreal v) {
+    return round(v / GRID_SIZE) * GRID_SIZE;
+}
+
+static inline QRectF gridToScene(const QRect& gridRect) {
+    // Scales a rectangle in grid coordinates to scene coordinates
+    QRectF sceneGridRect;
+    sceneGridRect.setWidth(gridRect.width() * GRID_SIZE);
+    sceneGridRect.setHeight(gridRect.height() * GRID_SIZE);
+    return sceneGridRect;
+}
+
+static inline QPoint sceneToGrid(const QPointF& p) {
+    return (p / GRID_SIZE).toPoint();
+}
+
+static inline QPointF gridToScene(const QPoint& p) {
+    return p * GRID_SIZE;
+}
+
+inline QLineF gridToScene(const QLine& line) {
+    return QLineF(gridToScene(line.p1()), gridToScene(line.p2()));
+}
 
 #define TOP_MARGIN 10
 #define BOT_MARGIN TOP_MARGIN

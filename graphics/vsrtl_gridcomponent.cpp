@@ -116,7 +116,15 @@ bool GridComponent::move(const QPoint& pos) {
 
 void GridComponent::placeAndRouteSubcomponents() {
     m_isPlacing = true;
-    PlaceRoute::placeAndRoute(getGridSubcomponents());
+    m_prresult = eda::PlaceRoute::placeAndRoute(getGridSubcomponents());
+
+    // Move components to their final positions
+    for (const auto& p : m_prresult.placement.components) {
+        p->gridComponent->move(p->pos);
+    }
+    // Let parent graphical component create routes
+    applyRouteRes();
+
     m_isPlacing = false;
     updateSubcomponentBoundingRect();
 }

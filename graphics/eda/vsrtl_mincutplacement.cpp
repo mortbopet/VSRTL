@@ -3,6 +3,7 @@
 #include "vsrtl_routing.h"
 
 namespace vsrtl {
+namespace eda {
 
 template <typename V, typename T>
 struct BinTree {
@@ -199,4 +200,5 @@ Placement MinCutPlacement(const std::vector<GridComponent*>& components) {
     return placement;
 }
 
+}  // namespace eda
 }  // namespace vsrtl

@@ -9,6 +9,7 @@
 #include <QPoint>
 
 namespace vsrtl {
+namespace eda {
 
 namespace {
 template <typename K, typename V>
@@ -115,5 +116,5 @@ std::vector<T*> AStar(T* start, T* goal, F adjacentFunc, std::function<int(T*, T
     }
     Q_UNREACHABLE();
 }
-
+}  // namespace eda
 }  // namespace vsrtl

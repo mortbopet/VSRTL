@@ -8,6 +8,7 @@
 #include <vector>
 
 namespace vsrtl {
+namespace eda {
 
 namespace {
 template <typename T>
@@ -153,6 +154,7 @@ std::pair<std::set<T*>, std::set<T*>> KernighanLin(const std::set<T*>& graph, F&
     return {A, B};
 }
 
+}  // namespace eda
 }  // namespace vsrtl
 
 #endif  // KERNIGHANLIN_H

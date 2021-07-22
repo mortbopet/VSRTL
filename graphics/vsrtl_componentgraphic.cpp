@@ -115,6 +115,36 @@ void ComponentGraphic::initialize(bool doPlaceAndRoute) {
     }
 }
 
+void ComponentGraphic::applyRouteRes() {
+    if (auto* netlist = m_prresult.netlist.get()) {
+        for (const auto& net : *netlist) {
+            for (const auto& route : *net.get()) {
+                Q_ASSERT(route->start.port != nullptr && route->end.port != nullptr);
+                auto startPort = route->start.port->getGraphic<PortGraphic>();
+                auto endPort = route->end.port->getGraphic<PortGraphic>();
+
+                Q_ASSERT(startPort);
+                auto* wire = startPort->getOutputWire();
+                wire->clearWires();
+                Q_ASSERT(wire->getWires().size() == 0);
+                WireSegment* seg = wire->createSegment(startPort->getPortPoint(SimPort::PortType::out),
+                                                       endPort->getPortPoint(SimPort::PortType::in));
+
+                for (const auto& region : route->path) {
+                    auto path = region->getPath(route.get());
+                    const auto from = path.from();
+                    const auto to = path.to();
+                    auto [newPoint1, newSeg1] = wire->createWirePointOnSeg(gridToScene(from), seg);
+                    auto [newPoint2, newSeg2] = wire->createWirePointOnSeg(gridToScene(to), newSeg1);
+                    Q_UNUSED(newPoint1);
+                    Q_UNUSED(newPoint2);
+                    seg = newSeg2;
+                }
+            }
+        }
+    }
+}
+
 /**
  * @brief ComponentGraphic::createSubcomponents
  * In charge of hide()ing subcomponents if the parent component (this) is not expanded
@@ -582,11 +612,43 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
     paintOverlay(painter, option, w);
 
 #ifdef VSRTL_DEBUG_DRAW
+    // Bounding rect
     painter->save();
+    painter->setBrush(Qt::transparent);
     painter->setPen(Qt::green);
     painter->drawRect(sceneGridRect());
+    // DRAW_BOUNDING_RECT(painter)
+
+    if (hasSubcomponents() && isExpanded()) {
+        // chip rect - adjust for the fact that it is in the adjusted rect-style of the place and route logic.
+        painter->setPen(Qt::red);
+        // painter->drawRect(gridToScene(m_prresult.placement.chipRect));
+
+        // Draw routing regions
+        for (const auto& rr : m_prresult.regions->regions) {
+            QPen pen;
+            pen.setColor(QColor(rand() % 255, rand() % 255, rand() % 255));
+            pen.setStyle(Qt::DotLine);
+            painter->setPen(pen);
+            // Adjust for the "historical deviation" off-by-1 mess of QRect (see QRect docs)
+            auto sceneGridRect = gridToScene(rr.get()->rect().adjusted(0, 0, -1, -1));
+            sceneGridRect.moveTo(rr.get()->rect().topLeft() * GRID_SIZE);
+            painter->drawRect(sceneGridRect);
+        }
+        /*
+
+        // Draw stretched lines
+        for (const auto& l : m_prresult.regions->regionLines) {
+            QPen pen;
+            pen.setColor(QColor(rand() % 255, rand() % 255, rand() % 255));
+            pen.setStyle(Qt::DotLine);
+            painter->setPen(pen);
+            auto sceneLine = gridToScene(l.toQLine());
+            painter->drawLine(sceneLine);
+        }
+        */
+    }
     painter->restore();
-    DRAW_BOUNDING_RECT(painter)
 #endif
     painter->restore();
 }

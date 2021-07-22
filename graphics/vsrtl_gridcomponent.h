@@ -5,6 +5,7 @@
 #include <map>
 
 #include "../interface/vsrtl_interface.h"
+#include "eda/vsrtl_routing.h"
 #include "vsrtl_componentborder.h"
 #include "vsrtl_graphicsbaseitem.h"
 #include "vsrtl_shape.h"
@@ -15,6 +16,7 @@ class GridComponent : public QObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
 public:
     GridComponent(SimComponent* c, GridComponent* parent);
+    virtual ~GridComponent() = default;
 
     enum class RotationDirection { RightHand, LeftHand };
     /**
@@ -89,6 +91,13 @@ signals:
 
 protected:
     int m_gridRotation = 0;  // Rotation angle, in the range [0, 360[ in intervals of 90 deg.
+    eda::PRResult m_prresult;
+    /**
+     * @brief applyPlaceAndRouteRes
+     * Let the graphics component apply the result of routing, i.e., to create wires between ports. This is delegated to
+     * the graphics component, since WireGraphics care only about scene coordinates @todo: bad design
+     */
+    virtual void applyRouteRes() { assert(false); }
 
     SimComponent* m_component = nullptr;
     /**
