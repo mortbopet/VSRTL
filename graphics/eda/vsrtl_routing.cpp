@@ -5,6 +5,8 @@
 namespace vsrtl {
 namespace eda {
 
+int RoutingRegion::rr_ids = 0;
+
 QRect RoutingComponent::rect() const {
     auto r = gridComponent->getCurrentComponentRect();
     r.moveTo(pos);

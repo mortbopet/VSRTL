@@ -56,10 +56,11 @@ public:
         QPoint from() const;
         QPoint to() const;
     };
-    RoutingRegion(QRect rect) : r(rect), h_cap(rect.width()), v_cap(rect.height()) {}
+    RoutingRegion(const QRect& rect) : r(rect), h_cap(rect.width()), v_cap(rect.height()) { m_id = rr_ids++; }
 
     const QRect& rect() { return r; }
     const std::vector<RoutingRegion*> adjacentRegions();
+    int id() const { return m_id; }
     /**
      * @brief adjacentRegion
      * @param rr
@@ -86,6 +87,9 @@ public:
 private:
     std::vector<Route*> verticalRoutes, horizontalRoutes;
     std::map<Route*, RoutePath> assignedRoutes;
+    // A unique ID representing this routing region
+    int m_id;
+    static int rr_ids;
 
     // Adjacent region groups
     RoutingRegion* top = nullptr;
