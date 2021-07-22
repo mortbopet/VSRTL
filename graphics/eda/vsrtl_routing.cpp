@@ -23,8 +23,10 @@ NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
             source.port = outputPort;
             source.routingComponent = routingComponent;
 
-            // Get source port grid position
-            source.region = regionMap.lookup(routingComponent->gridComponent->getPortGridPos(outputPort), Edge::Right);
+            // Get source port grid position and adjust based on the placement of that component
+            const QPoint portPosLocal =
+                routingComponent->gridComponent->getPortGridPos(outputPort) + routingComponent->pos;
+            source.region = regionMap.lookup(portPosLocal, Edge::Right);
             Q_ASSERT(source.region != nullptr);
             for (const auto& sinkPort : outputPort->getOutputPorts()) {
                 NetNode sink;
@@ -43,9 +45,10 @@ NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
                 }
                 sink.routingComponent = *rc_i;
 
-                // Get sink port grid position
-                sink.region =
-                    regionMap.lookup(sink.routingComponent->gridComponent->getPortGridPos(sinkPort), Edge::Left);
+                // Get sink port grid position and adjust based on the placement of that component
+                sink.region = regionMap.lookup(
+                    sink.routingComponent->gridComponent->getPortGridPos(sinkPort) + sink.routingComponent->pos,
+                    Edge::Left);
                 Q_ASSERT(sink.region != nullptr);
                 net->push_back(std::make_unique<Route>(source, sink));
             }
