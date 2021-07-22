@@ -330,7 +330,6 @@ public:
 
 private:
     SimComponent* getParentComponent() const;
-    void createRectilinearSegments(PortPoint* start, PortPoint* end);
 
     ComponentGraphic* m_parent = nullptr;
     PortGraphic* m_fromPort = nullptr;
