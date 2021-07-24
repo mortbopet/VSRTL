@@ -56,10 +56,12 @@ public:
         QPoint from() const;
         QPoint to() const;
     };
-    RoutingRegion(const QRect& rect) : r(rect), h_cap(rect.width()), v_cap(rect.height()) { m_id = rr_ids++; }
+    RoutingRegion(const QRect& rect) : r(rect), h_cap(rect.width() - 1), v_cap(rect.height() - 1) { m_id = rr_ids++; }
 
-    const QRect& rect() { return r; }
+    const QRect& rect() const { return r; }
     const std::vector<RoutingRegion*> adjacentRegions();
+    int capacity(Direction dir) const;
+    int remainingCap(Direction dir) const;
     int id() const { return m_id; }
     /**
      * @brief adjacentRegion
@@ -152,16 +154,19 @@ struct Placement {
 };
 
 #define WRAP_UNIQUEPTR(type) using type##Ptr = std::unique_ptr<type>;
-struct RoutingRegions {
+class RoutingGraph {
+public:
     std::vector<std::unique_ptr<RoutingRegion>> regions;
+
+    void dumpDotFile(const QString& path = QString()) const;
 
     // For debugging
     std::vector<Line> stretchedLines;
     std::vector<Line> regionLines;
 };
 
-WRAP_UNIQUEPTR(RoutingRegions)
-RoutingRegionsPtr createConnectivityGraph(Placement& placement);
+WRAP_UNIQUEPTR(RoutingGraph)
+RoutingGraphPtr createConnectivityGraph(Placement& placement);
 
 /**
  * @brief The RegionMap class
@@ -169,7 +174,7 @@ RoutingRegionsPtr createConnectivityGraph(Placement& placement);
  */
 class RegionMap {
 public:
-    RegionMap(const RoutingRegions& regions) {
+    RegionMap(const RoutingGraph& regions) {
         // Regions will be mapped to their lower-right corner in terms of indexing operations.
         // This is given the user of std::map::lower_bound to determine the map index
         for (const auto& region : regions.regions) {
@@ -210,7 +215,7 @@ NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap);
 
 struct PRResult {
     Placement placement;
-    RoutingRegionsPtr regions;
+    RoutingGraphPtr regions;
     NetlistPtr netlist;
 };
 

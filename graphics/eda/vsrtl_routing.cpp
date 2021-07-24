@@ -1,5 +1,6 @@
 #include "vsrtl_routing.h"
 
+#include "vsrtl_dotfile.h"
 #include "vsrtl_gridcomponent.h"
 
 namespace vsrtl {
@@ -58,7 +59,30 @@ NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
     return netlist;
 }
 
-RoutingRegionsPtr createConnectivityGraph(Placement& placement) {
+void RoutingGraph::dumpDotFile(const QString& path) const {
+    const auto realPath = path.isEmpty() ? "routinggraph.dot" : path;
+
+    DotFile f(realPath.toStdString(), "RoutingGraph");
+    for (const auto& region : regions) {
+        const std::string rid = std::to_string(region.get()->id());
+        f.addVar(rid, rid);
+    }
+
+    for (const auto& region : regions) {
+        const std::string rid = std::to_string(region.get()->id());
+        for (const auto& adjRegion : region->adjacentRegions()) {
+            if (adjRegion == nullptr) {
+                continue;
+            }
+            const std::string adjrid = std::to_string(adjRegion->id());
+            f.addEdge(rid, adjrid);
+        }
+    }
+
+    f.dump();
+}
+
+RoutingGraphPtr createConnectivityGraph(Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
     std::vector<QRect> rects;
     std::transform(placement.components.begin(), placement.components.end(), std::back_inserter(rects),
@@ -66,7 +90,7 @@ RoutingRegionsPtr createConnectivityGraph(Placement& placement) {
     Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(rects)));
     Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
 
-    RoutingRegionsPtr regions = std::make_unique<RoutingRegions>();
+    RoutingGraphPtr regions = std::make_unique<RoutingGraph>();
     const auto& chipRect = placement.chipRect;
 
     QList<Line> hz_bounding_lines, vt_bounding_lines, hz_region_lines, vt_region_lines;
@@ -385,6 +409,22 @@ void RoutingRegion::registerRoute(Route* r, Direction d) {
         horizontalRoutes.push_back(r);
     } else {
         verticalRoutes.push_back(r);
+    }
+}
+
+int RoutingRegion::capacity(Direction dir) const {
+    if (dir == Direction::Horizontal) {
+        return h_cap;
+    } else {
+        return v_cap;
+    }
+}
+
+int RoutingRegion::remainingCap(Direction dir) const {
+    if (dir == Direction::Horizontal) {
+        return h_cap - horizontalRoutes.size();
+    } else {
+        return v_cap - verticalRoutes.size();
     }
 }
 

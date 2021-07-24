@@ -140,6 +140,18 @@ PlaceRoute::PlaceRoute() {
     m_placementAlgorithm = PlaceAlg::ASAP;
 }
 
+Direction directionBetweenRRs(const RoutingRegion* from, const RoutingRegion* to,
+                              Direction def = Direction::Horizontal) {
+    if (from == nullptr) {
+        return def;
+    } else {
+        bool valid = true;
+        Direction direction = edgeToDirection(from->adjacentRegion(to, valid));
+        Q_ASSERT(valid);
+        return direction;
+    }
+}
+
 PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
     // Placement
     Placement placement = get()->m_placementAlgorithms.at(get()->m_placementAlgorithm)(components);
@@ -159,8 +171,12 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
 
     // ======================= ROUTING ======================= //
     // Define a heuristic cost function for routing regions
-    const auto rrHeuristic = [](RoutingRegion* start, RoutingRegion* goal) {
+    const auto rrHeuristic = [](const RoutingRegion* start, const RoutingRegion* goal) {
         return (goal->rect().center() - start->rect().center()).manhattanLength();
+    };
+    const auto validity = [](const RoutingRegion* from, const RoutingRegion* to) {
+        const Direction direction = directionBetweenRRs(from, to);
+        return to->remainingCap(direction) > 0;
     };
     auto netlist = createNetlist(placement, regionMap);
 
@@ -174,7 +190,7 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
         // Find a route to each start-stop pair in the net
         for (auto& route : *net) {
             route->path = AStar<RoutingRegion>(route->start.region, route->end.region, &RoutingRegion::adjacentRegions,
-                                               rrHeuristic);
+                                               validity, rrHeuristic);
             // For each region that the route passes through, register the route and its direction within it
 
             RoutingRegion* preRegion = nullptr;
@@ -204,6 +220,10 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
     for (const auto& region : cGraph->regions) {
         region->assignRoutes();
     }
+
+#ifndef NDEBUG
+    cGraph->dumpDotFile();
+#endif
 
     PRResult result;
     result.placement = placement;

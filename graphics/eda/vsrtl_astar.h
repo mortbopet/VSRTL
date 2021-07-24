@@ -14,7 +14,7 @@ namespace eda {
 namespace {
 template <typename K, typename V>
 V getDef(const std::map<K, V>& m, const K& key, const V& defval) {
-    typename std::map<K, V>::const_iterator it = m.find(key);
+    decltype(m.find(key)) it = m.find(key);
     if (it == m.end()) {
         return defval;
     } else {
@@ -37,11 +37,19 @@ std::vector<T*> reconstructPath(std::map<T*, T*> cameFromMap, T* current) {
 
 /** Generic A Star shortest path implementation
  * T: Graph node type
- * adjacentFunc: T member function pointer type for retrieving the set of adjacent nodes to a given T node
- * costFunction: A function which given two T nodes will return the heuristic cost between the two nodes
+ * adjacentFunc:
+ *  T member function pointer type for retrieving the set of adjacent nodes to a given T node
+ * validityFunc:
+ *  A function which, given the current node and a prospective node, returns whether the prospective node
+ *  is valid to route through
+ * costFunction:
+ *  A function which given two T nodes will return the heuristic cost between the
+ * two nodes
  */
 template <typename T, typename F>
-std::vector<T*> AStar(T* start, T* goal, F adjacentFunc, std::function<int(T*, T*)> costFunction) {
+std::vector<T*> AStar(T* start, T* goal, F&& adjacentFunc,
+                      const std::function<bool(const T*, const T*)>& validityFunction,
+                      const std::function<int(const T*, const T*)>& costFunction) {
     // With reference to from https://en.wikipedia.org/wiki/A*_search_algorithm
     // Precondition: start- and stop regions must have their horizontal and vertical capacities pre-decremented for the
     // given number of terminals within them
@@ -93,6 +101,9 @@ std::vector<T*> AStar(T* start, T* goal, F adjacentFunc, std::function<int(T*, T
             if (neighbour == nullptr) {
                 continue;
             }
+            if (!validityFunction(current, neighbour)) {
+                continue;
+            }
             if (closedSet.count(neighbour) > 0) {
                 // Ignore the neighbor which is already evaluated.
                 continue;
@@ -114,7 +125,9 @@ std::vector<T*> AStar(T* start, T* goal, F adjacentFunc, std::function<int(T*, T
             fScore[neighbour] = getDef(gScore, neighbour, INT_MAX) + costFunction(neighbour, goal);
         }
     }
-    Q_UNREACHABLE();
+
+    // No path available
+    return {};
 }
 }  // namespace eda
 }  // namespace vsrtl
