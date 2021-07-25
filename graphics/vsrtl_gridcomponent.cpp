@@ -379,10 +379,10 @@ void GridComponent::spreadPortsOnSide(const Side& side) {
     const auto n_ports = biMapCopy.count();
     if (n_ports > 0) {
         int i = 0;
-        auto h = getCurrentComponentRect().height();
+        const double h = getCurrentComponentRect().height();
         const double diff = h / n_ports;
         for (const auto& portId : biMapCopy.portToId) {
-            const int gridIndex = static_cast<int>(std::ceil((i * diff + diff / 2)));
+            const int gridIndex = static_cast<int>(std::floor((i * diff + diff / 2)));
             const auto* port = portId.first;  // Store port pointer here; p reference may change during port moving
             const auto movedPorts = m_border->movePort(port, PortPos{side, gridIndex});
             for (const auto& p : movedPorts) {
