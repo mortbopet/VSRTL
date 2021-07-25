@@ -14,6 +14,7 @@
 
 namespace vsrtl {
 
+// Number of grid squares of a port
 constexpr int s_portGridWidth = 1;
 
 PortGraphic::PortGraphic(SimPort* port, vsrtl::SimPort::PortType type, QGraphicsItem* parent)
@@ -227,16 +228,20 @@ QRectF PortGraphic::boundingRect() const {
 QPointF PortGraphic::getInputPoint() const {
     switch (m_side) {
         case Side::Right: {
-            return QPointF(m_type == vsrtl::SimPort::PortType::in ? s_portGridWidth * GRID_SIZE : 0, 0);
+            return QPointF(m_type == vsrtl::SimPort::PortType::in ? s_portGridWidth * GRID_SIZE - GRID_SIZE_HALF : 0,
+                           0);
         }
         case Side::Left: {
-            return QPointF(m_type == vsrtl::SimPort::PortType::in ? -s_portGridWidth * GRID_SIZE : 0, 0);
+            return QPointF(m_type == vsrtl::SimPort::PortType::in ? -s_portGridWidth * GRID_SIZE + GRID_SIZE_HALF : 0,
+                           0);
         }
         case Side::Top: {
-            return QPointF(0, m_type == vsrtl::SimPort::PortType::in ? -s_portGridWidth * GRID_SIZE : 0);
+            return QPointF(0,
+                           m_type == vsrtl::SimPort::PortType::in ? -s_portGridWidth * GRID_SIZE + GRID_SIZE_HALF : 0);
         }
         case Side::Bottom: {
-            return QPointF(0, m_type == vsrtl::SimPort::PortType::in ? s_portGridWidth * GRID_SIZE : 0);
+            return QPointF(0,
+                           m_type == vsrtl::SimPort::PortType::in ? s_portGridWidth * GRID_SIZE - GRID_SIZE_HALF : 0);
         }
     }
     Q_UNREACHABLE();
@@ -245,16 +250,20 @@ QPointF PortGraphic::getInputPoint() const {
 QPointF PortGraphic::getOutputPoint() const {
     switch (m_side) {
         case Side::Right: {
-            return QPointF(m_type == vsrtl::SimPort::PortType::out ? s_portGridWidth * GRID_SIZE : 0, 0);
+            return QPointF(m_type == vsrtl::SimPort::PortType::out ? s_portGridWidth * GRID_SIZE - GRID_SIZE_HALF : 0,
+                           0);
         }
         case Side::Left: {
-            return QPointF(m_type == vsrtl::SimPort::PortType::out ? -s_portGridWidth * GRID_SIZE : 0, 0);
+            return QPointF(m_type == vsrtl::SimPort::PortType::out ? -s_portGridWidth * GRID_SIZE + GRID_SIZE_HALF : 0,
+                           0);
         }
         case Side::Top: {
-            return QPointF(0, m_type == vsrtl::SimPort::PortType::out ? -s_portGridWidth * GRID_SIZE : 0);
+            return QPointF(0,
+                           m_type == vsrtl::SimPort::PortType::out ? -s_portGridWidth * GRID_SIZE + GRID_SIZE_HALF : 0);
         }
         case Side::Bottom: {
-            return QPointF(0, m_type == vsrtl::SimPort::PortType::out ? s_portGridWidth * GRID_SIZE : 0);
+            return QPointF(0,
+                           m_type == vsrtl::SimPort::PortType::out ? s_portGridWidth * GRID_SIZE - GRID_SIZE_HALF : 0);
         }
     }
     Q_UNREACHABLE();
@@ -498,10 +507,6 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
     }
 
     painter->restore();
-
-#ifdef VSRTL_DEBUG_DRAW
-    DRAW_BOUNDING_RECT(painter)
-#endif
 }
 
 }  // namespace vsrtl

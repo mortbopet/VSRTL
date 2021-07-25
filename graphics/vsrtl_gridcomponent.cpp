@@ -294,13 +294,21 @@ std::vector<unsigned> GridComponent::getFreePortPositions(Side s) {
 
 bool GridComponent::adjustPort(SimPort* port, QPoint newPos) {
     const auto ccr = getCurrentComponentRect();
-    if ((newPos.x() <= 0 && newPos.y() <= 0) || (newPos.x() >= ccr.width() && newPos.y() >= ccr.height()) ||
-        (newPos.x() <= 0 && newPos.y() >= ccr.height()) || (newPos.x() >= ccr.width() && newPos.y() <= 0)) {
+
+    const bool inHz = -1 <= newPos.x() && newPos.x() <= ccr.width();
+    const bool inVt = -1 <= newPos.y() && newPos.y() <= ccr.height();
+    const bool inTopLeftCorner = newPos.x() == -1 && newPos.y() == -1;
+    const bool inTopRightCorner = newPos.x() == ccr.width() && newPos.y() == -1;
+    const bool inBotLeftCorner = newPos.x() == -1 && newPos.y() == ccr.height();
+    const bool inBotRightCorner = newPos.x() == ccr.width() && newPos.y() == ccr.height();
+    const bool valid = inHz && inVt && !(inTopLeftCorner || inTopRightCorner || inBotLeftCorner || inBotRightCorner);
+
+    if (!valid) {
         // Out of bounds
         return false;
     }
 
-    if ((newPos.x() > 0 && newPos.x() < ccr.width()) && (newPos.y() > 0 && newPos.y() < ccr.height())) {
+    if ((newPos.x() > -1 && newPos.x() < ccr.width()) && (newPos.y() > -1 && newPos.y() < ccr.height())) {
         // newPos is inside this component
         return false;
     }
@@ -308,19 +316,19 @@ bool GridComponent::adjustPort(SimPort* port, QPoint newPos) {
     PortPos newPortPos;
 
     // Snap port position to the border of the component
-    newPos.rx() = newPos.x() < 0 ? 0 : newPos.x();
-    newPos.rx() = newPos.x() > ccr.width() ? ccr.width() : newPos.x();
+    newPos.rx() = newPos.x() < 0 ? -1 : newPos.x();
+    newPos.rx() = newPos.x() >= ccr.width() ? ccr.width() : newPos.x();
 
-    newPos.ry() = newPos.y() < 0 ? 0 : newPos.y();
-    newPos.ry() = newPos.y() > ccr.height() ? ccr.height() : newPos.y();
+    newPos.ry() = newPos.y() < 0 ? -1 : newPos.y();
+    newPos.ry() = newPos.y() >= ccr.height() ? ccr.height() : newPos.y();
 
-    if (newPos.x() == 0) {
+    if (newPos.x() == -1) {
         newPortPos.side = Side::Left;
         newPortPos.index = newPos.y();
     } else if (newPos.x() == ccr.width()) {
         newPortPos.side = Side::Right;
         newPortPos.index = newPos.y();
-    } else if (newPos.y() == 0) {
+    } else if (newPos.y() == -1) {
         newPortPos.side = Side::Top;
         newPortPos.index = newPos.x();
     } else if (newPos.y() == ccr.height()) {

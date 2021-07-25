@@ -455,8 +455,7 @@ void ComponentGraphic::updateGeometry() {
 bool ComponentGraphic::handlePortGraphicMoveAttempt(const PortGraphic* port, const QPointF& newBorderPos) {
     // Port will report its new position in its portGraphic coordinates. Transfor to this (the port parent)
     // coordinate system and attempt to adjust port position.
-
-    const QPoint adjustedPos = sceneToGrid(mapFromItem(port, newBorderPos).toPoint());
+    const QPoint adjustedPos = sceneToHalfGrid(mapFromItem(port, newBorderPos).toPoint());
     return adjustPort(port->getPort(), adjustedPos);
 }
 
@@ -471,19 +470,19 @@ void ComponentGraphic::handlePortPosChanged(const SimPort* port) {
     g->setSide(pos.side);
     switch (pos.side) {
         case Side::Left: {
-            g->setPos(QPointF(sceneGridRect().left(), pos.index * GRID_SIZE));
+            g->setPos(QPointF(sceneGridRect().left(), pos.index * GRID_SIZE + (GRID_SIZE / 2)));
             break;
         }
         case Side::Right: {
-            g->setPos(QPointF(sceneGridRect().right(), pos.index * GRID_SIZE));
+            g->setPos(QPointF(sceneGridRect().right(), pos.index * GRID_SIZE + (GRID_SIZE / 2)));
             break;
         }
         case Side::Top: {
-            g->setPos(QPointF(pos.index * GRID_SIZE, sceneGridRect().top()));
+            g->setPos(QPointF(pos.index * GRID_SIZE + (GRID_SIZE / 2), sceneGridRect().top()));
             break;
         }
         case Side::Bottom: {
-            g->setPos(QPointF(pos.index * GRID_SIZE, sceneGridRect().bottom()));
+            g->setPos(QPointF(pos.index * GRID_SIZE + (GRID_SIZE / 2), sceneGridRect().bottom()));
             break;
         }
     }

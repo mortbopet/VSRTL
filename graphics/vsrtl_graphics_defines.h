@@ -33,6 +33,7 @@ constexpr QColor BUTTON_COLLAPSE_COLOR = {0x6b, 0xc8, 0xff};
 constexpr QColor BUTTON_EXPAND_COLOR = {0x26, 0xa6, 0x5b};
 
 #define GRID_SIZE 14
+#define GRID_SIZE_HALF (GRID_SIZE / 2)
 
 static inline qreal snapToGrid(qreal v) {
     return round(v / GRID_SIZE) * GRID_SIZE;
@@ -46,8 +47,14 @@ static inline QRectF gridToScene(const QRect& gridRect) {
     return sceneGridRect;
 }
 
+// Snaps to grid coordinates when the center of grid indices are reached
 static inline QPoint sceneToGrid(const QPointF& p) {
-    return (p / GRID_SIZE).toPoint();
+    return (p / static_cast<float>(GRID_SIZE)).toPoint();
+}
+
+// Like sceneToGrid but snaps to grid coordinates when the border between two grid indices is traversed
+static inline QPoint sceneToHalfGrid(const QPointF& p) {
+    return ((p - QPointF(GRID_SIZE_HALF, GRID_SIZE_HALF)) / static_cast<float>(GRID_SIZE)).toPoint();
 }
 
 static inline QPointF gridToScene(const QPoint& p) {
