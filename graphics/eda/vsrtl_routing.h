@@ -224,6 +224,7 @@ using Netlist = std::vector<NetPtr>;
 WRAP_UNIQUEPTR(Netlist)
 
 NetlistPtr createNetlist(Placement& placement, const TileMap& tileMap);
+Direction directionBetweenRRs(const RoutingTile* from, const RoutingTile* to, Direction def = Direction::Horizontal);
 
 struct PRResult {
     Placement placement;

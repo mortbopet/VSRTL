@@ -13,9 +13,10 @@ class GridComponent;
 namespace eda {
 
 enum class PlaceAlg { ASAP, Topological1D, MinCut };
-enum class RouteAlg { Direct };
+enum class RouteAlg { Direct, AStar };
 
 using PlacementFunct = std::function<Placement(const std::vector<GridComponent*>&)>;
+using RouteFunct = std::function<void(NetlistPtr&)>;
 
 /**
  * @brief The PlaceRoute class
@@ -39,9 +40,10 @@ private:
     PlaceRoute();
 
     std::map<PlaceAlg, PlacementFunct> m_placementAlgorithms;
+    std::map<RouteAlg, RouteFunct> m_routingAlgorithms;
 
     PlaceAlg m_placementAlgorithm = PlaceAlg::Topological1D;
-    RouteAlg m_routingAlgorithm = RouteAlg::Direct;
+    RouteAlg m_routingAlgorithm = RouteAlg::AStar;
 };
 
 }  // namespace eda

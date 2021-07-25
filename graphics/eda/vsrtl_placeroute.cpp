@@ -12,6 +12,9 @@
 #include "vsrtl_wiregraphic.h"
 
 #include "vsrtl_astar.h"
+
+// Routing/placement algorithms
+#include "vsrtl_astarrouter.cpp"
 #include "vsrtl_mincutplacement.cpp"
 
 namespace vsrtl {
@@ -137,22 +140,14 @@ PlaceRoute::PlaceRoute() {
     m_placementAlgorithms[PlaceAlg::Topological1D] = &topologicalSortPlacement;
     m_placementAlgorithms[PlaceAlg::MinCut] = &MinCutPlacement;
 
-    m_placementAlgorithm = PlaceAlg::ASAP;
-}
+    m_routingAlgorithms[RouteAlg::AStar] = &AStarRouter;
 
-Direction directionBetweenRRs(const RoutingTile* from, const RoutingTile* to, Direction def = Direction::Horizontal) {
-    if (from == nullptr) {
-        return def;
-    } else {
-        bool valid = true;
-        Direction direction = edgeToDirection(from->adjacentRowCol(to, valid));
-        Q_ASSERT(valid);
-        return direction;
-    }
+    m_placementAlgorithm = PlaceAlg::ASAP;
+    m_routingAlgorithm = RouteAlg::AStar;
 }
 
 PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
-    // Placement
+    // ======================= PLACE ======================= //
     Placement placement = get()->m_placementAlgorithms.at(get()->m_placementAlgorithm)(components);
 
     // Connectivity graph: Transform current components into a placement format suitable for creating the connectivity
@@ -168,72 +163,12 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
     // Indexable tile map
     const auto tileMap = TileMap(*cGraph);
 
-    // ======================= ROUTING ======================= //
-    // Define a heuristic cost function for routing tiles
-    const auto rrHeuristic = [](const RoutingTile* start, const RoutingTile* goal) {
-        return (goal->rect().center() - start->rect().center()).manhattanLength();
-    };
-    const auto validity = [](const RoutingTile* from, const RoutingTile* to) {
-        const Direction direction = directionBetweenRRs(from, to);
-        return to->remainingCap(direction) > 0;
-    };
-    const auto adjacency = [](RoutingTile* from) {
-        /* in the AStar algorithm, we'll allow direct jumps to tiles in the same row and column as @p from. This lets
-         * the algorithm implicitly optimize for reducing manhatten distance by selecting long jumps with no direction
-         * changes */
-        const std::function<void(std::vector<RoutingTile*>&, RoutingTile*, Edge)> getAdjacentRec =
-            [&](std::vector<RoutingTile*>& tiles, RoutingTile* rt, Edge edge) {
-                if (rt) {
-                    tiles.push_back(rt);
-                    getAdjacentRec(tiles, rt->getAdjacentTile(edge), edge);
-                }
-            };
-
-        std::vector<RoutingTile*> rowColTiles;
-        for (auto dir : {Edge::Bottom, Edge::Top, Edge::Left, Edge::Right}) {
-            getAdjacentRec(rowColTiles, from->getAdjacentTile(dir), dir);
-        }
-        return rowColTiles;
-    };
-
+    // ======================= ROUTE ======================= //
     auto netlist = createNetlist(placement, tileMap);
+    get()->m_routingAlgorithms.at(get()->m_routingAlgorithm)(netlist);
 
-    // Route via. a* search between start- and stop nodes, using the available routing tiles
-    for (auto& net : *netlist) {
-        if (net->size() == 0) {
-            // Skip empty nets
-            continue;
-        }
-
-        // Find a route to each start-stop pair in the net
-        for (auto& route : *net) {
-            route->path = AStar<RoutingTile>(route->start.tile, route->end.tile, adjacency, validity, rrHeuristic);
-            // For each tile that the route passes through, register the route and its direction within it
-
-            RoutingTile* preTile = nullptr;
-            bool valid;
-            for (unsigned i = 0; i < route->path.size(); i++) {
-                const bool lastTile = i == (route->path.size() - 1);
-                RoutingTile* curTile = route->path.at(i);
-
-                if (preTile) {
-                    auto edge = preTile->adjacentRowCol(curTile, valid);
-                    Q_ASSERT(valid);
-                    preTile->registerRoute(route.get(), edgeToDirection(edge));
-                    if (lastTile) {
-                        curTile->registerRoute(route.get(), edgeToDirection(edge));
-                    }
-                } else if (lastTile) {
-                    // Directly abutting Tiles
-                    curTile->registerRoute(route.get(), Direction::Horizontal);
-                }
-                preTile = curTile;
-            }
-        }
-    }
-
-    // During findRoute, all routes have registered to their routing tiles. With knowledge of how many routes occupy
-    // each routing tile, a route is assigned a lane within the routing tile
+    // During the routing algorithm, all routes should have registered to their routing tiles. With knowledge of how
+    // many routes occupy each routing tile, a route is assigned a lane within the routing tile
     for (const auto& tile : cGraph->tiles) {
         tile->assignRoutes();
     }

@@ -541,6 +541,17 @@ void RoutingTile::assignRoutes() {
     }
 }
 
+Direction directionBetweenRRs(const RoutingTile* from, const RoutingTile* to, Direction def) {
+    if (from == nullptr) {
+        return def;
+    } else {
+        bool valid = true;
+        Direction direction = edgeToDirection(from->adjacentRowCol(to, valid));
+        Q_ASSERT(valid);
+        return direction;
+    }
+}
+
 }  // namespace eda
 }  // namespace vsrtl
 
