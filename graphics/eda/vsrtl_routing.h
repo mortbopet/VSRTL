@@ -70,6 +70,15 @@ public:
      * @return the edge which @p rr abutts to this tile. If not abutting, @p valid is set to false.
      */
     Edge adjacentTile(const RoutingTile* rr, bool& valid) const;
+    /**
+     * @brief adjacentRowCol
+     * like adjacentTile, but recursively checks all tiles in the row/column. If the target tile is found, returns the
+     * edge that was traversed to find it.
+     * @param is set to false if the target tile was not found in row/col.
+     */
+    Edge adjacentRowCol(const RoutingTile* rr, bool& valid) const;
+    RoutingTile* getAdjacentTile(Edge edge);
+    const RoutingTile* getAdjacentTile(Edge edge) const;
 
     void setTileAtEdge(Edge, RoutingTile*);
     void assignRoutes();
@@ -87,6 +96,7 @@ public:
     bool operator==(const RoutingTile& lhs) const;
 
 private:
+    bool adjacentRowColRec(const RoutingTile* rr, Edge dir) const;
     std::vector<Route*> verticalRoutes, horizontalRoutes;
     std::map<Route*, RoutePath> assignedRoutes;
     // A unique ID representing this routing tile

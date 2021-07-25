@@ -444,6 +444,51 @@ Edge RoutingTile::adjacentTile(const RoutingTile* rr, bool& valid) const {
     return Edge();
 }
 
+Edge RoutingTile::adjacentRowCol(const RoutingTile* rr, bool& valid) const {
+    Q_ASSERT(rr != this);
+    valid = true;
+    for (auto dir : {Edge::Bottom, Edge::Top, Edge::Left, Edge::Right}) {
+        if (auto adjTile = getAdjacentTile(dir)) {
+            if (adjTile->adjacentRowColRec(rr, dir)) {
+                return dir;
+            }
+        }
+    }
+
+    valid = false;
+    return {};
+}
+
+bool RoutingTile::adjacentRowColRec(const RoutingTile* rr, Edge dir) const {
+    if (this == rr) {
+        return true;
+    }
+    auto adjTile = getAdjacentTile(dir);
+    if (adjTile) {
+        return adjTile->adjacentRowColRec(rr, dir);
+    } else {
+        return false;
+    }
+}
+
+const RoutingTile* RoutingTile::getAdjacentTile(Edge edge) const {
+    switch (edge) {
+        case Edge::Top:
+            return top;
+        case Edge::Bottom:
+            return bottom;
+        case Edge::Left:
+            return left;
+        case Edge::Right:
+            return right;
+    }
+    return nullptr;
+}
+
+RoutingTile* RoutingTile::getAdjacentTile(Edge edge) {
+    return const_cast<RoutingTile*>(const_cast<const RoutingTile*>(this)->getAdjacentTile(edge));
+}
+
 void RoutingTile::registerRoute(Route* r, Direction d) {
     if (d == Direction::Horizontal) {
         horizontalRoutes.push_back(r);

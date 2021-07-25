@@ -145,7 +145,7 @@ Direction directionBetweenRRs(const RoutingTile* from, const RoutingTile* to, Di
         return def;
     } else {
         bool valid = true;
-        Direction direction = edgeToDirection(from->adjacentTile(to, valid));
+        Direction direction = edgeToDirection(from->adjacentRowCol(to, valid));
         Q_ASSERT(valid);
         return direction;
     }
@@ -177,7 +177,24 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
         const Direction direction = directionBetweenRRs(from, to);
         return to->remainingCap(direction) > 0;
     };
-    const auto adjacency = [](RoutingTile* from) { return from->adjacentTiles(); };
+    const auto adjacency = [](RoutingTile* from) {
+        /* in the AStar algorithm, we'll allow direct jumps to tiles in the same row and column as @p from. This lets
+         * the algorithm implicitly optimize for reducing manhatten distance by selecting long jumps with no direction
+         * changes */
+        const std::function<void(std::vector<RoutingTile*>&, RoutingTile*, Edge)> getAdjacentRec =
+            [&](std::vector<RoutingTile*>& tiles, RoutingTile* rt, Edge edge) {
+                if (rt) {
+                    tiles.push_back(rt);
+                    getAdjacentRec(tiles, rt->getAdjacentTile(edge), edge);
+                }
+            };
+
+        std::vector<RoutingTile*> rowColTiles;
+        for (auto dir : {Edge::Bottom, Edge::Top, Edge::Left, Edge::Right}) {
+            getAdjacentRec(rowColTiles, from->getAdjacentTile(dir), dir);
+        }
+        return rowColTiles;
+    };
 
     auto netlist = createNetlist(placement, tileMap);
 
@@ -200,7 +217,7 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
                 RoutingTile* curTile = route->path.at(i);
 
                 if (preTile) {
-                    auto edge = preTile->adjacentTile(curTile, valid);
+                    auto edge = preTile->adjacentRowCol(curTile, valid);
                     Q_ASSERT(valid);
                     preTile->registerRoute(route.get(), edgeToDirection(edge));
                     if (lastTile) {
