@@ -38,7 +38,7 @@ std::vector<T*> reconstructPath(std::map<T*, T*> cameFromMap, T* current) {
 /** Generic A Star shortest path implementation
  * T: Graph node type
  * adjacentFunc:
- *  T member function pointer type for retrieving the set of adjacent nodes to a given T node
+ *  T function for retrieving the set of adjacent nodes to a given node
  * validityFunc:
  *  A function which, given the current node and a prospective node, returns whether the prospective node
  *  is valid to route through
@@ -46,8 +46,9 @@ std::vector<T*> reconstructPath(std::map<T*, T*> cameFromMap, T* current) {
  *  A function which given two T nodes will return the heuristic cost between the
  * two nodes
  */
-template <typename T, typename F>
-std::vector<T*> AStar(T* start, T* goal, F&& adjacentFunc,
+
+template <typename T>
+std::vector<T*> AStar(T* start, T* goal, const std::function<std::vector<T*>(T*)>& adjacentFunc,
                       const std::function<bool(const T*, const T*)>& validityFunction,
                       const std::function<int(const T*, const T*)>& costFunction) {
     // With reference to from https://en.wikipedia.org/wiki/A*_search_algorithm
@@ -97,7 +98,7 @@ std::vector<T*> AStar(T* start, T* goal, F&& adjacentFunc,
         openSet.erase(current);
         closedSet.emplace(current);
 
-        for (const auto& neighbour : (current->*adjacentFunc)()) {
+        for (const auto& neighbour : adjacentFunc(current)) {
             if (neighbour == nullptr) {
                 continue;
             }

@@ -177,6 +177,8 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
         const Direction direction = directionBetweenRRs(from, to);
         return to->remainingCap(direction) > 0;
     };
+    const auto adjacency = [](RoutingTile* from) { return from->adjacentTiles(); };
+
     auto netlist = createNetlist(placement, tileMap);
 
     // Route via. a* search between start- and stop nodes, using the available routing tiles
@@ -188,8 +190,7 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
 
         // Find a route to each start-stop pair in the net
         for (auto& route : *net) {
-            route->path = AStar<RoutingTile>(route->start.tile, route->end.tile, &RoutingTile::adjacentTiles, validity,
-                                             rrHeuristic);
+            route->path = AStar<RoutingTile>(route->start.tile, route->end.tile, adjacency, validity, rrHeuristic);
             // For each tile that the route passes through, register the route and its direction within it
 
             RoutingTile* preTile = nullptr;
