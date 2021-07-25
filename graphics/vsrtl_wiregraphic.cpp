@@ -159,11 +159,9 @@ QVariant WirePoint::itemChange(GraphicsItemChange change, const QVariant& value)
         if (isLocked() && !m_parent->isSerializing())
             return pos();
 
-        // Snap to grid
-        QPointF newPos = value.toPointF();
-        qreal x = round(newPos.x() / GRID_SIZE) * GRID_SIZE;
-        qreal y = round(newPos.y() / GRID_SIZE) * GRID_SIZE;
-        return QPointF(x, y);
+        // Snap to center of grid squares
+        const QPointF newPos = value.toPointF();
+        return sceneToHalfGrid(newPos) * GRID_SIZE + QPointF{GRID_SIZE_HALF, GRID_SIZE_HALF};
     }
 
     return PortPoint::itemChange(change, value);
