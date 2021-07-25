@@ -618,7 +618,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         // painter->drawRect(gridToScene(m_prresult.placement.chipRect));
 
         // Draw routing regions
-        for (const auto& rr : m_prresult.regions->regions) {
+        for (const auto& rr : m_prresult.tiles->tiles) {
             QPen pen;
             pen.setColor(QColor(rand() % 255, rand() % 255, rand() % 255));
             pen.setStyle(Qt::DotLine);
@@ -627,7 +627,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             auto sceneGridRect = gridToScene(rr.get()->rect().adjusted(0, 0, -1, -1));
             sceneGridRect.moveTo(rr.get()->rect().topLeft() * GRID_SIZE);
             painter->drawRect(sceneGridRect);
-            painter->drawText(gridToScene(rr.get()->rect().topLeft()), QString::number(rr->id()));
+            // painter->drawText(gridToScene(rr.get()->rect().topLeft()), QString::number(rr->id()));
         }
         /*
 

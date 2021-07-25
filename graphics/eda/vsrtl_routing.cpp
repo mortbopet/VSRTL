@@ -6,7 +6,7 @@
 namespace vsrtl {
 namespace eda {
 
-int RoutingRegion::rr_ids = 0;
+int RoutingTile::rr_ids = 0;
 
 QRect RoutingComponent::rect() const {
     auto r = gridComponent->getCurrentComponentRect();
@@ -14,7 +14,7 @@ QRect RoutingComponent::rect() const {
     return r;
 }
 
-NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
+NetlistPtr createNetlist(Placement& placement, const TileMap& tileMap) {
     auto netlist = std::make_unique<Netlist>();
     for (const auto& routingComponent : placement.components) {
         for (const auto& outputPort : routingComponent->gridComponent->getComponent()->getOutputPorts()) {
@@ -27,8 +27,8 @@ NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
             // Get source port grid position and adjust based on the placement of that component
             const QPoint portPosLocal =
                 routingComponent->gridComponent->getPortGridPos(outputPort) + routingComponent->pos;
-            source.region = regionMap.lookup(portPosLocal, Edge::Right);
-            Q_ASSERT(source.region != nullptr);
+            source.tile = tileMap.lookup(portPosLocal, Edge::Right);
+            Q_ASSERT(source.tile != nullptr);
             for (const auto& sinkPort : outputPort->getOutputPorts()) {
                 NetNode sink;
                 sink.port = sinkPort;
@@ -47,10 +47,10 @@ NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap) {
                 sink.routingComponent = *rc_i;
 
                 // Get sink port grid position and adjust based on the placement of that component
-                sink.region = regionMap.lookup(
+                sink.tile = tileMap.lookup(
                     sink.routingComponent->gridComponent->getPortGridPos(sinkPort) + sink.routingComponent->pos,
                     Edge::Left);
-                Q_ASSERT(sink.region != nullptr);
+                Q_ASSERT(sink.tile != nullptr);
                 net->push_back(std::make_unique<Route>(source, sink));
             }
             netlist->push_back(std::move(net));
@@ -63,18 +63,18 @@ void RoutingGraph::dumpDotFile(const QString& path) const {
     const auto realPath = path.isEmpty() ? "routinggraph.dot" : path;
 
     DotFile f(realPath.toStdString(), "RoutingGraph");
-    for (const auto& region : regions) {
-        const std::string rid = std::to_string(region.get()->id());
+    for (const auto& tile : tiles) {
+        const std::string rid = std::to_string(tile.get()->id());
         f.addVar(rid, rid);
     }
 
-    for (const auto& region : regions) {
-        const std::string rid = std::to_string(region.get()->id());
-        for (const auto& adjRegion : region->adjacentRegions()) {
-            if (adjRegion == nullptr) {
+    for (const auto& tile : tiles) {
+        const std::string rid = std::to_string(tile.get()->id());
+        for (const auto& adjTile : tile->adjacentTiles()) {
+            if (adjTile == nullptr) {
                 continue;
             }
-            const std::string adjrid = std::to_string(adjRegion->id());
+            const std::string adjrid = std::to_string(adjTile->id());
             f.addEdge(rid, adjrid);
         }
     }
@@ -90,10 +90,10 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
     Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(rects)));
     Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
 
-    RoutingGraphPtr regions = std::make_unique<RoutingGraph>();
+    RoutingGraphPtr tiles = std::make_unique<RoutingGraph>();
     const auto& chipRect = placement.chipRect;
 
-    QList<Line> hz_bounding_lines, vt_bounding_lines, hz_region_lines, vt_region_lines;
+    QList<Line> hz_bounding_lines, vt_bounding_lines, hz_tile_lines, vt_tile_lines;
 
     // Get horizontal and vertical bounding rectangle lines for all components on chip
     for (const auto& r : placement.components) {
@@ -111,7 +111,7 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
         Line stretchedLine = Line({chipRect.left(), h_line.p1().y()}, {chipRect.right() + 1, h_line.p1().y()});
 
         // Record the stretched line for debugging
-        regions->stretchedLines.push_back(stretchedLine);
+        tiles->stretchedLines.push_back(stretchedLine);
 
         // Narrow line until no boundaries are met
         for (const auto& v_line : vt_bounding_lines) {
@@ -127,9 +127,9 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
             }
         }
 
-        // Add the stretched and now boundary analyzed line to the region lines
-        if (!hz_region_lines.contains(stretchedLine))
-            hz_region_lines << stretchedLine;
+        // Add the stretched and now boundary analyzed line to the tile lines
+        if (!hz_tile_lines.contains(stretchedLine))
+            hz_tile_lines << stretchedLine;
     }
 
     // Extrude vertical lines
@@ -138,7 +138,7 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
         Line stretchedLine = Line({line.p1().x(), chipRect.top()}, {line.p1().x(), chipRect.bottom() + 1});
 
         // Record the stretched line for debugging
-        regions->stretchedLines.push_back(stretchedLine);
+        tiles->stretchedLines.push_back(stretchedLine);
 
         // Narrow line until no boundaries are met
         for (const auto& h_line : hz_bounding_lines) {
@@ -154,193 +154,227 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
             }
         }
 
-        // Add the stretched and now boundary analyzed line to the vertical region lines
-        if (!vt_region_lines.contains(stretchedLine))
-            vt_region_lines << stretchedLine;
+        // Add the stretched and now boundary analyzed line to the vertical tile lines
+        if (!vt_tile_lines.contains(stretchedLine))
+            vt_tile_lines << stretchedLine;
     }
 
-    // Add chip boundaries to region lines. The chiprect cannot use RoutingComponent::rect so we'll manually adjust the
+    // Add chip boundaries to tile lines. The chiprect cannot use RoutingComponent::rect so we'll manually adjust the
     // edge lines.
-    hz_region_lines << getEdge(chipRect, Edge::Top) << getEdge(chipRect, Edge::Bottom);
-    vt_region_lines << getEdge(chipRect, Edge::Left) << getEdge(chipRect, Edge::Right);
+    hz_tile_lines << getEdge(chipRect, Edge::Top) << getEdge(chipRect, Edge::Bottom);
+    vt_tile_lines << getEdge(chipRect, Edge::Left) << getEdge(chipRect, Edge::Right);
 
-    regions->regionLines.insert(regions->regionLines.end(), hz_region_lines.begin(), hz_region_lines.end());
-    regions->regionLines.insert(regions->regionLines.end(), vt_region_lines.begin(), vt_region_lines.end());
+    tiles->tileLines.insert(tiles->tileLines.end(), hz_tile_lines.begin(), hz_tile_lines.end());
+    tiles->tileLines.insert(tiles->tileLines.end(), vt_tile_lines.begin(), vt_tile_lines.end());
 
     // Sort bounding lines
     // Top to bottom
-    std::sort(hz_region_lines.begin(), hz_region_lines.end(),
+    std::sort(hz_tile_lines.begin(), hz_tile_lines.end(),
               [](const auto& a, const auto& b) { return a.p1().y() < b.p1().y(); });
     // Left to right
-    std::sort(vt_region_lines.begin(), vt_region_lines.end(),
+    std::sort(vt_tile_lines.begin(), vt_tile_lines.end(),
               [](const auto& a, const auto& b) { return a.p1().x() < b.p1().x(); });
 
-    // ============ Routing region creation =================== //
+    // ============ Routing tile creation =================== //
 
-    // Maintain a map of regions around each intersecion point in the graph. This will aid in connecting the graph after
-    // the regions are found
-    std::map<QPoint, RegionGroup> regionGroups;
+    // Maintain a map of tiles around each intersecion point in the graph. This will aid in connecting the graph after
+    // the tiles are found
+    std::map<QPoint, TileGroup> tileGroups;
 
     // Bounding lines are no longer needed
     hz_bounding_lines.clear();
     vt_bounding_lines.clear();
 
-    // Find intersections between horizontal and vertical region lines, and create corresponding routing regions.
-    QPoint regionBottomLeft, regionBottomRight, regionTopLeft;
-    QPoint regionBottom, regionTop;
+    // Find intersections between horizontal and vertical tile lines, and create corresponding routing tiles.
+    QPoint tileBottomLeft, tileBottomRight, tileTopLeft;
+    QPoint tileBottom, tileTop;
     Line* topHzLine = nullptr;
-    for (int hi = 1; hi < hz_region_lines.size(); hi++) {
-        for (int vi = 1; vi < vt_region_lines.size(); vi++) {
-            const auto& vt_region_line = vt_region_lines[vi];
-            const auto& hz_region_line = hz_region_lines[hi];
-            if (hz_region_line.intersect(vt_region_line, regionBottom, IntersectType::OnEdge)) {
-                // Intersection found (bottom left or right point of region)
+    for (int hi = 1; hi < hz_tile_lines.size(); hi++) {
+        for (int vi = 1; vi < vt_tile_lines.size(); vi++) {
+            const auto& vt_tile_line = vt_tile_lines[vi];
+            const auto& hz_tile_line = hz_tile_lines[hi];
+            if (hz_tile_line.intersect(vt_tile_line, tileBottom, IntersectType::OnEdge)) {
+                // Intersection found (bottom left or right point of tile)
 
-                // 1. Locate the point above the current intersection point (top right of region)
+                // 1. Locate the point above the current intersection point (top right of tile)
                 for (int hi_rev = hi - 1; hi_rev >= 0; hi_rev--) {
-                    topHzLine = &hz_region_lines[hi_rev];
-                    if (topHzLine->intersect(vt_region_line, regionTop, IntersectType::OnEdge)) {
-                        // Intersection found (top left or right point of region)
+                    topHzLine = &hz_tile_lines[hi_rev];
+                    if (topHzLine->intersect(vt_tile_line, tileTop, IntersectType::OnEdge)) {
+                        // Intersection found (top left or right point of tile)
                         break;
                     }
                 }
                 // Determine whether bottom right or bottom left point was found
-                if (vt_region_line.p1().x() == hz_region_line.p1().x()) {
+                if (vt_tile_line.p1().x() == hz_tile_line.p1().x()) {
                     // Bottom left corner was found
-                    regionBottomLeft = regionBottom;
-                    // Locate bottom right of region
-                    for (int vi_rev = vi + 1; vi_rev < vt_region_lines.size(); vi_rev++) {
-                        if (hz_region_line.intersect(vt_region_lines[vi_rev], regionBottomRight,
-                                                     IntersectType::OnEdge)) {
+                    tileBottomLeft = tileBottom;
+                    // Locate bottom right of tile
+                    for (int vi_rev = vi + 1; vi_rev < vt_tile_lines.size(); vi_rev++) {
+                        if (hz_tile_line.intersect(vt_tile_lines[vi_rev], tileBottomRight, IntersectType::OnEdge)) {
                             break;
                         }
                     }
                 } else {
                     // Bottom right corner was found.
                     // Check whether topHzLine terminates in the topRightCorner - in this case, there can be no routing
-                    // region here (the region would pass into a component). No check is done for when the bottom left
+                    // tile here (the tile would pass into a component). No check is done for when the bottom left
                     // corner is found,given that the algorithm iterates from vertical lines, left to right.
-                    if (topHzLine->p1().x() == regionBottom.x()) {
+                    if (topHzLine->p1().x() == tileBottom.x()) {
                         continue;
                     }
-                    regionBottomRight = regionBottom;
-                    // Locate bottom left of region
+                    tileBottomRight = tileBottom;
+                    // Locate bottom left of tile
                     for (int vi_rev = vi - 1; vi_rev >= 0; vi_rev--) {
-                        if (hz_region_line.intersect(vt_region_lines[vi_rev], regionBottomLeft,
-                                                     IntersectType::OnEdge)) {
+                        if (hz_tile_line.intersect(vt_tile_lines[vi_rev], tileBottomLeft, IntersectType::OnEdge)) {
                             break;
                         }
                     }
                 }
 
                 // Set top left coordinate
-                regionTopLeft = QPoint(regionBottomLeft.x(), regionTop.y());
+                tileTopLeft = QPoint(tileBottomLeft.x(), tileTop.y());
 
-                // Check whether the region is enclosing a component.
-                QRect newRegionRect = QRect(regionTopLeft, regionBottomRight);
+                // Check whether the tile is enclosing a component.
+                QRect newTileRect = QRect(tileTopLeft, tileBottomRight);
 
-                // Check whether the new region encloses a component
-                const auto componentInRegionIt = std::find_if(placement.components.begin(), placement.components.end(),
-                                                              [&newRegionRect](const auto& routingComponent) {
-                                                                  QRect rrect = routingComponent->rect();
-                                                                  rrect.setBottomRight(realBottomRight(rrect));
-                                                                  return newRegionRect == rrect;
-                                                              });
+                // Check whether the new tile encloses a component
+                const auto componentInTileIt = std::find_if(placement.components.begin(), placement.components.end(),
+                                                            [&newTileRect](const auto& routingComponent) {
+                                                                QRect rrect = routingComponent->rect();
+                                                                rrect.setBottomRight(realBottomRight(rrect));
+                                                                return newTileRect == rrect;
+                                                            });
 
-                if (componentInRegionIt == placement.components.end()) {
-                    // New region was not a component, check if new region has already been added
-                    if (std::find_if(regions->regions.begin(), regions->regions.end(),
-                                     [&newRegionRect](const auto& region) {
-                                         return region.get()->rect() == newRegionRect;
-                                     }) == regions->regions.end())
+                if (componentInTileIt == placement.components.end()) {
+                    // New tile was not a component, check if new tile has already been added
+                    if (std::find_if(tiles->tiles.begin(), tiles->tiles.end(), [&newTileRect](const auto& tile) {
+                            return tile.get()->rect() == newTileRect;
+                        }) == tiles->tiles.end())
 
-                        // This is a new routing region
-                        regions->regions.push_back(std::make_unique<RoutingRegion>(newRegionRect));
-                    RoutingRegion* newRegion = regions->regions.rbegin()->get();
+                        // This is a new routing tile
+                        tiles->tiles.push_back(std::make_unique<RoutingTile>(newTileRect));
+                    RoutingTile* newtile = tiles->tiles.rbegin()->get();
 
-                    // Add region to regionGroups
-                    regionGroups[newRegionRect.topLeft()].setRegion(Corner::BottomRight, newRegion);
-                    regionGroups[newRegionRect.bottomLeft()].setRegion(Corner::TopRight, newRegion);
-                    regionGroups[newRegionRect.topRight()].setRegion(Corner::BottomLeft, newRegion);
-                    regionGroups[newRegionRect.bottomRight()].setRegion(Corner::TopLeft, newRegion);
+                    // Add tile to tileGroups
+                    tileGroups[newTileRect.topLeft()].setTile(Corner::BottomRight, newtile);
+                    tileGroups[newTileRect.bottomLeft()].setTile(Corner::TopRight, newtile);
+                    tileGroups[newTileRect.topRight()].setTile(Corner::BottomLeft, newtile);
+                    tileGroups[newTileRect.bottomRight()].setTile(Corner::TopLeft, newtile);
                 }
             }
         }
     }
 
     // =================== Connectivity graph connection ========================== //
-    for (auto& iter : regionGroups) {
-        RegionGroup& group = iter.second;
-        group.connectRegions();
+    for (auto& iter : tileGroups) {
+        TileGroup& group = iter.second;
+        group.connectTiles();
     }
 
-    // ======================= Routing Region Association ======================= //
+    // ======================= Routing Tile Association ======================= //
+    // Step 1: Associate with directly adjacent neighbours
     for (auto& rc : placement.components) {
-        // The algorithm have failed if regionGroups does not contain an entry for each corner of all routing components
+        // The algorithm have failed if tileGroups does not contain an entry for each corner of all routing components
         const auto rect = rc->rect();
-        Q_ASSERT(regionGroups.count(rect.topLeft()));
-        Q_ASSERT(regionGroups.count(realTopRight(rect)));
-        Q_ASSERT(regionGroups.count(realBottomRight(rect)));
-        Q_ASSERT(regionGroups.count(realBottomLeft(rect)));
-        rc->topRegion = regionGroups[rect.topLeft()].topright;
-        rc->leftRegion = regionGroups[rect.topLeft()].bottomleft;
-        rc->rightRegion = regionGroups[realTopRight(rect)].bottomright;
-        rc->bottomRegion = regionGroups[realBottomLeft(rect)].bottomright;
+        Q_ASSERT(tileGroups.count(rect.topLeft()));
+        Q_ASSERT(tileGroups.count(realTopRight(rect)));
+        Q_ASSERT(tileGroups.count(realBottomRight(rect)));
+        Q_ASSERT(tileGroups.count(realBottomLeft(rect)));
+        rc->topTile = tileGroups[rect.topLeft()].topright;
+        rc->leftTile = tileGroups[rect.topLeft()].bottomleft;
+        rc->rightTile = tileGroups[realTopRight(rect)].bottomright;
+        rc->bottomTile = tileGroups[realBottomLeft(rect)].bottomright;
     }
 
-    return regions;
+    /*
+    // Step 2: Associate with all regions in row/column
+    for (auto& rc : placement.components) {
+        // The algorithm have failed if tileGroups does not contain an entry for each corner of all routing components
+        RoutingComponent* rcptr = rc.get();
+        auto regionTraverseGen = [&](const std::function<const std::set<RoutingRegion*>&(RoutingRegion*)>&
+                                         regionGetter) {
+            std::function<void(std::set<RoutingRegion*>&, const std::set<RoutingRegion*>&)> recursiveTraverseRegions =
+                [&](std::set<RoutingRegion*>& base, const std::set<RoutingRegion*>& regions) {
+                    base.insert(regions.begin(), regions.end());
+                    for (const auto& r : regions) {
+                        recursiveTraverseRegions(base, regionGetter(r));
+                    }
+                };
+            return recursiveTraverseRegions;
+        };
+
+        regionTraverseGen([&](RoutingRegion* rr) { return rr-> })
+
+            do {
+            auto& regions = rcptr->topRegions;
+        }
+        while (regionPtr = regionPtr->topRegions)
+
+            const auto rect = rc->rect();
+        Q_ASSERT(tileGroups.count(rect.topLeft()));
+        Q_ASSERT(tileGroups.count(realTopRight(rect)));
+        Q_ASSERT(tileGroups.count(realBottomRight(rect)));
+        Q_ASSERT(tileGroups.count(realBottomLeft(rect)));
+        rc->topRegion = tileGroups[rect.topLeft()].topright;
+        rc->leftRegion = tileGroups[rect.topLeft()].bottomleft;
+        rc->rightRegion = tileGroups[realTopRight(rect)].bottomright;
+        rc->bottomRegion = tileGroups[realBottomLeft(rect)].bottomright;
+    }
+    */
+
+    return tiles;
 }
 
-void RegionGroup::setRegion(Corner c, RoutingRegion* region) {
+void TileGroup::setTile(Corner c, RoutingTile* tile) {
     switch (c) {
         case Corner::BottomLeft: {
-            bottomleft = region;
+            bottomleft = tile;
             return;
         }
         case Corner::BottomRight: {
-            bottomright = region;
+            bottomright = tile;
             return;
         }
         case Corner::TopLeft: {
-            topleft = region;
+            topleft = tile;
             return;
         }
         case Corner::TopRight: {
-            topright = region;
+            topright = tile;
             return;
         }
     }
 }
 
-RoutingRegion::RoutePath RoutingRegion::getPath(Route* route) const {
+RoutingTile::RoutePath RoutingTile::getPath(Route* route) const {
     auto it = assignedRoutes.find(route);
     Q_ASSERT(it != assignedRoutes.end());
     return it->second;
 }
 
-void RoutingRegion::setRegion(Edge e, RoutingRegion* region) {
+void RoutingTile::setTileAtEdge(Edge e, RoutingTile* tile) {
     switch (e) {
         case Edge::Top: {
-            top = region;
+            top = tile;
             return;
         }
         case Edge::Bottom: {
-            bottom = region;
+            bottom = tile;
             return;
         }
         case Edge::Left: {
-            left = region;
+            left = tile;
             return;
         }
         case Edge::Right: {
-            right = region;
+            right = tile;
             return;
         }
     }
 }
 
-QPoint RoutingRegion::RoutePath::from() const {
-    const auto r = region->rect();
+QPoint RoutingTile::RoutePath::from() const {
+    const auto r = tile->rect();
     /** @todo: direction needs to be changed to north/south/east/west, else this doesn't make sense*/
     QPoint p;
     switch (dir) {
@@ -362,8 +396,8 @@ QPoint RoutingRegion::RoutePath::from() const {
     return p;
 }
 
-QPoint RoutingRegion::RoutePath::to() const {
-    const auto r = region->rect();
+QPoint RoutingTile::RoutePath::to() const {
+    const auto r = tile->rect();
     /** @todo: direction needs to be changed to north/south/east/west, else this doesn't make sense*/
     QPoint p;
     switch (dir) {
@@ -385,11 +419,17 @@ QPoint RoutingRegion::RoutePath::to() const {
     return p;
 }
 
-const std::vector<RoutingRegion*> RoutingRegion::adjacentRegions() {
-    return {top, bottom, left, right};
+std::vector<RoutingTile*> RoutingTile::adjacentTiles() {
+    std::vector<RoutingTile*> tiles;
+    for (auto* t : {top, bottom, left, right}) {
+        if (t != nullptr) {
+            tiles.push_back(t);
+        }
+    }
+    return tiles;
 }
 
-Edge RoutingRegion::adjacentRegion(const RoutingRegion* rr, bool& valid) const {
+Edge RoutingTile::adjacentTile(const RoutingTile* rr, bool& valid) const {
     valid = true;
     if (rr == top) {
         return Edge::Top;
@@ -404,7 +444,7 @@ Edge RoutingRegion::adjacentRegion(const RoutingRegion* rr, bool& valid) const {
     return Edge();
 }
 
-void RoutingRegion::registerRoute(Route* r, Direction d) {
+void RoutingTile::registerRoute(Route* r, Direction d) {
     if (d == Direction::Horizontal) {
         horizontalRoutes.push_back(r);
     } else {
@@ -412,7 +452,7 @@ void RoutingRegion::registerRoute(Route* r, Direction d) {
     }
 }
 
-int RoutingRegion::capacity(Direction dir) const {
+int RoutingTile::capacity(Direction dir) const {
     if (dir == Direction::Horizontal) {
         return h_cap;
     } else {
@@ -420,7 +460,7 @@ int RoutingRegion::capacity(Direction dir) const {
     }
 }
 
-int RoutingRegion::remainingCap(Direction dir) const {
+int RoutingTile::remainingCap(Direction dir) const {
     if (dir == Direction::Horizontal) {
         return h_cap - horizontalRoutes.size();
     } else {
@@ -428,7 +468,7 @@ int RoutingRegion::remainingCap(Direction dir) const {
     }
 }
 
-bool RoutingRegion::operator==(const RoutingRegion& lhs) const {
+bool RoutingTile::operator==(const RoutingTile& lhs) const {
     if (!cmpRoutingRegPtr(top, lhs.top))
         return false;
     if (!cmpRoutingRegPtr(bottom, lhs.bottom))
@@ -441,7 +481,7 @@ bool RoutingRegion::operator==(const RoutingRegion& lhs) const {
     return r == lhs.r;
 }
 
-void RoutingRegion::assignRoutes() {
+void RoutingTile::assignRoutes() {
     const float hz_diff = static_cast<float>(h_cap) / (horizontalRoutes.size() + 1);
     const float vt_diff = static_cast<float>(v_cap) / (verticalRoutes.size() + 1);
     float hz_pos = hz_diff;

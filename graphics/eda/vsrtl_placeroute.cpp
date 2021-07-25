@@ -140,13 +140,12 @@ PlaceRoute::PlaceRoute() {
     m_placementAlgorithm = PlaceAlg::ASAP;
 }
 
-Direction directionBetweenRRs(const RoutingRegion* from, const RoutingRegion* to,
-                              Direction def = Direction::Horizontal) {
+Direction directionBetweenRRs(const RoutingTile* from, const RoutingTile* to, Direction def = Direction::Horizontal) {
     if (from == nullptr) {
         return def;
     } else {
         bool valid = true;
-        Direction direction = edgeToDirection(from->adjacentRegion(to, valid));
+        Direction direction = edgeToDirection(from->adjacentTile(to, valid));
         Q_ASSERT(valid);
         return direction;
     }
@@ -166,21 +165,21 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
     placement.chipRect.adjust(-hSpacing, -vSpacing, hSpacing, vSpacing);
     auto cGraph = createConnectivityGraph(placement);
 
-    // Indexable region map
-    const auto regionMap = RegionMap(*cGraph);
+    // Indexable tile map
+    const auto tileMap = TileMap(*cGraph);
 
     // ======================= ROUTING ======================= //
-    // Define a heuristic cost function for routing regions
-    const auto rrHeuristic = [](const RoutingRegion* start, const RoutingRegion* goal) {
+    // Define a heuristic cost function for routing tiles
+    const auto rrHeuristic = [](const RoutingTile* start, const RoutingTile* goal) {
         return (goal->rect().center() - start->rect().center()).manhattanLength();
     };
-    const auto validity = [](const RoutingRegion* from, const RoutingRegion* to) {
+    const auto validity = [](const RoutingTile* from, const RoutingTile* to) {
         const Direction direction = directionBetweenRRs(from, to);
         return to->remainingCap(direction) > 0;
     };
-    auto netlist = createNetlist(placement, regionMap);
+    auto netlist = createNetlist(placement, tileMap);
 
-    // Route via. a* search between start- and stop nodes, using the available routing regions
+    // Route via. a* search between start- and stop nodes, using the available routing tiles
     for (auto& net : *netlist) {
         if (net->size() == 0) {
             // Skip empty nets
@@ -189,36 +188,36 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
 
         // Find a route to each start-stop pair in the net
         for (auto& route : *net) {
-            route->path = AStar<RoutingRegion>(route->start.region, route->end.region, &RoutingRegion::adjacentRegions,
-                                               validity, rrHeuristic);
-            // For each region that the route passes through, register the route and its direction within it
+            route->path = AStar<RoutingTile>(route->start.tile, route->end.tile, &RoutingTile::adjacentTiles, validity,
+                                             rrHeuristic);
+            // For each tile that the route passes through, register the route and its direction within it
 
-            RoutingRegion* preRegion = nullptr;
+            RoutingTile* preTile = nullptr;
             bool valid;
             for (unsigned i = 0; i < route->path.size(); i++) {
-                const bool lastRegion = i == (route->path.size() - 1);
-                RoutingRegion* curRegion = route->path.at(i);
+                const bool lastTile = i == (route->path.size() - 1);
+                RoutingTile* curTile = route->path.at(i);
 
-                if (preRegion) {
-                    auto edge = preRegion->adjacentRegion(curRegion, valid);
+                if (preTile) {
+                    auto edge = preTile->adjacentTile(curTile, valid);
                     Q_ASSERT(valid);
-                    preRegion->registerRoute(route.get(), edgeToDirection(edge));
-                    if (lastRegion) {
-                        curRegion->registerRoute(route.get(), edgeToDirection(edge));
+                    preTile->registerRoute(route.get(), edgeToDirection(edge));
+                    if (lastTile) {
+                        curTile->registerRoute(route.get(), edgeToDirection(edge));
                     }
-                } else if (lastRegion) {
-                    // Directly abutting regions
-                    curRegion->registerRoute(route.get(), Direction::Horizontal);
+                } else if (lastTile) {
+                    // Directly abutting Tiles
+                    curTile->registerRoute(route.get(), Direction::Horizontal);
                 }
-                preRegion = curRegion;
+                preTile = curTile;
             }
         }
     }
 
-    // During findRoute, all routes have registered to their routing regions. With knowledge of how many routes occupy
-    // each routing region, a route is assigned a lane within the routing region
-    for (const auto& region : cGraph->regions) {
-        region->assignRoutes();
+    // During findRoute, all routes have registered to their routing tiles. With knowledge of how many routes occupy
+    // each routing tile, a route is assigned a lane within the routing tile
+    for (const auto& tile : cGraph->tiles) {
+        tile->assignRoutes();
     }
 
 #ifndef NDEBUG
@@ -227,7 +226,7 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
 
     PRResult result;
     result.placement = placement;
-    result.regions = std::move(cGraph);
+    result.tiles = std::move(cGraph);
     result.netlist = std::move(netlist);
     return result;
 }

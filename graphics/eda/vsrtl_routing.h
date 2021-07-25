@@ -3,6 +3,7 @@
 
 #include <QRect>
 #include <map>
+#include <set>
 #include <vector>
 
 #include "vsrtl_geometry.h"
@@ -16,7 +17,7 @@ class SimPort;
 
 namespace eda {
 
-class RoutingRegion;
+class RoutingTile;
 
 class RoutingComponent {
 public:
@@ -25,18 +26,17 @@ public:
     QPoint pos;
     QRect rect() const;
     /**
-     * @brief topRegion
-     * Routing regions on each face of this component
+     * Routing tileson each side of this component
      */
-    RoutingRegion* topRegion = nullptr;
-    RoutingRegion* leftRegion = nullptr;
-    RoutingRegion* rightRegion = nullptr;
-    RoutingRegion* bottomRegion = nullptr;
+    RoutingTile* topTile;
+    RoutingTile* leftTile;
+    RoutingTile* rightTile;
+    RoutingTile* bottomTile;
 };
 
 struct NetNode {
     std::shared_ptr<RoutingComponent> routingComponent;
-    RoutingRegion* region = nullptr;
+    RoutingTile* tile = nullptr;
     SimPort* port = nullptr;
 };
 
@@ -44,39 +44,39 @@ struct Route {
     Route(NetNode s, NetNode e) : start(s), end(e) {}
     NetNode start;
     NetNode end;
-    std::vector<RoutingRegion*> path;
+    std::vector<RoutingTile*> path;
 };
 
-class RoutingRegion {
+class RoutingTile {
 public:
     struct RoutePath {
-        RoutingRegion* region = nullptr;
+        RoutingTile* tile = nullptr;
         Direction dir;
         int idx;
         QPoint from() const;
         QPoint to() const;
     };
-    RoutingRegion(const QRect& rect) : r(rect), h_cap(rect.width() - 1), v_cap(rect.height() - 1) { m_id = rr_ids++; }
+    RoutingTile(const QRect& rect) : r(rect), h_cap(rect.width() - 1), v_cap(rect.height() - 1) { m_id = rr_ids++; }
 
     const QRect& rect() const { return r; }
-    const std::vector<RoutingRegion*> adjacentRegions();
+    std::vector<RoutingTile*> adjacentTiles();
     int capacity(Direction dir) const;
     int remainingCap(Direction dir) const;
     int id() const { return m_id; }
     /**
-     * @brief adjacentRegion
+     * @brief adjacentTile
      * @param rr
      * @param valid
-     * @return the edge which @p rr abutts to this routing region. If not abutting, @p valid is set to false.
+     * @return the edge which @p rr abutts to this tile. If not abutting, @p valid is set to false.
      */
-    Edge adjacentRegion(const RoutingRegion* rr, bool& valid) const;
+    Edge adjacentTile(const RoutingTile* rr, bool& valid) const;
 
-    void setRegion(Edge, RoutingRegion*);
+    void setTileAtEdge(Edge, RoutingTile*);
     void assignRoutes();
     RoutePath getPath(Route* route) const;
     void registerRoute(Route*, Direction);
 
-    static inline bool cmpRoutingRegPtr(RoutingRegion* a, RoutingRegion* b) {
+    static inline bool cmpRoutingRegPtr(RoutingTile* a, RoutingTile* b) {
         if ((a == nullptr && b != nullptr) || (b == nullptr && a != nullptr))
             return false;
         if (a == nullptr && b == nullptr)
@@ -84,62 +84,64 @@ public:
         return a->r == b->r;
     }
 
-    bool operator==(const RoutingRegion& lhs) const;
+    bool operator==(const RoutingTile& lhs) const;
 
 private:
     std::vector<Route*> verticalRoutes, horizontalRoutes;
     std::map<Route*, RoutePath> assignedRoutes;
-    // A unique ID representing this routing region
+    // A unique ID representing this routing tile
     int m_id;
     static int rr_ids;
 
-    // Adjacent region groups
-    RoutingRegion* top = nullptr;
-    RoutingRegion* bottom = nullptr;
-    RoutingRegion* left = nullptr;
-    RoutingRegion* right = nullptr;
+    /**
+     * Routing tiles on each row/column of this component
+     */
+    RoutingTile* top;
+    RoutingTile* left;
+    RoutingTile* right;
+    RoutingTile* bottom;
 
-    QRect r;    // Region size and position
-    int h_cap;  // Horizontal capacity of routing region
-    int v_cap;  // Vertical capacity of routing region
+    QRect r;    // tile size and position
+    int h_cap;  // Horizontal capacity of tile
+    int v_cap;  // Vertical capacity of tile
     int h_used = 0;
     int v_used = 0;
 };
 
 /**
- * @brief The RegionGroup class
- * A region group is the notion of the 4 regions surrounding a horizontal and vertical intersection between region group
+ * @brief The tileGroup class
+ * A tile group is the notion of the 4 tiles surrounding a horizontal and vertical intersection between tile group
  * boundaries.
- * When groups has been associated with all 4 corners, connectRegion() may be called to make the region groups at these
- * 4 corners aware of their adjacent region groups in respect to this point.
+ * When groups has been associated with all 4 corners, connecttile() may be called to make the tile groups at these
+ * 4 corners aware of their adjacent tile groups in respect to this point.
  */
-class RegionGroup {
+class TileGroup {
 public:
-    void connectRegions() {
+    void connectTiles() {
         if (topleft != nullptr) {
-            topleft->setRegion(Edge::Bottom, bottomleft);
-            topleft->setRegion(Edge::Right, topright);
+            topleft->setTileAtEdge(Edge::Bottom, bottomleft);
+            topleft->setTileAtEdge(Edge::Right, topright);
         }
 
         if (topright != nullptr) {
-            topright->setRegion(Edge::Left, topleft);
-            topright->setRegion(Edge::Bottom, bottomright);
+            topright->setTileAtEdge(Edge::Left, topleft);
+            topright->setTileAtEdge(Edge::Bottom, bottomright);
         }
         if (bottomleft != nullptr) {
-            bottomleft->setRegion(Edge::Top, topleft);
-            bottomleft->setRegion(Edge::Right, bottomright);
+            bottomleft->setTileAtEdge(Edge::Top, topleft);
+            bottomleft->setTileAtEdge(Edge::Right, bottomright);
         }
         if (bottomright != nullptr) {
-            bottomright->setRegion(Edge::Left, bottomleft);
-            bottomright->setRegion(Edge::Top, topright);
+            bottomright->setTileAtEdge(Edge::Left, bottomleft);
+            bottomright->setTileAtEdge(Edge::Top, topright);
         }
     }
-    void setRegion(Corner, RoutingRegion*);
+    void setTile(Corner, RoutingTile*);
 
-    RoutingRegion* topleft = nullptr;
-    RoutingRegion* topright = nullptr;
-    RoutingRegion* bottomleft = nullptr;
-    RoutingRegion* bottomright = nullptr;
+    RoutingTile* topleft = nullptr;
+    RoutingTile* topright = nullptr;
+    RoutingTile* bottomleft = nullptr;
+    RoutingTile* bottomright = nullptr;
 };
 
 struct Placement {
@@ -156,54 +158,54 @@ struct Placement {
 #define WRAP_UNIQUEPTR(type) using type##Ptr = std::unique_ptr<type>;
 class RoutingGraph {
 public:
-    std::vector<std::unique_ptr<RoutingRegion>> regions;
+    std::vector<std::unique_ptr<RoutingTile>> tiles;
 
     void dumpDotFile(const QString& path = QString()) const;
 
     // For debugging
     std::vector<Line> stretchedLines;
-    std::vector<Line> regionLines;
+    std::vector<Line> tileLines;
 };
 
 WRAP_UNIQUEPTR(RoutingGraph)
 RoutingGraphPtr createConnectivityGraph(Placement& placement);
 
 /**
- * @brief The RegionMap class
- * Data structure for retrieving the region group which envelops the provided index.
+ * @brief The tileMap class
+ * Data structure for retrieving the tile group which envelops the provided index.
  */
-class RegionMap {
+class TileMap {
 public:
-    RegionMap(const RoutingGraph& regions) {
-        // Regions will be mapped to their lower-right corner in terms of indexing operations.
+    TileMap(const RoutingGraph& tiles) {
+        // tiles will be mapped to their lower-right corner in terms of indexing operations.
         // This is given the user of std::map::lower_bound to determine the map index
-        for (const auto& region : regions.regions) {
-            const auto& bottomRight = region->rect().bottomRight();
-            regionMap[bottomRight.x()][bottomRight.y()] = region.get();
+        for (const auto& tile : tiles.tiles) {
+            const auto& bottomRight = tile->rect().bottomRight();
+            tileMap[bottomRight.x()][bottomRight.y()] = tile.get();
         }
     }
 
-    RoutingRegion* lookup(const QPoint& index, Edge tieBreakVt = Edge::Left, Edge tieBreakHz = Edge::Top) const {
+    RoutingTile* lookup(const QPoint& index, Edge tieBreakVt = Edge::Left, Edge tieBreakHz = Edge::Top) const {
         return lookup(index.x(), index.y(), tieBreakVt, tieBreakHz);
     }
 
-    RoutingRegion* lookup(int x, int y, Edge tieBreakVt = Edge::Left, Edge tieBreakHz = Edge::Top) const {
+    RoutingTile* lookup(int x, int y, Edge tieBreakVt = Edge::Left, Edge tieBreakHz = Edge::Top) const {
         Q_ASSERT(tieBreakHz == Edge::Top || tieBreakHz == Edge::Bottom);
         Q_ASSERT(tieBreakVt == Edge::Left || tieBreakVt == Edge::Right);
 
-        const auto& vertMap = regionMap.lower_bound(x + (tieBreakVt == Edge::Left ? 0 : 1));
-        if (vertMap != regionMap.end()) {
-            const auto& regionIt = vertMap->second.lower_bound(y + (tieBreakHz == Edge::Top ? 0 : 1));
-            if (regionIt != vertMap->second.end()) {
-                return regionIt->second;
+        const auto& vertMap = tileMap.lower_bound(x + (tieBreakVt == Edge::Left ? 0 : 1));
+        if (vertMap != tileMap.end()) {
+            const auto& tileIt = vertMap->second.lower_bound(y + (tieBreakHz == Edge::Top ? 0 : 1));
+            if (tileIt != vertMap->second.end()) {
+                return tileIt->second;
             }
         }
 
-        // Could not find a routing region corresponding to the index
+        // Could not find a routing tile corresponding to the index
         return nullptr;
     }
-    // Indexable region map : {x coord. : {y coord. : RoutingRegion}}
-    std::map<int, std::map<int, RoutingRegion*>> regionMap;
+    // Indexable tile map : {x coord. : {y coord. : Routingtile}}
+    std::map<int, std::map<int, RoutingTile*>> tileMap;
 };
 
 using Net = std::vector<std::unique_ptr<Route>>;
@@ -211,11 +213,11 @@ WRAP_UNIQUEPTR(Net)
 using Netlist = std::vector<NetPtr>;
 WRAP_UNIQUEPTR(Netlist)
 
-NetlistPtr createNetlist(Placement& placement, const RegionMap& regionMap);
+NetlistPtr createNetlist(Placement& placement, const TileMap& tileMap);
 
 struct PRResult {
     Placement placement;
-    RoutingGraphPtr regions;
+    RoutingGraphPtr tiles;
     NetlistPtr netlist;
 };
 
