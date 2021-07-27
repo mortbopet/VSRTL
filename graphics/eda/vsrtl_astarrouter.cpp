@@ -47,27 +47,6 @@ void AStarRouter(NetlistPtr& netlist) {
         // Find a route to each start-stop pair in the net
         for (auto& route : *net) {
             route->path = AStar<RoutingTile>(route->start.tile, route->end.tile, adjacency, validity, rrHeuristic);
-            // For each tile that the route passes through, register the route and its direction within it
-
-            RoutingTile* preTile = nullptr;
-            bool valid;
-            for (unsigned i = 0; i < route->path.size(); i++) {
-                const bool lastTile = i == (route->path.size() - 1);
-                RoutingTile* curTile = route->path.at(i);
-
-                if (preTile) {
-                    auto edge = preTile->adjacentRowCol(curTile, valid);
-                    Q_ASSERT(valid);
-                    preTile->registerRoute(route.get(), edgeToDirection(edge));
-                    if (lastTile) {
-                        curTile->registerRoute(route.get(), edgeToDirection(edge));
-                    }
-                } else if (lastTile) {
-                    // Directly abutting Tiles
-                    curTile->registerRoute(route.get(), Direction::Horizontal);
-                }
-                preTile = curTile;
-            }
         }
     }
 }

@@ -146,6 +146,64 @@ PlaceRoute::PlaceRoute() {
     m_routingAlgorithm = RouteAlg::AStar;
 }
 
+void registerRoutes(NetlistPtr& netlist) {
+    // For each tile that the route passes through, register the route and its direction within it
+    for (auto& net : *netlist) {
+        if (net->size() == 0) {
+            // Skip empty nets
+            continue;
+        }
+
+        for (auto& route : *net) {
+            RoutingTile* preTile = nullptr;
+            bool valid;
+            for (unsigned i = 0; i < route->path.size(); i++) {
+                const bool lastTile = i == (route->path.size() - 1);
+                RoutingTile* curTile = route->path.at(i);
+
+                if (i == 0) {
+                    // first tile
+                }
+
+                if (preTile) {
+                    auto edge = preTile->adjacentRowCol(curTile, valid);
+                    const Direction dir = edgeToDirection(edge);
+                    preTile->registerRoute(route.get(), dir);
+                    curTile->registerRoute(route.get(), dir);
+                }
+
+                if (i == (route->path.size() - 1)) {
+                    // last tile
+                }
+
+                preTile = curTile;
+                /*
+                std::optional<Direction> preDir;
+                Direction currentDir;
+                const bool lastTile = i == (route->path.size() - 1);
+                RoutingTile* curTile = route->path.at(i);
+
+                if (preTile) {
+                    auto edge = preTile->adjacentRowCol(curTile, valid);
+                    Q_ASSERT(valid);
+                    currentDir = edgeToDirection(edge);
+                    preTile->registerRoute(route.get(), edgeToDirection(edge));
+                    if (lastTile) {
+                        curTile->registerRoute(route.get(), edgeToDirection(edge));
+                    }
+                }
+
+                if (lastTile) {
+                    // Directly abutting Tiles
+                    curTile->registerRoute(route.get(), Direction::Horizontal);
+                }
+                preTile = curTile;
+*/
+            }
+        }
+    }
+}
+
 PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
     // ======================= PLACE ======================= //
     Placement placement = get()->m_placementAlgorithms.at(get()->m_placementAlgorithm)(components);
@@ -166,6 +224,8 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
     // ======================= ROUTE ======================= //
     auto netlist = createNetlist(placement, tileMap);
     get()->m_routingAlgorithms.at(get()->m_routingAlgorithm)(netlist);
+
+    registerRoutes(netlist);
 
     // During the routing algorithm, all routes should have registered to their routing tiles. With knowledge of how
     // many routes occupy each routing tile, a route is assigned a lane within the routing tile
