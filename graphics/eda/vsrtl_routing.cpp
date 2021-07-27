@@ -313,8 +313,8 @@ void TileGroup::setTile(Corner c, RoutingTile* tile) {
 }
 
 RoutingTile::RoutePath RoutingTile::getPath(Route* route) const {
-    auto it = assignedRoutes.find(route);
-    Q_ASSERT(it != assignedRoutes.end());
+    auto it = m_assignedRoutes.find(route);
+    Q_ASSERT(it != m_assignedRoutes.end());
     return it->second;
 }
 
@@ -463,11 +463,22 @@ Tile* Tile::getAdjacentTile(Edge edge) {
     return const_cast<Tile*>(const_cast<const Tile*>(this)->getAdjacentTile(edge));
 }
 
+const std::set<Route*>& RoutingTile::routes(Direction dir) const {
+    switch (dir) {
+        case Direction::Horizontal:
+            return m_horizontalRoutes;
+        case Direction::Vertical:
+            return m_verticalRoutes;
+    }
+
+    Q_UNREACHABLE();
+}
+
 void RoutingTile::registerRoute(Route* r, Direction d) {
     if (d == Direction::Horizontal) {
-        horizontalRoutes.insert(r);
+        m_horizontalRoutes.insert(r);
     } else {
-        verticalRoutes.insert(r);
+        m_verticalRoutes.insert(r);
     }
 }
 
@@ -481,9 +492,9 @@ int RoutingTile::capacity(Direction dir) const {
 
 int RoutingTile::remainingCap(Direction dir) const {
     if (dir == Direction::Horizontal) {
-        return h_cap - horizontalRoutes.size();
+        return h_cap - m_horizontalRoutes.size();
     } else {
-        return v_cap - verticalRoutes.size();
+        return v_cap - m_verticalRoutes.size();
     }
 }
 
@@ -511,16 +522,16 @@ bool Tile::operator==(const Tile& lhs) const {
 }
 
 void RoutingTile::assignRoutes() {
-    const float hz_diff = static_cast<float>(h_cap) / (horizontalRoutes.size() + 1);
-    const float vt_diff = static_cast<float>(v_cap) / (verticalRoutes.size() + 1);
+    const float hz_diff = static_cast<float>(h_cap) / (m_horizontalRoutes.size() + 1);
+    const float vt_diff = static_cast<float>(v_cap) / (m_verticalRoutes.size() + 1);
     float hz_pos = hz_diff;
     float vt_pos = vt_diff;
-    for (const auto& route : horizontalRoutes) {
-        assignedRoutes[route] = {this, Direction::Horizontal, static_cast<int>(hz_pos)};
+    for (const auto& route : m_horizontalRoutes) {
+        m_assignedRoutes[route] = {this, Direction::Horizontal, static_cast<int>(hz_pos)};
         hz_pos += hz_diff;
     }
-    for (const auto& route : verticalRoutes) {
-        assignedRoutes[route] = {this, Direction::Vertical, static_cast<int>(vt_pos)};
+    for (const auto& route : m_verticalRoutes) {
+        m_assignedRoutes[route] = {this, Direction::Vertical, static_cast<int>(vt_pos)};
         vt_pos += vt_diff;
     }
 }

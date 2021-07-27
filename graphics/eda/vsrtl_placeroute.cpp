@@ -158,11 +158,13 @@ void registerRoutes(NetlistPtr& netlist) {
             RoutingTile* preTile = nullptr;
             bool valid;
             for (unsigned i = 0; i < route->path.size(); i++) {
-                const bool lastTile = i == (route->path.size() - 1);
                 RoutingTile* curTile = route->path.at(i);
 
                 if (i == 0) {
                     // first tile
+                    auto edge = route->start.routingComponent->adjacentRowCol(curTile, valid);
+                    const Direction dir = edgeToDirection(edge);
+                    curTile->registerRoute(route.get(), dir);
                 }
 
                 if (preTile) {
@@ -174,31 +176,12 @@ void registerRoutes(NetlistPtr& netlist) {
 
                 if (i == (route->path.size() - 1)) {
                     // last tile
+                    auto edge = curTile->adjacentRowCol(route->end.routingComponent.get(), valid);
+                    const Direction dir = edgeToDirection(edge);
+                    curTile->registerRoute(route.get(), dir);
                 }
 
                 preTile = curTile;
-                /*
-                std::optional<Direction> preDir;
-                Direction currentDir;
-                const bool lastTile = i == (route->path.size() - 1);
-                RoutingTile* curTile = route->path.at(i);
-
-                if (preTile) {
-                    auto edge = preTile->adjacentRowCol(curTile, valid);
-                    Q_ASSERT(valid);
-                    currentDir = edgeToDirection(edge);
-                    preTile->registerRoute(route.get(), edgeToDirection(edge));
-                    if (lastTile) {
-                        curTile->registerRoute(route.get(), edgeToDirection(edge));
-                    }
-                }
-
-                if (lastTile) {
-                    // Directly abutting Tiles
-                    curTile->registerRoute(route.get(), Direction::Horizontal);
-                }
-                preTile = curTile;
-*/
             }
         }
     }

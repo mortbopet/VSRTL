@@ -97,9 +97,11 @@ public:
     RoutePath getPath(Route* route) const;
     void registerRoute(Route*, Direction);
 
+    const std::set<Route*>& routes(Direction dir) const;
+
 private:
-    std::set<Route*> verticalRoutes, horizontalRoutes;
-    std::map<Route*, RoutePath> assignedRoutes;
+    std::set<Route*> m_verticalRoutes, m_horizontalRoutes;
+    std::map<Route*, RoutePath> m_assignedRoutes;
     // A unique ID representing this routing tile
     int m_id;
     static int rr_ids;
