@@ -24,13 +24,13 @@ std::vector<RoutingTile*> adjacency(RoutingTile* from) {
         [&](std::vector<RoutingTile*>& tiles, RoutingTile* rt, Edge edge) {
             if (rt) {
                 tiles.push_back(rt);
-                getAdjacentRec(tiles, rt->getAdjacentTile(edge), edge);
+                getAdjacentRec(tiles, dynamic_cast<RoutingTile*>(rt->getAdjacentTile(edge)), edge);
             }
         };
 
     std::vector<RoutingTile*> rowColTiles;
     for (auto dir : {Edge::Bottom, Edge::Top, Edge::Left, Edge::Right}) {
-        getAdjacentRec(rowColTiles, from->getAdjacentTile(dir), dir);
+        getAdjacentRec(rowColTiles, dynamic_cast<RoutingTile*>(from->getAdjacentTile(dir)), dir);
     }
     return rowColTiles;
 };

@@ -19,19 +19,50 @@ namespace eda {
 
 class RoutingTile;
 
-class RoutingComponent {
+class Tile {
+public:
+    /**
+     * @brief adjacentTile
+     * @param rr
+     * @param valid
+     * @return the edge which @p rr abutts to this tile. If not abutting, @p valid is set to false.
+     */
+    Edge adjacentTile(const Tile* rr, bool& valid) const;
+    /**
+     * @brief adjacentRowCol
+     * like adjacentTile, but recursively checks all tiles in the row/column. If the target tile is found, returns the
+     * edge that was traversed to find it.
+     * @param is set to false if the target tile was not found in row/col.
+     */
+    Edge adjacentRowCol(const Tile* rr, bool& valid) const;
+    Tile* getAdjacentTile(Edge edge);
+    const Tile* getAdjacentTile(Edge edge) const;
+    std::vector<Tile*> adjacentTiles();
+
+    void setTileAtEdge(Edge, Tile*);
+
+    bool operator==(const Tile& lhs) const;
+    virtual QRect rect() const = 0;
+
+protected:
+    /**
+     * Routing tiles on each row/column of this component
+     */
+    Tile* top;
+    Tile* left;
+    Tile* right;
+    Tile* bottom;
+
+private:
+    bool adjacentRowColRec(const Tile* rr, Edge dir) const;
+};
+
+class RoutingComponent : public Tile {
 public:
     RoutingComponent(GridComponent* c) : gridComponent(c) {}
     GridComponent* gridComponent;
     QPoint pos;
-    QRect rect() const;
-    /**
-     * Routing tileson each side of this component
-     */
-    RoutingTile* topTile;
-    RoutingTile* leftTile;
-    RoutingTile* rightTile;
-    RoutingTile* bottomTile;
+    QRect rect() const override;
 };
 
 struct NetNode {
@@ -47,7 +78,7 @@ struct Route {
     std::vector<RoutingTile*> path;
 };
 
-class RoutingTile {
+class RoutingTile : public Tile {
 public:
     struct RoutePath {
         RoutingTile* tile = nullptr;
@@ -58,58 +89,20 @@ public:
     };
     RoutingTile(const QRect& rect) : r(rect), h_cap(rect.width() - 1), v_cap(rect.height() - 1) { m_id = rr_ids++; }
 
-    const QRect& rect() const { return r; }
-    std::vector<RoutingTile*> adjacentTiles();
+    QRect rect() const override { return r; }
     int capacity(Direction dir) const;
     int remainingCap(Direction dir) const;
     int id() const { return m_id; }
-    /**
-     * @brief adjacentTile
-     * @param rr
-     * @param valid
-     * @return the edge which @p rr abutts to this tile. If not abutting, @p valid is set to false.
-     */
-    Edge adjacentTile(const RoutingTile* rr, bool& valid) const;
-    /**
-     * @brief adjacentRowCol
-     * like adjacentTile, but recursively checks all tiles in the row/column. If the target tile is found, returns the
-     * edge that was traversed to find it.
-     * @param is set to false if the target tile was not found in row/col.
-     */
-    Edge adjacentRowCol(const RoutingTile* rr, bool& valid) const;
-    RoutingTile* getAdjacentTile(Edge edge);
-    const RoutingTile* getAdjacentTile(Edge edge) const;
-
-    void setTileAtEdge(Edge, RoutingTile*);
     void assignRoutes();
     RoutePath getPath(Route* route) const;
     void registerRoute(Route*, Direction);
 
-    static inline bool cmpRoutingRegPtr(RoutingTile* a, RoutingTile* b) {
-        if ((a == nullptr && b != nullptr) || (b == nullptr && a != nullptr))
-            return false;
-        if (a == nullptr && b == nullptr)
-            return true;
-        return a->r == b->r;
-    }
-
-    bool operator==(const RoutingTile& lhs) const;
-
 private:
-    bool adjacentRowColRec(const RoutingTile* rr, Edge dir) const;
-    std::vector<Route*> verticalRoutes, horizontalRoutes;
+    std::set<Route*> verticalRoutes, horizontalRoutes;
     std::map<Route*, RoutePath> assignedRoutes;
     // A unique ID representing this routing tile
     int m_id;
     static int rr_ids;
-
-    /**
-     * Routing tiles on each row/column of this component
-     */
-    RoutingTile* top;
-    RoutingTile* left;
-    RoutingTile* right;
-    RoutingTile* bottom;
 
     QRect r;    // tile size and position
     int h_cap;  // Horizontal capacity of tile

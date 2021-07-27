@@ -74,8 +74,10 @@ void RoutingGraph::dumpDotFile(const QString& path) const {
             if (adjTile == nullptr) {
                 continue;
             }
-            const std::string adjrid = std::to_string(adjTile->id());
-            f.addEdge(rid, adjrid);
+            if (auto* rtile = dynamic_cast<RoutingTile*>(adjTile)) {
+                const std::string adjrid = std::to_string(rtile->id());
+                f.addEdge(rid, adjrid);
+            }
         }
     }
 
@@ -280,47 +282,11 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
         Q_ASSERT(tileGroups.count(realTopRight(rect)));
         Q_ASSERT(tileGroups.count(realBottomRight(rect)));
         Q_ASSERT(tileGroups.count(realBottomLeft(rect)));
-        rc->topTile = tileGroups[rect.topLeft()].topright;
-        rc->leftTile = tileGroups[rect.topLeft()].bottomleft;
-        rc->rightTile = tileGroups[realTopRight(rect)].bottomright;
-        rc->bottomTile = tileGroups[realBottomLeft(rect)].bottomright;
+        rc->setTileAtEdge(Edge::Top, tileGroups[rect.topLeft()].topright);
+        rc->setTileAtEdge(Edge::Left, tileGroups[rect.topLeft()].bottomleft);
+        rc->setTileAtEdge(Edge::Right, tileGroups[realTopRight(rect)].bottomright);
+        rc->setTileAtEdge(Edge::Bottom, tileGroups[realBottomLeft(rect)].bottomright);
     }
-
-    /*
-    // Step 2: Associate with all regions in row/column
-    for (auto& rc : placement.components) {
-        // The algorithm have failed if tileGroups does not contain an entry for each corner of all routing components
-        RoutingComponent* rcptr = rc.get();
-        auto regionTraverseGen = [&](const std::function<const std::set<RoutingRegion*>&(RoutingRegion*)>&
-                                         regionGetter) {
-            std::function<void(std::set<RoutingRegion*>&, const std::set<RoutingRegion*>&)> recursiveTraverseRegions =
-                [&](std::set<RoutingRegion*>& base, const std::set<RoutingRegion*>& regions) {
-                    base.insert(regions.begin(), regions.end());
-                    for (const auto& r : regions) {
-                        recursiveTraverseRegions(base, regionGetter(r));
-                    }
-                };
-            return recursiveTraverseRegions;
-        };
-
-        regionTraverseGen([&](RoutingRegion* rr) { return rr-> })
-
-            do {
-            auto& regions = rcptr->topRegions;
-        }
-        while (regionPtr = regionPtr->topRegions)
-
-            const auto rect = rc->rect();
-        Q_ASSERT(tileGroups.count(rect.topLeft()));
-        Q_ASSERT(tileGroups.count(realTopRight(rect)));
-        Q_ASSERT(tileGroups.count(realBottomRight(rect)));
-        Q_ASSERT(tileGroups.count(realBottomLeft(rect)));
-        rc->topRegion = tileGroups[rect.topLeft()].topright;
-        rc->leftRegion = tileGroups[rect.topLeft()].bottomleft;
-        rc->rightRegion = tileGroups[realTopRight(rect)].bottomright;
-        rc->bottomRegion = tileGroups[realBottomLeft(rect)].bottomright;
-    }
-    */
 
     return tiles;
 }
@@ -352,22 +318,30 @@ RoutingTile::RoutePath RoutingTile::getPath(Route* route) const {
     return it->second;
 }
 
-void RoutingTile::setTileAtEdge(Edge e, RoutingTile* tile) {
+void Tile::setTileAtEdge(Edge e, Tile* tile) {
     switch (e) {
         case Edge::Top: {
             top = tile;
+            if (tile)
+                tile->bottom = this;
             return;
         }
         case Edge::Bottom: {
             bottom = tile;
+            if (tile)
+                tile->top = this;
             return;
         }
         case Edge::Left: {
             left = tile;
+            if (tile)
+                tile->right = this;
             return;
         }
         case Edge::Right: {
             right = tile;
+            if (tile)
+                tile->left = this;
             return;
         }
     }
@@ -419,8 +393,8 @@ QPoint RoutingTile::RoutePath::to() const {
     return p;
 }
 
-std::vector<RoutingTile*> RoutingTile::adjacentTiles() {
-    std::vector<RoutingTile*> tiles;
+std::vector<Tile*> Tile::adjacentTiles() {
+    std::vector<Tile*> tiles;
     for (auto* t : {top, bottom, left, right}) {
         if (t != nullptr) {
             tiles.push_back(t);
@@ -429,7 +403,7 @@ std::vector<RoutingTile*> RoutingTile::adjacentTiles() {
     return tiles;
 }
 
-Edge RoutingTile::adjacentTile(const RoutingTile* rr, bool& valid) const {
+Edge Tile::adjacentTile(const Tile* rr, bool& valid) const {
     valid = true;
     if (rr == top) {
         return Edge::Top;
@@ -444,7 +418,7 @@ Edge RoutingTile::adjacentTile(const RoutingTile* rr, bool& valid) const {
     return Edge();
 }
 
-Edge RoutingTile::adjacentRowCol(const RoutingTile* rr, bool& valid) const {
+Edge Tile::adjacentRowCol(const Tile* rr, bool& valid) const {
     Q_ASSERT(rr != this);
     valid = true;
     for (auto dir : {Edge::Bottom, Edge::Top, Edge::Left, Edge::Right}) {
@@ -459,7 +433,7 @@ Edge RoutingTile::adjacentRowCol(const RoutingTile* rr, bool& valid) const {
     return {};
 }
 
-bool RoutingTile::adjacentRowColRec(const RoutingTile* rr, Edge dir) const {
+bool Tile::adjacentRowColRec(const Tile* rr, Edge dir) const {
     if (this == rr) {
         return true;
     }
@@ -471,7 +445,7 @@ bool RoutingTile::adjacentRowColRec(const RoutingTile* rr, Edge dir) const {
     }
 }
 
-const RoutingTile* RoutingTile::getAdjacentTile(Edge edge) const {
+const Tile* Tile::getAdjacentTile(Edge edge) const {
     switch (edge) {
         case Edge::Top:
             return top;
@@ -485,15 +459,15 @@ const RoutingTile* RoutingTile::getAdjacentTile(Edge edge) const {
     return nullptr;
 }
 
-RoutingTile* RoutingTile::getAdjacentTile(Edge edge) {
-    return const_cast<RoutingTile*>(const_cast<const RoutingTile*>(this)->getAdjacentTile(edge));
+Tile* Tile::getAdjacentTile(Edge edge) {
+    return const_cast<Tile*>(const_cast<const Tile*>(this)->getAdjacentTile(edge));
 }
 
 void RoutingTile::registerRoute(Route* r, Direction d) {
     if (d == Direction::Horizontal) {
-        horizontalRoutes.push_back(r);
+        horizontalRoutes.insert(r);
     } else {
-        verticalRoutes.push_back(r);
+        verticalRoutes.insert(r);
     }
 }
 
@@ -513,17 +487,27 @@ int RoutingTile::remainingCap(Direction dir) const {
     }
 }
 
-bool RoutingTile::operator==(const RoutingTile& lhs) const {
-    if (!cmpRoutingRegPtr(top, lhs.top))
+namespace {
+inline bool cmpTilePtr(Tile* a, Tile* b) {
+    if ((a == nullptr && b != nullptr) || (b == nullptr && a != nullptr))
         return false;
-    if (!cmpRoutingRegPtr(bottom, lhs.bottom))
+    if (a == nullptr && b == nullptr)
+        return true;
+    return a->rect() == b->rect();
+}
+}  // namespace
+
+bool Tile::operator==(const Tile& lhs) const {
+    if (!cmpTilePtr(top, lhs.top))
         return false;
-    if (!cmpRoutingRegPtr(left, lhs.left))
+    if (!cmpTilePtr(bottom, lhs.bottom))
         return false;
-    if (!cmpRoutingRegPtr(right, lhs.right))
+    if (!cmpTilePtr(left, lhs.left))
+        return false;
+    if (!cmpTilePtr(right, lhs.right))
         return false;
 
-    return r == lhs.r;
+    return rect() == lhs.rect();
 }
 
 void RoutingTile::assignRoutes() {
