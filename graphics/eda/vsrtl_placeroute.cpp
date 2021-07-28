@@ -162,22 +162,25 @@ void registerRoutes(NetlistPtr& netlist) {
 
                 if (i == 0) {
                     // first tile
-                    auto edge = route->start.routingComponent->adjacentRowCol(curTile, valid);
-                    const Direction dir = edgeToDirection(edge);
+                    auto edge = route->start.routingComponent->adjacentTile(curTile, valid);
+                    Q_ASSERT(valid);
+                    const Orientation dir = edgeToDirection(edge);
                     curTile->registerRoute(route.get(), dir);
                 }
 
                 if (preTile) {
-                    auto edge = preTile->adjacentRowCol(curTile, valid);
-                    const Direction dir = edgeToDirection(edge);
+                    auto edge = preTile->adjacentTile(curTile, valid);
+                    Q_ASSERT(valid);
+                    const Orientation dir = edgeToDirection(edge);
                     preTile->registerRoute(route.get(), dir);
                     curTile->registerRoute(route.get(), dir);
                 }
 
                 if (i == (route->path.size() - 1)) {
                     // last tile
-                    auto edge = curTile->adjacentRowCol(route->end.routingComponent.get(), valid);
-                    const Direction dir = edgeToDirection(edge);
+                    auto edge = curTile->adjacentTile(route->end.routingComponent.get(), valid);
+                    Q_ASSERT(valid);
+                    const Orientation dir = edgeToDirection(edge);
                     curTile->registerRoute(route.get(), dir);
                 }
 

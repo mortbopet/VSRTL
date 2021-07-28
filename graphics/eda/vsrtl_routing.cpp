@@ -24,10 +24,9 @@ NetlistPtr createNetlist(Placement& placement, const TileMap& tileMap) {
             source.port = outputPort;
             source.routingComponent = routingComponent;
 
-            // Get source port grid position and adjust based on the placement of that component
-            const QPoint portPosLocal =
-                routingComponent->gridComponent->getPortGridPos(outputPort) + routingComponent->pos;
-            source.tile = tileMap.lookup(portPosLocal, Edge::Right);
+            // Get source port routing tile
+            source.tile = dynamic_cast<RoutingTile*>(source.routingComponent->getAdjacentTile(
+                source.routingComponent->gridComponent->getPortPos(outputPort).side));
             Q_ASSERT(source.tile != nullptr);
             for (const auto& sinkPort : outputPort->getOutputPorts()) {
                 NetNode sink;
@@ -46,10 +45,9 @@ NetlistPtr createNetlist(Placement& placement, const TileMap& tileMap) {
                 }
                 sink.routingComponent = *rc_i;
 
-                // Get sink port grid position and adjust based on the placement of that component
-                sink.tile = tileMap.lookup(
-                    sink.routingComponent->gridComponent->getPortGridPos(sinkPort) + sink.routingComponent->pos,
-                    Edge::Left);
+                // Get sink port routing tile
+                sink.tile = dynamic_cast<RoutingTile*>(sink.routingComponent->getAdjacentTile(
+                    sink.routingComponent->gridComponent->getPortPos(sinkPort).side));
                 Q_ASSERT(sink.tile != nullptr);
                 net->push_back(std::make_unique<Route>(source, sink));
             }
@@ -99,8 +97,8 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
 
     // Get horizontal and vertical bounding rectangle lines for all components on chip
     for (const auto& r : placement.components) {
-        hz_bounding_lines << getEdge(r->rect(), Edge::Top) << getEdge(r->rect(), Edge::Bottom);
-        vt_bounding_lines << getEdge(r->rect(), Edge::Left) << getEdge(r->rect(), Edge::Right);
+        hz_bounding_lines << getEdge(r->rect(), Direction::North) << getEdge(r->rect(), Direction::South);
+        vt_bounding_lines << getEdge(r->rect(), Direction::West) << getEdge(r->rect(), Direction::East);
     }
 
     // ============== Component edge extrusion =================
@@ -163,8 +161,8 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
 
     // Add chip boundaries to tile lines. The chiprect cannot use RoutingComponent::rect so we'll manually adjust the
     // edge lines.
-    hz_tile_lines << getEdge(chipRect, Edge::Top) << getEdge(chipRect, Edge::Bottom);
-    vt_tile_lines << getEdge(chipRect, Edge::Left) << getEdge(chipRect, Edge::Right);
+    hz_tile_lines << getEdge(chipRect, Direction::North) << getEdge(chipRect, Direction::South);
+    vt_tile_lines << getEdge(chipRect, Direction::West) << getEdge(chipRect, Direction::East);
 
     tiles->tileLines.insert(tiles->tileLines.end(), hz_tile_lines.begin(), hz_tile_lines.end());
     tiles->tileLines.insert(tiles->tileLines.end(), vt_tile_lines.begin(), vt_tile_lines.end());
@@ -282,10 +280,10 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
         Q_ASSERT(tileGroups.count(realTopRight(rect)));
         Q_ASSERT(tileGroups.count(realBottomRight(rect)));
         Q_ASSERT(tileGroups.count(realBottomLeft(rect)));
-        rc->setTileAtEdge(Edge::Top, tileGroups[rect.topLeft()].topright);
-        rc->setTileAtEdge(Edge::Left, tileGroups[rect.topLeft()].bottomleft);
-        rc->setTileAtEdge(Edge::Right, tileGroups[realTopRight(rect)].bottomright);
-        rc->setTileAtEdge(Edge::Bottom, tileGroups[realBottomLeft(rect)].bottomright);
+        rc->setTileAtEdge(Direction::North, tileGroups[rect.topLeft()].topright);
+        rc->setTileAtEdge(Direction::West, tileGroups[rect.topLeft()].bottomleft);
+        rc->setTileAtEdge(Direction::East, tileGroups[realTopRight(rect)].bottomright);
+        rc->setTileAtEdge(Direction::South, tileGroups[realBottomLeft(rect)].bottomright);
     }
 
     return tiles;
@@ -318,27 +316,28 @@ RoutingTile::RoutePath RoutingTile::getPath(Route* route) const {
     return it->second;
 }
 
-void Tile::setTileAtEdge(Edge e, Tile* tile) {
+void Tile::setTileAtEdge(Direction e, Tile* tile) {
+    Q_ASSERT(tile != this);
     switch (e) {
-        case Edge::Top: {
+        case Direction::North: {
             top = tile;
             if (tile)
                 tile->bottom = this;
             return;
         }
-        case Edge::Bottom: {
+        case Direction::South: {
             bottom = tile;
             if (tile)
                 tile->top = this;
             return;
         }
-        case Edge::Left: {
+        case Direction::West: {
             left = tile;
             if (tile)
                 tile->right = this;
             return;
         }
-        case Edge::Right: {
+        case Direction::East: {
             right = tile;
             if (tile)
                 tile->left = this;
@@ -352,10 +351,10 @@ QPoint RoutingTile::RoutePath::from() const {
     /** @todo: direction needs to be changed to north/south/east/west, else this doesn't make sense*/
     QPoint p;
     switch (dir) {
-        case Direction::Horizontal:
+        case Orientation::Horizontal:
             p = r.topLeft() + QPoint{0, idx};
             break;
-        case Direction::Vertical:
+        case Orientation::Vertical:
             p = r.topLeft() + QPoint{idx, 0};
             break;
             /*
@@ -375,10 +374,10 @@ QPoint RoutingTile::RoutePath::to() const {
     /** @todo: direction needs to be changed to north/south/east/west, else this doesn't make sense*/
     QPoint p;
     switch (dir) {
-        case Direction::Horizontal:
+        case Orientation::Horizontal:
             p = r.topRight() + QPoint{0, idx};
             break;
-        case Direction::Vertical:
+        case Orientation::Vertical:
             p = r.bottomLeft() + QPoint{idx, 0};
             break;
             /*
@@ -403,95 +402,133 @@ std::vector<Tile*> Tile::adjacentTiles() {
     return tiles;
 }
 
-Edge Tile::adjacentTile(const Tile* rr, bool& valid) const {
+Direction Tile::adjacentDir(const Tile* rr, bool& valid) const {
     valid = true;
-    if (rr == top) {
-        return Edge::Top;
-    } else if (rr == right) {
-        return Edge::Right;
-    } else if (rr == left) {
-        return Edge::Left;
-    } else if (rr == bottom) {
-        return Edge::Bottom;
+    const QRect r1 = this->rect();
+    const QRect r2 = rr->rect();
+    if (r1.y() < r2.y()) {
+        return Direction::South;
+    } else if (r1.y() > r2.y()) {
+        return Direction::North;
+    } else if (r1.x() < r2.x()) {
+        return Direction::East;
+    } else if (r1.x() > r2.x()) {
+        return Direction::West;
     }
-    valid = false;
-    return Edge();
-}
-
-Edge Tile::adjacentRowCol(const Tile* rr, bool& valid) const {
-    Q_ASSERT(rr != this);
-    valid = true;
-    for (auto dir : {Edge::Bottom, Edge::Top, Edge::Left, Edge::Right}) {
-        if (auto adjTile = getAdjacentTile(dir)) {
-            if (adjTile->adjacentRowColRec(rr, dir)) {
-                return dir;
-            }
-        }
-    }
-
     valid = false;
     return {};
 }
 
-bool Tile::adjacentRowColRec(const Tile* rr, Edge dir) const {
-    if (this == rr) {
-        return true;
+Direction Tile::adjacentTile(const Tile* rr, bool& valid) const {
+    valid = true;
+    if (rr == top) {
+        return Direction::North;
+    } else if (rr == right) {
+        return Direction::East;
+    } else if (rr == left) {
+        return Direction::West;
+    } else if (rr == bottom) {
+        return Direction::South;
     }
-    auto adjTile = getAdjacentTile(dir);
-    if (adjTile) {
-        return adjTile->adjacentRowColRec(rr, dir);
-    } else {
-        return false;
+    valid = false;
+    return Direction();
+}
+
+Direction Tile::adjacentRowCol(const Tile* otherTile, bool& valid) {
+    valid = false;
+    Direction retEdge;
+    RowColItFunc iterFunc = [&](Tile* /*origTile*/, Tile* itTile, Direction e) {
+        if (itTile == otherTile) {
+            // @param otherTile was found to be in the current row/column being iterated
+            retEdge = e;
+            valid = true;
+            return false;
+        } else {
+            // Continue iteration
+            return true;
+        }
+    };
+
+    iterateFromEdges(iterFunc, allDirections);
+    return retEdge;
+}
+
+void Tile::iterateFromEdge(const RowColItFunc& f, Direction edge) {
+    iterateFromEdges(f, {edge});
+}
+
+void Tile::iterateFromEdges(const RowColItFunc& f, const std::set<Direction>& edges) {
+    for (auto dir : edges) {
+        if (auto adjTile = getAdjacentTile(dir)) {
+            if (!adjTile->iterateEdgeRec(this, f, dir)) {
+                return;
+            }
+        }
     }
 }
 
-const Tile* Tile::getAdjacentTile(Edge edge) const {
+bool Tile::iterateEdgeRec(Tile* origTile, const RowColItFunc& f, Direction dir) {
+    if (f(origTile, this, dir)) {
+        auto adjTile = getAdjacentTile(dir);
+        if (adjTile) {
+            return adjTile->iterateEdgeRec(origTile, f, dir);
+        } else {
+            // No further tiles in the current direction, but we continue iteration in next row/col
+            return true;
+        }
+    }
+
+    // Do not continue iteration in next row/col
+    return false;
+}
+
+const Tile* Tile::getAdjacentTile(Direction edge) const {
     switch (edge) {
-        case Edge::Top:
+        case Direction::North:
             return top;
-        case Edge::Bottom:
+        case Direction::South:
             return bottom;
-        case Edge::Left:
+        case Direction::West:
             return left;
-        case Edge::Right:
+        case Direction::East:
             return right;
     }
     return nullptr;
 }
 
-Tile* Tile::getAdjacentTile(Edge edge) {
+Tile* Tile::getAdjacentTile(Direction edge) {
     return const_cast<Tile*>(const_cast<const Tile*>(this)->getAdjacentTile(edge));
 }
 
-const std::set<Route*>& RoutingTile::routes(Direction dir) const {
+const std::set<Route*>& RoutingTile::routes(Orientation dir) const {
     switch (dir) {
-        case Direction::Horizontal:
+        case Orientation::Horizontal:
             return m_horizontalRoutes;
-        case Direction::Vertical:
+        case Orientation::Vertical:
             return m_verticalRoutes;
     }
 
     Q_UNREACHABLE();
 }
 
-void RoutingTile::registerRoute(Route* r, Direction d) {
-    if (d == Direction::Horizontal) {
+void RoutingTile::registerRoute(Route* r, Orientation d) {
+    if (d == Orientation::Horizontal) {
         m_horizontalRoutes.insert(r);
     } else {
         m_verticalRoutes.insert(r);
     }
 }
 
-int RoutingTile::capacity(Direction dir) const {
-    if (dir == Direction::Horizontal) {
+int RoutingTile::capacity(Orientation dir) const {
+    if (dir == Orientation::Horizontal) {
         return h_cap;
     } else {
         return v_cap;
     }
 }
 
-int RoutingTile::remainingCap(Direction dir) const {
-    if (dir == Direction::Horizontal) {
+int RoutingTile::remainingCap(Orientation dir) const {
+    if (dir == Orientation::Horizontal) {
         return h_cap - m_horizontalRoutes.size();
     } else {
         return v_cap - m_verticalRoutes.size();
@@ -527,21 +564,21 @@ void RoutingTile::assignRoutes() {
     float hz_pos = hz_diff;
     float vt_pos = vt_diff;
     for (const auto& route : m_horizontalRoutes) {
-        m_assignedRoutes[route] = {this, Direction::Horizontal, static_cast<int>(hz_pos)};
+        m_assignedRoutes[route] = {this, Orientation::Horizontal, static_cast<int>(hz_pos)};
         hz_pos += hz_diff;
     }
     for (const auto& route : m_verticalRoutes) {
-        m_assignedRoutes[route] = {this, Direction::Vertical, static_cast<int>(vt_pos)};
+        m_assignedRoutes[route] = {this, Orientation::Vertical, static_cast<int>(vt_pos)};
         vt_pos += vt_diff;
     }
 }
 
-Direction directionBetweenRRs(const RoutingTile* from, const RoutingTile* to, Direction def) {
+Orientation directionBetweenRRs(RoutingTile* from, RoutingTile* to, Orientation def) {
     if (from == nullptr) {
         return def;
     } else {
         bool valid = true;
-        Direction direction = edgeToDirection(from->adjacentRowCol(to, valid));
+        Orientation direction = edgeToDirection(from->adjacentRowCol(to, valid));
         Q_ASSERT(valid);
         return direction;
     }

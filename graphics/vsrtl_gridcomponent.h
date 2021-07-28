@@ -58,7 +58,7 @@ public:
 
     PortPos getPortPos(const SimPort* port) const;
     QPoint getPortGridPos(const SimPort* port) const;
-    std::vector<unsigned> getFreePortPositions(Side s);
+    std::vector<unsigned> getFreePortPositions(Direction s);
 
     bool parentIsPlacing() const;
 
@@ -127,7 +127,7 @@ private:
      * @brief spreadPortsOnSide
      * Spread all ports currently located on @p side
      */
-    void spreadPortsOnSide(const Side& side);
+    void spreadPortsOnSide(const Direction& side);
 
     /**
      * @brief rotatePorts

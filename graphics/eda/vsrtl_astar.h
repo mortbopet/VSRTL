@@ -49,8 +49,8 @@ std::vector<T*> reconstructPath(std::map<T*, T*> cameFromMap, T* current) {
 
 template <typename T>
 std::vector<T*> AStar(T* start, T* goal, const std::function<std::vector<T*>(T*)>& adjacentFunc,
-                      const std::function<bool(const T*, const T*)>& validityFunction,
-                      const std::function<int(const T*, const T*)>& costFunction) {
+                      const std::function<bool(T*, T*)>& validityFunction,
+                      const std::function<int(T*, T*)>& costFunction) {
     // With reference to from https://en.wikipedia.org/wiki/A*_search_algorithm
     // Precondition: start- and stop regions must have their horizontal and vertical capacities pre-decremented for the
     // given number of terminals within them

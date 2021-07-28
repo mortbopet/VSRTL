@@ -212,14 +212,15 @@ QRect GridComponent::getContractedMinimumGridRect() const {
     // ports on that side
     QRect shapeMinRect = QRect(0, 0, 1, 1);
 
-    const unsigned maxVerticalPorts = m_border->sideToMap(Side::Left).count() > m_border->sideToMap(Side::Right).count()
-                                          ? m_border->sideToMap(Side::Left).count()
-                                          : m_border->sideToMap(Side::Right).count();
+    const unsigned maxVerticalPorts =
+        m_border->sideToMap(Direction::West).count() > m_border->sideToMap(Direction::East).count()
+            ? m_border->sideToMap(Direction::West).count()
+            : m_border->sideToMap(Direction::East).count();
 
     const unsigned maxHorizontalPorts =
-        m_border->sideToMap(Side::Top).count() > m_border->sideToMap(Side::Bottom).count()
-            ? m_border->sideToMap(Side::Top).count()
-            : m_border->sideToMap(Side::Bottom).count();
+        m_border->sideToMap(Direction::North).count() > m_border->sideToMap(Direction::South).count()
+            ? m_border->sideToMap(Direction::North).count()
+            : m_border->sideToMap(Direction::South).count();
 
     shapeMinRect.adjust(0, 0, maxHorizontalPorts, maxVerticalPorts);
 
@@ -246,7 +247,7 @@ void GridComponent::updateCurrentComponentRect(int dx, int dy) {
     // If dx !^ dy, the component is adjusted in only a single direction. As such, ports on the side in the given change
     // direction will not move logically, but must be adjusted in terms of where they are drawn.
     if ((dx == 0) ^ (dy == 0)) {
-        auto axisMovedPorts = dx == 0 ? m_border->sideToMap(Side::Bottom) : m_border->sideToMap(Side::Right);
+        auto axisMovedPorts = dx == 0 ? m_border->sideToMap(Direction::South) : m_border->sideToMap(Direction::East);
         for (const auto& p : axisMovedPorts.portToId) {
             emit portPosChanged(p.first);
         }
@@ -263,17 +264,17 @@ QPoint GridComponent::getPortGridPos(const SimPort* port) const {
     auto rect = getCurrentComponentRect();
     QPoint portPos = rect.topLeft();
     switch (portIdx.side) {
-        case Side::Top:
+        case Direction::North:
             portPos.rx() += portIdx.index;
             break;
-        case Side::Left:
+        case Direction::West:
             portPos.ry() += portIdx.index;
             break;
-        case Side::Right:
+        case Direction::East:
             portPos.rx() += rect.width();
             portPos.ry() += portIdx.index;
             break;
-        case Side::Bottom:
+        case Direction::South:
             portPos.ry() += rect.height();
             portPos.rx() += portIdx.index;
             break;
@@ -281,7 +282,7 @@ QPoint GridComponent::getPortGridPos(const SimPort* port) const {
     return portPos;
 }
 
-std::vector<unsigned> GridComponent::getFreePortPositions(Side s) {
+std::vector<unsigned> GridComponent::getFreePortPositions(Direction s) {
     std::vector<unsigned> freePos;
     const auto& usedIndexes = m_border->sideToMap(s).idToPort;
     for (int i = 0; i < getCurrentComponentRect().height(); i++) {
@@ -323,16 +324,16 @@ bool GridComponent::adjustPort(SimPort* port, QPoint newPos) {
     newPos.ry() = newPos.y() >= ccr.height() ? ccr.height() : newPos.y();
 
     if (newPos.x() == -1) {
-        newPortPos.side = Side::Left;
+        newPortPos.side = Direction::West;
         newPortPos.index = newPos.y();
     } else if (newPos.x() == ccr.width()) {
-        newPortPos.side = Side::Right;
+        newPortPos.side = Direction::East;
         newPortPos.index = newPos.y();
     } else if (newPos.y() == -1) {
-        newPortPos.side = Side::Top;
+        newPortPos.side = Direction::North;
         newPortPos.index = newPos.x();
     } else if (newPos.y() == ccr.height()) {
-        newPortPos.side = Side::Bottom;
+        newPortPos.side = Direction::South;
         newPortPos.index = newPos.x();
     } else {
         Q_ASSERT(false && "Error in snapping or out-of-bounds handling");
@@ -351,20 +352,20 @@ bool GridComponent::adjustPort(SimPort* port, QPoint newPos) {
 }
 
 void GridComponent::rotatePorts(const RotationDirection& dir) {
-    std::vector<std::pair<Side, ComponentBorder::PortIdBiMap>> oldPorts;
-    for (const auto& side : {Side::Left, Side::Right, Side::Top, Side::Bottom}) {
+    std::vector<std::pair<Direction, ComponentBorder::PortIdBiMap>> oldPorts;
+    for (const auto& side : {Direction::North, Direction::East, Direction::West, Direction::South}) {
         oldPorts.push_back({side, m_border->sideToMap(side)});
     }
 
     for (const auto& sidePorts : oldPorts) {
         for (const auto& port : sidePorts.second.portToId) {
-            Side newSide = Side();
+            Direction newSide = Direction();
             // clang-format off
             switch(sidePorts.first) {
-                case Side::Top:     newSide = dir == RotationDirection::RightHand ? Side::Right : Side::Left; break;
-                case Side::Left:    newSide = dir == RotationDirection::RightHand ? Side::Top : Side::Bottom; break;
-                case Side::Right:   newSide = dir == RotationDirection::RightHand ? Side::Bottom : Side::Top; break;
-                case Side::Bottom:  newSide = dir == RotationDirection::RightHand ? Side::Left : Side::Right; break;
+                case Direction::North:     newSide = dir == RotationDirection::RightHand ? Direction::East : Direction::West; break;
+                case Direction::West:    newSide = dir == RotationDirection::RightHand ? Direction::North : Direction::South; break;
+                case Direction::East:   newSide = dir == RotationDirection::RightHand ? Direction::South : Direction::North; break;
+                case Direction::South:  newSide = dir == RotationDirection::RightHand ? Direction::West : Direction::East; break;
             }
             // clang-format on
 
@@ -374,7 +375,7 @@ void GridComponent::rotatePorts(const RotationDirection& dir) {
     }
 }
 
-void GridComponent::spreadPortsOnSide(const Side& side) {
+void GridComponent::spreadPortsOnSide(const Direction& side) {
     auto biMapCopy = m_border->sideToMap(side);
     const auto n_ports = biMapCopy.count();
     if (n_ports > 0) {
@@ -394,14 +395,15 @@ void GridComponent::spreadPortsOnSide(const Side& side) {
 }
 
 void GridComponent::spreadPortsOrdered() {
-    for (const auto& side : {Side::Left, Side::Right, Side::Top, Side::Bottom}) {
+    for (const auto& side : {Direction::North, Direction::East, Direction::West, Direction::South}) {
         auto biMapCopy = m_border->sideToMap(side);
         const auto n_ports = biMapCopy.count();
         if (n_ports > 0) {
             int i = 0;
-            const double diff = ((side == Side::Left || side == Side::Right) ? getCurrentComponentRect().height()
-                                                                             : getCurrentComponentRect().width()) /
-                                n_ports;
+            const double diff =
+                ((side == Direction::West || side == Direction::East) ? getCurrentComponentRect().height()
+                                                                      : getCurrentComponentRect().width()) /
+                n_ports;
             for (const auto& idp : biMapCopy.idToPort) {
                 const int gridIndex = static_cast<int>(std::ceil((i * diff + diff / 2)));
                 const auto* port = idp.second;  // Store port pointer here; p reference may change during port moving
@@ -416,10 +418,10 @@ void GridComponent::spreadPortsOrdered() {
 }
 
 void GridComponent::spreadPorts() {
-    spreadPortsOnSide(Side::Left);
-    spreadPortsOnSide(Side::Right);
-    spreadPortsOnSide(Side::Top);
-    spreadPortsOnSide(Side::Bottom);
+    spreadPortsOnSide(Direction::North);
+    spreadPortsOnSide(Direction::East);
+    spreadPortsOnSide(Direction::West);
+    spreadPortsOnSide(Direction::South);
 }
 
 }  // namespace vsrtl

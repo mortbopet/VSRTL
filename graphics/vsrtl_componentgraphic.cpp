@@ -469,19 +469,19 @@ void ComponentGraphic::handlePortPosChanged(const SimPort* port) {
 
     g->setSide(pos.side);
     switch (pos.side) {
-        case Side::Left: {
+        case Direction::West: {
             g->setPos(QPointF(sceneGridRect().left(), pos.index * GRID_SIZE + (GRID_SIZE / 2)));
             break;
         }
-        case Side::Right: {
+        case Direction::East: {
             g->setPos(QPointF(sceneGridRect().right(), pos.index * GRID_SIZE + (GRID_SIZE / 2)));
             break;
         }
-        case Side::Top: {
+        case Direction::North: {
             g->setPos(QPointF(pos.index * GRID_SIZE + (GRID_SIZE / 2), sceneGridRect().top()));
             break;
         }
-        case Side::Bottom: {
+        case Direction::South: {
             g->setPos(QPointF(pos.index * GRID_SIZE + (GRID_SIZE / 2), sceneGridRect().bottom()));
             break;
         }
@@ -627,7 +627,13 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
             auto sceneGridRect = gridToScene(rr.get()->rect().adjusted(0, 0, -1, -1));
             sceneGridRect.moveTo(rr.get()->rect().topLeft() * GRID_SIZE);
             painter->drawRect(sceneGridRect);
-            // painter->drawText(gridToScene(rr.get()->rect().topLeft()), QString::number(rr->id()));
+            auto f = painter->font();
+            f.setPointSize(7);
+            painter->setFont(f);
+            painter->drawText(gridToScene(rr.get()->rect().topLeft()),
+                              QString::number(rr->id()) +
+                                  " h: " + QString::number(rr->routes(Orientation::Horizontal).size()) +
+                                  " v: " + QString::number(rr->routes(Orientation::Vertical).size()));
         }
         /*
 
@@ -662,10 +668,10 @@ void ComponentGraphic::paintIndicator(QPainter* painter, PortGraphic* p, QColor 
     int startAngle = 0;
     // clang-format off
     switch(p->getSide()){
-        case Side::Top : startAngle = 0; break;
-        case Side::Bottom : startAngle = -180; break;
-        case Side::Left : startAngle = 90; break;
-        case Side::Right : startAngle = -90; break;
+        case Direction::North : startAngle = 0; break;
+        case Direction::South : startAngle = -180; break;
+        case Direction::West : startAngle = 90; break;
+        case Direction::East : startAngle = -90; break;
     }
     // clang-format on
 

@@ -82,8 +82,8 @@ public:
 
     const QPen& getPen();
 
-    void setSide(Side side);
-    Side getSide() const { return m_side; }
+    void setSide(Direction side);
+    Direction getSide() const { return m_side; }
 
     void modulePositionHasChanged() override;
 
@@ -150,7 +150,7 @@ private:
 
     std::unique_ptr<QPropertyAnimation> m_colorAnimation;
 
-    Side m_side = Side::Right;
+    Direction m_side = Direction::East;
     Label* m_label = nullptr;
     Label* m_portWidthLabel = nullptr;
     QString m_widthText;

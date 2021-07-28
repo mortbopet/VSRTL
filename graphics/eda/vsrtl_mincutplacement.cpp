@@ -28,7 +28,7 @@ enum class CutlineDirection { Alternating, Repeating };
 class PartitioningTree : public BinTree<SimComponent*, PartitioningTree> {
 public:
     explicit PartitioningTree(Placement& _placement) : BinTree(), placement(_placement) {}
-    Direction cutlinedir = Direction::Horizontal;
+    Orientation cutlinedir = Orientation::Horizontal;
     QRect cachedRect;
     Placement& placement;
 
@@ -40,10 +40,10 @@ public:
             // Add this node's rect to the offset, and propagate the call further down the tree
             QPoint a_offset = offset;
             QPoint b_offset = offset;
-            if (cutlinedir == Direction::Horizontal) {
+            if (cutlinedir == Orientation::Horizontal) {
                 a_offset -= QPoint(0, a->rect().height() / 2);
                 b_offset += QPoint(0, b->rect().height() / 2);
-            } else if (cutlinedir == Direction::Vertical) {
+            } else if (cutlinedir == Orientation::Vertical) {
                 a_offset -= QPoint(a->rect().width() / 2, 0);
                 b_offset += QPoint(b->rect().width() / 2, 0);
             }
@@ -77,14 +77,14 @@ public:
             const auto& b_rect = b->rect();
             int width, height;
             switch (cutlinedir) {
-                case Direction::Horizontal: {
+                case Orientation::Horizontal: {
                     // For horizontal cuts, components will be placed above and below each other. Width will be the
                     // width of the largest component, height will be the total height of the two components
                     width = a_rect.width() > b_rect.width() ? a_rect.width() : b_rect.width();
                     height = a_rect.height() + b_rect.height();
                     break;
                 }
-                case Direction::Vertical: {
+                case Orientation::Vertical: {
                     // For vertical cuts, components will be placed left and right of each other. Height will be the
                     // height of the tallest component. Width will be the total width of the two components
                     width = a_rect.width() + b_rect.width();
@@ -130,9 +130,9 @@ void recursivePartitioning(PartitioningTree& node, const std::set<SimComponent*>
     node.b = std::make_unique<PartitioningTree>(node.placement);
 
     // Assign cutline direction to child nodes
-    Direction childrenCutlineDir = Direction::Horizontal;
+    Orientation childrenCutlineDir = Orientation::Horizontal;
     if (dir == CutlineDirection::Alternating) {
-        childrenCutlineDir = node.cutlinedir == Direction::Horizontal ? Direction::Vertical : Direction::Horizontal;
+        childrenCutlineDir = node.cutlinedir == Orientation::Horizontal ? Orientation::Vertical : Orientation::Horizontal;
     } else if (dir == CutlineDirection::Repeating) {
         // Unimplemnented
         Q_ASSERT(false);
@@ -172,7 +172,7 @@ Placement MinCutPlacement(const std::vector<GridComponent*>& components) {
 
     // recursively partition the graph and routing regions. Initial cut is determined to be a vertical cut
     PartitioningTree rootPartitionNode(placement);
-    rootPartitionNode.cutlinedir = Direction::Vertical;
+    rootPartitionNode.cutlinedir = Orientation::Vertical;
     recursivePartitioning(rootPartitionNode, c_set, CutlineDirection::Alternating);
 
     // With the circuit partitioned, call rect() on the top node, to propagate rect calculation and caching through the

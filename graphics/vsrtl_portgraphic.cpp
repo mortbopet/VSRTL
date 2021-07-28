@@ -152,7 +152,7 @@ void PortGraphic::redraw() {
     }
 }
 
-void PortGraphic::setSide(Side side) {
+void PortGraphic::setSide(Direction side) {
     m_side = side;
     updateGeometry();
 }
@@ -227,19 +227,19 @@ QRectF PortGraphic::boundingRect() const {
 
 QPointF PortGraphic::getInputPoint() const {
     switch (m_side) {
-        case Side::Right: {
+        case Direction::East: {
             return QPointF(m_type == vsrtl::SimPort::PortType::in ? s_portGridWidth * GRID_SIZE - GRID_SIZE_HALF : 0,
                            0);
         }
-        case Side::Left: {
+        case Direction::West: {
             return QPointF(m_type == vsrtl::SimPort::PortType::in ? -s_portGridWidth * GRID_SIZE + GRID_SIZE_HALF : 0,
                            0);
         }
-        case Side::Top: {
+        case Direction::North: {
             return QPointF(0,
                            m_type == vsrtl::SimPort::PortType::in ? -s_portGridWidth * GRID_SIZE + GRID_SIZE_HALF : 0);
         }
-        case Side::Bottom: {
+        case Direction::South: {
             return QPointF(0,
                            m_type == vsrtl::SimPort::PortType::in ? s_portGridWidth * GRID_SIZE - GRID_SIZE_HALF : 0);
         }
@@ -249,19 +249,19 @@ QPointF PortGraphic::getInputPoint() const {
 
 QPointF PortGraphic::getOutputPoint() const {
     switch (m_side) {
-        case Side::Right: {
+        case Direction::East: {
             return QPointF(m_type == vsrtl::SimPort::PortType::out ? s_portGridWidth * GRID_SIZE - GRID_SIZE_HALF : 0,
                            0);
         }
-        case Side::Left: {
+        case Direction::West: {
             return QPointF(m_type == vsrtl::SimPort::PortType::out ? -s_portGridWidth * GRID_SIZE + GRID_SIZE_HALF : 0,
                            0);
         }
-        case Side::Top: {
+        case Direction::North: {
             return QPointF(0,
                            m_type == vsrtl::SimPort::PortType::out ? -s_portGridWidth * GRID_SIZE + GRID_SIZE_HALF : 0);
         }
-        case Side::Bottom: {
+        case Direction::South: {
             return QPointF(0,
                            m_type == vsrtl::SimPort::PortType::out ? s_portGridWidth * GRID_SIZE - GRID_SIZE_HALF : 0);
         }
@@ -411,28 +411,28 @@ void PortGraphic::updateGeometry() {
     // a virtual child of this port).
     QPointF pDiff;
     switch (m_side) {
-        case Side::Left:
-        case Side::Right: {
+        case Direction::West:
+        case Direction::East: {
             m_boundingRect.setY(-GRID_SIZE / 2);
             m_boundingRect.setHeight(GRID_SIZE);
-            m_boundingRect.setX(m_side == Side::Left ? -GRID_SIZE * s_portGridWidth : 0);
+            m_boundingRect.setX(m_side == Direction::West ? -GRID_SIZE * s_portGridWidth : 0);
             m_boundingRect.setWidth(GRID_SIZE * s_portGridWidth);
 
             const qreal vDiff = std::abs(GRID_SIZE / 2 - m_portWidthLabel->boundingRect().height() / 2);
-            pDiff =
-                m_side == Side::Left ? QPointF{-m_portWidthLabel->boundingRect().width(), -vDiff} : QPointF{0, -vDiff};
+            pDiff = m_side == Direction::West ? QPointF{-m_portWidthLabel->boundingRect().width(), -vDiff}
+                                              : QPointF{0, -vDiff};
             break;
         }
-        case Side::Top:
-        case Side::Bottom: {
+        case Direction::North:
+        case Direction::South: {
             m_boundingRect.setX(-GRID_SIZE / 2);
             m_boundingRect.setWidth(GRID_SIZE);
-            m_boundingRect.setY(m_side == Side::Top ? -GRID_SIZE * s_portGridWidth : 0);
+            m_boundingRect.setY(m_side == Direction::North ? -GRID_SIZE * s_portGridWidth : 0);
             m_boundingRect.setHeight(GRID_SIZE * s_portGridWidth);
 
             const qreal vDiff = std::abs(GRID_SIZE / 2 - m_portWidthLabel->boundingRect().height() / 2);
-            pDiff = (m_side == Side::Top ? QPointF{0, -m_portWidthLabel->boundingRect().height() + vDiff}
-                                         : QPointF{0, -vDiff});
+            pDiff = (m_side == Direction::North ? QPointF{0, -m_portWidthLabel->boundingRect().height() + vDiff}
+                                                : QPointF{0, -vDiff});
             break;
         }
     }
@@ -478,10 +478,10 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
         QPointF p1, p2;
 
         switch (m_side) {
-            case Side::Left:
-            case Side::Right: {
+            case Direction::West:
+            case Direction::East: {
                 int dir = m_type == vsrtl::SimPort::PortType::out ? -1 : 1;
-                dir *= m_side == Side::Right ? -1 : 1;
+                dir *= m_side == Direction::East ? -1 : 1;
 
                 start.rx() = start.x() + dir * d / 2;
 
@@ -490,10 +490,10 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
                 break;
             }
 
-            case Side::Bottom:
-            case Side::Top: {
+            case Direction::South:
+            case Direction::North: {
                 int dir = m_type == vsrtl::SimPort::PortType::in ? -1 : 1;
-                dir *= m_side == Side::Top ? -1 : 1;
+                dir *= m_side == Direction::North ? -1 : 1;
 
                 start.ry() = start.y() + dir * d / 2;
 

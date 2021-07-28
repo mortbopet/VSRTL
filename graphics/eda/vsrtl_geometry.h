@@ -5,24 +5,27 @@
 #include <QPoint>
 #include <QRect>
 
-namespace vsrtl {
-namespace eda {
+#include <set>
 
-enum class Edge { Top, Bottom, Left, Right };
-enum class Direction { Horizontal, Vertical };
+namespace vsrtl {
+enum class Direction { North, South, West, East };
+#define allDirections (std::set<Direction>{Direction::North, Direction::South, Direction::West, Direction::East})
+enum class Orientation { Horizontal, Vertical };
 enum class Corner { TopLeft, TopRight, BottomRight, BottomLeft };
+
+namespace eda {
 enum class IntersectType { Cross, OnEdge };
 
-inline Direction edgeToDirection(const Edge e) {
+inline Orientation edgeToDirection(const Direction e) {
     switch (e) {
-        case Edge::Top:
-            return Direction::Vertical;
-        case Edge::Bottom:
-            return Direction::Vertical;
-        case Edge::Left:
-            return Direction::Horizontal;
-        case Edge::Right:
-            return Direction::Horizontal;
+        case Direction::North:
+            return Orientation::Vertical;
+        case Direction::South:
+            return Orientation::Vertical;
+        case Direction::West:
+            return Orientation::Horizontal;
+        case Direction::East:
+            return Orientation::Horizontal;
     }
     Q_UNREACHABLE();
 }
@@ -35,7 +38,7 @@ inline Direction edgeToDirection(const Edge e) {
 class Line {
 public:
     constexpr Line(const QPoint& p1, const QPoint& p2)
-        : m_p1(p1), m_p2(p2), m_orientation(p1.x() == p2.x() ? Direction::Vertical : Direction::Horizontal) {
+        : m_p1(p1), m_p2(p2), m_orientation(p1.x() == p2.x() ? Orientation::Vertical : Orientation::Horizontal) {
         // Assert that the line is orthogonal to one of the grid axis
         Q_ASSERT(p1.x() == p2.x() || p1.y() == p2.y());
     }
@@ -44,13 +47,13 @@ public:
     constexpr const QPoint& p2() const { return m_p2; }
     constexpr void setP1(const QPoint& p) { m_p1 = p; }
     constexpr void setP2(const QPoint& p) { m_p2 = p; }
-    constexpr Direction orientation() const { return m_orientation; }
+    constexpr Orientation orientation() const { return m_orientation; }
     Line adjusted(const QPoint& dp1, const QPoint& dp2) const { return Line(p1() + dp1, p2() + dp2); }
     QLine toQLine() const { return QLine(p1(), p2()); }
     bool intersect(const Line& other, QPoint& p, IntersectType type) const {
         Q_ASSERT(orientation() != other.orientation());
         const Line *hz, *vt;
-        if (m_orientation == Direction::Horizontal) {
+        if (m_orientation == Orientation::Horizontal) {
             hz = this;
             vt = &other;
         } else {
@@ -86,7 +89,7 @@ public:
 private:
     QPoint m_p1;
     QPoint m_p2;
-    Direction m_orientation;
+    Orientation m_orientation;
 };
 
 // The following functions fixes the "historical reason" for incorrect corner coordinates in QRect (see QRect
@@ -102,18 +105,18 @@ inline QPoint realBottomLeft(const QRect& rect) {
     return rect.bottomLeft() + QPoint(0, 1);
 }
 
-inline Line getEdge(const QRect& rect, Edge e) {
+inline Line getEdge(const QRect& rect, Direction e) {
     switch (e) {
-        case Edge::Top: {
+        case Direction::North: {
             return Line(rect.topLeft(), realTopRight(rect));
         }
-        case Edge::Bottom: {
+        case Direction::South: {
             return Line(realBottomLeft(rect), realBottomRight(rect));
         }
-        case Edge::Left: {
+        case Direction::West: {
             return Line(rect.topLeft(), realBottomLeft(rect));
         }
-        case Edge::Right: {
+        case Direction::East: {
             return Line(realTopRight(rect), realBottomRight(rect));
         }
     }

@@ -6,12 +6,12 @@
 #include "cereal/types/map.hpp"
 
 #include "../interface/vsrtl_interface.h"
+#include "eda/vsrtl_geometry.h"
 
 namespace vsrtl {
 
-enum class Side { Left, Right, Top, Bottom };
 struct PortPos {
-    Side side;
+    Direction side;
     int index;
     bool validIndex() const { return index > 0; }
 
@@ -28,14 +28,14 @@ public:
         std::set<SimPort*> placedPorts;
 
         for (const auto& p : c->getPorts<SimPort::PortType::in>()) {
-            initPlacePortOnSide(Side::Left, p, placedPorts);
+            initPlacePortOnSide(Direction::West, p, placedPorts);
         }
         for (const auto& p : c->getPorts<SimPort::PortType::out>()) {
-            initPlacePortOnSide(Side::Right, p, placedPorts);
+            initPlacePortOnSide(Direction::East, p, placedPorts);
         }
     }
 
-    void initPlacePortOnSide(Side s, SimPort* p, std::set<SimPort*>& placed) {
+    void initPlacePortOnSide(Direction s, SimPort* p, std::set<SimPort*>& placed) {
         if (placed.count(p))
             return;
 
@@ -47,8 +47,8 @@ public:
     }
 
     struct PortIdBiMap {
-        PortIdBiMap(Side _dir) : dir(_dir) {}
-        Side dir;
+        PortIdBiMap(Direction _dir) : dir(_dir) {}
+        Direction dir;
         IdToPortMap idToPort;
         PortToIdMap portToId;
 
@@ -122,15 +122,15 @@ public:
         return {map->dir, map->portToId[p]};
     }
 
-    inline PortIdBiMap& sideToMap(Side d) {
+    inline PortIdBiMap& sideToMap(Direction d) {
         switch (d) {
-            case Side::Left:
+            case Direction::West:
                 return m_left;
-            case Side::Right:
+            case Direction::East:
                 return m_right;
-            case Side::Top:
+            case Direction::North:
                 return m_top;
-            case Side::Bottom:
+            case Direction::South:
                 return m_bottom;
         }
         Q_UNREACHABLE();
@@ -138,7 +138,7 @@ public:
 
     template <class Archive>
     void serialize(Archive& archive) {
-        std::map<Side, std::map<std::string, unsigned>> portPosSerialMap;
+        std::map<Direction, std::map<std::string, unsigned>> portPosSerialMap;
         // Create a mapping between port names and their positions
         for (const auto& pm : {m_left, m_right, m_top, m_bottom}) {
             for (const auto& p : pm.idToPort) {
@@ -171,10 +171,10 @@ public:
 private:
     NameToPortMap m_namePortMap;
     std::map<const SimPort*, PortIdBiMap*> m_portMap;
-    PortIdBiMap m_left = PortIdBiMap(Side::Left);
-    PortIdBiMap m_right = PortIdBiMap(Side::Right);
-    PortIdBiMap m_top = PortIdBiMap(Side::Top);
-    PortIdBiMap m_bottom = PortIdBiMap(Side::Bottom);
+    PortIdBiMap m_left = PortIdBiMap(Direction::West);
+    PortIdBiMap m_right = PortIdBiMap(Direction::East);
+    PortIdBiMap m_top = PortIdBiMap(Direction::North);
+    PortIdBiMap m_bottom = PortIdBiMap(Direction::South);
 };
 
 }  // namespace vsrtl

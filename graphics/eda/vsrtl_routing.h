@@ -19,6 +19,13 @@ namespace eda {
 
 class RoutingTile;
 
+template <typename T1, typename T2>
+void assertAdjacentTiles(const T1* t1, const T2* t2) {
+    bool valid;
+    t1->adjacentTile(t2, valid);
+    Q_ASSERT(valid);
+}
+
 class Tile {
 public:
     /**
@@ -27,24 +34,71 @@ public:
      * @param valid
      * @return the edge which @p rr abutts to this tile. If not abutting, @p valid is set to false.
      */
-    Edge adjacentTile(const Tile* rr, bool& valid) const;
+    Direction adjacentTile(const Tile* rr, bool& valid) const;
+    /**
+     * @brief adjacentDir
+     * Like the above but returns the direction which @p rr is to this tile (geometry based rather than connectivity
+     * based).
+     */
+    Direction adjacentDir(const Tile* rr, bool& valid) const;
+
     /**
      * @brief adjacentRowCol
      * like adjacentTile, but recursively checks all tiles in the row/column. If the target tile is found, returns the
      * edge that was traversed to find it.
      * @param is set to false if the target tile was not found in row/col.
      */
-    Edge adjacentRowCol(const Tile* rr, bool& valid) const;
-    Tile* getAdjacentTile(Edge edge);
-    const Tile* getAdjacentTile(Edge edge) const;
+    Direction adjacentRowCol(const Tile* rr, bool& valid);
+    Tile* getAdjacentTile(Direction edge);
+    const Tile* getAdjacentTile(Direction edge) const;
     std::vector<Tile*> adjacentTiles();
 
-    void setTileAtEdge(Edge, Tile*);
+    /**
+     * @brief intermediateTiles
+     * @return an ordered vector of tiles between this tile and @p t. If this and @p t are not in the same row/column or
+     * obstructed by some component, returns an empty set.
+     */
+    template <typename T>
+    std::vector<T*> intermediateTiles(const T* t) {
+        std::vector<T*> intTiles;
+        RowColItFunc f = [&](Tile* /*origTile*/, Tile* itTile, Direction /*e*/) {
+            if (itTile == t) {
+                // finish iteration
+                return false;
+            } else {
+                if (auto* itTTile = dynamic_cast<T*>(itTile)) {
+                    intTiles.push_back(itTTile);
+                } else {
+                    return false;
+                }
+            }
+            return true;
+        };
+        bool valid;
+        const Direction e = adjacentDir(t, valid);
+        Q_ASSERT(valid);
+        iterateFromEdges(f, {e});
+        return intTiles;
+    }
+
+    void setTileAtEdge(Direction, Tile*);
 
     bool operator==(const Tile& lhs) const;
     virtual QRect rect() const = 0;
 
 protected:
+    // The row/column iteration function shall return true if iteration should continue
+    /** @brief RowColItFunc
+     * @param Tile*: Origin tile where this iteration started
+     * @param Tile*: Tile currently being iterated
+     * @param Edge: Edge which this iteration originated from in the original tile
+     * @return true if iteration should continue
+     */
+    using RowColItFunc = std::function<bool(Tile*, Tile*, Direction)>;
+    void iterateFromEdge(const RowColItFunc& f, Direction edge);
+    void iterateFromEdges(const RowColItFunc& f, const std::set<Direction>& edges);
+    bool iterateEdgeRec(Tile* origTile, const RowColItFunc& f, Direction dir);
+
     /**
      * Routing tiles on each row/column of this component
      */
@@ -54,7 +108,7 @@ protected:
     Tile* bottom;
 
 private:
-    bool adjacentRowColRec(const Tile* rr, Edge dir) const;
+    bool adjacentRowColRec(const Tile* rr, Direction dir) const;
 };
 
 class RoutingComponent : public Tile {
@@ -82,7 +136,7 @@ class RoutingTile : public Tile {
 public:
     struct RoutePath {
         RoutingTile* tile = nullptr;
-        Direction dir;
+        Orientation dir;
         int idx;
         QPoint from() const;
         QPoint to() const;
@@ -90,14 +144,14 @@ public:
     RoutingTile(const QRect& rect) : r(rect), h_cap(rect.width() - 1), v_cap(rect.height() - 1) { m_id = rr_ids++; }
 
     QRect rect() const override { return r; }
-    int capacity(Direction dir) const;
-    int remainingCap(Direction dir) const;
+    int capacity(Orientation dir) const;
+    int remainingCap(Orientation dir) const;
     int id() const { return m_id; }
     void assignRoutes();
     RoutePath getPath(Route* route) const;
-    void registerRoute(Route*, Direction);
+    void registerRoute(Route*, Orientation);
 
-    const std::set<Route*>& routes(Direction dir) const;
+    const std::set<Route*>& routes(Orientation dir) const;
 
 private:
     std::set<Route*> m_verticalRoutes, m_horizontalRoutes;
@@ -124,21 +178,21 @@ class TileGroup {
 public:
     void connectTiles() {
         if (topleft != nullptr) {
-            topleft->setTileAtEdge(Edge::Bottom, bottomleft);
-            topleft->setTileAtEdge(Edge::Right, topright);
+            topleft->setTileAtEdge(Direction::South, bottomleft);
+            topleft->setTileAtEdge(Direction::East, topright);
         }
 
         if (topright != nullptr) {
-            topright->setTileAtEdge(Edge::Left, topleft);
-            topright->setTileAtEdge(Edge::Bottom, bottomright);
+            topright->setTileAtEdge(Direction::West, topleft);
+            topright->setTileAtEdge(Direction::South, bottomright);
         }
         if (bottomleft != nullptr) {
-            bottomleft->setTileAtEdge(Edge::Top, topleft);
-            bottomleft->setTileAtEdge(Edge::Right, bottomright);
+            bottomleft->setTileAtEdge(Direction::North, topleft);
+            bottomleft->setTileAtEdge(Direction::East, bottomright);
         }
         if (bottomright != nullptr) {
-            bottomright->setTileAtEdge(Edge::Left, bottomleft);
-            bottomright->setTileAtEdge(Edge::Top, topright);
+            bottomright->setTileAtEdge(Direction::West, bottomleft);
+            bottomright->setTileAtEdge(Direction::North, topright);
         }
     }
     void setTile(Corner, RoutingTile*);
@@ -190,17 +244,19 @@ public:
         }
     }
 
-    RoutingTile* lookup(const QPoint& index, Edge tieBreakVt = Edge::Left, Edge tieBreakHz = Edge::Top) const {
+    RoutingTile* lookup(const QPoint& index, Direction tieBreakVt = Direction::West,
+                        Direction tieBreakHz = Direction::North) const {
         return lookup(index.x(), index.y(), tieBreakVt, tieBreakHz);
     }
 
-    RoutingTile* lookup(int x, int y, Edge tieBreakVt = Edge::Left, Edge tieBreakHz = Edge::Top) const {
-        Q_ASSERT(tieBreakHz == Edge::Top || tieBreakHz == Edge::Bottom);
-        Q_ASSERT(tieBreakVt == Edge::Left || tieBreakVt == Edge::Right);
+    RoutingTile* lookup(int x, int y, Direction tieBreakVt = Direction::West,
+                        Direction tieBreakHz = Direction::North) const {
+        Q_ASSERT(tieBreakHz == Direction::North || tieBreakHz == Direction::South);
+        Q_ASSERT(tieBreakVt == Direction::West || tieBreakVt == Direction::East);
 
-        const auto& vertMap = tileMap.lower_bound(x + (tieBreakVt == Edge::Left ? 0 : 1));
+        const auto& vertMap = tileMap.lower_bound(x + (tieBreakVt == Direction::West ? 0 : 1));
         if (vertMap != tileMap.end()) {
-            const auto& tileIt = vertMap->second.lower_bound(y + (tieBreakHz == Edge::Top ? 0 : 1));
+            const auto& tileIt = vertMap->second.lower_bound(y + (tieBreakHz == Direction::North ? 0 : 1));
             if (tileIt != vertMap->second.end()) {
                 return tileIt->second;
             }
@@ -219,7 +275,7 @@ using Netlist = std::vector<NetPtr>;
 WRAP_UNIQUEPTR(Netlist)
 
 NetlistPtr createNetlist(Placement& placement, const TileMap& tileMap);
-Direction directionBetweenRRs(const RoutingTile* from, const RoutingTile* to, Direction def = Direction::Horizontal);
+Orientation directionBetweenRRs(RoutingTile* from, RoutingTile* to, Orientation def = Orientation::Horizontal);
 
 struct PRResult {
     Placement placement;
