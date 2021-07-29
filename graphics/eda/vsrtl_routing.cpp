@@ -14,7 +14,26 @@ QRect RoutingComponent::rect() const {
     return r;
 }
 
-NetlistPtr createNetlist(Placement& placement, const TileMap& tileMap) {
+void RoutingComponent::doTileBasedPlacement() {
+    QRect enclosedArea;
+    if (top) {
+        enclosedArea.setTop(top->rect().bottom());
+    }
+    if (bottom) {
+        enclosedArea.setBottom(bottom->rect().top());
+    }
+    if (left) {
+        enclosedArea.setLeft(left->rect().right());
+    }
+    if (right) {
+        enclosedArea.setRight(right->rect().left());
+    }
+
+    Q_ASSERT(enclosedArea.width() > 0 && enclosedArea.height() > 0);
+    pos = enclosedArea.center() - QPoint(rect().width() / 2, rect().height() / 2);
+}
+
+NetlistPtr createNetlist(Placement& placement) {
     auto netlist = std::make_unique<Netlist>();
     for (const auto& routingComponent : placement.components) {
         for (const auto& outputPort : routingComponent->gridComponent->getComponent()->getOutputPorts()) {
@@ -82,7 +101,163 @@ void RoutingGraph::dumpDotFile(const QString& path) const {
     f.dump();
 }
 
-RoutingGraphPtr createConnectivityGraph(Placement& placement) {
+QRect Placement::componentBoundingRect() const {
+    std::function<QRect(const std::shared_ptr<RoutingComponent>&)> f = [](const auto& rr) { return rr.get()->rect(); };
+    return boundingRectOfRectsF<QRect>(components, f);
+}
+
+void Placement::doTileBasedPlacement() {
+    for (const auto& c : components) {
+        c->doTileBasedPlacement();
+    }
+}
+
+std::set<RoutingTile*> gatherTilesInDirections(RoutingTile* origin, const std::set<Direction>& directions) {
+    std::set<RoutingTile*> tiles;
+    auto f = [&](Tile*, Tile* tileIt, Direction) {
+        if (auto* rt = dynamic_cast<RoutingTile*>(tileIt)) {
+            tiles.insert(rt);
+            return true;
+        }
+        return false;
+    };
+
+    for (const auto d : directions) {
+        origin->iterateInDirection(f, d);
+    }
+    tiles.insert(origin);
+    return tiles;
+}
+
+std::set<RoutingTile*> expandTilesInOrientation(RoutingTile* origin, Orientation o) {
+    auto tiles = gatherTilesInDirections(origin, orientationToDirections(o));
+    int maxO = 0;
+
+    for (const auto& tile : tiles) {
+        maxO = maxO > static_cast<int>(tile->routes(o).size()) ? maxO : tile->routes(o).size();
+        switch (o) {
+            case Orientation::Horizontal:
+                maxO = maxO > tile->rect().height() ? maxO : tile->rect().height();
+                break;
+            case Orientation::Vertical:
+                maxO = maxO > tile->rect().width() ? maxO : tile->rect().width();
+                break;
+        }
+    }
+
+    for (const auto& tile : tiles) {
+        switch (o) {
+            case Orientation::Horizontal:
+                tile->setHeight(maxO + 1);
+                break;
+            case Orientation::Vertical:
+                tile->setWidth(maxO + 1);
+                break;
+        }
+    }
+
+    return tiles;
+}
+
+TileMap::TileMap(const RoutingGraph& tiles) {
+    // tiles will be mapped to their lower-right corner in terms of indexing operations.
+    // This is given the user of std::map::lower_bound to determine the map index
+    for (const auto& tile : tiles.tiles) {
+        const auto& bottomRight = tile->rect().bottomRight();
+        tileMap[bottomRight.x()][bottomRight.y()] = tile.get();
+    }
+}
+
+RoutingTile* TileMap::lookup(const QPoint& index, Direction tieBreakVt, Direction tieBreakHz) const {
+    return lookup(index.x(), index.y(), tieBreakVt, tieBreakHz);
+}
+
+RoutingTile* TileMap::lookup(int x, int y, Direction tieBreakVt, Direction tieBreakHz) const {
+    Q_ASSERT(tieBreakHz == Direction::North || tieBreakHz == Direction::South);
+    Q_ASSERT(tieBreakVt == Direction::West || tieBreakVt == Direction::East);
+
+    const auto& vertMap = tileMap.lower_bound(x + (tieBreakVt == Direction::West ? 0 : 1));
+    if (vertMap != tileMap.end()) {
+        const auto& tileIt = vertMap->second.lower_bound(y + (tieBreakHz == Direction::North ? 0 : 1));
+        if (tileIt != vertMap->second.end()) {
+            return tileIt->second;
+        }
+    }
+
+    // Could not find a routing tile corresponding to the index
+    return nullptr;
+}
+
+void placeTilesRec(RoutingTile* tile, std::set<RoutingTile*>& alreadyPlaced) {
+    if (alreadyPlaced.count(tile)) {
+        return;
+    }
+
+    alreadyPlaced.insert(tile);
+    std::set<RoutingTile*> toIterate;
+    if (auto* rt = dynamic_cast<RoutingTile*>(tile->getAdjacentTile(Direction::East))) {
+        rt->setPos(tile->rect().topRight());
+        toIterate.insert(rt);
+    }
+    if (auto* rt = dynamic_cast<RoutingTile*>(tile->getAdjacentTile(Direction::West))) {
+        rt->setPos(tile->rect().topLeft() - QPoint(rt->rect().width() - 1, 0));
+        toIterate.insert(rt);
+    }
+    if (auto* rt = dynamic_cast<RoutingTile*>(tile->getAdjacentTile(Direction::South))) {
+        rt->setPos(tile->rect().bottomLeft());
+        toIterate.insert(rt);
+    }
+    if (auto* rt = dynamic_cast<RoutingTile*>(tile->getAdjacentTile(Direction::North))) {
+        rt->setPos(tile->rect().topLeft() - QPoint(0, rt->rect().height() - 1));
+        toIterate.insert(rt);
+    }
+
+    for (const auto& rt : toIterate) {
+        placeTilesRec(rt, alreadyPlaced);
+    }
+}
+
+template <typename T>
+std::set<T> setMinus(const std::set<T>& s1, const std::set<T>& s2) {
+    std::set<T> diff;
+    std::set_difference(s1.begin(), s1.end(), s2.begin(), s2.end(), std::inserter(diff, diff.begin()));
+    return diff;
+}
+
+template <typename T>
+void assertIsSubset(const std::set<T>& s1, const std::set<T>& s2) {
+    auto diff = setMinus(s1, s2);
+    Q_ASSERT(diff.size() == 0);
+}
+
+void RoutingGraph::expandTiles() {
+    std::set<RoutingTile*> remaining;
+    for (const auto& t : tiles) {
+        remaining.insert(t.get());
+    }
+
+    // First, all tiles are expanded based on the maximum required width/height of other tiles in their row/column.
+    while (remaining.size() > 0) {
+        RoutingTile* tile = *remaining.begin();
+        auto hzTiles = expandTilesInOrientation(tile, Orientation::Horizontal);
+        auto vtTiles = expandTilesInOrientation(tile, Orientation::Vertical);
+
+        remaining = setMinus(setMinus(remaining, hzTiles), vtTiles);
+    }
+
+    // Then, tiles are repositioned based on their adjacency to one another. This is done recursively starting from the
+    // top-left tile.
+    RoutingTile* tile = m_tileMap->lookup(QPoint(0, 0));
+    Q_ASSERT(tile);
+    Q_ASSERT(tile->getAdjacentTile(Direction::West) == nullptr);
+    Q_ASSERT(tile->getAdjacentTile(Direction::North) == nullptr);
+
+    std::set<RoutingTile*> alreadyPlaced;
+    tile->setPos(QPoint(0, 0));
+    placeTilesRec(tile, alreadyPlaced);
+}
+
+RoutingGraph::RoutingGraph(Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
     std::vector<QRect> rects;
     std::transform(placement.components.begin(), placement.components.end(), std::back_inserter(rects),
@@ -90,7 +265,6 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
     Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(rects)));
     Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
 
-    RoutingGraphPtr tiles = std::make_unique<RoutingGraph>();
     const auto& chipRect = placement.chipRect;
 
     QList<Line> hz_bounding_lines, vt_bounding_lines, hz_tile_lines, vt_tile_lines;
@@ -111,7 +285,7 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
         Line stretchedLine = Line({chipRect.left(), h_line.p1().y()}, {chipRect.right() + 1, h_line.p1().y()});
 
         // Record the stretched line for debugging
-        tiles->stretchedLines.push_back(stretchedLine);
+        stretchedLines.push_back(stretchedLine);
 
         // Narrow line until no boundaries are met
         for (const auto& v_line : vt_bounding_lines) {
@@ -138,7 +312,7 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
         Line stretchedLine = Line({line.p1().x(), chipRect.top()}, {line.p1().x(), chipRect.bottom() + 1});
 
         // Record the stretched line for debugging
-        tiles->stretchedLines.push_back(stretchedLine);
+        stretchedLines.push_back(stretchedLine);
 
         // Narrow line until no boundaries are met
         for (const auto& h_line : hz_bounding_lines) {
@@ -164,8 +338,8 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
     hz_tile_lines << getEdge(chipRect, Direction::North) << getEdge(chipRect, Direction::South);
     vt_tile_lines << getEdge(chipRect, Direction::West) << getEdge(chipRect, Direction::East);
 
-    tiles->tileLines.insert(tiles->tileLines.end(), hz_tile_lines.begin(), hz_tile_lines.end());
-    tiles->tileLines.insert(tiles->tileLines.end(), vt_tile_lines.begin(), vt_tile_lines.end());
+    tileLines.insert(tileLines.end(), hz_tile_lines.begin(), hz_tile_lines.end());
+    tileLines.insert(tileLines.end(), vt_tile_lines.begin(), vt_tile_lines.end());
 
     // Sort bounding lines
     // Top to bottom
@@ -247,13 +421,13 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
 
                 if (componentInTileIt == placement.components.end()) {
                     // New tile was not a component, check if new tile has already been added
-                    if (std::find_if(tiles->tiles.begin(), tiles->tiles.end(), [&newTileRect](const auto& tile) {
+                    if (std::find_if(tiles.begin(), tiles.end(), [&newTileRect](const auto& tile) {
                             return tile.get()->rect() == newTileRect;
-                        }) == tiles->tiles.end())
+                        }) == tiles.end())
 
                         // This is a new routing tile
-                        tiles->tiles.push_back(std::make_unique<RoutingTile>(newTileRect));
-                    RoutingTile* newtile = tiles->tiles.rbegin()->get();
+                        tiles.push_back(std::make_unique<RoutingTile>(newTileRect));
+                    RoutingTile* newtile = tiles.rbegin()->get();
 
                     // Add tile to tileGroups
                     tileGroups[newTileRect.topLeft()].setTile(Corner::BottomRight, newtile);
@@ -286,7 +460,8 @@ RoutingGraphPtr createConnectivityGraph(Placement& placement) {
         rc->setTileAtEdge(Direction::South, tileGroups[realBottomLeft(rect)].bottomright);
     }
 
-    return tiles;
+    // Create indexable tile map
+    m_tileMap = std::make_unique<TileMap>(*this);
 }
 
 void TileGroup::setTile(Corner c, RoutingTile* tile) {
@@ -449,29 +624,29 @@ Direction Tile::adjacentRowCol(const Tile* otherTile, bool& valid) {
         }
     };
 
-    iterateFromEdges(iterFunc, allDirections);
+    iterateInDirections(iterFunc, allDirections);
     return retEdge;
 }
 
-void Tile::iterateFromEdge(const RowColItFunc& f, Direction edge) {
-    iterateFromEdges(f, {edge});
+void Tile::iterateInDirection(const RowColItFunc& f, Direction edge) {
+    iterateInDirections(f, {edge});
 }
 
-void Tile::iterateFromEdges(const RowColItFunc& f, const std::set<Direction>& edges) {
+void Tile::iterateInDirections(const RowColItFunc& f, const std::set<Direction>& edges) {
     for (auto dir : edges) {
         if (auto adjTile = getAdjacentTile(dir)) {
-            if (!adjTile->iterateEdgeRec(this, f, dir)) {
+            if (!adjTile->iterateDirectionRec(this, f, dir)) {
                 return;
             }
         }
     }
 }
 
-bool Tile::iterateEdgeRec(Tile* origTile, const RowColItFunc& f, Direction dir) {
+bool Tile::iterateDirectionRec(Tile* origTile, const RowColItFunc& f, Direction dir) {
     if (f(origTile, this, dir)) {
         auto adjTile = getAdjacentTile(dir);
         if (adjTile) {
-            return adjTile->iterateEdgeRec(origTile, f, dir);
+            return adjTile->iterateDirectionRec(origTile, f, dir);
         } else {
             // No further tiles in the current direction, but we continue iteration in next row/col
             return true;
@@ -578,7 +753,7 @@ Orientation directionBetweenRRs(RoutingTile* from, RoutingTile* to, Orientation 
         return def;
     } else {
         bool valid = true;
-        Orientation direction = edgeToDirection(from->adjacentRowCol(to, valid));
+        Orientation direction = directionToOrientation(from->adjacentRowCol(to, valid));
         Q_ASSERT(valid);
         return direction;
     }

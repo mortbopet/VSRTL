@@ -164,14 +164,14 @@ void registerRoutes(NetlistPtr& netlist) {
                     // first tile
                     auto edge = route->start.routingComponent->adjacentTile(curTile, valid);
                     Q_ASSERT(valid);
-                    const Orientation dir = edgeToDirection(edge);
+                    const Orientation dir = directionToOrientation(edge);
                     curTile->registerRoute(route.get(), dir);
                 }
 
                 if (preTile) {
                     auto edge = preTile->adjacentTile(curTile, valid);
                     Q_ASSERT(valid);
-                    const Orientation dir = edgeToDirection(edge);
+                    const Orientation dir = directionToOrientation(edge);
                     preTile->registerRoute(route.get(), dir);
                     curTile->registerRoute(route.get(), dir);
                 }
@@ -180,7 +180,7 @@ void registerRoutes(NetlistPtr& netlist) {
                     // last tile
                     auto edge = curTile->adjacentTile(route->end.routingComponent.get(), valid);
                     Q_ASSERT(valid);
-                    const Orientation dir = edgeToDirection(edge);
+                    const Orientation dir = directionToOrientation(edge);
                     curTile->registerRoute(route.get(), dir);
                 }
 
@@ -202,30 +202,30 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
     const int vSpacing = placement.chipRect.y();
     // Add margins to chip rect to allow routing on right- and bottom borders
     placement.chipRect.adjust(-hSpacing, -vSpacing, hSpacing, vSpacing);
-    auto cGraph = createConnectivityGraph(placement);
-
-    // Indexable tile map
-    const auto tileMap = TileMap(*cGraph);
+    std::unique_ptr<RoutingGraph> rGraph = std::make_unique<RoutingGraph>(placement);
 
     // ======================= ROUTE ======================= //
-    auto netlist = createNetlist(placement, tileMap);
+    auto netlist = createNetlist(placement);
     get()->m_routingAlgorithms.at(get()->m_routingAlgorithm)(netlist);
 
     registerRoutes(netlist);
 
+    rGraph->expandTiles();
+    // placement.doTileBasedPlacement();
+
     // During the routing algorithm, all routes should have registered to their routing tiles. With knowledge of how
     // many routes occupy each routing tile, a route is assigned a lane within the routing tile
-    for (const auto& tile : cGraph->tiles) {
+    for (const auto& tile : rGraph->tiles) {
         tile->assignRoutes();
     }
 
 #ifndef NDEBUG
-    cGraph->dumpDotFile();
+    rGraph->dumpDotFile();
 #endif
 
     PRResult result;
     result.placement = placement;
-    result.tiles = std::move(cGraph);
+    result.tiles = std::move(rGraph);
     result.netlist = std::move(netlist);
     return result;
 }

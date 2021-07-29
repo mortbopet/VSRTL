@@ -20,7 +20,8 @@ int main(int argc, char** argv) {
 
     Q_INIT_RESOURCE(vsrtl_icons);
 
-    vsrtl::AdderAndReg design;
+    vsrtl::leros::SingleCycleLeros design;
+    // vsrtl::AdderAndReg design;
 
     vsrtl::MainWindow w(design);
 

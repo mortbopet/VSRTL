@@ -77,7 +77,7 @@ public:
         bool valid;
         const Direction e = adjacentDir(t, valid);
         Q_ASSERT(valid);
-        iterateFromEdges(f, {e});
+        iterateInDirections(f, {e});
         return intTiles;
     }
 
@@ -86,7 +86,6 @@ public:
     bool operator==(const Tile& lhs) const;
     virtual QRect rect() const = 0;
 
-protected:
     // The row/column iteration function shall return true if iteration should continue
     /** @brief RowColItFunc
      * @param Tile*: Origin tile where this iteration started
@@ -95,9 +94,11 @@ protected:
      * @return true if iteration should continue
      */
     using RowColItFunc = std::function<bool(Tile*, Tile*, Direction)>;
-    void iterateFromEdge(const RowColItFunc& f, Direction edge);
-    void iterateFromEdges(const RowColItFunc& f, const std::set<Direction>& edges);
-    bool iterateEdgeRec(Tile* origTile, const RowColItFunc& f, Direction dir);
+    void iterateInDirection(const RowColItFunc& f, Direction edge);
+    void iterateInDirections(const RowColItFunc& f, const std::set<Direction>& edges);
+
+protected:
+    bool iterateDirectionRec(Tile* origTile, const RowColItFunc& f, Direction dir);
 
     /**
      * Routing tiles on each row/column of this component
@@ -117,6 +118,11 @@ public:
     GridComponent* gridComponent;
     QPoint pos;
     QRect rect() const override;
+    /**
+     * @brief doTileBasedPlacement
+     * Places this routing component in the centor of the area enclosed by its adjacent tiles
+     */
+    void doTileBasedPlacement();
 };
 
 struct NetNode {
@@ -150,6 +156,9 @@ public:
     void assignRoutes();
     RoutePath getPath(Route* route) const;
     void registerRoute(Route*, Orientation);
+    void setWidth(unsigned w) { r.setWidth(w); }
+    void setHeight(unsigned h) { r.setHeight(h); }
+    void setPos(const QPoint& pos) { r.moveTo(pos); }
 
     const std::set<Route*>& routes(Orientation dir) const;
 
@@ -206,75 +215,67 @@ public:
 struct Placement {
     QRect chipRect;
     std::vector<std::shared_ptr<RoutingComponent>> components;
-    QRect componentBoundingRect() const {
-        std::function<QRect(const std::shared_ptr<RoutingComponent>&)> f = [](const auto& rr) {
-            return rr.get()->rect();
-        };
-        return boundingRectOfRectsF<QRect>(components, f);
-    }
+    QRect componentBoundingRect() const;
+
+    /**
+     * @brief tileBasedPlacement
+     * Places all components based on the geometry of their surrounding routing tiles.
+     */
+    void doTileBasedPlacement();
 };
 
-#define WRAP_UNIQUEPTR(type) using type##Ptr = std::unique_ptr<type>;
-class RoutingGraph {
-public:
-    std::vector<std::unique_ptr<RoutingTile>> tiles;
-
-    void dumpDotFile(const QString& path = QString()) const;
-
-    // For debugging
-    std::vector<Line> stretchedLines;
-    std::vector<Line> tileLines;
-};
-
-WRAP_UNIQUEPTR(RoutingGraph)
-RoutingGraphPtr createConnectivityGraph(Placement& placement);
-
+class RoutingGraph;
 /**
  * @brief The tileMap class
  * Data structure for retrieving the tile group which envelops the provided index.
  */
 class TileMap {
 public:
-    TileMap(const RoutingGraph& tiles) {
-        // tiles will be mapped to their lower-right corner in terms of indexing operations.
-        // This is given the user of std::map::lower_bound to determine the map index
-        for (const auto& tile : tiles.tiles) {
-            const auto& bottomRight = tile->rect().bottomRight();
-            tileMap[bottomRight.x()][bottomRight.y()] = tile.get();
-        }
-    }
+    TileMap(const RoutingGraph& tiles);
 
     RoutingTile* lookup(const QPoint& index, Direction tieBreakVt = Direction::West,
-                        Direction tieBreakHz = Direction::North) const {
-        return lookup(index.x(), index.y(), tieBreakVt, tieBreakHz);
-    }
+                        Direction tieBreakHz = Direction::North) const;
 
     RoutingTile* lookup(int x, int y, Direction tieBreakVt = Direction::West,
-                        Direction tieBreakHz = Direction::North) const {
-        Q_ASSERT(tieBreakHz == Direction::North || tieBreakHz == Direction::South);
-        Q_ASSERT(tieBreakVt == Direction::West || tieBreakVt == Direction::East);
+                        Direction tieBreakHz = Direction::North) const;
 
-        const auto& vertMap = tileMap.lower_bound(x + (tieBreakVt == Direction::West ? 0 : 1));
-        if (vertMap != tileMap.end()) {
-            const auto& tileIt = vertMap->second.lower_bound(y + (tieBreakHz == Direction::North ? 0 : 1));
-            if (tileIt != vertMap->second.end()) {
-                return tileIt->second;
-            }
-        }
-
-        // Could not find a routing tile corresponding to the index
-        return nullptr;
-    }
     // Indexable tile map : {x coord. : {y coord. : Routingtile}}
     std::map<int, std::map<int, RoutingTile*>> tileMap;
 };
+
+#define WRAP_UNIQUEPTR(type) using type##Ptr = std::unique_ptr<type>;
+class RoutingGraph {
+public:
+    RoutingGraph(Placement& placement);
+
+    std::vector<std::unique_ptr<RoutingTile>> tiles;
+
+    void dumpDotFile(const QString& path = QString()) const;
+
+    /**
+     * @brief expandTiles
+     * Post route registration, expands all tiles to fit the maximum number of vertical/horizontal routes registerred in
+     * each row/column of the routable area.
+     */
+    void expandTiles();
+
+    // For debugging
+    std::vector<Line> stretchedLines;
+    std::vector<Line> tileLines;
+
+private:
+    std::unique_ptr<TileMap> m_tileMap;
+};
+
+WRAP_UNIQUEPTR(RoutingGraph)
+RoutingGraphPtr createConnectivityGraph(Placement& placement);
 
 using Net = std::vector<std::unique_ptr<Route>>;
 WRAP_UNIQUEPTR(Net)
 using Netlist = std::vector<NetPtr>;
 WRAP_UNIQUEPTR(Netlist)
 
-NetlistPtr createNetlist(Placement& placement, const TileMap& tileMap);
+NetlistPtr createNetlist(Placement& placement);
 Orientation directionBetweenRRs(RoutingTile* from, RoutingTile* to, Orientation def = Orientation::Horizontal);
 
 struct PRResult {

@@ -16,7 +16,7 @@ enum class Corner { TopLeft, TopRight, BottomRight, BottomLeft };
 namespace eda {
 enum class IntersectType { Cross, OnEdge };
 
-inline Orientation edgeToDirection(const Direction e) {
+inline Orientation directionToOrientation(const Direction e) {
     switch (e) {
         case Direction::North:
             return Orientation::Vertical;
@@ -26,6 +26,16 @@ inline Orientation edgeToDirection(const Direction e) {
             return Orientation::Horizontal;
         case Direction::East:
             return Orientation::Horizontal;
+    }
+    Q_UNREACHABLE();
+}
+
+inline std::set<Direction> orientationToDirections(const Orientation o) {
+    switch (o) {
+        case Orientation::Horizontal:
+            return {Direction::East, Direction::West};
+        case Orientation::Vertical:
+            return {Direction::North, Direction::South};
     }
     Q_UNREACHABLE();
 }
