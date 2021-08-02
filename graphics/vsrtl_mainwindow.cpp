@@ -1,8 +1,8 @@
 #include "vsrtl_mainwindow.h"
 #include "ui_vsrtl_mainwindow.h"
 #include "vsrtl_design.h"
-#include "vsrtl_netlist.h"
 #include "vsrtl_netlistmodel.h"
+#include "vsrtl_netlistwidget.h"
 #include "vsrtl_widget.h"
 
 #include <QAction>
@@ -25,15 +25,15 @@ MainWindow::MainWindow(SimDesign& arch, QWidget* parent) : QMainWindow(parent), 
     m_vsrtlWidget = new VSRTLWidget(this);
     m_vsrtlWidget->setDesign(&arch, true);
 
-    m_netlist = new Netlist(arch, this);
+    m_netlist = new NetlistWidget(arch, this);
 
     QSplitter* splitter = new QSplitter(this);
 
     splitter->addWidget(m_netlist);
     splitter->addWidget(m_vsrtlWidget);
 
-    connect(m_netlist, &Netlist::selectionChanged, m_vsrtlWidget, &VSRTLWidget::handleSelectionChanged);
-    connect(m_vsrtlWidget, &VSRTLWidget::componentSelectionChanged, m_netlist, &Netlist::updateSelection);
+    connect(m_netlist, &NetlistWidget::selectionChanged, m_vsrtlWidget, &VSRTLWidget::handleSelectionChanged);
+    connect(m_vsrtlWidget, &VSRTLWidget::componentSelectionChanged, m_netlist, &NetlistWidget::updateSelection);
 
     setCentralWidget(splitter);
 

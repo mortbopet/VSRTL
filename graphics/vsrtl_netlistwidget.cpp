@@ -1,5 +1,5 @@
-#include "vsrtl_netlist.h"
-#include "ui_vsrtl_netlist.h"
+#include "vsrtl_netlistwidget.h"
+#include "ui_vsrtl_netlistwidget.h"
 #include "vsrtl_netlistdelegate.h"
 #include "vsrtl_netlistmodel.h"
 #include "vsrtl_registermodel.h"
@@ -11,7 +11,7 @@
 
 namespace vsrtl {
 
-Netlist::Netlist(SimDesign& design, QWidget* parent) : QWidget(parent), ui(new Ui::Netlist) {
+NetlistWidget::NetlistWidget(SimDesign& design, QWidget* parent) : QWidget(parent), ui(new Ui::NetlistWidget) {
     ui->setupUi(this);
 
     m_netlistView = new NetlistView<NetlistTreeItem>(this);
@@ -28,7 +28,7 @@ Netlist::Netlist(SimDesign& design, QWidget* parent) : QWidget(parent), ui(new U
 
     m_selectionModel = new QItemSelectionModel(m_netlistModel);
     m_netlistView->setSelectionModel(m_selectionModel);
-    connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, &Netlist::handleViewSelectionChanged);
+    connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, &NetlistWidget::handleViewSelectionChanged);
 
     m_netlistView->header()->setSectionResizeMode(NetlistModel::ComponentColumn, QHeaderView::ResizeToContents);
     m_netlistView->header()->setSectionResizeMode(NetlistModel::IOColumn, QHeaderView::ResizeToContents);
@@ -56,7 +56,7 @@ Netlist::Netlist(SimDesign& design, QWidget* parent) : QWidget(parent), ui(new U
     connect(ui->collapse, &QPushButton::clicked, collapseAct, &QAction::trigger);
 }
 
-void Netlist::setCurrentViewExpandState(bool state) {
+void NetlistWidget::setCurrentViewExpandState(bool state) {
     QTreeView* view = nullptr;
     switch (ui->netlistViews->currentIndex()) {
         case 0: {
@@ -80,7 +80,7 @@ void Netlist::setCurrentViewExpandState(bool state) {
     }
 }
 
-void Netlist::updateSelection(const std::vector<SimComponent*>& selected) {
+void NetlistWidget::updateSelection(const std::vector<SimComponent*>& selected) {
     m_selectionModel->clearSelection();
     for (const auto& c : selected) {
         m_selectionModel->select(m_netlistModel->lookupIndexForComponent(c),
@@ -100,7 +100,7 @@ void getIndexComponentPtr(const QItemSelection& selected, std::vector<SimCompone
 }
 }  // namespace
 
-void Netlist::handleViewSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected) {
+void NetlistWidget::handleViewSelectionChanged(const QItemSelection& selected, const QItemSelection& deselected) {
     std::vector<SimComponent*> sel_components, desel_components;
 
     getIndexComponentPtr(selected, sel_components);
@@ -109,11 +109,11 @@ void Netlist::handleViewSelectionChanged(const QItemSelection& selected, const Q
     emit selectionChanged(sel_components, desel_components);
 }
 
-Netlist::~Netlist() {
+NetlistWidget::~NetlistWidget() {
     delete ui;
 }
 
-void Netlist::reloadNetlist() {
+void NetlistWidget::reloadNetlist() {
     m_netlistModel->invalidate();
     m_registerModel->invalidate();
 }

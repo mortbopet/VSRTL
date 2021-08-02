@@ -10,7 +10,7 @@
 namespace vsrtl {
 
 namespace Ui {
-class Netlist;
+class NetlistWidget;
 }
 
 class NetlistModel;
@@ -18,12 +18,12 @@ class RegisterModel;
 class RegisterTreeItem;
 class NetlistTreeItem;
 
-class Netlist : public QWidget {
+class NetlistWidget : public QWidget {
     Q_OBJECT
 
 public:
-    explicit Netlist(SimDesign& design, QWidget* parent = 0);
-    ~Netlist();
+    explicit NetlistWidget(SimDesign& design, QWidget* parent = 0);
+    ~NetlistWidget();
 
 signals:
     void selectionChanged(const std::vector<SimComponent*>& selected, std::vector<SimComponent*>& deselected);
@@ -38,7 +38,7 @@ private slots:
 private:
     void setCurrentViewExpandState(bool state);
 
-    Ui::Netlist* ui;
+    Ui::NetlistWidget* ui;
     QItemSelectionModel* m_selectionModel;
     NetlistModel* m_netlistModel;
     RegisterModel* m_registerModel;

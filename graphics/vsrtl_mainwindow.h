@@ -12,7 +12,7 @@ namespace vsrtl {
 
 class VSRTLWidget;
 class NetlistModel;
-class Netlist;
+class NetlistWidget;
 
 namespace Ui {
 class MainWindow;
@@ -29,7 +29,7 @@ private:
     Ui::MainWindow* ui;
 
     VSRTLWidget* m_vsrtlWidget;
-    Netlist* m_netlist;
+    NetlistWidget* m_netlist;
 
     void createToolbar();
 };
