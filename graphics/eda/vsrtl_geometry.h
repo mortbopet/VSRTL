@@ -35,11 +35,9 @@ inline Direction inv(Direction dir) {
 inline Orientation directionToOrientation(const Direction e) {
     switch (e) {
         case Direction::North:
-            return Orientation::Vertical;
         case Direction::South:
             return Orientation::Vertical;
         case Direction::West:
-            return Orientation::Horizontal;
         case Direction::East:
             return Orientation::Horizontal;
         case Direction::NDirections:

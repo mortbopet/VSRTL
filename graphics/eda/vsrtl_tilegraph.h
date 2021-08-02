@@ -262,20 +262,6 @@ private:
 WRAP_UNIQUEPTR(TileGraph)
 TileGraphPtr createConnectivityGraph(Placement& placement);
 
-using Net = std::vector<std::unique_ptr<Route>>;
-WRAP_UNIQUEPTR(Net)
-using Netlist = std::vector<NetPtr>;
-WRAP_UNIQUEPTR(Netlist)
-
-NetlistPtr createNetlist(Placement& placement);
-Orientation directionBetweenRRs(RoutingTile* from, RoutingTile* to, Orientation def = Orientation::Horizontal);
-
-struct PRResult {
-    Placement placement;
-    TileGraphPtr tiles;
-    NetlistPtr netlist;
-};
-
 }  // namespace eda
 }  // namespace vsrtl
 

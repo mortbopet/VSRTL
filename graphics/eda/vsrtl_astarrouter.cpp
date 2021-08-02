@@ -1,5 +1,6 @@
 #include "vsrtl_astar.h"
-#include "vsrtl_routing.h"
+#include "vsrtl_netlist.h"
+#include "vsrtl_tilegraph.h"
 
 namespace vsrtl {
 namespace eda {
@@ -12,8 +13,9 @@ int rrHeuristic(RoutingTile* start, RoutingTile* goal) {
 
 bool validity(RoutingTile* from, RoutingTile* to) {
     return true;  // Todo: fix this
-    const Orientation direction = directionBetweenRRs(from, to);
-    return to->remainingCap(direction) > 0;
+    bool valid;
+    const Orientation direction = directionToOrientation(from->adjacentDir(to, valid));
+    return valid && to->remainingCap(direction) > 0;
 };
 
 std::vector<RoutingTile*> adjacency(RoutingTile* from) {

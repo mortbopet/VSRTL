@@ -6,7 +6,8 @@
 #include <map>
 #include <vector>
 
-#include "vsrtl_routing.h"
+#include "vsrtl_netlist.h"
+#include "vsrtl_tilegraph.h"
 
 namespace vsrtl {
 class GridComponent;
@@ -17,6 +18,12 @@ enum class RouteAlg { Direct, AStar };
 
 using PlacementFunct = std::function<Placement(const std::vector<GridComponent*>&)>;
 using RouteFunct = std::function<void(NetlistPtr&)>;
+
+struct PRResult {
+    Placement placement;
+    TileGraphPtr tiles;
+    NetlistPtr netlist;
+};
 
 /**
  * @brief The PlaceRoute class

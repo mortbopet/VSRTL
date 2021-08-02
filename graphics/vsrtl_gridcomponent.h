@@ -5,7 +5,7 @@
 #include <map>
 
 #include "../interface/vsrtl_interface.h"
-#include "eda/vsrtl_routing.h"
+#include "eda/vsrtl_placeroute.h"
 #include "vsrtl_componentborder.h"
 #include "vsrtl_graphicsbaseitem.h"
 #include "vsrtl_shape.h"
