@@ -83,6 +83,7 @@ public:
     }
 
     void setTileAtEdge(Direction, Tile*);
+    int id() const { return m_id; }
 
     bool operator==(const Tile& lhs) const;
     virtual QRect rect() const = 0;
@@ -103,6 +104,10 @@ protected:
 
 private:
     bool adjacentRowColRec(const Tile* rr, Direction dir) const;
+
+    // A unique ID representing this routing tile
+    int m_id;
+    static int rr_ids;
 };
 
 class RoutingComponent : public Tile {
@@ -140,12 +145,11 @@ public:
         QPoint from() const;
         QPoint to() const;
     };
-    RoutingTile(const QRect& rect) : r(rect), h_cap(rect.width() - 1), v_cap(rect.height() - 1) { m_id = rr_ids++; }
+    RoutingTile(const QRect& rect) : r(rect), h_cap(rect.width() - 1), v_cap(rect.height() - 1) {}
 
     QRect rect() const override { return r; }
     int capacity(Orientation dir) const;
     int remainingCap(Orientation dir) const;
-    int id() const { return m_id; }
     void assignRoutes();
     RoutePath getPath(Route* route) const;
     void registerRoute(Route*, Orientation);
@@ -158,9 +162,6 @@ public:
 private:
     std::set<Route*> m_verticalRoutes, m_horizontalRoutes;
     std::map<Route*, RoutePath> m_assignedRoutes;
-    // A unique ID representing this routing tile
-    int m_id;
-    static int rr_ids;
 
     QRect r;    // tile size and position
     int h_cap;  // Horizontal capacity of tile
@@ -217,14 +218,14 @@ struct Placement {
     void doTileBasedPlacement();
 };
 
-class RoutingGraph;
+class TileGraph;
 /**
  * @brief The tileMap class
  * Data structure for retrieving the tile group which envelops the provided index.
  */
 class TileMap {
 public:
-    TileMap(const RoutingGraph& tiles);
+    TileMap(const TileGraph& tiles);
 
     RoutingTile* lookup(const QPoint& index, Direction tieBreakVt = Direction::West,
                         Direction tieBreakHz = Direction::North) const;
@@ -237,11 +238,9 @@ public:
 };
 
 #define WRAP_UNIQUEPTR(type) using type##Ptr = std::unique_ptr<type>;
-class RoutingGraph {
+class TileGraph : public Graph<Tile> {
 public:
-    RoutingGraph(Placement& placement);
-
-    std::vector<std::unique_ptr<RoutingTile>> tiles;
+    TileGraph(Placement& placement);
 
     void dumpDotFile(const QString& path = QString()) const;
 
@@ -260,8 +259,8 @@ private:
     std::unique_ptr<TileMap> m_tileMap;
 };
 
-WRAP_UNIQUEPTR(RoutingGraph)
-RoutingGraphPtr createConnectivityGraph(Placement& placement);
+WRAP_UNIQUEPTR(TileGraph)
+TileGraphPtr createConnectivityGraph(Placement& placement);
 
 using Net = std::vector<std::unique_ptr<Route>>;
 WRAP_UNIQUEPTR(Net)
@@ -273,7 +272,7 @@ Orientation directionBetweenRRs(RoutingTile* from, RoutingTile* to, Orientation 
 
 struct PRResult {
     Placement placement;
-    RoutingGraphPtr tiles;
+    TileGraphPtr tiles;
     NetlistPtr netlist;
 };
 

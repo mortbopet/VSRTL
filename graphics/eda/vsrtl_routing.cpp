@@ -6,9 +6,11 @@
 namespace vsrtl {
 namespace eda {
 
-int RoutingTile::rr_ids = 0;
+int Tile::rr_ids = 0;
 
 Tile::Tile() {
+    m_id = rr_ids++;
+
     // One neighbour in each direction
     for (int i = 0; i < NDirections; i++) {
         addNeighbour(nullptr);
@@ -83,17 +85,17 @@ NetlistPtr createNetlist(Placement& placement) {
     return netlist;
 }
 
-void RoutingGraph::dumpDotFile(const QString& path) const {
+void TileGraph::dumpDotFile(const QString& path) const {
     const auto realPath = path.isEmpty() ? "routinggraph.dot" : path;
 
     DotFile f(realPath.toStdString(), "RoutingGraph");
-    for (const auto& tile : tiles) {
-        const std::string rid = std::to_string(tile.get()->id());
+    for (const auto& tile : verticesOfType<RoutingTile>()) {
+        const std::string rid = std::to_string(tile->id());
         f.addVar(rid, rid);
     }
 
-    for (const auto& tile : tiles) {
-        const std::string rid = std::to_string(tile.get()->id());
+    for (const auto& tile : verticesOfType<RoutingTile>()) {
+        const std::string rid = std::to_string(tile->id());
         for (const auto& adjTile : tile->adjacentTiles()) {
             if (adjTile == nullptr) {
                 continue;
@@ -166,12 +168,12 @@ std::set<RoutingTile*> expandTilesInOrientation(RoutingTile* origin, Orientation
     return tiles;
 }
 
-TileMap::TileMap(const RoutingGraph& tiles) {
+TileMap::TileMap(const TileGraph& tiles) {
     // tiles will be mapped to their lower-right corner in terms of indexing operations.
     // This is given the user of std::map::lower_bound to determine the map index
-    for (const auto& tile : tiles.tiles) {
+    for (const auto& tile : tiles.verticesOfType<RoutingTile>()) {
         const auto& bottomRight = tile->rect().bottomRight();
-        tileMap[bottomRight.x()][bottomRight.y()] = tile.get();
+        tileMap[bottomRight.x()][bottomRight.y()] = tile;
     }
 }
 
@@ -237,10 +239,10 @@ void assertIsSubset(const std::set<T>& s1, const std::set<T>& s2) {
     Q_ASSERT(diff.size() == 0);
 }
 
-void RoutingGraph::expandTiles() {
+void TileGraph::expandTiles() {
     std::set<RoutingTile*> remaining;
-    for (const auto& t : tiles) {
-        remaining.insert(t.get());
+    for (const auto& t : verticesOfType<RoutingTile>()) {
+        remaining.insert(t);
     }
 
     // First, all tiles are expanded based on the maximum required width/height of other tiles in their row/column.
@@ -264,7 +266,7 @@ void RoutingGraph::expandTiles() {
     placeTilesRec(tile, alreadyPlaced);
 }
 
-RoutingGraph::RoutingGraph(Placement& placement) {
+TileGraph::TileGraph(Placement& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
     std::vector<QRect> rects;
     std::transform(placement.components.begin(), placement.components.end(), std::back_inserter(rects),
@@ -428,19 +430,19 @@ RoutingGraph::RoutingGraph(Placement& placement) {
 
                 if (componentInTileIt == placement.components.end()) {
                     // New tile was not a component, check if new tile has already been added
-                    if (std::find_if(tiles.begin(), tiles.end(), [&newTileRect](const auto& tile) {
-                            return tile.get()->rect() == newTileRect;
-                        }) == tiles.end())
-
+                    auto routingTiles = verticesOfType<RoutingTile>();
+                    if (std::find_if(routingTiles.begin(), routingTiles.end(), [&newTileRect](const auto& tile) {
+                            return tile->rect() == newTileRect;
+                        }) == routingTiles.end()) {
                         // This is a new routing tile
-                        tiles.push_back(std::make_unique<RoutingTile>(newTileRect));
-                    RoutingTile* newtile = tiles.rbegin()->get();
+                        auto* newTile = addVertex(std::make_shared<RoutingTile>(newTileRect));
 
-                    // Add tile to tileGroups
-                    tileGroups[newTileRect.topLeft()].setTile(Corner::BottomRight, newtile);
-                    tileGroups[newTileRect.bottomLeft()].setTile(Corner::TopRight, newtile);
-                    tileGroups[newTileRect.topRight()].setTile(Corner::BottomLeft, newtile);
-                    tileGroups[newTileRect.bottomRight()].setTile(Corner::TopLeft, newtile);
+                        // Add tile to tileGroups
+                        tileGroups[newTileRect.topLeft()].setTile(Corner::BottomRight, newTile);
+                        tileGroups[newTileRect.bottomLeft()].setTile(Corner::TopRight, newTile);
+                        tileGroups[newTileRect.topRight()].setTile(Corner::BottomLeft, newTile);
+                        tileGroups[newTileRect.bottomRight()].setTile(Corner::TopLeft, newTile);
+                    }
                 }
             }
         }

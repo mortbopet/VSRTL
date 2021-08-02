@@ -202,7 +202,7 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
     const int vSpacing = placement.chipRect.y();
     // Add margins to chip rect to allow routing on right- and bottom borders
     placement.chipRect.adjust(-hSpacing, -vSpacing, hSpacing, vSpacing);
-    std::unique_ptr<RoutingGraph> rGraph = std::make_unique<RoutingGraph>(placement);
+    std::unique_ptr<TileGraph> rGraph = std::make_unique<TileGraph>(placement);
 
 #ifndef NDEBUG
     rGraph->dumpDotFile();
@@ -219,7 +219,7 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
 
     // During the routing algorithm, all routes should have registered to their routing tiles. With knowledge of how
     // many routes occupy each routing tile, a route is assigned a lane within the routing tile
-    for (const auto& tile : rGraph->tiles) {
+    for (const auto& tile : rGraph->verticesOfType<RoutingTile>()) {
         tile->assignRoutes();
     }
 

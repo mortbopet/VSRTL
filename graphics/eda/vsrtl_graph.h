@@ -2,17 +2,20 @@
 
 #include <assert.h>
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 namespace vsrtl {
 namespace eda {
 
-class Vertex {
-    template <typename T>
-    constexpr void assertSubclass() const {
-        static_assert(std::is_base_of<Vertex, T>::value, "T must subclass Vertex");
-    }
+class Vertex;
 
+template <typename T>
+constexpr void assertSubclass() {
+    static_assert(std::is_base_of<Vertex, T>::value, "T must subclass Vertex");
+}
+
+class Vertex {
 public:
     virtual ~Vertex() = default;
 
@@ -64,17 +67,46 @@ private:
     std::vector<Vertex*> m_neighbours;
 };
 
-template <class T>
+// Convenience function for generating vertex type predicates
+template <typename T1, typename T2>
+bool is(T1* vt) {
+    return static_cast<bool>(dynamic_cast<T2*>(vt));
+}
+
+template <class Vt>
 class Graph {
-    static_assert(std::is_base_of<T, Vertex>::value, "T must subclass Vertex");
+    using Vtp = std::shared_ptr<Vt>;
+    static_assert(std::is_base_of<Vertex, Vt>::value, "T must subclass Vertex");
 
 public:
-    Graph();
+    Graph() = default;
 
-    const std::vector<T>& vertices() const;
+    template <typename T = Vt>
+    std::vector<T*> vertices(const std::function<bool(Vt*)>& pred = [](Vt*) { return true; }) const {
+        std::vector<T*> _vertices;
+        for (const auto& n : m_vertices) {
+            T* _n = static_cast<T*>(n.get());
+            if (pred(_n)) {
+                _vertices.push_back(_n);
+            }
+        }
+        return _vertices;
+    }
+
+    template <typename T = Vt>
+    std::vector<T*> verticesOfType() const {
+        return vertices<T>(is<Vertex, T>);
+    }
+
+    template <typename T = Vt>
+    T* addVertex(std::shared_ptr<T>&& vtp) {
+        assertSubclass<T>();
+        m_vertices.push_back(vtp);
+        return vtp.get();
+    }
 
 protected:
-    std::vector<T> m_vertices;
+    std::vector<Vtp> m_vertices;
 };
 
 }  // namespace eda

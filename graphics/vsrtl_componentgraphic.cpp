@@ -616,22 +616,19 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         // painter->drawRect(gridToScene(m_prresult.placement.chipRect));
 
         // Draw routing regions
-        for (const auto& rr : m_prresult.tiles->tiles) {
+        for (const auto& rr : m_prresult.tiles->vertices()) {
             QPen pen;
             pen.setColor(QColor(rand() % 255, rand() % 255, rand() % 255));
             pen.setStyle(Qt::DotLine);
             painter->setPen(pen);
             // Adjust for the "historical deviation" off-by-1 mess of QRect (see QRect docs)
-            auto sceneGridRect = gridToScene(rr.get()->rect().adjusted(0, 0, -1, -1));
-            sceneGridRect.moveTo(rr.get()->rect().topLeft() * GRID_SIZE);
+            auto sceneGridRect = gridToScene(rr->rect().adjusted(0, 0, -1, -1));
+            sceneGridRect.moveTo(rr->rect().topLeft() * GRID_SIZE);
             painter->drawRect(sceneGridRect);
             auto f = painter->font();
             f.setPointSize(7);
             painter->setFont(f);
-            painter->drawText(gridToScene(rr.get()->rect().topLeft()),
-                              QString::number(rr->id()) +
-                                  " h: " + QString::number(rr->routes(Orientation::Horizontal).size()) +
-                                  " v: " + QString::number(rr->routes(Orientation::Vertical).size()));
+            painter->drawText(gridToScene(rr->rect().topLeft()), QString::number(rr->id()));
         }
         /*
 
