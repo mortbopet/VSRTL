@@ -278,6 +278,8 @@ QPoint GridComponent::getPortGridPos(const SimPort* port) const {
             portPos.ry() += rect.height();
             portPos.rx() += portIdx.index;
             break;
+        case Direction::NDirections:
+            assert(false);
     }
     return portPos;
 }
@@ -362,10 +364,12 @@ void GridComponent::rotatePorts(const RotationDirection& dir) {
             Direction newSide = Direction();
             // clang-format off
             switch(sidePorts.first) {
-                case Direction::North:     newSide = dir == RotationDirection::RightHand ? Direction::East : Direction::West; break;
-                case Direction::West:    newSide = dir == RotationDirection::RightHand ? Direction::North : Direction::South; break;
-                case Direction::East:   newSide = dir == RotationDirection::RightHand ? Direction::South : Direction::North; break;
-                case Direction::South:  newSide = dir == RotationDirection::RightHand ? Direction::West : Direction::East; break;
+                case Direction::North: newSide = dir == RotationDirection::RightHand ? Direction::East : Direction::West; break;
+                case Direction::West:  newSide = dir == RotationDirection::RightHand ? Direction::North : Direction::South; break;
+                case Direction::East:  newSide = dir == RotationDirection::RightHand ? Direction::South : Direction::North; break;
+                case Direction::South: newSide = dir == RotationDirection::RightHand ? Direction::West : Direction::East; break;
+                case Direction::NDirections: assert(false);
+
             }
             // clang-format on
 

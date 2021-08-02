@@ -24,13 +24,13 @@ std::vector<RoutingTile*> adjacency(RoutingTile* from) {
         [&](std::vector<RoutingTile*>& tiles, RoutingTile* rt, Direction edge) {
             if (rt) {
                 tiles.push_back(rt);
-                getAdjacentRec(tiles, dynamic_cast<RoutingTile*>(rt->getAdjacentTile(edge)), edge);
+                getAdjacentRec(tiles, dynamic_cast<RoutingTile*>(rt->neighbour(edge)), edge);
             }
         };
 
     std::vector<RoutingTile*> rowColTiles;
     for (auto dir : {Direction::South, Direction::North, Direction::West, Direction::East}) {
-        getAdjacentRec(rowColTiles, dynamic_cast<RoutingTile*>(from->getAdjacentTile(dir)), dir);
+        getAdjacentRec(rowColTiles, dynamic_cast<RoutingTile*>(from->neighbour(dir)), dir);
     }
     return rowColTiles;
 };
@@ -80,10 +80,10 @@ void AStarRouter(NetlistPtr& netlist) {
                     // Patch up intermediate path
                     auto intermediateTiles = curTile->intermediateTiles(preTile);
 #ifndef NDEBUG
+                    assert(intermediateTiles.size() != 0);
                     assertAdjacentTiles(curTile, *intermediateTiles.begin());
                     assertAdjacentTiles(preTile, *intermediateTiles.rbegin());
 #endif
-                    assert(intermediateTiles.size() != 0);
                     route->path.insert(route->path.begin() + i + 1, intermediateTiles.begin(), intermediateTiles.end());
                 }
             }

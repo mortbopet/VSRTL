@@ -8,6 +8,13 @@ namespace eda {
 
 int RoutingTile::rr_ids = 0;
 
+Tile::Tile() {
+    // One neighbour in each direction
+    for (int i = 0; i < NDirections; i++) {
+        addNeighbour(nullptr);
+    }
+}
+
 QRect RoutingComponent::rect() const {
     auto r = gridComponent->getCurrentComponentRect();
     r.moveTo(pos);
@@ -16,17 +23,17 @@ QRect RoutingComponent::rect() const {
 
 void RoutingComponent::doTileBasedPlacement() {
     QRect enclosedArea;
-    if (top) {
-        enclosedArea.setTop(top->rect().bottom());
+    if (auto* n = neighbour<Tile>(Direction::North)) {
+        enclosedArea.setTop(n->rect().bottom());
     }
-    if (bottom) {
-        enclosedArea.setBottom(bottom->rect().top());
+    if (auto* n = neighbour<Tile>(Direction::South)) {
+        enclosedArea.setBottom(n->rect().top());
     }
-    if (left) {
-        enclosedArea.setLeft(left->rect().right());
+    if (auto* n = neighbour<Tile>(Direction::West)) {
+        enclosedArea.setLeft(n->rect().right());
     }
-    if (right) {
-        enclosedArea.setRight(right->rect().left());
+    if (auto* n = neighbour<Tile>(Direction::East)) {
+        enclosedArea.setRight(n->rect().left());
     }
 
     Q_ASSERT(enclosedArea.width() > 0 && enclosedArea.height() > 0);
@@ -44,7 +51,7 @@ NetlistPtr createNetlist(Placement& placement) {
             source.routingComponent = routingComponent;
 
             // Get source port routing tile
-            source.tile = dynamic_cast<RoutingTile*>(source.routingComponent->getAdjacentTile(
+            source.tile = dynamic_cast<RoutingTile*>(source.routingComponent->neighbour(
                 source.routingComponent->gridComponent->getPortPos(outputPort).side));
             Q_ASSERT(source.tile != nullptr);
             for (const auto& sinkPort : outputPort->getOutputPorts()) {
@@ -65,8 +72,8 @@ NetlistPtr createNetlist(Placement& placement) {
                 sink.routingComponent = *rc_i;
 
                 // Get sink port routing tile
-                sink.tile = dynamic_cast<RoutingTile*>(sink.routingComponent->getAdjacentTile(
-                    sink.routingComponent->gridComponent->getPortPos(sinkPort).side));
+                sink.tile = dynamic_cast<RoutingTile*>(
+                    sink.routingComponent->neighbour(sink.routingComponent->gridComponent->getPortPos(sinkPort).side));
                 Q_ASSERT(sink.tile != nullptr);
                 net->push_back(std::make_unique<Route>(source, sink));
             }
@@ -195,19 +202,19 @@ void placeTilesRec(RoutingTile* tile, std::set<RoutingTile*>& alreadyPlaced) {
 
     alreadyPlaced.insert(tile);
     std::set<RoutingTile*> toIterate;
-    if (auto* rt = dynamic_cast<RoutingTile*>(tile->getAdjacentTile(Direction::East))) {
+    if (auto* rt = dynamic_cast<RoutingTile*>(tile->neighbour(Direction::East))) {
         rt->setPos(tile->rect().topRight());
         toIterate.insert(rt);
     }
-    if (auto* rt = dynamic_cast<RoutingTile*>(tile->getAdjacentTile(Direction::West))) {
+    if (auto* rt = dynamic_cast<RoutingTile*>(tile->neighbour(Direction::West))) {
         rt->setPos(tile->rect().topLeft() - QPoint(rt->rect().width() - 1, 0));
         toIterate.insert(rt);
     }
-    if (auto* rt = dynamic_cast<RoutingTile*>(tile->getAdjacentTile(Direction::South))) {
+    if (auto* rt = dynamic_cast<RoutingTile*>(tile->neighbour(Direction::South))) {
         rt->setPos(tile->rect().bottomLeft());
         toIterate.insert(rt);
     }
-    if (auto* rt = dynamic_cast<RoutingTile*>(tile->getAdjacentTile(Direction::North))) {
+    if (auto* rt = dynamic_cast<RoutingTile*>(tile->neighbour(Direction::North))) {
         rt->setPos(tile->rect().topLeft() - QPoint(0, rt->rect().height() - 1));
         toIterate.insert(rt);
     }
@@ -249,8 +256,8 @@ void RoutingGraph::expandTiles() {
     // top-left tile.
     RoutingTile* tile = m_tileMap->lookup(QPoint(0, 0));
     Q_ASSERT(tile);
-    Q_ASSERT(tile->getAdjacentTile(Direction::West) == nullptr);
-    Q_ASSERT(tile->getAdjacentTile(Direction::North) == nullptr);
+    Q_ASSERT(tile->neighbour(Direction::West) == nullptr);
+    Q_ASSERT(tile->neighbour(Direction::North) == nullptr);
 
     std::set<RoutingTile*> alreadyPlaced;
     tile->setPos(QPoint(0, 0));
@@ -493,31 +500,9 @@ RoutingTile::RoutePath RoutingTile::getPath(Route* route) const {
 
 void Tile::setTileAtEdge(Direction e, Tile* tile) {
     Q_ASSERT(tile != this);
-    switch (e) {
-        case Direction::North: {
-            top = tile;
-            if (tile)
-                tile->bottom = this;
-            return;
-        }
-        case Direction::South: {
-            bottom = tile;
-            if (tile)
-                tile->top = this;
-            return;
-        }
-        case Direction::West: {
-            left = tile;
-            if (tile)
-                tile->right = this;
-            return;
-        }
-        case Direction::East: {
-            right = tile;
-            if (tile)
-                tile->left = this;
-            return;
-        }
+    neighbourRef(e) = tile;
+    if (tile) {
+        tile->neighbourRef(inv(e)) = this;
     }
 }
 
@@ -568,13 +553,7 @@ QPoint RoutingTile::RoutePath::to() const {
 }
 
 std::vector<Tile*> Tile::adjacentTiles() {
-    std::vector<Tile*> tiles;
-    for (auto* t : {top, bottom, left, right}) {
-        if (t != nullptr) {
-            tiles.push_back(t);
-        }
-    }
-    return tiles;
+    return neighbours<Tile>([](Tile* t) { return t != nullptr; });
 }
 
 Direction Tile::adjacentDir(const Tile* rr, bool& valid) const {
@@ -596,14 +575,10 @@ Direction Tile::adjacentDir(const Tile* rr, bool& valid) const {
 
 Direction Tile::adjacentTile(const Tile* rr, bool& valid) const {
     valid = true;
-    if (rr == top) {
-        return Direction::North;
-    } else if (rr == right) {
-        return Direction::East;
-    } else if (rr == left) {
-        return Direction::West;
-    } else if (rr == bottom) {
-        return Direction::South;
+    for (const auto& dir : allDirections) {
+        if (rr == neighbour<Tile>(dir)) {
+            return dir;
+        }
     }
     valid = false;
     return Direction();
@@ -634,7 +609,7 @@ void Tile::iterateInDirection(const RowColItFunc& f, Direction edge) {
 
 void Tile::iterateInDirections(const RowColItFunc& f, const std::set<Direction>& edges) {
     for (auto dir : edges) {
-        if (auto adjTile = getAdjacentTile(dir)) {
+        if (auto* adjTile = neighbour<Tile>(dir)) {
             if (!adjTile->iterateDirectionRec(this, f, dir)) {
                 return;
             }
@@ -644,7 +619,7 @@ void Tile::iterateInDirections(const RowColItFunc& f, const std::set<Direction>&
 
 bool Tile::iterateDirectionRec(Tile* origTile, const RowColItFunc& f, Direction dir) {
     if (f(origTile, this, dir)) {
-        auto adjTile = getAdjacentTile(dir);
+        auto* adjTile = neighbour<Tile>(dir);
         if (adjTile) {
             return adjTile->iterateDirectionRec(origTile, f, dir);
         } else {
@@ -655,24 +630,6 @@ bool Tile::iterateDirectionRec(Tile* origTile, const RowColItFunc& f, Direction 
 
     // Do not continue iteration in next row/col
     return false;
-}
-
-const Tile* Tile::getAdjacentTile(Direction edge) const {
-    switch (edge) {
-        case Direction::North:
-            return top;
-        case Direction::South:
-            return bottom;
-        case Direction::West:
-            return left;
-        case Direction::East:
-            return right;
-    }
-    return nullptr;
-}
-
-Tile* Tile::getAdjacentTile(Direction edge) {
-    return const_cast<Tile*>(const_cast<const Tile*>(this)->getAdjacentTile(edge));
 }
 
 const std::set<Route*>& RoutingTile::routes(Orientation dir) const {
@@ -711,7 +668,7 @@ int RoutingTile::remainingCap(Orientation dir) const {
 }
 
 namespace {
-inline bool cmpTilePtr(Tile* a, Tile* b) {
+inline bool cmpTilePtr(const Tile* a, const Tile* b) {
     if ((a == nullptr && b != nullptr) || (b == nullptr && a != nullptr))
         return false;
     if (a == nullptr && b == nullptr)
@@ -721,13 +678,13 @@ inline bool cmpTilePtr(Tile* a, Tile* b) {
 }  // namespace
 
 bool Tile::operator==(const Tile& lhs) const {
-    if (!cmpTilePtr(top, lhs.top))
+    if (!cmpTilePtr(neighbour<Tile>(Direction::North), lhs.neighbour<Tile>(Direction::North)))
         return false;
-    if (!cmpTilePtr(bottom, lhs.bottom))
+    if (!cmpTilePtr(neighbour<Tile>(Direction::South), lhs.neighbour<Tile>(Direction::South)))
         return false;
-    if (!cmpTilePtr(left, lhs.left))
+    if (!cmpTilePtr(neighbour<Tile>(Direction::West), lhs.neighbour<Tile>(Direction::West)))
         return false;
-    if (!cmpTilePtr(right, lhs.right))
+    if (!cmpTilePtr(neighbour<Tile>(Direction::East), lhs.neighbour<Tile>(Direction::East)))
         return false;
 
     return rect() == lhs.rect();

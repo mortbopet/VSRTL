@@ -132,6 +132,8 @@ public:
                 return m_top;
             case Direction::South:
                 return m_bottom;
+            case Direction::NDirections:
+                assert(false);
         }
         Q_UNREACHABLE();
     }

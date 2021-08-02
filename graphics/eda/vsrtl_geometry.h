@@ -8,13 +8,29 @@
 #include <set>
 
 namespace vsrtl {
-enum class Direction { North, South, West, East };
+enum Direction { North, South, West, East, NDirections };
 #define allDirections (std::set<Direction>{Direction::North, Direction::South, Direction::West, Direction::East})
 enum class Orientation { Horizontal, Vertical };
 enum class Corner { TopLeft, TopRight, BottomRight, BottomLeft };
 
 namespace eda {
 enum class IntersectType { Cross, OnEdge };
+
+inline Direction inv(Direction dir) {
+    switch (dir) {
+        case North:
+            return South;
+        case South:
+            return North;
+        case West:
+            return East;
+        case East:
+            return West;
+        case NDirections:
+            assert(false);
+    }
+    Q_UNREACHABLE();
+}
 
 inline Orientation directionToOrientation(const Direction e) {
     switch (e) {
@@ -26,6 +42,8 @@ inline Orientation directionToOrientation(const Direction e) {
             return Orientation::Horizontal;
         case Direction::East:
             return Orientation::Horizontal;
+        case Direction::NDirections:
+            assert(false);
     }
     Q_UNREACHABLE();
 }
@@ -117,18 +135,16 @@ inline QPoint realBottomLeft(const QRect& rect) {
 
 inline Line getEdge(const QRect& rect, Direction e) {
     switch (e) {
-        case Direction::North: {
+        case Direction::North:
             return Line(rect.topLeft(), realTopRight(rect));
-        }
-        case Direction::South: {
+        case Direction::South:
             return Line(realBottomLeft(rect), realBottomRight(rect));
-        }
-        case Direction::West: {
+        case Direction::West:
             return Line(rect.topLeft(), realBottomLeft(rect));
-        }
-        case Direction::East: {
+        case Direction::East:
             return Line(realTopRight(rect), realBottomRight(rect));
-        }
+        case Direction::NDirections:
+            assert(false);
     }
     Q_UNREACHABLE();
 }

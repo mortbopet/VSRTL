@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "vsrtl_geometry.h"
+#include "vsrtl_graph.h"
 #include "vsrtl_graphics_util.h"
 
 // Various data-structures used during routing
@@ -26,8 +27,10 @@ void assertAdjacentTiles(const T1* t1, const T2* t2) {
     Q_ASSERT(valid);
 }
 
-class Tile {
+class Tile : public Vertex {
 public:
+    Tile();
+
     /**
      * @brief adjacentTile
      * @param rr
@@ -49,8 +52,6 @@ public:
      * @param is set to false if the target tile was not found in row/col.
      */
     Direction adjacentRowCol(const Tile* rr, bool& valid);
-    Tile* getAdjacentTile(Direction edge);
-    const Tile* getAdjacentTile(Direction edge) const;
     std::vector<Tile*> adjacentTiles();
 
     /**
@@ -99,14 +100,6 @@ public:
 
 protected:
     bool iterateDirectionRec(Tile* origTile, const RowColItFunc& f, Direction dir);
-
-    /**
-     * Routing tiles on each row/column of this component
-     */
-    Tile* top;
-    Tile* left;
-    Tile* right;
-    Tile* bottom;
 
 private:
     bool adjacentRowColRec(const Tile* rr, Direction dir) const;

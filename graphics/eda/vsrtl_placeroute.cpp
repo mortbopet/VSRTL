@@ -204,6 +204,10 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
     placement.chipRect.adjust(-hSpacing, -vSpacing, hSpacing, vSpacing);
     std::unique_ptr<RoutingGraph> rGraph = std::make_unique<RoutingGraph>(placement);
 
+#ifndef NDEBUG
+    rGraph->dumpDotFile();
+#endif
+
     // ======================= ROUTE ======================= //
     auto netlist = createNetlist(placement);
     get()->m_routingAlgorithms.at(get()->m_routingAlgorithm)(netlist);
@@ -218,10 +222,6 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
     for (const auto& tile : rGraph->tiles) {
         tile->assignRoutes();
     }
-
-#ifndef NDEBUG
-    rGraph->dumpDotFile();
-#endif
 
     PRResult result;
     result.placement = placement;

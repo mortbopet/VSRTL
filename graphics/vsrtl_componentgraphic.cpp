@@ -469,22 +469,20 @@ void ComponentGraphic::handlePortPosChanged(const SimPort* port) {
 
     g->setSide(pos.side);
     switch (pos.side) {
-        case Direction::West: {
+        case Direction::West:
             g->setPos(QPointF(sceneGridRect().left(), pos.index * GRID_SIZE + (GRID_SIZE / 2)));
             break;
-        }
-        case Direction::East: {
+        case Direction::East:
             g->setPos(QPointF(sceneGridRect().right(), pos.index * GRID_SIZE + (GRID_SIZE / 2)));
             break;
-        }
-        case Direction::North: {
+        case Direction::North:
             g->setPos(QPointF(pos.index * GRID_SIZE + (GRID_SIZE / 2), sceneGridRect().top()));
             break;
-        }
-        case Direction::South: {
+        case Direction::South:
             g->setPos(QPointF(pos.index * GRID_SIZE + (GRID_SIZE / 2), sceneGridRect().bottom()));
             break;
-        }
+        case Direction::NDirections:
+            assert(false);
     }
 }
 
@@ -672,6 +670,7 @@ void ComponentGraphic::paintIndicator(QPainter* painter, PortGraphic* p, QColor 
         case Direction::South : startAngle = -180; break;
         case Direction::West : startAngle = 90; break;
         case Direction::East : startAngle = -90; break;
+        case Direction::NDirections: assert(false);
     }
     // clang-format on
 

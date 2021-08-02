@@ -243,6 +243,8 @@ QPointF PortGraphic::getInputPoint() const {
             return QPointF(0,
                            m_type == vsrtl::SimPort::PortType::in ? s_portGridWidth * GRID_SIZE - GRID_SIZE_HALF : 0);
         }
+        case Direction::NDirections:
+            assert(false);
     }
     Q_UNREACHABLE();
 }
@@ -265,6 +267,8 @@ QPointF PortGraphic::getOutputPoint() const {
             return QPointF(0,
                            m_type == vsrtl::SimPort::PortType::out ? s_portGridWidth * GRID_SIZE - GRID_SIZE_HALF : 0);
         }
+        case Direction::NDirections:
+            assert(false);
     }
     Q_UNREACHABLE();
 }
@@ -435,6 +439,8 @@ void PortGraphic::updateGeometry() {
                                                 : QPointF{0, -vDiff});
             break;
         }
+        case Direction::NDirections:
+            assert(false);
     }
     m_portWidthLabel->setPos(mapToItem(m_portWidthLabel->parentItem(), pDiff));
 
@@ -501,6 +507,8 @@ void PortGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWid
                 p2 = start - QPointF(-d, dir * d);
                 break;
             }
+            case Direction::NDirections:
+                assert(false);
         }
         painter->drawLine(start, p1);
         painter->drawLine(start, p2);
