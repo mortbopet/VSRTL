@@ -38,6 +38,10 @@ public:
     void setLocked(bool locked);
     void zoomToFit();
 
+    /// Called whenever the state of the simulator and the visualization is out of sync, i.e., after running the
+    /// processor. Updates the scene and all text items within it to reflect the current state of the processor.
+    void sync();
+
 public slots:
 
     /**
@@ -62,7 +66,6 @@ signals:
     void runFinished();
 
 private slots:
-    void handleRunFinished();
 
 signals:
     void canReverse(bool);
