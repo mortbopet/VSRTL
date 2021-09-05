@@ -186,8 +186,8 @@ void VSRTLWidget::sync() {
     // value, given that labels manually must have their text updated (ie. text is not updated in the redraw call).
     const auto sceneItems = m_scene->items();
     for (auto* item : qAsConst(sceneItems)) {
-        if (auto* label = dynamic_cast<Label*>(item)) {
-            label->updateText();
+        if (auto* simobject = dynamic_cast<SimQObject*>(item)) {
+            simobject->simUpdateSlot();
         }
     }
 
