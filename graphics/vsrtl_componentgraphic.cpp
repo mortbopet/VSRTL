@@ -67,6 +67,7 @@ GraphicsBaseItem<QGraphicsItem>* ComponentGraphic::moduleParent() {
 }
 
 void ComponentGraphic::initialize(bool doPlaceAndRoute) {
+    setToolTip(QString::fromStdString(m_component->getDescription()));
     setFlags(ItemIsSelectable | flags());
     setAcceptHoverEvents(true);
     setMoveable();

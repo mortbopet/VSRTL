@@ -40,6 +40,7 @@ public:
 
     const std::string& getName() const { return m_name; }
     const std::string& getDisplayName() const { return m_displayName.empty() ? m_name : m_displayName; }
+    const std::string& getDescription() const { return m_description; }
     const std::string getHierName() const {
         if (m_parent) {
             return m_parent->getHierName() + "->" + getName();
@@ -54,6 +55,7 @@ public:
     }
 
     void setDisplayName(std::string name) { m_displayName = name; }
+    void setDescription(const std::string& description) { m_description = description; }
 
     template <typename T>
     void registerGraphic(T* obj) {
@@ -73,6 +75,7 @@ protected:
     SimBase* m_parent = nullptr;
     SimDesign* m_design = nullptr;
     std::string m_displayName;
+    std::string m_description;
     void* m_graphicObject = nullptr;
 };
 
