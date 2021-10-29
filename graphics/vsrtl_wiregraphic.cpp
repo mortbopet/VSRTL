@@ -523,7 +523,7 @@ void WireGraphic::createRectilinearSegments(PortPoint* start, PortPoint* end) {
     // 3. Create points on wire segments
     auto pointAndSeg = createWirePointOnSeg(mapToScene(intermediate1), seg);
     if (createTwoPoints)
-        pointAndSeg = createWirePointOnSeg(mapToScene(intermediate2), pointAndSeg.second);
+        createWirePointOnSeg(mapToScene(intermediate2), pointAndSeg.second);
 }
 
 /**

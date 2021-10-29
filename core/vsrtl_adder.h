@@ -12,7 +12,7 @@ template <unsigned int W>
 class Adder : public Component {
 public:
     SetGraphicsType(Adder);
-    Adder(std::string name, SimComponent* parent) : Component(name, parent) {
+    Adder(const std::string& name, SimComponent* parent) : Component(name, parent) {
         out << [=] { return op1.sValue() + op2.sValue(); };
     }
 

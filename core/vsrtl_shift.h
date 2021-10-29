@@ -11,7 +11,7 @@ enum class ShiftType { sl, sra, srl };
 template <unsigned int W>
 class Shift : public Component {
 public:
-    Shift(std::string name, SimComponent* parent, ShiftType t, unsigned int shamt) : Component(name, parent) {
+    Shift(const std::string& name, SimComponent* parent, ShiftType t, unsigned int shamt) : Component(name, parent) {
         out << [=] {
             if (t == ShiftType::sl) {
                 return in.uValue() << shamt;

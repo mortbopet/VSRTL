@@ -12,7 +12,7 @@ namespace core {
 class MultiplexerBase : public Component {
 public:
     SetGraphicsType(Multiplexer);
-    MultiplexerBase(std::string name, SimComponent* parent) : Component(name, parent) {}
+    MultiplexerBase(const std::string& name, SimComponent* parent) : Component(name, parent) {}
 
     virtual std::vector<PortBase*> getIns() = 0;
     virtual PortBase* getSelect() = 0;
@@ -22,7 +22,7 @@ public:
 template <unsigned int N, unsigned int W>
 class Multiplexer : public MultiplexerBase {
 public:
-    Multiplexer(std::string name, SimComponent* parent) : MultiplexerBase(name, parent) {
+    Multiplexer(const std::string& name, SimComponent* parent) : MultiplexerBase(name, parent) {
         setSpecialPort(GFX_MUX_SELECT, &select);
         out << [=] { return ins.at(select.uValue())->uValue(); };
     }
@@ -71,7 +71,7 @@ public:
 template <typename E_t, unsigned W>
 class EnumMultiplexer : public MultiplexerBase {
 public:
-    EnumMultiplexer(std::string name, SimComponent* parent) : MultiplexerBase(name, parent) {
+    EnumMultiplexer(const std::string& name, SimComponent* parent) : MultiplexerBase(name, parent) {
         setSpecialPort(GFX_MUX_SELECT, &select);
         for (auto v : E_t::_values()) {
             m_enumToPort[v] = this->ins.at(v);

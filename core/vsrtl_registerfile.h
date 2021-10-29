@@ -17,7 +17,7 @@ namespace core {
 template <int W, int N>
 class RegisterFile : public Component {
 public:
-    RegisterFile(std::string name, SimComponent* parent) : Component(name, parent) {
+    RegisterFile(const std::string& name, SimComponent* parent) : Component(name, parent) {
         // Connect write (source) muxes
         for (int i = 0; i < N; i++) {
             src_muxes[i]->out >> regs[i]->in;

@@ -8,7 +8,7 @@ namespace core {
 
 class DoubleNestedExponenter : public Component {
 public:
-    DoubleNestedExponenter(std::string name, SimComponent* parent) : Component(name, parent) {
+    DoubleNestedExponenter(const std::string& name, SimComponent* parent) : Component(name, parent) {
         in >> exp1->expIn;
         exp1->out >> exp2->expIn;
 

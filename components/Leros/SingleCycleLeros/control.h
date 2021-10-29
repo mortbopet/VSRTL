@@ -12,7 +12,7 @@ namespace leros {
 
 class Control : public Component {
 public:
-    Control(std::string name, SimComponent* parent) : Component(name, parent) {
+    Control(const std::string& name, SimComponent* parent) : Component(name, parent) {
         alu_ctrl << [=] {
             // clang-format off
             Switch(instr_op, LerosInstr) {

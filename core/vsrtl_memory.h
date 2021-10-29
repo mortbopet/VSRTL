@@ -51,7 +51,7 @@ template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = tru
 class WrMemory : public ClockedComponent, public BaseMemory<byteIndexed> {
 public:
     SetGraphicsType(Component);
-    WrMemory(std::string name, SimComponent* parent) : ClockedComponent(name, parent) {}
+    WrMemory(const std::string& name, SimComponent* parent) : ClockedComponent(name, parent) {}
     void reset() override { m_reverseStack.clear(); }
     AddressSpace::RegionType accessRegion() const override { return this->memory()->regionType(addr.uValue()); }
 
@@ -113,7 +113,7 @@ private:
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
 class MemorySyncRd : public WrMemory<addrWidth, dataWidth, byteIndexed> {
 public:
-    MemorySyncRd(std::string name, SimComponent* parent) : WrMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {
+    MemorySyncRd(const std::string& name, SimComponent* parent) : WrMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {
         data_out << [=] {
             return this->read(this->addr.uValue(), dataWidth / CHAR_BIT,
                               ceillog2((byteIndexed ? addrWidth : dataWidth) / CHAR_BIT));
@@ -133,7 +133,7 @@ class RdMemory : public Component, public BaseMemory<byteIndexed> {
 
 public:
     SetGraphicsType(ClockedComponent);
-    RdMemory(std::string name, SimComponent* parent) : Component(name, parent) {
+    RdMemory(const std::string& name, SimComponent* parent) : Component(name, parent) {
         data_out << [=] {
             auto _addr = addr.uValue();
             auto val =
@@ -155,7 +155,7 @@ template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = tru
 class MemoryAsyncRd : public Component {
 public:
     SetGraphicsType(ClockedComponent);
-    MemoryAsyncRd(std::string name, SimComponent* parent) : Component(name, parent) {
+    MemoryAsyncRd(const std::string& name, SimComponent* parent) : Component(name, parent) {
         addr >> _wr_mem->addr;
         wr_en >> _wr_mem->wr_en;
         data_in >> _wr_mem->data_in;
@@ -187,7 +187,7 @@ public:
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
 class ROM : public RdMemory<addrWidth, dataWidth, byteIndexed> {
 public:
-    ROM(std::string name, SimComponent* parent) : RdMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {}
+    ROM(const std::string& name, SimComponent* parent) : RdMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {}
 };
 
 }  // namespace core

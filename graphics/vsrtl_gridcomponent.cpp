@@ -8,9 +8,8 @@
 
 namespace vsrtl {
 
-GridComponent::GridComponent(SimComponent* c, GridComponent* parent) : GraphicsBaseItem(parent), m_component(c) {
-    m_border = std::make_unique<ComponentBorder>(c);
-
+GridComponent::GridComponent(SimComponent* c, GridComponent* parent)
+    : GraphicsBaseItem(parent), m_component(c), m_border(std::make_unique<ComponentBorder>(c)) {
     setInitialRect();
     m_currentExpandedRect = m_currentSubcomponentBoundingRect;
 }

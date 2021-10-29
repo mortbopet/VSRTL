@@ -36,7 +36,7 @@ namespace core {
 
 class Component : public SimComponent {
 public:
-    Component(std::string displayName, SimComponent* parent) : SimComponent(displayName, parent) {}
+    Component(const std::string& displayName, SimComponent* parent) : SimComponent(displayName, parent) {}
     /**
      * @brief getBaseType
      * Used to identify the component type, which is used when determining how to draw a component. Introduced to avoid
@@ -62,21 +62,21 @@ public:
     void setSensitiveTo(const PortBase& p) { setSensitiveTo(&p); }
 
     template <unsigned int W, typename E_t = void>
-    Port<W>& createInputPort(std::string name) {
+    Port<W>& createInputPort(const std::string& name) {
         return createPort<W, E_t>(name, m_inputPorts, vsrtl::SimPort::PortType::in);
     }
     template <unsigned int W, typename E_t = void>
-    Port<W>& createOutputPort(std::string name) {
+    Port<W>& createOutputPort(const std::string& name) {
         return createPort<W, E_t>(name, m_outputPorts, vsrtl::SimPort::PortType::out);
     }
 
     template <unsigned int W>
-    std::vector<Port<W>*> createInputPorts(std::string name, unsigned int n) {
+    std::vector<Port<W>*> createInputPorts(const std::string& name, unsigned int n) {
         return createPorts<W>(name, m_inputPorts, vsrtl::SimPort::PortType::in, n);
     }
 
     template <unsigned int W>
-    std::vector<Port<W>*> createOutputPorts(std::string name, unsigned int n) {
+    std::vector<Port<W>*> createOutputPorts(const std::string& name, unsigned int n) {
         return createPorts<W>(name, m_outputPorts, vsrtl::SimPort::PortType::out, n);
     }
 
@@ -229,7 +229,7 @@ public:
 
 protected:
     template <unsigned int W, typename E_t = void>
-    Port<W>& createPort(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container,
+    Port<W>& createPort(const std::string& name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container,
                         vsrtl::SimPort::PortType type) {
         verifyIsUniquePortName(name);
         Port<W>* port;
@@ -243,7 +243,8 @@ protected:
     }
 
     template <unsigned int W>
-    std::vector<Port<W>*> createPorts(std::string name, std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container,
+    std::vector<Port<W>*> createPorts(const std::string& name,
+                                      std::set<std::unique_ptr<SimPort>, PortBaseCompT>& container,
                                       vsrtl::SimPort::PortType type, unsigned int n) {
         std::vector<Port<W>*> ports;
         Port<W>* port;

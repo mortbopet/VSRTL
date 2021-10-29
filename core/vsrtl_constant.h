@@ -26,7 +26,7 @@ template <unsigned int W>
 class Constant : public Component {
 public:
     SetGraphicsType(Constant);
-    Constant(std::string name, SimComponent* parent, VSRTL_VT_U value = 0) : Component(name, parent) {
+    Constant(const std::string& name, SimComponent* parent, VSRTL_VT_U value = 0) : Component(name, parent) {
         m_value = value;
         if (!valueFitsInBitWidth(W, m_value)) {
             throw std::runtime_error("Value does not fit inside provided bit-width");

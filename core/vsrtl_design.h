@@ -25,7 +25,7 @@ namespace core {
  */
 class Design : public SimDesign {
 public:
-    Design(std::string name) : SimDesign(name, nullptr) {}
+    Design(const std::string& name) : SimDesign(name, nullptr) {}
 
     /**
      * @brief clock
