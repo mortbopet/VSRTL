@@ -60,8 +60,8 @@ public:
             ClockedComponent::popReversibleCycle();
             m_cycleCount--;
             propagateDesign();
+            SimDesign::reverse();
         }
-        SimDesign::reverse();
     }
 
     void propagate() override { propagateDesign(); }
