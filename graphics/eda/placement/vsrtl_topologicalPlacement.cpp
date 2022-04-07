@@ -53,9 +53,9 @@ std::shared_ptr<Placement> topologicalSortPlacement(const std::vector<GridCompon
     QPoint pos = QPoint(SUBCOMPONENT_INDENT, SUBCOMPONENT_INDENT);  // Start a bit offset from the parent borders
     for (const auto& c : sortedComponents) {
         auto* g = c->getGraphic<GridComponent>();
-        auto routable = RoutingComponent(g);
-        routable.pos = pos;
-        placements->components.push_back(std::make_shared<RoutingComponent>(routable));
+        auto routable = ComponentTile(g);
+        routable.setPos(pos);
+        placements->addComponent(std::make_shared<ComponentTile>(routable));
         pos.rx() += g->getCurrentComponentRect().width() + COMPONENT_COLUMN_MARGIN;
     }
 
@@ -110,9 +110,9 @@ std::shared_ptr<Placement> ASAPPlacement(const std::vector<GridComponent*>& comp
     for (const auto& iter : asapSchedule) {
         for (const auto& c : iter.second) {
             auto* g = c->getGraphic<GridComponent>();
-            auto routable = RoutingComponent(g);
-            routable.pos = QPoint(x, y);
-            placements->components.push_back(std::make_shared<RoutingComponent>(routable));
+            auto routable = ComponentTile(g);
+            routable.setPos(QPoint(x, y));
+            placements->addComponent(std::make_shared<ComponentTile>(routable));
             y += g->getCurrentComponentRect().height() + COMPONENT_COLUMN_MARGIN;
         }
         x += columnWidths[iter.first] + 2 * COMPONENT_COLUMN_MARGIN;

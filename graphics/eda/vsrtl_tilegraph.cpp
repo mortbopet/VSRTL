@@ -20,7 +20,7 @@ namespace eda {
 
 int Tile::s_rr_ids = 0;
 
-Tile::Tile() {
+Tile::Tile(const QRect& rect) : r(rect) {
     m_id = s_rr_ids++;
 
     // One neighbour in each direction
@@ -29,10 +29,21 @@ Tile::Tile() {
     }
 }
 
-QRect RoutingComponent::rect() const {
-    auto r = gridComponent->getCurrentComponentRect();
-    r.moveTo(pos);
-    return r;
+ComponentTile::ComponentTile(GridComponent* c) : Tile(c->getCurrentComponentRect()), gridComponent(c) {}
+
+void ComponentTile::updatePos(ComponentPos p) {
+    switch (p) {
+        case ComponentPos::Center: {
+            auto componentSize = gridComponent->getCurrentComponentRect().size();
+            QPoint offset = QPoint(componentSize.width(), componentSize.height()) / 2;
+            gridComponent->setPos(rect().center() - offset);
+            break;
+        }
+        case ComponentPos::TopLeft: {
+            gridComponent->setPos(rect().topLeft());
+            break;
+        }
+    }
 }
 
 void TileGraph::dumpDotFile(const QString& path) const {
@@ -60,9 +71,19 @@ void TileGraph::dumpDotFile(const QString& path) const {
     f.dump();
 }
 
+Placement::Placement(const std::vector<std::shared_ptr<ComponentTile>>& components, const QRect& chipRect)
+    : m_components(components), m_chipRect(chipRect) {
+    if (this->chipRect() == QRect())
+        fitChipRectToComponents();
+}
+
+void Placement::fitChipRectToComponents() {
+    m_chipRect = componentBoundingRect().adjusted(0, 0, 1, 1);
+}
+
 QRect Placement::componentBoundingRect() const {
-    std::function<QRect(const std::shared_ptr<RoutingComponent>&)> f = [](const auto& rr) { return rr.get()->rect(); };
-    return boundingRectOfRectsF<QRect>(components, f);
+    std::function<QRect(const std::shared_ptr<ComponentTile>&)> f = [](const auto& rr) { return rr.get()->rect(); };
+    return boundingRectOfRectsF<QRect>(m_components, f);
 }
 
 std::set<RoutingTile*> gatherTilesInDirections(RoutingTile* origin, const std::set<Direction>& directions) {
@@ -82,41 +103,34 @@ std::set<RoutingTile*> gatherTilesInDirections(RoutingTile* origin, const std::s
     return tiles;
 }
 
-void expandTileRecursively(RoutingTile* tile, unsigned w, unsigned h) {
+void expandTileRecursively(Tile* tile, unsigned w, unsigned h, bool& didExpansion) {
     auto oldRect = tile->rect();
-    bool modW = false;
-    bool modH = false;
     if (w > oldRect.width()) {
         tile->setWidth(w);
-        modW = true;
+        didExpansion = true;
     }
 
     if (h > oldRect.height()) {
         tile->setHeight(h);
-        modH = true;
+        didExpansion = true;
     }
 
-    if (!modW && !modH)
-        return;
+    qDebug() << "Expanded tile " << tile->id() << " " << oldRect << " to " << tile->rect();
 
-    if (modH) {
-        // expand neighbours to the east/west
-        for (auto* t : {tile->getTileAtEdge(Direction::West), tile->getTileAtEdge(Direction::East)}) {
-            auto* rt = dynamic_cast<RoutingTile*>(t);
-            if (!rt)
-                continue;
-            expandTileRecursively(rt, t->rect().width(), h);
-        }
+    // expand neighbours to the east/west
+    for (auto* t : {tile->getTileAtEdge(Direction::West), tile->getTileAtEdge(Direction::East)}) {
+        auto* rt = dynamic_cast<Tile*>(t);
+        if (!rt || rt->rect().height() >= tile->rect().height())
+            continue;
+        expandTileRecursively(rt, rt->rect().width(), tile->rect().height(), didExpansion);
     }
 
-    if (modW) {
-        // expand neighbours to the north/south
-        for (auto* t : {tile->getTileAtEdge(Direction::North), tile->getTileAtEdge(Direction::South)}) {
-            auto* rt = dynamic_cast<RoutingTile*>(t);
-            if (!rt)
-                continue;
-            expandTileRecursively(rt, w, t->rect().height());
-        }
+    // expand neighbours to the north/south
+    for (auto* t : {tile->getTileAtEdge(Direction::North), tile->getTileAtEdge(Direction::South)}) {
+        auto* rt = dynamic_cast<Tile*>(t);
+        if (!rt || rt->rect().width() >= tile->rect().width())
+            continue;
+        expandTileRecursively(rt, tile->rect().width(), rt->rect().height(), didExpansion);
     }
 
     assert_valid_rect(tile->rect());
@@ -154,10 +168,10 @@ RoutingTile* TileMap::lookup(int x, int y, Direction tieBreakVt, Direction tieBr
 /// Places all routing tiles relative to a starting tile (at 0,0) and the width and height of each tile.
 static void placeTiles(RoutingTile* start, TileGraph& tg) {
     assert(start->pos() == QPoint(0, 0) && "Expected start tile to be at (0, 0)");
-    std::set<RoutingTile*> visited;
-    auto vertices = tg.vertices<RoutingTile>();
-    auto unvisited = std::set<RoutingTile*>(vertices.begin(), vertices.end());
-    std::vector<RoutingTile*> queue;
+    std::set<Tile*> visited;
+    auto vertices = tg.vertices<Tile>();
+    auto unvisited = std::set<Tile*>(vertices.begin(), vertices.end());
+    std::vector<Tile*> queue;
 
     queue.push_back(start);
 
@@ -169,12 +183,12 @@ static void placeTiles(RoutingTile* start, TileGraph& tg) {
         visited.insert(tile);
         unvisited.erase(tile);
 
-        if (auto* rt = dynamic_cast<RoutingTile*>(tile->getTileAtEdge(Direction::East))) {
+        if (auto* rt = dynamic_cast<Tile*>(tile->getTileAtEdge(Direction::East))) {
             rt->setPos(tile->rect().topRight());
             queue.push_back(rt);
             assert_valid_rect(rt->rect());
         }
-        if (auto* rt = dynamic_cast<RoutingTile*>(tile->getTileAtEdge(Direction::South))) {
+        if (auto* rt = dynamic_cast<Tile*>(tile->getTileAtEdge(Direction::South))) {
             rt->setPos(tile->rect().bottomLeft());
             queue.push_back(rt);
             assert_valid_rect(rt->rect());
@@ -236,14 +250,25 @@ void assertIsSubset(const std::set<T>& s1, const std::set<T>& s2) {
     Q_ASSERT(diff.size() == 0);
 }
 
-void TileGraph::expandTiles() {
+QRect TileGraph::boundingRect() const {
+    std::function<QRect(Tile*)> f = [](const auto& rr) { return rr->rect(); };
+    return boundingRectOfRectsF<QRect, Tile*>(vertices<Tile>(), f);
+}
+bool TileGraph::expandTiles() {
+    QRect oldBR = boundingRect();
     // For each tile in the tilegraph, expand itself to fit the requested number of wires, and recursively expand its
     // neighbours if they do not correspond to the new size.
 
+    bool didExpansion = false;
     for (auto& rt : vertices<RoutingTile>())
-        expandTileRecursively(rt, rt->used(Orientation::Vertical), rt->used(Orientation::Horizontal));
+        expandTileRecursively(rt, rt->used(Orientation::Vertical), rt->used(Orientation::Horizontal), didExpansion);
 
-    // Then, tiles are repositioned based on their adjacency to one another. This is done recursively starting from the
+    if (!didExpansion) {
+        // No changes to the state of the tiles!
+        return false;
+    }
+
+    // Tiles are repositioned based on their adjacency to one another. This is done recursively starting from the
     // top-left tile.
     RoutingTile* startTile = m_tileMap->lookup(QPoint(0, 0));
     Q_ASSERT(startTile);
@@ -254,22 +279,28 @@ void TileGraph::expandTiles() {
     startTile->setPos(QPoint(0, 0));
     // placeTilesRec(tile, alreadyPlaced);
     placeTiles(startTile, *this);
+
+    // Sanity check that the bounding rect actually changed, if we said that we expanded some tile.
+    Q_ASSERT(boundingRect() != oldBR);
+
+    return true;
 }
 
 TileGraph::TileGraph(const std::shared_ptr<Placement>& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
     std::vector<QRect> rects;
-    std::transform(placement->components.begin(), placement->components.end(), std::back_inserter(rects),
+    std::transform(placement->components().begin(), placement->components().end(), std::back_inserter(rects),
                    [](const auto& c) { return c->rect(); });
-    Q_ASSERT(placement->chipRect.contains(boundingRectOfRects(rects)));
-    Q_ASSERT(placement->chipRect.topLeft() == QPoint(0, 0));
+    QRect br = boundingRectOfRects(rects);
+    Q_ASSERT(placement->chipRect() == br || placement->chipRect().contains(br));
+    Q_ASSERT(placement->chipRect().topLeft() == QPoint(0, 0));
 
-    const auto& chipRect = placement->chipRect;
+    const auto& chipRect = placement->chipRect();
 
     QList<Line> hz_bounding_lines, vt_bounding_lines, hz_tile_lines, vt_tile_lines;
 
     // Get horizontal and vertical bounding rectangle lines for all components on chip
-    for (const auto& r : placement->components) {
+    for (const auto& r : placement->components()) {
         hz_bounding_lines << getEdge(r->rect(), Direction::North) << getEdge(r->rect(), Direction::South);
         assert_valid_line(hz_bounding_lines.back());
         vt_bounding_lines << getEdge(r->rect(), Direction::West) << getEdge(r->rect(), Direction::East);
@@ -420,14 +451,15 @@ TileGraph::TileGraph(const std::shared_ptr<Placement>& placement) {
                 assert_valid_rect(newTileRect);
 
                 // Check whether the new tile encloses a component
-                const auto componentInTileIt = std::find_if(placement->components.begin(), placement->components.end(),
-                                                            [&newTileRect](const auto& routingComponent) {
-                                                                QRect rrect = routingComponent->rect();
-                                                                rrect.setBottomRight(realBottomRight(rrect));
-                                                                return newTileRect == rrect;
-                                                            });
+                const auto componentInTileIt =
+                    std::find_if(placement->components().begin(), placement->components().end(),
+                                 [&newTileRect](const auto& routingComponent) {
+                                     QRect rrect = routingComponent->rect();
+                                     rrect.setBottomRight(realBottomRight(rrect));
+                                     return newTileRect == rrect;
+                                 });
 
-                if (componentInTileIt == placement->components.end()) {
+                if (componentInTileIt == placement->components().end()) {
                     // New tile was not a component, check if new tile has already been added
                     auto routingTiles = vertices<RoutingTile>();
                     if (std::find_if(routingTiles.begin(), routingTiles.end(), [&newTileRect](const auto& tile) {
@@ -455,7 +487,7 @@ TileGraph::TileGraph(const std::shared_ptr<Placement>& placement) {
 
     // ======================= Routing Tile Association ======================= //
     // Step 1: Associate with directly adjacent neighbours
-    for (auto& rc : placement->components) {
+    for (auto& rc : placement->components()) {
         // The algorithm have failed if tileGroups does not contain an entry for each corner of all routing components
         const auto rect = rc->rect();
         Q_ASSERT(tileGroups.count(rect.topLeft()));
@@ -659,17 +691,17 @@ void RoutingTile::registerRoute(Route* r, Orientation d) {
 
 int RoutingTile::capacity(Orientation dir) const {
     if (dir == Orientation::Horizontal) {
-        return h_cap;
+        return rect().height() - 1;
     } else {
-        return v_cap;
+        return rect().width() - 1;
     }
 }
 
 int RoutingTile::remainingCap(Orientation dir) const {
     if (dir == Orientation::Horizontal) {
-        return h_cap - m_horizontalRoutes.size();
+        return capacity(Orientation::Horizontal) - m_horizontalRoutes.size();
     } else {
-        return v_cap - m_verticalRoutes.size();
+        return capacity(Orientation::Vertical) - m_verticalRoutes.size();
     }
 }
 
@@ -705,8 +737,8 @@ bool Tile::operator==(const Tile& lhs) const {
 }
 
 void RoutingTile::assignRoutes() {
-    const float hz_diff = static_cast<float>(h_cap) / (m_horizontalRoutes.size() + 1);
-    const float vt_diff = static_cast<float>(v_cap) / (m_verticalRoutes.size() + 1);
+    const float hz_diff = static_cast<float>(capacity(Orientation::Horizontal)) / (m_horizontalRoutes.size() + 1);
+    const float vt_diff = static_cast<float>(capacity(Orientation::Vertical)) / (m_verticalRoutes.size() + 1);
     float hz_pos = hz_diff;
     float vt_pos = vt_diff;
     for (const auto& route : m_horizontalRoutes) {

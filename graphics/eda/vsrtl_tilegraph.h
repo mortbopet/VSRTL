@@ -29,7 +29,7 @@ void assertAdjacentTiles(const T1* t1, const T2* t2) {
 
 class Tile : public Vertex {
 public:
-    Tile();
+    Tile(const QRect& rect);
 
     /**
      * @brief adjacentTile
@@ -87,7 +87,11 @@ public:
     int id() const { return m_id; }
 
     bool operator==(const Tile& lhs) const;
-    virtual QRect rect() const = 0;
+    virtual QRect rect() const { return r; }
+    void setWidth(unsigned w) { r.setWidth(w); }
+    void setHeight(unsigned h) { r.setHeight(h); }
+    void setPos(const QPoint& pos) { r.moveTo(pos); }
+    QPoint pos() const { return r.topLeft(); }
 
     // The row/column iteration function shall return true if iteration should continue
     /** @brief RowColItFunc
@@ -110,18 +114,21 @@ private:
     int m_id;
     // Routing id counter.
     static int s_rr_ids;
+
+    QRect r;  // tile size and position
 };
 
-class RoutingComponent : public Tile {
+class ComponentTile : public Tile {
 public:
-    RoutingComponent(GridComponent* c) : gridComponent(c) {}
+    ComponentTile(GridComponent* c);
     GridComponent* gridComponent;
-    QPoint pos;
-    QRect rect() const override;
+
+    enum class ComponentPos { TopLeft, Center };
+    void updatePos(ComponentPos p);
 };
 
 struct NetNode {
-    std::shared_ptr<RoutingComponent> routingComponent;
+    std::shared_ptr<ComponentTile> componentTile;
     RoutingTile* tile = nullptr;
     SimPort* port = nullptr;
 };
@@ -142,37 +149,27 @@ public:
         QPoint from() const;
         QPoint to() const;
     };
-    RoutingTile(const QRect& rect) : r(rect), h_cap(rect.width() - 1), v_cap(rect.height() - 1) {}
+    RoutingTile(const QRect& rect) : Tile(rect) {}
 
-    QRect rect() const override { return r; }
     int capacity(Orientation dir) const;
     int remainingCap(Orientation dir) const;
     int used(Orientation dir) const;
     void assignRoutes();
     RoutePath getPath(Route* route) const;
     void registerRoute(Route*, Orientation);
-    void setWidth(unsigned w) { r.setWidth(w); }
-    void setHeight(unsigned h) { r.setHeight(h); }
-    void setPos(const QPoint& pos) { r.moveTo(pos); }
-    QPoint pos() const { return r.topLeft(); }
 
     const std::set<Route*>& routes(Orientation dir) const;
 
 private:
     std::set<Route*> m_verticalRoutes, m_horizontalRoutes;
     std::map<Route*, RoutePath> m_assignedRoutes;
-
-    QRect r;    // tile size and position
-    int h_cap;  // Horizontal capacity of tile
-    int v_cap;  // Vertical capacity of tile
 };
 
 /**
  * @brief The tileGroup class
- * A tile group is the notion of the 4 tiles surrounding a horizontal and vertical intersection between tile group
- * boundaries.
- * When groups has been associated with all 4 corners, connecttile() may be called to make the tile groups at these
- * 4 corners aware of their adjacent tile groups in respect to this point.
+ * A tile group is the notion of the 4 tiles surrounding a horizontal and vertical intersection between tile
+ * group boundaries. When groups has been associated with all 4 corners, connecttile() may be called to make the
+ * tile groups at these 4 corners aware of their adjacent tile groups in respect to this point.
  */
 class TileGroup {
 public:
@@ -203,9 +200,10 @@ public:
     RoutingTile* bottomright = nullptr;
 };
 
-struct Placement {
-    QRect chipRect;
-    std::vector<std::shared_ptr<RoutingComponent>> components;
+class Placement {
+public:
+    Placement(const std::vector<std::shared_ptr<ComponentTile>>& components = {}, const QRect& chipRect = QRect());
+
     QRect componentBoundingRect() const;
 
     /**
@@ -213,6 +211,15 @@ struct Placement {
      * Places all components based on the geometry of their surrounding routing tiles.
      */
     void doTileBasedPlacement();
+    void fitChipRectToComponents();
+    void addComponent(const std::shared_ptr<ComponentTile>& c) { m_components.push_back(c); }
+    const std::vector<std::shared_ptr<ComponentTile>>& components() const { return m_components; }
+    const QRect& chipRect() const { return m_chipRect; }
+    void setChipRect(const QRect& rect) { m_chipRect = rect; }
+
+private:
+    std::vector<std::shared_ptr<ComponentTile>> m_components;
+    QRect m_chipRect;
 };
 
 class TileGraph;
@@ -242,10 +249,13 @@ public:
 
     /**
      * @brief expandTiles
-     * Post route registration, expands all tiles to fit the maximum number of vertical/horizontal routes registerred in
-     * each row/column of the routable area.
+     * Post route registration, expands all tiles to fit the maximum number of vertical/horizontal routes
+     * registerred in each row/column of the routable area.
+     * Returns true if any tile was expanded.
      */
-    void expandTiles();
+    bool expandTiles();
+
+    QRect boundingRect() const;
 
     // For debugging
     std::vector<Line> stretchedLines;

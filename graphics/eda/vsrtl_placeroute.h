@@ -48,6 +48,7 @@ public:
 
 private:
     PlaceRoute();
+    PRResult routeAndExpand(std::shared_ptr<Placement> placement) const;
 
     std::map<PlaceAlg, PlacementFunct> m_placementAlgorithms;
     std::map<RouteAlg, RouteFunct> m_routingAlgorithms;

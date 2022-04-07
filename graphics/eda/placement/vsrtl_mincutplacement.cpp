@@ -58,9 +58,9 @@ public:
             const auto w = gridComponent->getCurrentComponentRect().width();
             const auto h = gridComponent->getCurrentComponentRect().height();
             const QPoint pos = (offset - QPoint(w / 2, h / 2));
-            RoutingComponent rc(gridComponent);
-            rc.pos = pos;
-            placement.components.push_back(std::make_shared<RoutingComponent>(rc));
+            ComponentTile rc(gridComponent);
+            rc.setPos(pos);
+            placement.addComponent(std::make_shared<ComponentTile>(rc));
         }
     }
 
