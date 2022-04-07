@@ -50,7 +50,7 @@ public:
     bool handlePortGraphicMoveAttempt(const PortGraphic* port, const QPointF& newBorderPos);
 
     void setExpanded(bool isExpanded);
-    void registerWire(WireGraphic* wire);
+    void registerWire(WireNet* wire);
 
     GraphicsBaseItem<QGraphicsItem>* moduleParent() override;
 
@@ -116,7 +116,7 @@ protected:
      * their wire with a corresponding ComponentGraphic. These registrations may in turn be used to toggle the
      * visibility of wires inside a ComponentGraphic, based on the expansion state of the ComponentGraphic.
      */
-    std::vector<WireGraphic*> m_wires;
+    std::vector<WireNet*> m_wires;
 
     QMap<SimPort*, PortGraphic*> m_inputPorts;
     QMap<SimPort*, PortGraphic*> m_outputPorts;
@@ -239,7 +239,7 @@ public:
             // @todo: should this be in port serialization?
             for (auto& p : m_inputPorts) {
                 try {
-                    archive(cereal::make_nvp(p->getPort()->getName() + "_in_wire", *p->getOutputWire()));
+                    archive(cereal::make_nvp(p->getPort()->getName() + "_in_wire", *p->getOutputNet()));
                 } catch (const cereal::Exception& e) {
                     /// @todo: build an error report
                 }
@@ -262,7 +262,7 @@ public:
             // Serialize output wire
             for (auto& p : m_outputPorts) {
                 try {
-                    archive(cereal::make_nvp(p->getPort()->getName() + "_out_wire", *p->getOutputWire()));
+                    archive(cereal::make_nvp(p->getPort()->getName() + "_out_wire", *p->getOutputNet()));
                 } catch (const cereal::Exception& e) {
                     /// @todo: build an error report
                 }

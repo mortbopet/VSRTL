@@ -82,7 +82,7 @@ public:
     Graph() = default;
 
     template <typename T = Vt>
-    std::vector<T*> vertices(const std::function<bool(Vt*)>& pred = [](Vt*) { return true; }) const {
+    std::vector<T*> verticesFiltered(const std::function<bool(Vt*)>& pred = [](Vt*) { return true; }) const {
         std::vector<T*> _vertices;
         for (const auto& n : m_vertices) {
             T* _n = static_cast<T*>(n.get());
@@ -94,8 +94,8 @@ public:
     }
 
     template <typename T = Vt>
-    std::vector<T*> verticesOfType() const {
-        return vertices<T>(is<Vertex, T>);
+    std::vector<T*> vertices() const {
+        return verticesFiltered<T>(is<Vertex, T>);
     }
 
     template <typename T = Vt>

@@ -23,7 +23,7 @@ class RoutingTile;
 template <typename T1, typename T2>
 void assertAdjacentTiles(const T1* t1, const T2* t2) {
     bool valid;
-    t1->adjacentTile(t2, valid);
+    t1->isAdjacentTile(t2, valid);
     Q_ASSERT(valid);
 }
 
@@ -37,13 +37,13 @@ public:
      * @param valid
      * @return the edge which @p rr abutts to this tile. If not abutting, @p valid is set to false.
      */
-    Direction adjacentTile(const Tile* rr, bool& valid) const;
+    Direction isAdjacentTile(const Tile* rr, bool& valid) const;
     /**
      * @brief adjacentDir
      * Like the above but returns the direction which @p rr is to this tile (geometry based rather than connectivity
      * based).
      */
-    Direction adjacentDir(const Tile* rr, bool& valid) const;
+    Direction isAdjacentDir(const Tile* rr, bool& valid) const;
 
     /**
      * @brief adjacentRowCol
@@ -76,13 +76,14 @@ public:
             return true;
         };
         bool valid;
-        const Direction e = adjacentDir(t, valid);
+        const Direction e = isAdjacentDir(t, valid);
         Q_ASSERT(valid);
         iterateInDirections(f, {e});
         return intTiles;
     }
 
     void setTileAtEdge(Direction, Tile*);
+    Tile* getTileAtEdge(Direction);
     int id() const { return m_id; }
 
     bool operator==(const Tile& lhs) const;
@@ -146,6 +147,7 @@ public:
     QRect rect() const override { return r; }
     int capacity(Orientation dir) const;
     int remainingCap(Orientation dir) const;
+    int used(Orientation dir) const;
     void assignRoutes();
     RoutePath getPath(Route* route) const;
     void registerRoute(Route*, Orientation);
@@ -162,8 +164,6 @@ private:
     QRect r;    // tile size and position
     int h_cap;  // Horizontal capacity of tile
     int v_cap;  // Vertical capacity of tile
-    int h_used = 0;
-    int v_used = 0;
 };
 
 /**

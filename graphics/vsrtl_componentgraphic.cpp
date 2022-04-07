@@ -121,13 +121,14 @@ void ComponentGraphic::applyRouteRes() {
                 auto endPort = route->end.port->getGraphic<PortGraphic>();
 
                 Q_ASSERT(startPort);
-                auto* wire = startPort->getOutputWire();
-                wire->clearWires();
-                Q_ASSERT(wire->getWires().size() == 0);
-                WireSegment* seg = wire->createSegment(startPort->getPortPoint(SimPort::PortType::out),
-                                                       endPort->getPortPoint(SimPort::PortType::in));
+                auto* net = startPort->getOutputNet();
+                net->clearWires();
+                Q_ASSERT(net->getWires().size() == 0);
+                auto seg = net->createSegment(startPort->getPortPoint(SimPort::PortType::out),
+                                              endPort->getPortPoint(SimPort::PortType::in));
                 for (const auto& region : route->path) {
-                    auto [newPoint1, newSeg1] = wire->createWirePointOnSeg(gridToScene(region->rect().center()), seg);
+                    auto [newPoint1, newSeg1] =
+                        net->createWirePointOnSeg(gridToScene(region->rect().center()), seg.get());
                     Q_UNUSED(newPoint1);
                     seg = newSeg1;
                 }
@@ -171,12 +172,12 @@ void ComponentGraphic::resetWires() {
         // Clear subcomponent wires
         for (const auto& c : m_subcomponents) {
             for (const auto& p : c->outputPorts()) {
-                p->getOutputWire()->clearWirePoints();
+                p->getOutputNet()->clearWirePoints();
             }
         }
         // Clear wires from this components input ports
         for (const auto& p : qAsConst(m_inputPorts)) {
-            p->getOutputWire()->clearWirePoints();
+            p->getOutputNet()->clearWirePoints();
         }
     }
 }
@@ -349,7 +350,7 @@ void ComponentGraphic::setIndicatorState(PortGraphic* p, bool enabled) {
     update();
 }
 
-void ComponentGraphic::registerWire(WireGraphic* wire) {
+void ComponentGraphic::registerWire(WireNet* wire) {
     m_wires.push_back(wire);
 }
 

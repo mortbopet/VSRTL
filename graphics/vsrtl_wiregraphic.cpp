@@ -121,7 +121,7 @@ void PortPoint::removeOutputWire(WireSegment* wire) {
 }
 
 bool WirePoint::canMergeWith(WirePoint* point) {
-    return m_parent->canMergePoints(this, point) != WireGraphic::MergeType::CannotMerge;
+    return m_parent->canMergePoints(this, point) != WireNet::MergeType::CannotMerge;
 }
 
 void WirePoint::pointDrop(WirePoint* point) {
@@ -132,7 +132,7 @@ void WirePoint::pointDrop(WirePoint* point) {
 }
 
 void WirePoint::pointDragEnter(WirePoint* point) {
-    if (m_parent->canMergePoints(this, point) != WireGraphic::MergeType::CannotMerge) {
+    if (m_parent->canMergePoints(this, point) != WireNet::MergeType::CannotMerge) {
         m_draggedOnThis = point;
         update();
     }
@@ -143,7 +143,7 @@ void WirePoint::pointDragLeave(WirePoint*) {
     update();
 }
 
-WirePoint::WirePoint(WireGraphic* parent) : PortPoint(parent), m_parent(parent) {
+WirePoint::WirePoint(WireNet* parent) : PortPoint(parent), m_parent(parent) {
     setFlag(ItemIsSelectable, true);
     setAcceptHoverEvents(true);
     setMoveable();
@@ -179,7 +179,7 @@ void WirePoint::contextMenuEvent(QGraphicsSceneContextMenuEvent* event) {
 
 // --------------------------------------------------------------------------------
 
-WireSegment::WireSegment(WireGraphic* parent) : GraphicsBaseItem(parent), m_parent(parent) {
+WireSegment::WireSegment(WireNet* parent) : GraphicsBaseItem(parent), m_parent(parent) {
     setAcceptHoverEvents(true);
     setFlag(ItemIsSelectable);
 }
@@ -202,6 +202,10 @@ void WireSegment::setEnd(PortPoint* end) {
         m_end->setInputWire(this);
 
     geometryModified();
+}
+
+void WireSegment::setVisible(bool visible) {
+    getNet()->setWireVisible(this, visible);
 }
 
 QLineF WireSegment::getLine() const {
@@ -340,27 +344,29 @@ QVariant WireSegment::itemChange(GraphicsItemChange change, const QVariant& valu
 
 // --------------------------------------------------------------------------------
 
-WirePoint* WireGraphic::createWirePoint() {
+WirePoint* WireNet::createWirePoint() {
     // Create new point managed by this graphic.
     auto* point = new WirePoint(this);
     m_points.insert(point);
     return point;
 }
 
-void WireGraphic::moveWirePoint(PortPoint* point, const QPointF scenePos) {
+void WireNet::moveWirePoint(PortPoint* point, const QPointF scenePos) {
     // Move new point to its creation position
     point->setPos(mapToItem(this, mapFromScene(scenePos)));
 }
 
-WireSegment* WireGraphic::createSegment(PortPoint* start, PortPoint* end) {
-    auto* newSeg = new WireSegment(this);
+std::shared_ptr<WireSegment> WireNet::createSegment(PortPoint* start, PortPoint* end) {
+    auto newSeg = std::make_shared<WireSegment>(this);
     newSeg->setStart(start);
     newSeg->setEnd(end);
     m_wires.insert(newSeg);
     return newSeg;
 }
 
-std::pair<WirePoint*, WireSegment*> WireGraphic::createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment) {
+std::pair<WirePoint*, std::shared_ptr<WireSegment>> WireNet::createWirePointOnSeg(const QPointF scenePos,
+                                                                                  WireSegment* onSegment) {
+    assert(onSegment);
     const auto& endPoint = onSegment->getEnd();
 
     auto* newPoint = createWirePoint();
@@ -369,7 +375,7 @@ std::pair<WirePoint*, WireSegment*> WireGraphic::createWirePointOnSeg(const QPoi
     onSegment->setEnd(newPoint);
 
     // Create wire segment between new point and previous end point
-    auto* newSeg = createSegment(newPoint, endPoint);
+    auto newSeg = createSegment(newPoint, endPoint);
 
     // Move new point to its creation position
     moveWirePoint(newPoint, scenePos);
@@ -378,7 +384,7 @@ std::pair<WirePoint*, WireSegment*> WireGraphic::createWirePointOnSeg(const QPoi
     return {newPoint, newSeg};
 }
 
-void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
+void WireNet::removeWirePoint(WirePoint* pointToRemove) {
     prepareGeometryChange();
     Q_ASSERT(std::find(m_points.begin(), m_points.end(), pointToRemove) != m_points.end());
     auto* wireToRemove = pointToRemove->getInputWire();
@@ -394,7 +400,7 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     Q_ASSERT(pointToRemove->getOutputWires().size() == 0);
 
     // Delete the (now defunct) wire between the new start point and the point to be removed
-    auto iter = std::find(m_wires.begin(), m_wires.end(), wireToRemove);
+    auto iter = std::find_if(m_wires.begin(), m_wires.end(), [&](auto wire) { return wire.get() == wireToRemove; });
     Q_ASSERT(iter != m_wires.end());
     m_wires.erase(iter);
     wireToRemove->invalidate();
@@ -408,17 +414,17 @@ void WireGraphic::removeWirePoint(WirePoint* pointToRemove) {
     pointToRemove->deleteLater();
 }
 
-WireGraphic::WireGraphic(ComponentGraphic* parent, PortGraphic* from, const std::vector<SimPort*>& to, WireType type)
+WireNet::WireNet(ComponentGraphic* parent, PortGraphic* from, const std::vector<SimPort*>& to, WireType type)
     : GraphicsBaseItem(parent), m_parent(parent), m_fromPort(from), m_toPorts(to), m_type(type) {
     m_parent->registerWire(this);
     setFlag(QGraphicsItem::ItemHasNoContents, true);
 }
 
-bool WireGraphic::managesPoint(WirePoint* point) const {
+bool WireNet::managesPoint(WirePoint* point) const {
     return std::find(m_points.begin(), m_points.end(), point) != m_points.end();
 }
 
-void WireGraphic::mergePoints(WirePoint* base, WirePoint* toMerge) {
+void WireNet::mergePoints(WirePoint* base, WirePoint* toMerge) {
     const auto mergeType = canMergePoints(base, toMerge);
     Q_ASSERT(mergeType != MergeType::CannotMerge);
 
@@ -436,7 +442,7 @@ void WireGraphic::mergePoints(WirePoint* base, WirePoint* toMerge) {
     removeWirePoint(toMerge);
 }
 
-void WireGraphic::clearWirePoints() {
+void WireNet::clearWirePoints() {
     // removeWirePoint modifies m_points. Iterate over a copy.
     auto pointsCopy = m_points;
     for (auto& p : pointsCopy) {
@@ -444,11 +450,9 @@ void WireGraphic::clearWirePoints() {
     }
 }
 
-void WireGraphic::clearWires() {
-    for (const auto& w : m_wires) {
+void WireNet::clearWires() {
+    for (const auto& w : m_wires)
         w->invalidate();
-        delete w;
-    }
     m_wires.clear();
 }
 
@@ -457,7 +461,7 @@ void WireGraphic::clearWires() {
  * Points which are adjacent may be merged.
  * Points which both have their input wires connected to the source port may be merged.
  */
-WireGraphic::MergeType WireGraphic::canMergePoints(WirePoint* base, WirePoint* toMerge) const {
+WireNet::MergeType WireNet::canMergePoints(WirePoint* base, WirePoint* toMerge) const {
     if (!managesPoint(base) || !managesPoint(toMerge))
         return MergeType::CannotMerge;
 
@@ -487,12 +491,7 @@ WireGraphic::MergeType WireGraphic::canMergePoints(WirePoint* base, WirePoint* t
  * @param p port
  * @param visible
  */
-void WireGraphic::setWiresVisibleToPort(const PortPoint* p, bool visible) {
-    /// Find segment which terminates in 'p'.
-    auto iter = std::find_if(m_wires.begin(), m_wires.end(), [p](WireSegment* wire) { return wire->getEnd() == p; });
-    Q_ASSERT(iter != m_wires.end());
-
-    WireSegment* seg = *iter;
+void WireNet::setWireVisible(WireSegment* seg, bool visible) {
     PortPoint* start = seg->getStart();
     while (seg->isVisible() ^ visible) {
         seg->setVisible(visible);
@@ -516,7 +515,7 @@ void WireGraphic::setWiresVisibleToPort(const PortPoint* p, bool visible) {
     }
 }
 
-SimComponent* WireGraphic::getParentComponent() const {
+SimComponent* WireNet::getParentComponent() const {
     return m_parent->getComponent();
 }
 
@@ -525,7 +524,7 @@ SimComponent* WireGraphic::getParentComponent() const {
  * With all ports and components created during circuit construction, wires may now register themselves with their
  * attached input- and output ports
  */
-void WireGraphic::postSceneConstructionInitialize1() {
+void WireNet::postSceneConstructionInitialize1() {
     std::function<void(SimPort*)> addGraphicToPort = [&](SimPort* portPtr) {
         if (auto* portGraphic = portPtr->getGraphic<PortGraphic>()) {
             m_toGraphicPorts.push_back(portGraphic);
@@ -542,15 +541,15 @@ void WireGraphic::postSceneConstructionInitialize1() {
         addGraphicToPort(toPort);
     }
 
-    // Make the wire destination ports aware of this WireGraphic
+    // Create a new wire to all sink ports
     for (const auto& sink : m_toGraphicPorts) {
-        sink->setInputWire(this);
+        createSegment(m_fromPort->getPortPoint(SimPort::PortType::out), sink->getPortPoint(SimPort::PortType::in));
     }
 
     GraphicsBaseItem::postSceneConstructionInitialize1();
 }
 
-void WireGraphic::postSerializeInit() {
+void WireNet::postSerializeInit() {
     if (m_fromPort) {
         m_fromPort->setUserVisible(!m_fromPort->userHidden());
     }
@@ -566,7 +565,7 @@ void WireGraphic::postSerializeInit() {
     }
 }
 
-const QPen& WireGraphic::getPen() {
+const QPen& WireNet::getPen() {
     // propagate the source port pen to callers
     return m_fromPort->getPen();
 }

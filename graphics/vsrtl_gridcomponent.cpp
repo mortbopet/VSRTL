@@ -122,7 +122,7 @@ void GridComponent::placeAndRouteSubcomponents() {
         p->gridComponent->move(p->pos);
     }
     // Let parent graphical component create routes
-    applyRouteRes();
+    // applyRouteRes();
 
     m_isPlacing = false;
     updateSubcomponentBoundingRect();

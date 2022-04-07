@@ -39,12 +39,12 @@ void TileGraph::dumpDotFile(const QString& path) const {
     const auto realPath = path.isEmpty() ? "routinggraph.dot" : path;
 
     DotFile f(realPath.toStdString(), "RoutingGraph");
-    for (const auto& tile : verticesOfType<RoutingTile>()) {
+    for (const auto& tile : vertices<RoutingTile>()) {
         const std::string rid = std::to_string(tile->id());
         f.addVar(rid, rid);
     }
 
-    for (const auto& tile : verticesOfType<RoutingTile>()) {
+    for (const auto& tile : vertices<RoutingTile>()) {
         const std::string rid = std::to_string(tile->id());
         for (const auto& adjTile : tile->adjacentTiles()) {
             if (adjTile == nullptr) {
@@ -82,40 +82,48 @@ std::set<RoutingTile*> gatherTilesInDirections(RoutingTile* origin, const std::s
     return tiles;
 }
 
-std::set<RoutingTile*> expandTilesInOrientation(RoutingTile* origin, Orientation o) {
-    auto tiles = gatherTilesInDirections(origin, orientationToDirections(o));
-    int maxO = 0;
+void expandTileRecursively(RoutingTile* tile, unsigned w, unsigned h) {
+    auto oldRect = tile->rect();
+    bool modW = false;
+    bool modH = false;
+    if (w > oldRect.width()) {
+        tile->setWidth(w);
+        modW = true;
+    }
 
-    for (const auto& tile : tiles) {
-        maxO = maxO > static_cast<int>(tile->routes(o).size()) ? maxO : tile->routes(o).size();
-        switch (o) {
-            case Orientation::Horizontal:
-                maxO = maxO > tile->rect().height() ? maxO : tile->rect().height();
-                break;
-            case Orientation::Vertical:
-                maxO = maxO > tile->rect().width() ? maxO : tile->rect().width();
-                break;
+    if (h > oldRect.height()) {
+        tile->setHeight(h);
+        modH = true;
+    }
+
+    if (!modW && !modH)
+        return;
+
+    if (modH) {
+        // expand neighbours to the east/west
+        for (auto* t : {tile->getTileAtEdge(Direction::West), tile->getTileAtEdge(Direction::East)}) {
+            auto* rt = dynamic_cast<RoutingTile*>(t);
+            if (!rt)
+                continue;
+            expandTileRecursively(rt, t->rect().width(), h);
         }
     }
 
-    for (const auto& tile : tiles) {
-        switch (o) {
-            case Orientation::Horizontal:
-                tile->setHeight(maxO + 1);
-                break;
-            case Orientation::Vertical:
-                tile->setWidth(maxO + 1);
-                break;
+    if (modW) {
+        // expand neighbours to the north/south
+        for (auto* t : {tile->getTileAtEdge(Direction::North), tile->getTileAtEdge(Direction::South)}) {
+            auto* rt = dynamic_cast<RoutingTile*>(t);
+            if (!rt)
+                continue;
+            expandTileRecursively(rt, w, t->rect().height());
         }
     }
-
-    return tiles;
 }
 
 TileMap::TileMap(const TileGraph& tiles) {
     // tiles will be mapped to their lower-right corner in terms of indexing operations.
     // This is given the user of std::map::lower_bound to determine the map index
-    for (const auto& tile : tiles.verticesOfType<RoutingTile>()) {
+    for (const auto& tile : tiles.vertices<RoutingTile>()) {
         const auto& bottomRight = tile->rect().bottomRight();
         tileMap[bottomRight.x()][bottomRight.y()] = tile;
     }
@@ -184,19 +192,11 @@ void assertIsSubset(const std::set<T>& s1, const std::set<T>& s2) {
 }
 
 void TileGraph::expandTiles() {
-    std::set<RoutingTile*> remaining;
-    for (const auto& t : verticesOfType<RoutingTile>()) {
-        remaining.insert(t);
-    }
+    // For each tile in the tilegraph, expand itself to fit the requested number of wires, and recursively expand its
+    // neighbours if they do not correspond to the new size.
 
-    // First, all tiles are expanded based on the maximum required width/height of other tiles in their row/column.
-    while (remaining.size() > 0) {
-        RoutingTile* tile = *remaining.begin();
-        auto hzTiles = expandTilesInOrientation(tile, Orientation::Horizontal);
-        auto vtTiles = expandTilesInOrientation(tile, Orientation::Vertical);
-
-        remaining = setMinus(setMinus(remaining, hzTiles), vtTiles);
-    }
+    for (auto& rt : vertices<RoutingTile>())
+        expandTileRecursively(rt, rt->used(Orientation::Vertical), rt->used(Orientation::Horizontal));
 
     // Then, tiles are repositioned based on their adjacency to one another. This is done recursively starting from the
     // top-left tile.
@@ -383,7 +383,7 @@ TileGraph::TileGraph(const std::shared_ptr<Placement>& placement) {
 
                 if (componentInTileIt == placement->components.end()) {
                     // New tile was not a component, check if new tile has already been added
-                    auto routingTiles = verticesOfType<RoutingTile>();
+                    auto routingTiles = vertices<RoutingTile>();
                     if (std::find_if(routingTiles.begin(), routingTiles.end(), [&newTileRect](const auto& tile) {
                             return tile->rect() == newTileRect;
                         }) == routingTiles.end()) {
@@ -457,8 +457,13 @@ void Tile::setTileAtEdge(Direction e, Tile* tile) {
     Q_ASSERT(tile != this);
     neighbourRef(e) = tile;
     if (tile) {
+        // Reflect edge setting (register this tile with the target tile).
         tile->neighbourRef(inv(e)) = this;
     }
+}
+
+Tile* Tile::getTileAtEdge(Direction e) {
+    return static_cast<Tile*>(neighbour(e));
 }
 
 QPoint RoutingTile::RoutePath::from() const {
@@ -511,7 +516,7 @@ std::vector<Tile*> Tile::adjacentTiles() {
     return neighbours<Tile>([](Tile* t) { return t != nullptr; });
 }
 
-Direction Tile::adjacentDir(const Tile* rr, bool& valid) const {
+Direction Tile::isAdjacentDir(const Tile* rr, bool& valid) const {
     valid = true;
     const QRect r1 = this->rect();
     const QRect r2 = rr->rect();
@@ -528,7 +533,7 @@ Direction Tile::adjacentDir(const Tile* rr, bool& valid) const {
     return {};
 }
 
-Direction Tile::adjacentTile(const Tile* rr, bool& valid) const {
+Direction Tile::isAdjacentTile(const Tile* rr, bool& valid) const {
     valid = true;
     for (const auto& dir : allDirections) {
         if (rr == neighbour<Tile>(dir)) {
@@ -619,6 +624,14 @@ int RoutingTile::remainingCap(Orientation dir) const {
         return h_cap - m_horizontalRoutes.size();
     } else {
         return v_cap - m_verticalRoutes.size();
+    }
+}
+
+int RoutingTile::used(Orientation dir) const {
+    if (dir == Orientation::Horizontal) {
+        return m_horizontalRoutes.size();
+    } else {
+        return m_verticalRoutes.size();
     }
 }
 

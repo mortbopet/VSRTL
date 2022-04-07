@@ -14,7 +14,7 @@ int rrHeuristic(RoutingTile* start, RoutingTile* goal) {
 bool validity(RoutingTile* from, RoutingTile* to) {
     return true;  // Todo: fix this
     bool valid;
-    const Orientation direction = directionToOrientation(from->adjacentDir(to, valid));
+    const Orientation direction = directionToOrientation(from->isAdjacentDir(to, valid));
     return valid && to->remainingCap(direction) > 0;
 };
 
@@ -77,7 +77,7 @@ void AStarRouter(const std::shared_ptr<Netlist>& netlist) {
                 bool isAdjacent;
                 RoutingTile* curTile = route->path.at(i);
                 RoutingTile* preTile = route->path.at(i + 1);
-                curTile->adjacentTile(preTile, isAdjacent);
+                curTile->isAdjacentTile(preTile, isAdjacent);
                 if (!isAdjacent) {
                     // Patch up intermediate path
                     auto intermediateTiles = curTile->intermediateTiles(preTile);

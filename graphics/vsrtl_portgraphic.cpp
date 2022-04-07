@@ -54,15 +54,15 @@ PortGraphic::PortGraphic(SimPort* port, vsrtl::SimPort::PortType type, QGraphics
 
     if (m_type == vsrtl::SimPort::PortType::in) {
         scopeParent = directParent;
-        m_outputWire =
-            new WireGraphic(scopeParent, this, m_port->getOutputPorts(), WireGraphic::WireType::BorderOutput);
+        m_outputNet =
+            std::make_unique<WireNet>(scopeParent, this, m_port->getOutputPorts(), WireNet::WireType::BorderOutput);
     } else {
         // Output wires exists in the domain in between different components in the PARENT of the parent of this port.
         scopeParent = dynamic_cast<ComponentGraphic*>(moduleParent());
-        m_outputWire =
-            new WireGraphic(scopeParent, this, m_port->getOutputPorts(), WireGraphic::WireType::ComponentOutput);
+        m_outputNet =
+            std::make_unique<WireNet>(scopeParent, this, m_port->getOutputPorts(), WireNet::WireType::ComponentOutput);
     }
-    m_outputWire->setZValue(VSRTLScene::Z_Wires);
+    m_outputNet->setZValue(VSRTLScene::Z_Wires);
 
     // Setup actions
     m_showValueAction = std::make_shared<QAction>("Show value");
@@ -136,15 +136,14 @@ void PortGraphic::setPortWidthVisible(bool visible) {
 }
 
 void PortGraphic::updateWireGeometry() {
-    m_outputWire->prepareGeometryChange();
+    m_outputNet->prepareGeometryChange();
 }
 
 void PortGraphic::redraw() {
     // Schedules redrawing of the current port and its output wire
     update();
-    if (m_outputWire) {
-        m_outputWire->update();
-    }
+    if (m_outputNet)
+        m_outputNet->update();
 }
 
 void PortGraphic::setSide(Direction side) {
@@ -166,9 +165,7 @@ void PortGraphic::propagateRedraw() {
  * initialized, given that updatePen() will trigger a redraw of wires
  */
 void PortGraphic::postSceneConstructionInitialize2() {
-    if (!m_inputWire) {
-        updatePen();
-    }
+    updatePen();
 
     if (m_port->isConstant()) {
         // For constant ports, we by default display the value of the port
@@ -209,10 +206,10 @@ void PortGraphic::modulePositionHasChanged() {
     m_outputPortPoint->modulePositionHasChanged();
 }
 
-void PortGraphic::setInputWire(WireGraphic* wire) {
+void PortGraphic::setInputWire(const std::shared_ptr<WireSegment>& wire) {
     // Set wire is called during post scene construction initialization, wherein WireGraphic's will register with its
     // destination ports (inputs)
-    Q_ASSERT(m_inputWire == nullptr);
+    Q_ASSERT(m_inputWire.lock() == nullptr);
     m_inputWire = wire;
 }
 
@@ -290,6 +287,9 @@ void PortGraphic::updatePenColor() {
 }
 
 void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
+    if (!m_inputWire.lock())
+        return;
+
     m_port->traverseToRoot([=](SimPort* node) {
         if (node->isConstant()) {
             return;
@@ -298,7 +298,8 @@ void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
         // Traverse to root, and only execute when no input wire is present. This signifies that the root source
         // port has been reached
         auto* portGraphic = node->getGraphic<PortGraphic>();
-        if (portGraphic && !portGraphic->m_inputWire) {
+        auto inputWire = portGraphic->m_inputWire.lock();
+        if (portGraphic && !inputWire) {
             if (aboutToBeDeselected || aboutToBeSelected) {
                 portGraphic->m_signalSelected = aboutToBeSelected;
             }
@@ -340,9 +341,10 @@ QVariant PortGraphic::itemChange(GraphicsItemChange change, const QVariant& valu
 void PortGraphic::setPortVisible(bool visible) {
     m_inputPortPoint->setVisible(visible);
     m_outputPortPoint->setVisible(visible);
-    if (m_inputWire && m_type == vsrtl::SimPort::PortType::in) {
+    auto inputWire = m_inputWire.lock();
+    if (inputWire && m_type == vsrtl::SimPort::PortType::in) {
         // Inform wires terminating in this port to set their visibility based on this ports visibility
-        m_inputWire->setWiresVisibleToPort(m_inputPortPoint, visible && m_sourceVisible && !m_userHidden);
+        inputWire->setVisible(visible && m_sourceVisible && !m_userHidden);
     }
 
     else if (m_type == vsrtl::SimPort::PortType::out) {
@@ -455,8 +457,8 @@ const QPen& PortGraphic::getPen() {
     // Only source ports (ports with no input wires) can provide a pen.
     // Sink ports request their pens from their endpoint source port. This call might go through multiple port
     // in/out combinations and component boundaries before reaching the pen.
-    if (m_inputWire) {
-        return m_inputWire->getFromPort()->getPen();
+    if (auto inputWire = m_inputWire.lock()) {
+        return inputWire->getNet()->getFromPort()->getPen();
     } else {
         return m_pen;
     }

@@ -21,8 +21,9 @@ QT_FORWARD_DECLARE_CLASS(QPropertyAnimation)
 
 namespace vsrtl {
 
-class WireGraphic;
+class WireNet;
 class PortPoint;
+class WireSegment;
 
 class PortGraphic : public SimQObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
@@ -62,8 +63,8 @@ public:
 
     void updateGeometry();
     SimPort* getPort() const { return m_port; }
-    void setInputWire(WireGraphic* wire);
-    WireGraphic* getOutputWire() { return m_outputWire; }
+    void setInputWire(const std::shared_ptr<WireSegment>& wire);
+    WireNet* getOutputNet() { return m_outputNet.get(); }
     void updateInputWire();
     void updateWireGeometry();
     PortPoint* getPortPoint(vsrtl::SimPort::PortType t) {
@@ -130,8 +131,11 @@ private:
     PortPoint* m_inputPortPoint = nullptr;
     PortPoint* m_outputPortPoint = nullptr;
 
-    WireGraphic* m_outputWire = nullptr;
-    WireGraphic* m_inputWire = nullptr;
+    // A port owns an output net (collection of wire segments + points that propagate from the output of this port to
+    // all of the connected inputs).
+    std::unique_ptr<WireNet> m_outputNet;
+    // A port is associated with a single input wire segment.
+    std::weak_ptr<WireSegment> m_inputWire;
 
     ValueLabel* m_valueLabel = nullptr;
 

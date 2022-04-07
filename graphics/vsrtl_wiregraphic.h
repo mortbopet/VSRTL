@@ -18,7 +18,7 @@
 namespace vsrtl {
 
 class PortGraphic;
-class WireGraphic;
+class WireNet;
 class WireSegment;
 class ComponentGraphic;
 
@@ -73,7 +73,7 @@ private:
  */
 class WirePoint : public PortPoint {
 public:
-    WirePoint(WireGraphic* parent);
+    WirePoint(WireNet* parent);
 
     QVariant itemChange(GraphicsItemChange change, const QVariant& value) override;
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* event) override;
@@ -85,7 +85,7 @@ public:
     void pointDragLeave(WirePoint* point);
 
 private:
-    WireGraphic* m_parent = nullptr;
+    WireNet* m_parent = nullptr;
 };
 
 class WireSegment : public QObject, public GraphicsBaseItem<QGraphicsItem> {
@@ -93,7 +93,7 @@ class WireSegment : public QObject, public GraphicsBaseItem<QGraphicsItem> {
     friend class WirePoint;
 
 public:
-    WireSegment(WireGraphic* parent);
+    WireSegment(WireNet* parent);
 
     void invalidate();
     bool isDrawn() const;
@@ -103,6 +103,8 @@ public:
     PortPoint* getStart() const { return m_start; }
     PortPoint* getEnd() const { return m_end; }
     QLineF getLine() const;
+    WireNet* getNet() { return m_parent; }
+    void setVisible(bool visible);
 
     /**
      * @brief geometryModified
@@ -122,13 +124,13 @@ public:
 private:
     PortPoint* m_start = nullptr;
     PortPoint* m_end = nullptr;
-    WireGraphic* m_parent = nullptr;
+    WireNet* m_parent = nullptr;
     QLineF m_cachedLine;
     QPainterPath m_cachedShape;
     QRectF m_cachedBoundingRect;
 };
 
-class WireGraphic : public QObject, public GraphicsBaseItem<QGraphicsItem> {
+class WireNet : public QObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
     friend class PortGraphic;
 
@@ -136,7 +138,7 @@ public:
     enum class MergeType { CannotMerge, MergeSinkWithSource, MergeSourceWithSink, MergeParallelSinks };
     enum class WireType { BorderOutput, ComponentOutput };
 
-    WireGraphic(ComponentGraphic* parent, PortGraphic* from, const std::vector<SimPort*>& to, WireType type);
+    WireNet(ComponentGraphic* parent, PortGraphic* from, const std::vector<SimPort*>& to, WireType type);
 
     QRectF boundingRect() const override { return QRectF(); }
     const QPen& getPen();
@@ -144,14 +146,16 @@ public:
     void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) override {}
 
     void setWiresVisibleToPort(const PortPoint* p, bool visible);
+    void setWireVisible(WireSegment* wire, bool visible);
     PortGraphic* getFromPort() const { return m_fromPort; }
     const std::vector<PortGraphic*>& getToPorts() const { return m_toGraphicPorts; }
-    std::pair<WirePoint*, WireSegment*> createWirePointOnSeg(const QPointF scenePos, WireSegment* onSegment);
-    const std::set<WireSegment*>& getWires() const { return m_wires; }
+    std::pair<WirePoint*, std::shared_ptr<WireSegment>> createWirePointOnSeg(const QPointF scenePos,
+                                                                             WireSegment* onSegment);
+    const std::set<std::shared_ptr<WireSegment>>& getWires() const { return m_wires; }
     void removeWirePoint(WirePoint* point);
     WirePoint* createWirePoint();
     void moveWirePoint(PortPoint* point, const QPointF scenePos);
-    WireSegment* createSegment(PortPoint* start, PortPoint* end);
+    std::shared_ptr<WireSegment> createSegment(PortPoint* start, PortPoint* end);
 
     /**
      * @brief clearWirePoints
@@ -335,7 +339,7 @@ private:
     PortGraphic* m_fromPort = nullptr;
     std::vector<SimPort*> m_toPorts;
     std::vector<PortGraphic*> m_toGraphicPorts;
-    std::set<WireSegment*> m_wires;
+    std::set<std::shared_ptr<WireSegment>> m_wires;
     std::set<WirePoint*> m_points;
     WireType m_type;
 };

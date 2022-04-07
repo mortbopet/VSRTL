@@ -43,14 +43,14 @@ void registerRoutes(const std::shared_ptr<Netlist>& netlist) {
 
                 if (i == 0) {
                     // first tile
-                    auto edge = route->start.routingComponent->adjacentTile(curTile, valid);
+                    auto edge = route->start.routingComponent->isAdjacentTile(curTile, valid);
                     Q_ASSERT(valid);
                     const Orientation dir = directionToOrientation(edge);
                     curTile->registerRoute(route.get(), dir);
                 }
 
                 if (preTile) {
-                    auto edge = preTile->adjacentTile(curTile, valid);
+                    auto edge = preTile->isAdjacentTile(curTile, valid);
                     Q_ASSERT(valid);
                     const Orientation dir = directionToOrientation(edge);
                     preTile->registerRoute(route.get(), dir);
@@ -59,7 +59,7 @@ void registerRoutes(const std::shared_ptr<Netlist>& netlist) {
 
                 if (i == (route->path.size() - 1)) {
                     // last tile
-                    auto edge = curTile->adjacentTile(route->end.routingComponent.get(), valid);
+                    auto edge = curTile->isAdjacentTile(route->end.routingComponent.get(), valid);
                     Q_ASSERT(valid);
                     const Orientation dir = directionToOrientation(edge);
                     curTile->registerRoute(route.get(), dir);
@@ -100,7 +100,7 @@ PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components
 
     // During the routing algorithm, all routes should have registered to their routing tiles. With knowledge of how
     // many routes occupy each routing tile, a route is assigned a lane within the routing tile
-    for (const auto& tile : rGraph->verticesOfType<RoutingTile>()) {
+    for (const auto& tile : rGraph->vertices<RoutingTile>()) {
         tile->assignRoutes();
     }
 
