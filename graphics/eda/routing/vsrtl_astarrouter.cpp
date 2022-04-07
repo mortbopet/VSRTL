@@ -1,6 +1,6 @@
-#include "vsrtl_astar.h"
-#include "vsrtl_netlist.h"
-#include "vsrtl_tilegraph.h"
+#include "eda/algorithms/vsrtl_astar.h"
+#include "eda/vsrtl_netlist.h"
+#include "eda/vsrtl_tilegraph.h"
 
 namespace vsrtl {
 namespace eda {
@@ -59,7 +59,7 @@ void assertValidRoute(const Route& route) {
     }
 }
 
-void AStarRouter(NetlistPtr& netlist) {
+void AStarRouter(const std::shared_ptr<Netlist>& netlist) {
     // Route via. a* search between start- and stop nodes, using the available routing tiles
 
     for (auto& net : *netlist) {

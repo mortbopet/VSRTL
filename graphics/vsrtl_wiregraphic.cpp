@@ -488,7 +488,7 @@ WireGraphic::MergeType WireGraphic::canMergePoints(WirePoint* base, WirePoint* t
  * @param visible
  */
 void WireGraphic::setWiresVisibleToPort(const PortPoint* p, bool visible) {
-    /// Find segment which terminates in @param p
+    /// Find segment which terminates in 'p'.
     auto iter = std::find_if(m_wires.begin(), m_wires.end(), [p](WireSegment* wire) { return wire->getEnd() == p; });
     Q_ASSERT(iter != m_wires.end());
 

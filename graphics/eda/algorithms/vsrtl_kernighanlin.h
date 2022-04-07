@@ -1,6 +1,7 @@
 #ifndef KERNIGHANLIN_H
 #define KERNIGHANLIN_H
 
+#include <assert.h>
 #include <limits.h>
 #include <algorithm>
 #include <map>
@@ -41,8 +42,7 @@ void splitContainer(const T& in, T& A, T& B) {
 
 template <typename T, typename F>
 int KLdValue(T* node, const std::set<T*>& A, const std::set<T*>& B, F&& connectedComponentsFunc) {
-    // Assert that the node is only present in one of the sets
-    Q_ASSERT((A.count(node) == 0) ^ (B.count(node) == 0));
+    assert((A.count(node) == 0) ^ (B.count(node) == 0) && "expected node only to be present in one of the sets");
     const auto& internalSet = A.count(node) > 0 ? A : B;
     const auto& externalSet = B.count(node) > 0 ? A : B;
 
@@ -67,7 +67,7 @@ int KLdValue(T* node, const std::set<T*>& A, const std::set<T*>& B, F&& connecte
 
 template <typename T, typename F>
 std::pair<std::set<T*>, std::set<T*>> KernighanLin(const std::set<T*>& graph, F&& connectedComponentsFunc) {
-    Q_ASSERT(graph.size() > 1);
+    assert(graph.size() > 1);
     // Create an initial balanced distribution
     std::set<T*> A, B;
     splitContainer(graph, A, B);
@@ -116,7 +116,7 @@ std::pair<std::set<T*>, std::set<T*>> KernighanLin(const std::set<T*>& graph, F&
                     }
                 }
             }
-            Q_ASSERT(a != nullptr && b != nullptr);
+            assert(a != nullptr && b != nullptr);
             // a and b which maximizes g has been found. Add values to gv, av, bv
             gv.push_back(g_pass_max);
             av.push_back(a);

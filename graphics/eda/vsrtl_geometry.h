@@ -76,7 +76,7 @@ public:
     constexpr Orientation orientation() const { return m_orientation; }
     Line adjusted(const QPoint& dp1, const QPoint& dp2) const { return Line(p1() + dp1, p2() + dp2); }
     QLine toQLine() const { return QLine(p1(), p2()); }
-    bool intersect(const Line& other, QPoint& p, IntersectType type) const {
+    bool intersects(const Line& other, QPoint& p, IntersectType type) const {
         Q_ASSERT(orientation() != other.orientation());
         const Line *hz, *vt;
         if (m_orientation == Orientation::Horizontal) {

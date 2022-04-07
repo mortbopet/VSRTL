@@ -107,7 +107,8 @@ private:
 
     // A unique ID representing this routing tile
     int m_id;
-    static int rr_ids;
+    // Routing id counter.
+    static int s_rr_ids;
 };
 
 class RoutingComponent : public Tile {
@@ -116,11 +117,6 @@ public:
     GridComponent* gridComponent;
     QPoint pos;
     QRect rect() const override;
-    /**
-     * @brief doTileBasedPlacement
-     * Places this routing component in the centor of the area enclosed by its adjacent tiles
-     */
-    void doTileBasedPlacement();
 };
 
 struct NetNode {
@@ -237,10 +233,9 @@ public:
     std::map<int, std::map<int, RoutingTile*>> tileMap;
 };
 
-#define WRAP_UNIQUEPTR(type) using type##Ptr = std::unique_ptr<type>;
 class TileGraph : public Graph<Tile> {
 public:
-    TileGraph(Placement& placement);
+    TileGraph(const std::shared_ptr<Placement>& placement);
 
     void dumpDotFile(const QString& path = QString()) const;
 
@@ -258,9 +253,6 @@ public:
 private:
     std::unique_ptr<TileMap> m_tileMap;
 };
-
-WRAP_UNIQUEPTR(TileGraph)
-TileGraphPtr createConnectivityGraph(Placement& placement);
 
 }  // namespace eda
 }  // namespace vsrtl

@@ -1,6 +1,6 @@
+#include "eda/algorithms/vsrtl_kernighanlin.h"
+#include "eda/vsrtl_tilegraph.h"
 #include "vsrtl_gridcomponent.h"
-#include "vsrtl_kernighanlin.h"
-#include "vsrtl_tilegraph.h"
 
 namespace vsrtl {
 namespace eda {
@@ -132,7 +132,8 @@ void recursivePartitioning(PartitioningTree& node, const std::set<SimComponent*>
     // Assign cutline direction to child nodes
     Orientation childrenCutlineDir = Orientation::Horizontal;
     if (dir == CutlineDirection::Alternating) {
-        childrenCutlineDir = node.cutlinedir == Orientation::Horizontal ? Orientation::Vertical : Orientation::Horizontal;
+        childrenCutlineDir =
+            node.cutlinedir == Orientation::Horizontal ? Orientation::Vertical : Orientation::Horizontal;
     } else if (dir == CutlineDirection::Repeating) {
         // Unimplemnented
         Q_ASSERT(false);

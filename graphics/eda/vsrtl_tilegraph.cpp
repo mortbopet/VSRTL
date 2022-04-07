@@ -3,13 +3,25 @@
 #include "vsrtl_dotfile.h"
 #include "vsrtl_gridcomponent.h"
 
+#include <QDebug>
+
 namespace vsrtl {
 namespace eda {
 
-int Tile::rr_ids = 0;
+#define assert_valid_point(p)         \
+    assert(p.x() >= 0 && "p.x < 0!"); \
+    assert(p.y() >= 0 && "p.y < 0!");
+
+#define assert_valid_line(line)    \
+    assert_valid_point(line.p1()); \
+    assert_valid_point(line.p2());
+
+#define assert_valid_rect(rect) assert_valid_point(rect.topLeft());
+
+int Tile::s_rr_ids = 0;
 
 Tile::Tile() {
-    m_id = rr_ids++;
+    m_id = s_rr_ids++;
 
     // One neighbour in each direction
     for (int i = 0; i < NDirections; i++) {
@@ -21,25 +33,6 @@ QRect RoutingComponent::rect() const {
     auto r = gridComponent->getCurrentComponentRect();
     r.moveTo(pos);
     return r;
-}
-
-void RoutingComponent::doTileBasedPlacement() {
-    QRect enclosedArea;
-    if (auto* n = neighbour<Tile>(Direction::North)) {
-        enclosedArea.setTop(n->rect().bottom());
-    }
-    if (auto* n = neighbour<Tile>(Direction::South)) {
-        enclosedArea.setBottom(n->rect().top());
-    }
-    if (auto* n = neighbour<Tile>(Direction::West)) {
-        enclosedArea.setLeft(n->rect().right());
-    }
-    if (auto* n = neighbour<Tile>(Direction::East)) {
-        enclosedArea.setRight(n->rect().left());
-    }
-
-    Q_ASSERT(enclosedArea.width() > 0 && enclosedArea.height() > 0);
-    pos = enclosedArea.center() - QPoint(rect().width() / 2, rect().height() / 2);
 }
 
 void TileGraph::dumpDotFile(const QString& path) const {
@@ -70,12 +63,6 @@ void TileGraph::dumpDotFile(const QString& path) const {
 QRect Placement::componentBoundingRect() const {
     std::function<QRect(const std::shared_ptr<RoutingComponent>&)> f = [](const auto& rr) { return rr.get()->rect(); };
     return boundingRectOfRectsF<QRect>(components, f);
-}
-
-void Placement::doTileBasedPlacement() {
-    for (const auto& c : components) {
-        c->doTileBasedPlacement();
-    }
 }
 
 std::set<RoutingTile*> gatherTilesInDirections(RoutingTile* origin, const std::set<Direction>& directions) {
@@ -223,22 +210,24 @@ void TileGraph::expandTiles() {
     placeTilesRec(tile, alreadyPlaced);
 }
 
-TileGraph::TileGraph(Placement& placement) {
+TileGraph::TileGraph(const std::shared_ptr<Placement>& placement) {
     // Check that a valid placement was received (all components contained within the chip boundary)
     std::vector<QRect> rects;
-    std::transform(placement.components.begin(), placement.components.end(), std::back_inserter(rects),
+    std::transform(placement->components.begin(), placement->components.end(), std::back_inserter(rects),
                    [](const auto& c) { return c->rect(); });
-    Q_ASSERT(placement.chipRect.contains(boundingRectOfRects(rects)));
-    Q_ASSERT(placement.chipRect.topLeft() == QPoint(0, 0));
+    Q_ASSERT(placement->chipRect.contains(boundingRectOfRects(rects)));
+    Q_ASSERT(placement->chipRect.topLeft() == QPoint(0, 0));
 
-    const auto& chipRect = placement.chipRect;
+    const auto& chipRect = placement->chipRect;
 
     QList<Line> hz_bounding_lines, vt_bounding_lines, hz_tile_lines, vt_tile_lines;
 
     // Get horizontal and vertical bounding rectangle lines for all components on chip
-    for (const auto& r : placement.components) {
+    for (const auto& r : placement->components) {
         hz_bounding_lines << getEdge(r->rect(), Direction::North) << getEdge(r->rect(), Direction::South);
+        assert_valid_line(hz_bounding_lines.back());
         vt_bounding_lines << getEdge(r->rect(), Direction::West) << getEdge(r->rect(), Direction::East);
+        assert_valid_line(vt_bounding_lines.back());
     }
 
     // ============== Component edge extrusion =================
@@ -249,6 +238,7 @@ TileGraph::TileGraph(Placement& placement) {
     for (const auto& h_line : hz_bounding_lines) {
         // Stretch line to chip boundary
         Line stretchedLine = Line({chipRect.left(), h_line.p1().y()}, {chipRect.right() + 1, h_line.p1().y()});
+        assert_valid_line(stretchedLine);
 
         // Record the stretched line for debugging
         stretchedLines.push_back(stretchedLine);
@@ -256,7 +246,7 @@ TileGraph::TileGraph(Placement& placement) {
         // Narrow line until no boundaries are met
         for (const auto& v_line : vt_bounding_lines) {
             QPoint intersectPoint;
-            if (stretchedLine.intersect(v_line, intersectPoint, IntersectType::Cross)) {
+            if (stretchedLine.intersects(v_line, intersectPoint, IntersectType::Cross)) {
                 // Contract based on point closest to original line segment
                 if ((intersectPoint - h_line.p1()).manhattanLength() <
                     (intersectPoint - h_line.p2()).manhattanLength()) {
@@ -276,6 +266,7 @@ TileGraph::TileGraph(Placement& placement) {
     for (const auto& line : vt_bounding_lines) {
         // Stretch line to chip boundary
         Line stretchedLine = Line({line.p1().x(), chipRect.top()}, {line.p1().x(), chipRect.bottom() + 1});
+        assert_valid_line(stretchedLine);
 
         // Record the stretched line for debugging
         stretchedLines.push_back(stretchedLine);
@@ -284,7 +275,7 @@ TileGraph::TileGraph(Placement& placement) {
         for (const auto& h_line : hz_bounding_lines) {
             QPoint intersectPoint;
             // Intersecting lines must cross each other. This avoids intersections with a rectangles own sides
-            if (h_line.intersect(stretchedLine, intersectPoint, IntersectType::Cross)) {
+            if (h_line.intersects(stretchedLine, intersectPoint, IntersectType::Cross)) {
                 // Contract based on point closest to original line segment
                 if ((intersectPoint - line.p1()).manhattanLength() < (intersectPoint - line.p2()).manhattanLength()) {
                     stretchedLine.setP1(intersectPoint);
@@ -333,13 +324,16 @@ TileGraph::TileGraph(Placement& placement) {
         for (int vi = 1; vi < vt_tile_lines.size(); vi++) {
             const auto& vt_tile_line = vt_tile_lines[vi];
             const auto& hz_tile_line = hz_tile_lines[hi];
-            if (hz_tile_line.intersect(vt_tile_line, tileBottom, IntersectType::OnEdge)) {
+            assert_valid_line(vt_tile_line);
+            assert_valid_line(hz_tile_line);
+
+            if (hz_tile_line.intersects(vt_tile_line, tileBottom, IntersectType::OnEdge)) {
                 // Intersection found (bottom left or right point of tile)
 
                 // 1. Locate the point above the current intersection point (top right of tile)
                 for (int hi_rev = hi - 1; hi_rev >= 0; hi_rev--) {
                     topHzLine = &hz_tile_lines[hi_rev];
-                    if (topHzLine->intersect(vt_tile_line, tileTop, IntersectType::OnEdge)) {
+                    if (topHzLine->intersects(vt_tile_line, tileTop, IntersectType::OnEdge)) {
                         // Intersection found (top left or right point of tile)
                         break;
                     }
@@ -350,7 +344,7 @@ TileGraph::TileGraph(Placement& placement) {
                     tileBottomLeft = tileBottom;
                     // Locate bottom right of tile
                     for (int vi_rev = vi + 1; vi_rev < vt_tile_lines.size(); vi_rev++) {
-                        if (hz_tile_line.intersect(vt_tile_lines[vi_rev], tileBottomRight, IntersectType::OnEdge)) {
+                        if (hz_tile_line.intersects(vt_tile_lines[vi_rev], tileBottomRight, IntersectType::OnEdge)) {
                             break;
                         }
                     }
@@ -365,7 +359,7 @@ TileGraph::TileGraph(Placement& placement) {
                     tileBottomRight = tileBottom;
                     // Locate bottom left of tile
                     for (int vi_rev = vi - 1; vi_rev >= 0; vi_rev--) {
-                        if (hz_tile_line.intersect(vt_tile_lines[vi_rev], tileBottomLeft, IntersectType::OnEdge)) {
+                        if (hz_tile_line.intersects(vt_tile_lines[vi_rev], tileBottomLeft, IntersectType::OnEdge)) {
                             break;
                         }
                     }
@@ -373,19 +367,21 @@ TileGraph::TileGraph(Placement& placement) {
 
                 // Set top left coordinate
                 tileTopLeft = QPoint(tileBottomLeft.x(), tileTop.y());
+                assert_valid_point(tileTopLeft);
 
                 // Check whether the tile is enclosing a component.
                 QRect newTileRect = QRect(tileTopLeft, tileBottomRight);
+                assert_valid_rect(newTileRect);
 
                 // Check whether the new tile encloses a component
-                const auto componentInTileIt = std::find_if(placement.components.begin(), placement.components.end(),
+                const auto componentInTileIt = std::find_if(placement->components.begin(), placement->components.end(),
                                                             [&newTileRect](const auto& routingComponent) {
                                                                 QRect rrect = routingComponent->rect();
                                                                 rrect.setBottomRight(realBottomRight(rrect));
                                                                 return newTileRect == rrect;
                                                             });
 
-                if (componentInTileIt == placement.components.end()) {
+                if (componentInTileIt == placement->components.end()) {
                     // New tile was not a component, check if new tile has already been added
                     auto routingTiles = verticesOfType<RoutingTile>();
                     if (std::find_if(routingTiles.begin(), routingTiles.end(), [&newTileRect](const auto& tile) {
@@ -413,7 +409,7 @@ TileGraph::TileGraph(Placement& placement) {
 
     // ======================= Routing Tile Association ======================= //
     // Step 1: Associate with directly adjacent neighbours
-    for (auto& rc : placement.components) {
+    for (auto& rc : placement->components) {
         // The algorithm have failed if tileGroups does not contain an entry for each corner of all routing components
         const auto rect = rc->rect();
         Q_ASSERT(tileGroups.count(rect.topLeft()));

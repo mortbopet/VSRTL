@@ -92,6 +92,9 @@ signals:
 
 protected:
     int m_gridRotation = 0;  // Rotation angle, in the range [0, 360[ in intervals of 90 deg.
+
+    /// Store a place- and route result. This is used both for manifesting component/wire changes, as well as drawing
+    /// debug information.
     eda::PRResult m_prresult;
     /**
      * @brief applyPlaceAndRouteRes

@@ -4,6 +4,7 @@
 #include <QPointF>
 
 #include <map>
+#include <memory>
 #include <vector>
 
 #include "vsrtl_netlist.h"
@@ -16,13 +17,15 @@ namespace eda {
 enum class PlaceAlg { ASAP, Topological1D, MinCut };
 enum class RouteAlg { Direct, AStar };
 
-using PlacementFunct = std::function<Placement(const std::vector<GridComponent*>&)>;
-using RouteFunct = std::function<void(NetlistPtr&)>;
+using PlacementFunct = std::function<std::shared_ptr<Placement>(const std::vector<GridComponent*>&)>;
+using RouteFunct = std::function<void(std::shared_ptr<Netlist>&)>;
 
+/// The PRResult class is used to store the result of the placement and routing
+/// algorithms.
 struct PRResult {
-    Placement placement;
-    TileGraphPtr tiles;
-    NetlistPtr netlist;
+    std::shared_ptr<Placement> placement;
+    std::shared_ptr<TileGraph> tiles;
+    std::shared_ptr<Netlist> netlist;
 };
 
 /**

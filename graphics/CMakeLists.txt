@@ -3,10 +3,16 @@ cmake_minimum_required(VERSION 3.9)
 file(GLOB LIB_SOURCES
     *.cpp
     eda/*.cpp
+    eda/routing/*.cpp
+    eda/placement/*.cpp
+    eda/algorithms/*.cpp
 )
 file(GLOB LIB_HEADERS
     *.h
     eda/*.h
+    eda/routing/*.h
+    eda/placement/*.h
+    eda/algorithms/*.h
 )
 
 ######################################################################
