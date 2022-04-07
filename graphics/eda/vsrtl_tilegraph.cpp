@@ -118,6 +118,8 @@ void expandTileRecursively(RoutingTile* tile, unsigned w, unsigned h) {
             expandTileRecursively(rt, w, t->rect().height());
         }
     }
+
+    assert_valid_rect(tile->rect());
 }
 
 TileMap::TileMap(const TileGraph& tiles) {
@@ -149,6 +151,45 @@ RoutingTile* TileMap::lookup(int x, int y, Direction tieBreakVt, Direction tieBr
     return nullptr;
 }
 
+/// Places all routing tiles relative to a starting tile (at 0,0) and the width and height of each tile.
+static void placeTiles(RoutingTile* start, TileGraph& tg) {
+    assert(start->pos() == QPoint(0, 0) && "Expected start tile to be at (0, 0)");
+    std::set<RoutingTile*> visited;
+    auto vertices = tg.vertices<RoutingTile>();
+    auto unvisited = std::set<RoutingTile*>(vertices.begin(), vertices.end());
+    std::vector<RoutingTile*> queue;
+
+    queue.push_back(start);
+
+    while (!queue.empty()) {
+        auto* tile = queue.front();
+        queue.erase(queue.begin());
+        if (visited.count(tile))
+            continue;
+        visited.insert(tile);
+        unvisited.erase(tile);
+
+        if (auto* rt = dynamic_cast<RoutingTile*>(tile->getTileAtEdge(Direction::East))) {
+            rt->setPos(tile->rect().topRight());
+            queue.push_back(rt);
+            assert_valid_rect(rt->rect());
+        }
+        if (auto* rt = dynamic_cast<RoutingTile*>(tile->getTileAtEdge(Direction::South))) {
+            rt->setPos(tile->rect().bottomLeft());
+            queue.push_back(rt);
+            assert_valid_rect(rt->rect());
+        }
+    }
+
+    // Some tiles may be left unvisited.
+    // @TODO: For these, find a visited neighbour and try to place it relative to this. This can be done in an iterative
+    // fashion, but should monitor for no change in the queue.
+    for (auto t : unvisited) {
+        if (!visited.count(t))
+            qWarning() << "Tile " << t->rect() << "Was never visited, and";
+    }
+}
+
 void placeTilesRec(RoutingTile* tile, std::set<RoutingTile*>& alreadyPlaced) {
     if (alreadyPlaced.count(tile)) {
         return;
@@ -159,18 +200,22 @@ void placeTilesRec(RoutingTile* tile, std::set<RoutingTile*>& alreadyPlaced) {
     if (auto* rt = dynamic_cast<RoutingTile*>(tile->neighbour(Direction::East))) {
         rt->setPos(tile->rect().topRight());
         toIterate.insert(rt);
+        assert_valid_rect(rt->rect());
     }
     if (auto* rt = dynamic_cast<RoutingTile*>(tile->neighbour(Direction::West))) {
         rt->setPos(tile->rect().topLeft() - QPoint(rt->rect().width() - 1, 0));
         toIterate.insert(rt);
+        assert_valid_rect(rt->rect());
     }
     if (auto* rt = dynamic_cast<RoutingTile*>(tile->neighbour(Direction::South))) {
         rt->setPos(tile->rect().bottomLeft());
         toIterate.insert(rt);
+        assert_valid_rect(rt->rect());
     }
     if (auto* rt = dynamic_cast<RoutingTile*>(tile->neighbour(Direction::North))) {
         rt->setPos(tile->rect().topLeft() - QPoint(0, rt->rect().height() - 1));
         toIterate.insert(rt);
+        assert_valid_rect(rt->rect());
     }
 
     for (const auto& rt : toIterate) {
@@ -200,14 +245,15 @@ void TileGraph::expandTiles() {
 
     // Then, tiles are repositioned based on their adjacency to one another. This is done recursively starting from the
     // top-left tile.
-    RoutingTile* tile = m_tileMap->lookup(QPoint(0, 0));
-    Q_ASSERT(tile);
-    Q_ASSERT(tile->neighbour(Direction::West) == nullptr);
-    Q_ASSERT(tile->neighbour(Direction::North) == nullptr);
+    RoutingTile* startTile = m_tileMap->lookup(QPoint(0, 0));
+    Q_ASSERT(startTile);
+    Q_ASSERT(startTile->neighbour(Direction::West) == nullptr);
+    Q_ASSERT(startTile->neighbour(Direction::North) == nullptr);
 
     std::set<RoutingTile*> alreadyPlaced;
-    tile->setPos(QPoint(0, 0));
-    placeTilesRec(tile, alreadyPlaced);
+    startTile->setPos(QPoint(0, 0));
+    // placeTilesRec(tile, alreadyPlaced);
+    placeTiles(startTile, *this);
 }
 
 TileGraph::TileGraph(const std::shared_ptr<Placement>& placement) {

@@ -154,6 +154,7 @@ public:
     void setWidth(unsigned w) { r.setWidth(w); }
     void setHeight(unsigned h) { r.setHeight(h); }
     void setPos(const QPoint& pos) { r.moveTo(pos); }
+    QPoint pos() const { return r.topLeft(); }
 
     const std::set<Route*>& routes(Orientation dir) const;
 
