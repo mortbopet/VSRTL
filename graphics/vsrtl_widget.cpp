@@ -47,10 +47,10 @@ VSRTLWidget::VSRTLWidget(QWidget* parent) : QWidget(parent), ui(new Ui::VSRTLWid
     /**
      * runFinished will always be emitted asynchronously within the run call.
      * When a run is finished, we need to ensure that the graphical view is fully up to date with the underlying
-     * circuit. This is performed through handleRunFinished, but ensured to be performed on the main gui thread, and not
+     * circuit. This is performed through sync, but ensured to be performed on the main gui thread, and not
      * on whatever thread the running was performed on.
      */
-    connect(this, &VSRTLWidget::runFinished, this, &VSRTLWidget::handleRunFinished, Qt::QueuedConnection);
+    connect(this, &VSRTLWidget::runFinished, this, &VSRTLWidget::sync, Qt::QueuedConnection);
 }
 
 void VSRTLWidget::clearDesign() {
@@ -181,13 +181,13 @@ void VSRTLWidget::clock() {
     }
 }
 
-void VSRTLWidget::handleRunFinished() {
+void VSRTLWidget::sync() {
     // Since the design does not emit signals during running, we need to manually tell all labels to reset their text
     // value, given that labels manually must have their text updated (ie. text is not updated in the redraw call).
     const auto sceneItems = m_scene->items();
     for (auto* item : qAsConst(sceneItems)) {
-        if (auto* label = dynamic_cast<Label*>(item)) {
-            label->updateText();
+        if (auto* simobject = dynamic_cast<SimQObject*>(item)) {
+            simobject->simUpdateSlot();
         }
     }
 

@@ -61,15 +61,6 @@ public:
     void setUserVisible(bool state);
     const auto& outputPorts() const { return m_outputPorts; }
 
-signals:
-    /**
-     * @brief simChanged
-     * Given that the simulator signal/slot framework is not the Qt framework, we here provide a translation signal for
-     * simulator-to-Qt signals. This is done to allow for using Qt's Qt::AutoConnection connection type which handles
-     * cross-thread signal-slot connections if the simulator is executing in some none-GUI thread.
-     */
-    void simChanged();
-
 private slots:
     /**
      * @brief handleGridPosChange
@@ -80,16 +71,10 @@ private slots:
     void updateGeometry();
     void setIndicatorState(vsrtl::PortGraphic* p, bool enabled);
 
-    // Called by vsrtl_core components linked via signal/slot mechanism
-    void updateSlot() { update(); }
-
 private:
     void verifySpecialSignals() const;
 
 protected:
-    /** @brief see simChanged **/
-    void emitSimChanged();
-
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseMoveEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseReleaseEvent(QGraphicsSceneMouseEvent* event) override;

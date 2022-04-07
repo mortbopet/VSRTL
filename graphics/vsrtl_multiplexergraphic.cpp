@@ -7,7 +7,7 @@ namespace vsrtl {
 
 MultiplexerGraphic::MultiplexerGraphic(SimComponent* c, ComponentGraphic* parent) : ComponentGraphic(c, parent) {
     // Make changes in the select signal trigger a redraw of the multiplexer (and its input signal markings)
-    getSelect()->changed.Connect(this, &MultiplexerGraphic::emitSimChanged);
+    wrapSimSignal(getSelect()->changed);
 }
 
 SimPort* MultiplexerGraphic::getSelect() {

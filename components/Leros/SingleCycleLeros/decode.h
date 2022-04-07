@@ -11,7 +11,7 @@ namespace leros {
 
 class Decode : public Component {
 public:
-    Decode(std::string name, SimComponent* parent) : Component(name, parent) {
+    Decode(const std::string& name, SimComponent* parent) : Component(name, parent) {
         lowByte << [=] { return instr.uValue() & 0xFF; };
 
         op << [=] {

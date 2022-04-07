@@ -28,18 +28,19 @@ class SimSynchronous;
 
 class SimBase {
 public:
-    SimBase(std::string name, SimBase* parent) : m_name(name), m_parent(parent) {}
+    SimBase(const std::string& name, SimBase* parent) : m_name(name), m_parent(parent) {}
     virtual ~SimBase() {}
 
     SimDesign* getDesign();
 
     template <typename T = std::runtime_error>
-    void throwError(const std::string message) const {
+    void throwError(const std::string& message) const {
         throw T(getName() + ": " + message);
     }
 
     const std::string& getName() const { return m_name; }
     const std::string& getDisplayName() const { return m_displayName.empty() ? m_name : m_displayName; }
+    const std::string& getDescription() const { return m_description; }
     const std::string getHierName() const {
         if (m_parent) {
             return m_parent->getHierName() + "->" + getName();
@@ -53,7 +54,8 @@ public:
         return dynamic_cast<T*>(m_parent);
     }
 
-    void setDisplayName(std::string name) { m_displayName = name; }
+    void setDisplayName(const std::string& name) { m_displayName = name; }
+    void setDescription(const std::string& description) { m_description = description; }
 
     template <typename T>
     void registerGraphic(T* obj) {
@@ -69,10 +71,17 @@ public:
     }
 
 protected:
+    /// Name of this component.
     std::string m_name;
+    /// Parent of this component.
     SimBase* m_parent = nullptr;
+    /// Cached pointer to the top-level design.
     SimDesign* m_design = nullptr;
+    /// Display name of this component. If set, a UI should prefer showing this name over m_name.
     std::string m_displayName;
+    /// An optional description of this component.
+    std::string m_description;
+    /// An opaque pointer to a graphical counterpart to this component.
     void* m_graphicObject = nullptr;
 };
 
@@ -89,7 +98,7 @@ class SimPort : public SimBase {
 
 public:
     enum class PortType { in, out, signal };
-    SimPort(std::string name, SimBase* parent, PortType type) : SimBase(name, parent), m_type(type) {}
+    SimPort(const std::string& name, SimBase* parent, PortType type) : SimBase(name, parent), m_type(type) {}
     virtual ~SimPort() {}
     virtual unsigned int getWidth() const = 0;
     virtual VSRTL_VT_U uValue() const = 0;
@@ -225,7 +234,7 @@ public:
     using PortBaseCompT = BaseSorter<std::unique_ptr<SimPort>>;
     using ComponentCompT = BaseSorter<std::unique_ptr<SimComponent>>;
 
-    SimComponent(std::string name, SimBase* parent) : SimBase(name, parent) {}
+    SimComponent(const std::string& name, SimBase* parent) : SimBase(name, parent) {}
     virtual ~SimComponent() {}
 
     /**
@@ -411,7 +420,7 @@ public:
 
     // Component object generator that registers objects in parent upon creation
     template <typename T, typename... Args>
-    T* create_component(std::string name, Args... args) {
+    T* create_component(const std::string& name, Args... args) {
         verifyIsUniqueComponentName(name);
         auto sptr = std::make_unique<T>(name, this, args...);
         auto* ptr = sptr.get();
@@ -420,7 +429,7 @@ public:
     }
 
     template <typename T, typename... Args>
-    std::vector<T*> create_components(std::string name, unsigned int n, Args... args) {
+    std::vector<T*> create_components(const std::string& name, unsigned int n, Args... args) {
         std::vector<T*> components;
         for (unsigned int i = 0; i < n; i++) {
             std::string i_name = name + "_" + std::to_string(i);
@@ -430,7 +439,7 @@ public:
     }
 
     template <typename T>
-    Parameter<T>& createParameter(std::string name, const T& value) {
+    Parameter<T>& createParameter(const std::string& name, const T& value) {
         verifyIsUniqueParameterName(name);
         auto sptr = std::make_unique<Parameter<T>>(name, value);
         auto* ptr = sptr.get();
@@ -546,7 +555,7 @@ private:
 
 class SimDesign : public SimComponent {
 public:
-    SimDesign(std::string name, SimBase* parent) : SimComponent(name, parent) {}
+    SimDesign(const std::string& name, SimBase* parent) : SimComponent(name, parent) {}
     virtual ~SimDesign() {}
     /**
      * @brief clock

@@ -21,7 +21,7 @@ file ( GLOB RESOURCES resources/icons/*.qrc resources/fonts/*.qrc)
 ## Linking
 ######################################################################
 
-add_library(${VSRTL_GRAPHICS_LIB} ${LIB_SOURCES} ${LIB_HEADERS} ${UIS} ${RESOURCES} )
+add_library(${VSRTL_GRAPHICS_LIB} STATIC ${LIB_SOURCES} ${LIB_HEADERS} ${UIS} ${RESOURCES} )
 
 option(VSRTL_DEBUG_DRAWING "Draw bounding rectangles & scene grid background" OFF)
 if(VSRTL_DEBUG_DRAWING)

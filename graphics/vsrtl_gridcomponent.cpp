@@ -8,9 +8,8 @@
 
 namespace vsrtl {
 
-GridComponent::GridComponent(SimComponent* c, GridComponent* parent) : GraphicsBaseItem(parent), m_component(c) {
-    m_border = std::make_unique<ComponentBorder>(c);
-
+GridComponent::GridComponent(SimComponent* c, GridComponent* parent)
+    : GraphicsBaseItem(parent), m_component(c), m_border(std::make_unique<ComponentBorder>(c)) {
     setInitialRect();
     m_currentExpandedRect = m_currentSubcomponentBoundingRect;
 }
@@ -93,8 +92,8 @@ bool GridComponent::move(const QPoint& pos) {
     }
 
     // Restrict positioning to inside parent rect
-    auto* parent = dynamic_cast<GridComponent*>(parentItem());
     QPoint newPos = pos;
+    auto* parent = dynamic_cast<GridComponent*>(parentItem());
     if (parent) {
         newPos.setX(qMin(parent->getCurrentComponentRect().right() + 1 - getCurrentComponentRect().width(),
                          qMax(newPos.x(), 0)));

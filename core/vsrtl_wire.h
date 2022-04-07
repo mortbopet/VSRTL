@@ -16,7 +16,7 @@ namespace core {
     class wire_##name : public Component {                                                      \
     public:                                                                                     \
         SetGraphicsType(Wire);                                                                  \
-        wire_##name(std::string name, SimComponent* parent) : Component(name, parent) {}        \
+        wire_##name(const std::string& name, SimComponent* parent) : Component(name, parent) {}        \
                                                                                                 \
         OUTPUTPORT(out, outWidth);                                                              \
                                                                                                 \

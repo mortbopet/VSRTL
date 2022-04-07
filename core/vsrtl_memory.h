@@ -14,8 +14,9 @@
 namespace vsrtl {
 namespace core {
 
+// A memory eviction contains information about data that was overwritten in a given cycle.
 struct MemoryEviction {
-    bool writeEnable;
+    long long cycle;
     VSRTL_VT_U addr;
     VSRTL_VT_U data;
     VSRTL_VT_U width;
@@ -51,20 +52,23 @@ template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = tru
 class WrMemory : public ClockedComponent, public BaseMemory<byteIndexed> {
 public:
     SetGraphicsType(Component);
-    WrMemory(std::string name, SimComponent* parent) : ClockedComponent(name, parent) {}
+    WrMemory(const std::string& name, SimComponent* parent) : ClockedComponent(name, parent) {}
     void reset() override { m_reverseStack.clear(); }
     AddressSpace::RegionType accessRegion() const override { return this->memory()->regionType(addr.uValue()); }
 
     void save() override {
         constexpr unsigned wordshift = ceillog2((byteIndexed ? addrWidth : dataWidth) / CHAR_BIT);
         const bool writeEnable = static_cast<bool>(wr_en);
-        const VSRTL_VT_U addr_v = addr.uValue();
-        const VSRTL_VT_U data_in_v = data_in.uValue();
-        const VSRTL_VT_U data_out_v = this->read(addr_v, dataWidth / CHAR_BIT, wordshift);
-        const VSRTL_VT_U wr_width_v = wr_width.uValue();
-        auto ev = MemoryEviction({writeEnable, addr_v, data_out_v, wr_width_v});
-        saveToStack(ev);
         if (writeEnable) {
+            const VSRTL_VT_U addr_v = addr.uValue();
+            const VSRTL_VT_U data_in_v = data_in.uValue();
+            const VSRTL_VT_U data_out_v = this->read(addr_v, dataWidth / CHAR_BIT, wordshift);
+            const VSRTL_VT_U wr_width_v = wr_width.uValue();
+            // save() is called prior to cycle incrementation; WrMemory::reverse() relies on an eviction being listed
+            // for the cycle which the 'reverse' call happened in.´
+            const auto cycle = getDesign()->getCycleCount() + 1;
+            auto ev = MemoryEviction({cycle, addr_v, data_out_v, wr_width_v});
+            saveToStack(ev);
             this->write(addr_v, data_in_v, wr_width_v, wordshift);
         }
     }
@@ -72,11 +76,12 @@ public:
     void reverse() override {
         if (m_reverseStack.size() > 0) {
             auto lastEviction = m_reverseStack.front();
-            if (lastEviction.writeEnable) {
+            auto cycle = getDesign()->getCycleCount();
+            if (lastEviction.cycle == cycle) {
                 this->write(lastEviction.addr, lastEviction.data, lastEviction.width,
                             ceillog2((byteIndexed ? addrWidth : dataWidth) / CHAR_BIT));
+                m_reverseStack.pop_front();
             }
-            m_reverseStack.pop_front();
         }
     }
 
@@ -113,7 +118,8 @@ private:
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
 class MemorySyncRd : public WrMemory<addrWidth, dataWidth, byteIndexed> {
 public:
-    MemorySyncRd(std::string name, SimComponent* parent) : WrMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {
+    MemorySyncRd(const std::string& name, SimComponent* parent)
+        : WrMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {
         data_out << [=] {
             return this->read(this->addr.uValue(), dataWidth / CHAR_BIT,
                               ceillog2((byteIndexed ? addrWidth : dataWidth) / CHAR_BIT));
@@ -133,7 +139,7 @@ class RdMemory : public Component, public BaseMemory<byteIndexed> {
 
 public:
     SetGraphicsType(ClockedComponent);
-    RdMemory(std::string name, SimComponent* parent) : Component(name, parent) {
+    RdMemory(const std::string& name, SimComponent* parent) : Component(name, parent) {
         data_out << [=] {
             auto _addr = addr.uValue();
             auto val =
@@ -155,7 +161,7 @@ template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = tru
 class MemoryAsyncRd : public Component {
 public:
     SetGraphicsType(ClockedComponent);
-    MemoryAsyncRd(std::string name, SimComponent* parent) : Component(name, parent) {
+    MemoryAsyncRd(const std::string& name, SimComponent* parent) : Component(name, parent) {
         addr >> _wr_mem->addr;
         wr_en >> _wr_mem->wr_en;
         data_in >> _wr_mem->data_in;
@@ -187,7 +193,7 @@ public:
 template <unsigned int addrWidth, unsigned int dataWidth, bool byteIndexed = true>
 class ROM : public RdMemory<addrWidth, dataWidth, byteIndexed> {
 public:
-    ROM(std::string name, SimComponent* parent) : RdMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {}
+    ROM(const std::string& name, SimComponent* parent) : RdMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {}
 };
 
 }  // namespace core

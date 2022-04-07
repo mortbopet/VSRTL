@@ -25,7 +25,7 @@ enum class PropagationState { unpropagated, propagated, constant };
  */
 class PortBase : public SimPort {
 public:
-    PortBase(std::string name, SimComponent* parent, PortType type) : SimPort(name, parent, type) {
+    PortBase(const std::string& name, SimComponent* parent, PortType type) : SimPort(name, parent, type) {
         assert(parent != nullptr);
     }
 
@@ -59,7 +59,7 @@ protected:
 template <unsigned int W>
 class Port : public PortBase {
 public:
-    Port(std::string name, SimComponent* parent, PortType type) : PortBase(name, parent, type) {}
+    Port(const std::string& name, SimComponent* parent, PortType type) : PortBase(name, parent, type) {}
     bool isConnected() const override { return m_inputPort != nullptr || m_propagationFunction; }
 
     // Port connections are doubly linked
@@ -140,7 +140,7 @@ protected:
 template <unsigned int W, typename E_t>
 class EnumPort : public Port<W> {
 public:
-    EnumPort(std::string name, Component* parent, vsrtl::SimPort::PortType type) : Port<W>(name, parent, type) {}
+    EnumPort(const std::string& name, Component* parent, vsrtl::SimPort::PortType type) : Port<W>(name, parent, type) {}
 
     bool isEnumPort() const override { return true; }
     std::string valueToEnumString() const override { return E_t::_from_integral(this->uValue())._to_string(); }

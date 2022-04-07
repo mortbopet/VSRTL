@@ -9,10 +9,11 @@
 #include "vsrtl_componentborder.h"
 #include "vsrtl_graphicsbaseitem.h"
 #include "vsrtl_shape.h"
+#include "vsrtl_simqobject.h"
 
 namespace vsrtl {
 
-class GridComponent : public QObject, public GraphicsBaseItem<QGraphicsItem> {
+class GridComponent : public SimQObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
 public:
     GridComponent(SimComponent* c, GridComponent* parent);

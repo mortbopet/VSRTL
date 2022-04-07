@@ -31,21 +31,17 @@
 #include <QPushButton>
 #include <QStyleOptionGraphicsItem>
 
+#include <memory>
+
 namespace vsrtl {
 
 static constexpr qreal c_resizeMargin = GRID_SIZE;
 
 ComponentGraphic::ComponentGraphic(SimComponent* c, ComponentGraphic* parent) : GridComponent(c, parent) {
-    // Connect changes from simulator through our signal translation mechanism, see doc wrt. simChanged
-    c->changed.Connect(this, &ComponentGraphic::emitSimChanged);
-    connect(this, &ComponentGraphic::simChanged, this, &ComponentGraphic::updateSlot);
-
+    // Connect changes from simulator through our signal translation mechanism.
+    wrapSimSignal(c->changed);
     c->registerGraphic(this);
     verifySpecialSignals();
-}
-
-void ComponentGraphic::emitSimChanged() {
-    emit simChanged();
 }
 
 void ComponentGraphic::verifySpecialSignals() const {
@@ -71,6 +67,7 @@ GraphicsBaseItem<QGraphicsItem>* ComponentGraphic::moduleParent() {
 }
 
 void ComponentGraphic::initialize(bool doPlaceAndRoute) {
+    setToolTip(QString::fromStdString(m_component->getDescription()));
     setFlags(ItemIsSelectable | flags());
     setAcceptHoverEvents(true);
     setMoveable();

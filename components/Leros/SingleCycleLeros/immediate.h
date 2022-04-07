@@ -11,7 +11,7 @@ namespace leros {
 
 class Immediate : public Component {
 public:
-    Immediate(std::string name, SimComponent* parent) : Component(name, parent) {
+    Immediate(const std::string& name, SimComponent* parent) : Component(name, parent) {
         imm << [=] {
             const auto imm8 = instr.uValue() & 0xFF;
             const auto simm8 = signextend<8>(imm8);

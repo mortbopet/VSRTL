@@ -34,7 +34,7 @@ class Parameter : public ParameterBase {
                   "Unsupported parameter type");
 
 public:
-    Parameter(std::string name, const T& value = T()) : ParameterBase(name), m_value(value) {}
+    Parameter(const std::string& name, const T& value = T()) : ParameterBase(name), m_value(value) {}
     T& getValue() { return m_value; }
     void setValue(const T& value) {
         m_value = value;

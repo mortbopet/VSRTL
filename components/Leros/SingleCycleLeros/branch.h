@@ -11,7 +11,7 @@ namespace leros {
 
 class Branch : public Component {
 public:
-    Branch(std::string name, SimComponent* parent) : Component(name, parent) {
+    Branch(const std::string& name, SimComponent* parent) : Component(name, parent) {
         do_branch << [=] {
             Switch(op, imm_op) {
                 case br_op::br:

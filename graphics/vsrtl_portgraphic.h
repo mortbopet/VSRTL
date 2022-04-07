@@ -5,6 +5,7 @@
 #include "vsrtl_graphics_defines.h"
 #include "vsrtl_graphicsbaseitem.h"
 #include "vsrtl_label.h"
+#include "vsrtl_simqobject.h"
 #include "vsrtl_valuelabel.h"
 
 #include "../interface/vsrtl_interface.h"
@@ -23,7 +24,7 @@ namespace vsrtl {
 class WireGraphic;
 class PortPoint;
 
-class PortGraphic : public QObject, public GraphicsBaseItem<QGraphicsItem> {
+class PortGraphic : public SimQObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
     Q_PROPERTY(QColor penColor MEMBER m_penColor)
     friend class ValueLabel;
@@ -87,25 +88,16 @@ public:
 
     void modulePositionHasChanged() override;
 
-signals:
-    /**
-     * @brief simChanged
-     * Given that the simulator signal/slot framework is not the Qt framework, we here provide a translation signal for
-     * simulator-to-Qt signals. This is done to allow for using Qt's Qt::AutoConnection connection type which handles
-     * cross-thread signal-slot connections if the simulator is executing in some none-GUI thread.
-     */
-    void simChanged();
+protected:
+    void simUpdateSlot() override;
 
 private slots:
     void updatePenColor();
 
 private:
-    /** @brief see simChanged **/
-    void emitSimChanged();
     void redraw();
     void propagateRedraw();
     void updatePen(bool aboutToBeSelected = false, bool aboutToBeDeselected = false);
-    void updateSlot();
 
     /**
      * @brief m_userHidden

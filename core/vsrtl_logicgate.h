@@ -9,7 +9,7 @@ namespace core {
 template <unsigned int W, unsigned int nInputs>
 class LogicGate : public Component {
 public:
-    LogicGate(std::string name, SimComponent* parent) : Component(name, parent) {}
+    LogicGate(const std::string& name, SimComponent* parent) : Component(name, parent) {}
     OUTPUTPORT(out, W);
     INPUTPORTS(in, W, nInputs);
 };
@@ -17,7 +17,7 @@ public:
 template <unsigned int W, unsigned int nInputs>
 class And : public LogicGate<W, nInputs> {
 public:
-    SetGraphicsType(And) And(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
+    SetGraphicsType(And) And(const std::string& name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] {
             auto v = this->in[0]->uValue();
             for (unsigned i = 1; i < this->in.size(); i++) {
@@ -31,7 +31,7 @@ public:
 template <unsigned int W, unsigned int nInputs>
 class Nand : public LogicGate<W, nInputs> {
 public:
-    SetGraphicsType(Nand) Nand(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
+    SetGraphicsType(Nand) Nand(const std::string& name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] {
             auto v = this->in[0]->uValue();
             for (unsigned i = 1; i < this->in.size(); i++) {
@@ -46,7 +46,7 @@ template <unsigned int W, unsigned int nInputs>
 class Or : public LogicGate<W, nInputs> {
 public:
     SetGraphicsType(Or);
-    Or(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
+    Or(const std::string& name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] {
             auto v = this->in[0]->uValue();
             for (unsigned i = 1; i < this->in.size(); i++) {
@@ -61,7 +61,7 @@ template <unsigned int W, unsigned int nInputs>
 class Xor : public LogicGate<W, nInputs> {
 public:
     SetGraphicsType(Xor);
-    Xor(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
+    Xor(const std::string& name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] {
             auto v = this->in[0]->uValue();
             for (unsigned i = 1; i < this->in.size(); i++) {
@@ -76,7 +76,7 @@ template <unsigned int W, unsigned int nInputs>
 class Not : public LogicGate<W, nInputs> {
 public:
     SetGraphicsType(Not);
-    Not(std::string name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
+    Not(const std::string& name, SimComponent* parent) : LogicGate<W, nInputs>(name, parent) {
         this->out << [=] { return ~this->in[0]->uValue(); };
     }
 };

@@ -2,6 +2,7 @@
 #define VSRTL_GRAPHICSBASE_H
 
 #include <QGraphicsItem>
+#include "gallantsignalwrapper.h"
 
 namespace vsrtl {
 
@@ -49,7 +50,6 @@ public:
         child->m_virtualParents[this] = link;
     }
 
-protected:
     /**
      * @brief m_virtualChildren
      * Virtual children are items which have no QGraphicsItem child/parent relationship to this item, but who should

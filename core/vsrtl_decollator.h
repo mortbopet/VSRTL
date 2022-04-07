@@ -18,7 +18,7 @@ namespace core {
 template <unsigned int W>
 class Decollator : public Component {
 public:
-    Decollator(std::string name, SimComponent* parent) : Component(name, parent) {
+    Decollator(const std::string& name, SimComponent* parent) : Component(name, parent) {
         for (int i = 0; i < W; i++) {
             *out[i] << [=] { return (VT_U(in) >> i) & 0b1; };
         }

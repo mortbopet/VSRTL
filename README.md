@@ -10,7 +10,7 @@ A VSRTL-described circuit may be built and simulated as a standalone application
 
 Refer to the [reference section](docs/README.md) for implementation and usage documentation.  
 If you would like to contribute, check the [issues](https://github.com/mortbopet/vsrtl/issues) section - There's plenty of work to be done!  
-Got questions or comments? Head over to the VSRTL [Gitter chat](https://gitter.im/Ripes-VSRTL/).  
+For questions, comments, feature requests, or new ideas, don't hesitate to share these at [the discussions page](https://github.com/mortbopet/VSRTL/discussions).
 
 <p align="center">
   <img src="https://github.com/mortbopet/vsrtl/blob/master/resources/gif1.gif?raw=true" width=75%/>
@@ -31,7 +31,7 @@ make -j$(nproc)
   * C++17 toolchain
   * CMake
 * **Graphics**
-  * Qt 5.9.3+: https://www.qt.io/download
+  * Qt 5.14+: https://www.qt.io/download
 
 ---
 In papers and reports, please refer to VSRTL as follows: 'Morten Borup Petersen. VSRTL. https://github.com/mortbopet/VSRTL', e.g. using the following BibTeX code:

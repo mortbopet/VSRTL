@@ -11,7 +11,7 @@ namespace leros {
 
 class ALU : public Component {
 public:
-    ALU(std::string name, SimComponent* parent) : Component(name, parent) {
+    ALU(const std::string& name, SimComponent* parent) : Component(name, parent) {
         res << [=] {
             const auto op1s = op1.sValue();
             const auto op2s = op2.sValue();

@@ -127,7 +127,7 @@ public:
         }
     }
 
-    virtual VSRTL_VT_U readMem(VSRTL_VT_U address, unsigned width = 4) override {
+    virtual VSRTL_VT_U readMem(VSRTL_VT_U address, unsigned width) override {
         if (auto* mmapregion = findMMapRegion(address)) {
             return mmapregion->io.ioRead(address - mmapregion->base, width);
         } else {
@@ -135,7 +135,7 @@ public:
         }
     }
 
-    virtual VSRTL_VT_U readMemConst(VSRTL_VT_U address, unsigned width = 4) const override {
+    virtual VSRTL_VT_U readMemConst(VSRTL_VT_U address, unsigned width) const override {
         if (auto* mmapregion = findMMapRegion(address)) {
             return mmapregion->io.ioRead(address - mmapregion->base, width);
         } else {

@@ -43,7 +43,7 @@ class ClockedComponent : public Component, public SimSynchronous {
     SetGraphicsType(ClockedComponent);
 
 public:
-    ClockedComponent(std::string name, SimComponent* parent) : Component(name, parent), SimSynchronous(this) {}
+    ClockedComponent(const std::string& name, SimComponent* parent) : Component(name, parent), SimSynchronous(this) {}
     virtual void save() = 0;
 
     /**
@@ -95,7 +95,7 @@ private:
 
 class RegisterBase : public ClockedComponent {
 public:
-    RegisterBase(std::string name, SimComponent* parent) : ClockedComponent(name, parent) {}
+    RegisterBase(const std::string& name, SimComponent* parent) : ClockedComponent(name, parent) {}
 
     virtual PortBase* getIn() = 0;
     virtual PortBase* getOut() = 0;
@@ -106,7 +106,7 @@ class Register : public RegisterBase {
 public:
     SetGraphicsType(Register);
 
-    Register(std::string name, SimComponent* parent) : RegisterBase(name, parent) {
+    Register(const std::string& name, SimComponent* parent) : RegisterBase(name, parent) {
         // Calling out.propagate() will clock the register the register
         out << ([=] { return m_savedValue; });
     }
@@ -165,7 +165,7 @@ protected:
 template <unsigned int W>
 class RegisterClEn : public Register<W> {
 public:
-    RegisterClEn(std::string name, SimComponent* parent) : Register<W>(name, parent) {}
+    RegisterClEn(const std::string& name, SimComponent* parent) : Register<W>(name, parent) {}
 
     void save() override {
         this->saveToStack();
@@ -187,7 +187,7 @@ class ShiftRegister : public RegisterBase {
 public:
     SetGraphicsType(Register);
 
-    ShiftRegister(std::string name, SimComponent* parent) : RegisterBase(name, parent) {
+    ShiftRegister(const std::string& name, SimComponent* parent) : RegisterBase(name, parent) {
         stages.setTooltip("Number of shift register stages");
         stages.setOptions({1, 100});
         stages.changed.Connect(this, &ShiftRegister::stagesChanged);

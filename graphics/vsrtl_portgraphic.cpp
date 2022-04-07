@@ -32,9 +32,8 @@ PortGraphic::PortGraphic(SimPort* port, vsrtl::SimPort::PortType type, QGraphics
         *m_radix = Radix::Enum;
     }
 
-    // Connect changes from simulator through our signal translation mechanism, see doc wrt. simChanged
-    port->changed.Connect(this, &PortGraphic::emitSimChanged);
-    connect(this, &PortGraphic::simChanged, this, &PortGraphic::updateSlot);
+    // Connect changes from simulator through our signal translation mechanism
+    wrapSimSignal(port->changed);
 
     m_colorAnimation = std::make_unique<QPropertyAnimation>(this, "penColor");
     m_colorAnimation->setDuration(100);
@@ -111,11 +110,7 @@ PortGraphic::PortGraphic(SimPort* port, vsrtl::SimPort::PortType type, QGraphics
     updateGeometry();
 }
 
-void PortGraphic::emitSimChanged() {
-    emit simChanged();
-}
-
-void PortGraphic::updateSlot() {
+void PortGraphic::simUpdateSlot() {
     Q_ASSERT(m_valueLabel);
     updatePen();
     update();
@@ -130,7 +125,7 @@ void PortGraphic::setValueLabelVisible(bool visible) {
     if (!userHidden() || m_valueLabel->isVisible()) {
         m_showValueAction->setChecked(visible);
         m_valueLabel->setVisible(visible);
-        updateSlot();
+        simUpdateSlot();
     }
 }
 
@@ -179,7 +174,7 @@ void PortGraphic::postSceneConstructionInitialize2() {
         // For constant ports, we by default display the value of the port
         m_valueLabel->show();
         *m_radix = m_port->getWidth() == 1 ? Radix::Unsigned : Radix::Signed;
-        updateSlot();  // propagate radix change to value label
+        simUpdateSlot();  // propagate radix change to value label
 
         const auto br = m_valueLabel->boundingRect();
         m_valueLabel->setPos(
