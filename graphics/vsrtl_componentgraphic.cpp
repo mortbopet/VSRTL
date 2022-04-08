@@ -113,7 +113,7 @@ void ComponentGraphic::initialize(bool doPlaceAndRoute) {
 }
 
 void ComponentGraphic::applyRouteRes() {
-    if (auto* netlist = m_prresult.netlist.get()) {
+    if (auto* netlist = m_prresult->netlist.get()) {
         for (const auto& net : *netlist) {
             for (const auto& route : *net.get()) {
                 Q_ASSERT(route->start.port != nullptr && route->end.port != nullptr);
@@ -614,7 +614,7 @@ void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* 
         // painter->drawRect(gridToScene(m_prresult.placement.chipRect));
 
         // Draw routing regions
-        for (const auto& rr : m_prresult.tiles->vertices()) {
+        for (const auto& rr : m_prresult->tiles->vertices()) {
             QPen pen;
             pen.setColor(QColor(rand() % 255, rand() % 255, rand() % 255));
             pen.setStyle(Qt::DotLine);

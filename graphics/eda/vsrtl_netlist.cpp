@@ -5,9 +5,9 @@
 namespace vsrtl {
 namespace eda {
 
-std::shared_ptr<Netlist> createNetlist(const std::shared_ptr<Placement>& placement) {
+std::shared_ptr<Netlist> createNetlist(const std::shared_ptr<TileGraph>& tg) {
     auto netlist = std::make_shared<Netlist>();
-    for (const auto& routingComponent : placement->components()) {
+    for (const auto& routingComponent : tg->components()) {
         for (const auto& outputPort : routingComponent->gridComponent->getComponent()->getOutputPorts()) {
             // Note: terminal position currently is fixed to right => output, left => input
             auto net = std::make_shared<Net>();
@@ -26,10 +26,10 @@ std::shared_ptr<Netlist> createNetlist(const std::shared_ptr<Placement>& placeme
                 Q_ASSERT(sinkGridComponent);
                 // Lookup routing component for sink component graphic
                 auto rc_i = std::find_if(
-                    placement->components().begin(), placement->components().end(),
+                    tg->components().begin(), tg->components().end(),
                     [&sinkGridComponent](const auto& rc) { return rc->gridComponent == sinkGridComponent; });
 
-                if (rc_i == placement->components().end()) {
+                if (rc_i == tg->components().end()) {
                     /** @todo: connected port is the parent component (i.e., an in- or output port of the parent
                      * component */
                     continue;

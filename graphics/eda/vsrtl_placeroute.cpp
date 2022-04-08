@@ -13,6 +13,8 @@
 #include "placement/vsrtl_placement.h"
 #include "routing/vsrtl_routing.h"
 
+#include <QDebug>
+
 namespace vsrtl {
 namespace eda {
 
@@ -59,7 +61,7 @@ void registerRoutes(const std::shared_ptr<Netlist>& netlist) {
 
                 if (i == (route->path.size() - 1)) {
                     // last tile
-                    auto edge = curTile->isAdjacentTile(route->end.componentTile.get(), valid);
+                    auto edge = curTile->isAdjacentTile(route->end.componentTile, valid);
                     Q_ASSERT(valid);
                     const Orientation dir = directionToOrientation(edge);
                     curTile->registerRoute(route.get(), dir);
@@ -71,33 +73,24 @@ void registerRoutes(const std::shared_ptr<Netlist>& netlist) {
     }
 }
 
-PRResult PlaceRoute::routeAndExpand(std::shared_ptr<Placement> placement) const {
+std::shared_ptr<PRResult> PlaceRoute::routeAndExpand(std::shared_ptr<Placement> placement) const {
+    qDebug() << "Route and expanding";
     // Connectivity graph: Transform current components into a placement format suitable for creating the connectivity
     // graph
     // Add margins to chip rect to allow routing on right- and bottom borders
-    std::shared_ptr<TileGraph> rGraph = std::make_shared<TileGraph>(placement);
+    std::shared_ptr<TileGraph> rGraph = placement->toTileGraph();
 
 #ifndef NDEBUG
     rGraph->dumpDotFile();
 #endif
 
     // ======================= ROUTE ======================= //
-    auto netlist = createNetlist(placement);
+    auto netlist = createNetlist(rGraph);
     PlaceRoute::get()->m_routingAlgorithms.at(PlaceRoute::get()->m_routingAlgorithm)(netlist);
 
     registerRoutes(netlist);
 
-    bool expanded = rGraph->expandTiles();
-    if (expanded) {
-        // Tiles in the graph were expanded to accomodate the assigned routing. In this case, we recurse with a new
-        // placement based on the expanded tiles. (The hope is that eventually, we've expanded enough tiles => recreated
-        // a placement for our components => a routing can be done without needing to expand any tiles).
-        // Set a new chiprect based on the current bounding rect of the TileGraph
-        placement->setChipRect(rGraph->boundingRect());
-        rGraph.reset();
-        netlist.reset();
-        return routeAndExpand(placement);
-    }
+    (void)rGraph->expandTiles();
     // placement.doTileBasedPlacement();
 
     // During the routing algorithm, all routes should have registered to their routing tiles. With knowledge of how
@@ -106,23 +99,17 @@ PRResult PlaceRoute::routeAndExpand(std::shared_ptr<Placement> placement) const 
         tile->assignRoutes();
     }
 
-    PRResult result;
-    result.placement = placement;
-    result.tiles = rGraph;
-    result.netlist = std::move(netlist);
+    auto result = std::make_shared<PRResult>();
+    result->placement = placement;
+    result->tiles = rGraph;
+    result->netlist = std::move(netlist);
     return result;
 }
 
-PRResult PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
+std::shared_ptr<PRResult> PlaceRoute::placeAndRoute(const std::vector<GridComponent*>& components) {
     // Generate an initial placement. This will be used as the starting point for the routing algorithm + tile
     // expansion.
     auto placement = get()->m_placementAlgorithms.at(get()->m_placementAlgorithm)(components);
-    QRect chipRect = placement->componentBoundingRect();
-    // Expand chiprect slightly, to reach (0,0) topleft and give equal spacing to the other faces.
-    const int hSpacing = chipRect.x();
-    const int vSpacing = chipRect.y();
-    chipRect.adjust(-hSpacing, -vSpacing, hSpacing, vSpacing);
-    placement->setChipRect(chipRect);
 
     return get()->routeAndExpand(placement);
 }

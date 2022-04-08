@@ -46,7 +46,7 @@ std::deque<SimComponent*> topologicalSort(const std::vector<GridComponent*>& com
 }
 
 std::shared_ptr<Placement> topologicalSortPlacement(const std::vector<GridComponent*>& components) {
-    std::shared_ptr<Placement> placements;
+    auto placements = std::make_shared<PhysicalPlacement>();
     std::deque<SimComponent*> sortedComponents = topologicalSort(components);
 
     // Position components
@@ -62,9 +62,9 @@ std::shared_ptr<Placement> topologicalSortPlacement(const std::vector<GridCompon
     return placements;
 }
 
-std::map<int, std::set<SimComponent*>> ASAPSchedule(const std::vector<GridComponent*>& components) {
+static std::map<int, std::vector<GridComponent*>> ASAPSchedule(const std::vector<GridComponent*>& components) {
     std::deque<SimComponent*> sortedComponents = topologicalSort(components);
-    std::map<int, std::set<SimComponent*>> schedule;
+    std::map<int, std::vector<GridComponent*>> schedule;
     std::map<SimComponent*, int> componentToDepth;
 
     // 1. assign a depth to the components based on their depth in the topological sort, disregarding output edges
@@ -81,15 +81,18 @@ std::map<int, std::set<SimComponent*>> ASAPSchedule(const std::vector<GridCompon
 
     // 2. Create a map between depths and components
     for (const auto& c : componentToDepth) {
-        schedule[c.second].insert(c.first);
+        schedule[c.second].push_back(c.first->getGraphic<GridComponent>());
     }
 
     return schedule;
 }
 
 std::shared_ptr<Placement> ASAPPlacement(const std::vector<GridComponent*>& components) {
-    auto placements = std::make_shared<Placement>();
     const auto asapSchedule = ASAPSchedule(components);
+    return std::make_shared<MatrixPlacement>(asapSchedule);
+
+    /*
+    // Leftover code from when ASAPPlacement was a physical placement.
 
     // 1. create a width of each column
     std::map<int, int> columnWidths;
@@ -120,6 +123,7 @@ std::shared_ptr<Placement> ASAPPlacement(const std::vector<GridComponent*>& comp
     }
 
     return placements;
+*/
 }
 
 }  // namespace eda

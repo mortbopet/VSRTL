@@ -7,6 +7,7 @@
 #include <memory>
 #include <vector>
 
+#include "placement/vsrtl_placement.h"
 #include "vsrtl_netlist.h"
 #include "vsrtl_tilegraph.h"
 
@@ -44,11 +45,11 @@ public:
     void setPlacementAlgorithm(PlaceAlg alg) { m_placementAlgorithm = alg; }
     void setRoutingAlgorithm(RouteAlg alg) { m_routingAlgorithm = alg; }
 
-    static PRResult placeAndRoute(const std::vector<GridComponent*>& components);
+    static std::shared_ptr<PRResult> placeAndRoute(const std::vector<GridComponent*>& components);
 
 private:
     PlaceRoute();
-    PRResult routeAndExpand(std::shared_ptr<Placement> placement) const;
+    std::shared_ptr<PRResult> routeAndExpand(std::shared_ptr<Placement> placement) const;
 
     std::map<PlaceAlg, PlacementFunct> m_placementAlgorithms;
     std::map<RouteAlg, RouteFunct> m_routingAlgorithms;

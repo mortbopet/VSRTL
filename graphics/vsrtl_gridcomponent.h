@@ -5,13 +5,15 @@
 #include <map>
 
 #include "../interface/vsrtl_interface.h"
-#include "eda/vsrtl_placeroute.h"
 #include "vsrtl_componentborder.h"
 #include "vsrtl_graphicsbaseitem.h"
 #include "vsrtl_shape.h"
 #include "vsrtl_simqobject.h"
 
 namespace vsrtl {
+namespace eda {
+class PRResult;
+}
 
 class GridComponent : public SimQObject, public GraphicsBaseItem<QGraphicsItem> {
     Q_OBJECT
@@ -95,7 +97,7 @@ protected:
 
     /// Store a place- and route result. This is used both for manifesting component/wire changes, as well as drawing
     /// debug information.
-    eda::PRResult m_prresult;
+    std::shared_ptr<eda::PRResult> m_prresult;
     /**
      * @brief applyPlaceAndRouteRes
      * Let the graphics component apply the result of routing, i.e., to create wires between ports. This is delegated to

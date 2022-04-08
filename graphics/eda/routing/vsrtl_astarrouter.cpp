@@ -38,13 +38,13 @@ std::vector<RoutingTile*> adjacency(RoutingTile* from) {
 };
 
 void assertValidRoute(const Route& route) {
-    assertAdjacentTiles(route.start.componentTile.get(), *route.path.begin());
-    assertAdjacentTiles(*route.path.rbegin(), route.end.componentTile.get());
+    assertAdjacentTiles(route.start.componentTile, *route.path.begin());
+    assertAdjacentTiles(*route.path.rbegin(), route.end.componentTile);
 
     for (size_t i = 0; i < route.path.size(); i++) {
         // Routing components shouldn't be in a list of Routing Tiles
-        Q_ASSERT(static_cast<Tile*>(route.start.componentTile.get()) != static_cast<Tile*>(route.path.at(i)));
-        Q_ASSERT(static_cast<Tile*>(route.end.componentTile.get()) != static_cast<Tile*>(route.path.at(i)));
+        Q_ASSERT(static_cast<Tile*>(route.start.componentTile) != static_cast<Tile*>(route.path.at(i)));
+        Q_ASSERT(static_cast<Tile*>(route.end.componentTile) != static_cast<Tile*>(route.path.at(i)));
 
         if (i > 0) {
             assertAdjacentTiles(route.path.at(i), route.path.at(i - 1));

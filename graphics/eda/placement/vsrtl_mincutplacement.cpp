@@ -1,6 +1,7 @@
 #include "eda/algorithms/vsrtl_kernighanlin.h"
 #include "eda/vsrtl_tilegraph.h"
 #include "vsrtl_gridcomponent.h"
+#include "vsrtl_placement.h"
 
 namespace vsrtl {
 namespace eda {
@@ -27,10 +28,10 @@ enum class CutlineDirection { Alternating, Repeating };
 
 class PartitioningTree : public BinTree<SimComponent*, PartitioningTree> {
 public:
-    explicit PartitioningTree(Placement& _placement) : BinTree(), placement(_placement) {}
+    explicit PartitioningTree(PhysicalPlacement& _placement) : BinTree(), placement(_placement) {}
     Orientation cutlinedir = Orientation::Horizontal;
     QRect cachedRect;
-    Placement& placement;
+    PhysicalPlacement& placement;
 
     void place(const QPoint offset) {
         // Given an offset, propagates placement values down the tree structure, modifying offset according
@@ -155,7 +156,7 @@ void recursivePartitioning(PartitioningTree& node, const std::set<SimComponent*>
     }
 }
 
-Placement MinCutPlacement(const std::vector<GridComponent*>& components) {
+std::shared_ptr<Placement> MinCutPlacement(const std::vector<GridComponent*>& components) {
     /**
       Min cut placement:
       1. Use a partitioning algorithm to divide the netlist as well as the layout region in progressively smaller
@@ -169,10 +170,10 @@ Placement MinCutPlacement(const std::vector<GridComponent*>& components) {
         c_set.emplace(c->getComponent());
     }
 
-    Placement placement;
+    auto placement = std::make_shared<PhysicalPlacement>();
 
     // recursively partition the graph and routing regions. Initial cut is determined to be a vertical cut
-    PartitioningTree rootPartitionNode(placement);
+    PartitioningTree rootPartitionNode(*static_cast<PhysicalPlacement*>(placement.get()));
     rootPartitionNode.cutlinedir = Orientation::Vertical;
     recursivePartitioning(rootPartitionNode, c_set, CutlineDirection::Alternating);
 

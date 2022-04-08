@@ -10,6 +10,16 @@
 #include "vsrtl_graph.h"
 #include "vsrtl_graphics_util.h"
 
+#define assert_valid_point(p)         \
+    assert(p.x() >= 0 && "p.x < 0!"); \
+    assert(p.y() >= 0 && "p.y < 0!");
+
+#define assert_valid_line(line)    \
+    assert_valid_point(line.p1()); \
+    assert_valid_point(line.p2());
+
+#define assert_valid_rect(rect) assert_valid_point(rect.topLeft());
+
 // Various data-structures used during routing
 
 namespace vsrtl {
@@ -84,6 +94,10 @@ public:
 
     void setTileAtEdge(Direction, Tile*);
     Tile* getTileAtEdge(Direction);
+
+    /// Returns the tile found after traversing the provided route. If any hop resulted in a non-existing neighbour,
+    /// returns a nullptr.
+    Tile* traverseRoute(const std::vector<Direction>& route);
     int id() const { return m_id; }
 
     bool operator==(const Tile& lhs) const;
@@ -118,6 +132,7 @@ private:
     QRect r;  // tile size and position
 };
 
+/// A tile which contains a component.
 class ComponentTile : public Tile {
 public:
     ComponentTile(GridComponent* c);
@@ -128,7 +143,7 @@ public:
 };
 
 struct NetNode {
-    std::shared_ptr<ComponentTile> componentTile;
+    ComponentTile* componentTile;
     RoutingTile* tile = nullptr;
     SimPort* port = nullptr;
 };
@@ -140,6 +155,7 @@ struct Route {
     std::vector<RoutingTile*> path;
 };
 
+/// A tile which wires can be routed through.
 class RoutingTile : public Tile {
 public:
     struct RoutePath {
@@ -149,7 +165,7 @@ public:
         QPoint from() const;
         QPoint to() const;
     };
-    RoutingTile(const QRect& rect) : Tile(rect) {}
+    RoutingTile(const QRect& rect = {}) : Tile(rect) {}
 
     int capacity(Orientation dir) const;
     int remainingCap(Orientation dir) const;
@@ -200,28 +216,6 @@ public:
     RoutingTile* bottomright = nullptr;
 };
 
-class Placement {
-public:
-    Placement(const std::vector<std::shared_ptr<ComponentTile>>& components = {}, const QRect& chipRect = QRect());
-
-    QRect componentBoundingRect() const;
-
-    /**
-     * @brief tileBasedPlacement
-     * Places all components based on the geometry of their surrounding routing tiles.
-     */
-    void doTileBasedPlacement();
-    void fitChipRectToComponents();
-    void addComponent(const std::shared_ptr<ComponentTile>& c) { m_components.push_back(c); }
-    const std::vector<std::shared_ptr<ComponentTile>>& components() const { return m_components; }
-    const QRect& chipRect() const { return m_chipRect; }
-    void setChipRect(const QRect& rect) { m_chipRect = rect; }
-
-private:
-    std::vector<std::shared_ptr<ComponentTile>> m_components;
-    QRect m_chipRect;
-};
-
 class TileGraph;
 /**
  * @brief The tileMap class
@@ -241,11 +235,14 @@ public:
     std::map<int, std::map<int, RoutingTile*>> tileMap;
 };
 
+/// A tilegraph represents a directed graph of physical tiles. Tile graphs are built by placements. A tilegraph must be
+/// initialized by the placement once it's finished building the tilegraph.
 class TileGraph : public Graph<Tile> {
 public:
-    TileGraph(const std::shared_ptr<Placement>& placement);
-
     void dumpDotFile(const QString& path = QString()) const;
+
+    /// Returns the component tiles in this tilegraph.
+    const std::vector<ComponentTile*>& components() const { return m_components; }
 
     /**
      * @brief expandTiles
@@ -254,15 +251,25 @@ public:
      * Returns true if any tile was expanded.
      */
     bool expandTiles();
-
     QRect boundingRect() const;
 
     // For debugging
     std::vector<Line> stretchedLines;
     std::vector<Line> tileLines;
 
+    /// Post-construction initialization.
+    void initialize();
+
+    /// PHysicalizing a tile graph implies resizing and repositioning tiles based on the number of requested routes
+    /// within the routing tiles.
+    /// @note: this might be fairly impossible for anything but the 2d matrix placement-based tilegraphs...
+    void physicalize();
+
 private:
     std::unique_ptr<TileMap> m_tileMap;
+    std::vector<ComponentTile*> m_components;
+
+    bool m_initialized = false;
 };
 
 }  // namespace eda
