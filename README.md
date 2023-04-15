@@ -31,7 +31,7 @@ make -j$(nproc)
   * C++17 toolchain
   * CMake
 * **Graphics**
-  * Qt 5.14+: https://www.qt.io/download
+  * Qt 6.5.0+: https://www.qt.io/download
 
 ---
 In papers and reports, please refer to VSRTL as follows: 'Morten Borup Petersen. VSRTL. https://github.com/mortbopet/VSRTL', e.g. using the following BibTeX code:

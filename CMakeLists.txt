@@ -17,13 +17,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
 # Find Qt5Core and Qt5Widgets
-find_package(Qt5Core REQUIRED)
-find_package(Qt5Widgets CONFIG REQUIRED)
+find_package(Qt6 COMPONENTS Core Widgets REQUIRED)
 find_package(Threads REQUIRED)
-
-# Finding Qt includes
-include_directories(${Qt5Widgets_INCLUDE_DIRS})
-include_directories(${Qt5Core_INCLUDE_DIRS})
 
 include_directories(SYSTEM external/cereal/include)
 include_directories(SYSTEM external/Signals)
@@ -72,6 +67,6 @@ option(VSRTL_BUILD_APP "Build the VSRTL standalone application" ON)
 if(VSRTL_BUILD_APP)
     set(APP_NAME VSRTL)
     add_executable(${APP_NAME} app.cpp)
-    target_link_libraries(${APP_NAME} Qt5::Core Qt5::Widgets)
+    target_link_libraries(${APP_NAME} Qt6::Core Qt6::Widgets)
     target_link_libraries(${APP_NAME} ${VSRTL_CORE_LIB} ${VSRTL_GRAPHICS_LIB} ${VSRTL_COMPONENTS_LIB})
 endif()
