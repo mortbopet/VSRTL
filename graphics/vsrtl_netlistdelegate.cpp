@@ -13,7 +13,7 @@ namespace vsrtl {
 NetlistDelegate::NetlistDelegate(QObject* parent) : QStyledItemDelegate(parent) {
     // The validator does not concern itself whether the value is actually writeable to the register. Any hex input is
     // accepted. When a register is forced to a value, the value is truncated to the bit width of the register.
-    m_validator = new QRegExpValidator(this);
+    m_validator = new QRegularExpressionValidator(this);
 }
 
 QWidget* NetlistDelegate::createEditor(QWidget* parent, const QStyleOptionViewItem&, const QModelIndex&) const {
@@ -33,19 +33,19 @@ void NetlistDelegate::setEditorData(QWidget* e, const QModelIndex& index) const 
 
     switch (treeItem->m_radix) {
         case Radix::Binary: {
-            m_validator->setRegExp(binRegex);
+            m_validator->setRegularExpression(binRegex);
             break;
         }
         case Radix::Hex: {
-            m_validator->setRegExp(hexRegex);
+            m_validator->setRegularExpression(hexRegex);
             break;
         }
         case Radix::Unsigned: {
-            m_validator->setRegExp(unsignedRegex);
+            m_validator->setRegularExpression(unsignedRegex);
             break;
         }
         case Radix::Signed: {
-            m_validator->setRegExp(signedRegex);
+            m_validator->setRegularExpression(signedRegex);
             break;
         }
         case Radix::Enum: {

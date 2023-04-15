@@ -1,7 +1,7 @@
 #ifndef VSRTL_NETLISTDELEGATE_H
 #define VSRTL_NETLISTDELEGATE_H
 
-#include <QRegExpValidator>
+#include <QRegularExpressionValidator>
 #include <QStyledItemDelegate>
 
 namespace vsrtl {
@@ -14,7 +14,7 @@ public:
     void setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const override;
 
 private:
-    QRegExpValidator* m_validator;
+    QRegularExpressionValidator* m_validator;
 };
 }  // namespace vsrtl
 

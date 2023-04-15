@@ -24,7 +24,7 @@
 #include <QGraphicsProxyWidget>
 #include <QGraphicsScene>
 #include <QGraphicsSceneHoverEvent>
-#include <QMatrix>
+#include <QMatrix4x4>
 #include <QMenu>
 #include <QMessageBox>
 #include <QPainter>
@@ -371,10 +371,10 @@ void ComponentGraphic::updateGeometry() {
     // Next, separately apply the scaling through a secondary matrix (The transformation gets a lot simpler like
     // this, rather than composing translation + rotation +translation + scaling in a single matrix.
     QTransform t;
-    QMatrix mat;
+    QMatrix4x4 mat;
     mat.scale(sceneRect.width(), sceneRect.height());
     t.translate(0.5, 0.5).rotate(gridRotation()).translate(-0.5, -0.5);
-    m_shape = mat.map(ShapeRegister::getTypeShape(m_component->getGraphicsType(), t));
+    m_shape = mat.toTransform().map(ShapeRegister::getTypeShape(m_component->getGraphicsType(), t));
 
     // Position the expand-button
     if (hasSubcomponents()) {

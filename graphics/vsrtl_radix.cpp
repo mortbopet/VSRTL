@@ -6,6 +6,7 @@
 #include "../interface/vsrtl_interface.h"
 
 #include <QAction>
+#include <QActionGroup>
 #include <QMenu>
 #include <QObject>
 #include <QString>
