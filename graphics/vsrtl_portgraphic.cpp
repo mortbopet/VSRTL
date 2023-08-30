@@ -264,13 +264,50 @@ void PortGraphic::updatePenColor() {
     } else {
         m_pen.setWidth(WIRE_WIDTH);
         if (m_port->getWidth() == 1) {
-            if (static_cast<bool>(m_port->uValue())) {
-                m_pen.setColor(WIRE_BOOLHIGH_COLOR);
-            } else {
-                m_pen.setColor(WIRE_DEFAULT_COLOR);
+            if(!QString::fromStdString(m_port->getHierName()).contains("MIPS")){
+                if (static_cast<bool>(m_port->uValue())) {
+                    m_pen.setColor(WIRE_BOOLHIGH_COLOR);
+                } else {
+                    m_pen.setColor(WIRE_DEFAULT_COLOR);
+                }
+            }
+
+            else{
+               if(m_port->isActivePath()){
+                   m_pen.setColor(WIRE_BOOLHIGH_COLOR);
+               }
+               else{
+                   if (static_cast<bool>(m_port->uValue())) {
+                       m_pen.setColor(WIRE_BOOLHIGH_COLOR);
+                   } else {
+                       m_pen.setColor(WIRE_DEFAULT_COLOR);
+                   }
+               }
             }
         } else {
-            m_pen.setColor(m_penColor);
+            if(QString::fromStdString(m_port->getHierName()).contains("MIPS")){
+                if(m_port->isActivePath()){
+                    if(QString::fromStdString(m_port->getHierName()).contains("control->alu_ctrl") || QString::fromStdString(m_port->getHierName()).contains("alu_control->res")
+                            || QString::fromStdString(m_port->getHierName()).contains("alu_control_reg->out") || QString::fromStdString(m_port->getHierName()).contains("control")){
+                        m_pen.setColor(WIRE_BOOLHIGH_COLOR);
+                    }else{
+
+                        m_pen.setColor(WIRE_HIGH_COLOR);
+                    }
+
+                }
+                else if(!m_port->isActivePath()){
+                    m_pen.setColor(WIRE_DEFAULT_COLOR);
+                }
+                else{
+                    m_pen.setColor(WIRE_DEFAULT_COLOR);
+                }
+            }
+            else{
+                m_pen.setColor(m_penColor);
+            }
+
+
         }
     }
     propagateRedraw();
