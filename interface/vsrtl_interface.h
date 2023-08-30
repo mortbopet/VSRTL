@@ -103,6 +103,10 @@ public:
     virtual unsigned int getWidth() const = 0;
     virtual VSRTL_VT_U uValue() const = 0;
     virtual VSRTL_VT_S sValue() const = 0;
+    virtual bool isActivePath() const = 0;
+    virtual void setActivePath(bool value) = 0;
+    virtual bool isActiveFsm() const = 0;
+    virtual void setActiveFsm(bool value) = 0;
 
     template <typename T = SimPort>
     std::vector<T*> getOutputPorts() {
@@ -498,6 +502,29 @@ public:
         }
         m_synchronous = s;
     }
+    void setComponentActivePath(bool value){
+        m_activeComp = value;
+    }
+
+    bool isComponentActivePath(){
+        return m_activeComp;
+    }
+    void setComponentActiveFsmCol(bool value){
+        m_activeCompFsmCol = value;
+    }
+
+    bool isComponentActiveFsmCol(){
+        return m_activeCompFsmCol;
+    }
+
+    void setComponentActiveFsm(bool value){
+        m_activeCompFsm = value;
+    }
+
+    bool isComponentActiveFsm(){
+        return m_activeCompFsm;
+    }
+
     bool isSynchronous() const { return m_synchronous != nullptr; }
     SimSynchronous* getSynchronous() { return m_synchronous; }
 
@@ -513,7 +540,9 @@ protected:
     std::set<std::unique_ptr<SimComponent>, ComponentCompT> m_subcomponents;
     std::set<std::unique_ptr<ParameterBase>> m_parameters;
     std::map<std::string, SimPort*> m_specialPorts;
-
+    bool m_activeComp = false;
+    bool m_activeCompFsm = false;
+    bool m_activeCompFsmCol = false;
 private:
     unsigned m_constantCount = 0;  // Number of constants currently initialized in the component
     SimSynchronous* m_synchronous = nullptr;
