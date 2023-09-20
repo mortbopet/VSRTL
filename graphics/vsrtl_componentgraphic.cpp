@@ -521,33 +521,101 @@ QVariant ComponentGraphic::itemChange(QGraphicsItem::GraphicsItemChange change, 
 }
 
 void ComponentGraphic::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* w) {
-    painter->save();
-    QColor color;
-    if (static_cast<VSRTLScene*>(scene())->darkmode()) {
-        color = hasSubcomponents() && isExpanded() ? QColorConstants::DarkGray.darker() : QColor{0x80, 0x84, 0x8a};
-    } else {
-        color = hasSubcomponents() && isExpanded() ? QColor{0xec, 0xf0, 0xf1} : QColorConstants::White;
+    if(QString::fromStdString(m_component->getHierName()).contains("MIPS")){
+        painter->save();
+
+        QColor color;
+        if (static_cast<VSRTLScene*>(scene())->darkmode() ) {
+            color = hasSubcomponents() && isExpanded() ? QColorConstants::DarkGray.darker() : QColor{0x80, 0x84, 0x8a};
+        } else {
+            color = hasSubcomponents() && isExpanded() ? QColor{0xec, 0xf0, 0xf1} : QColorConstants::White;
+        }
+
+        QColor fillColor = (option->state & QStyle::State_Selected) ? color.darker(150) : color;
+        if (option->state & QStyle::State_MouseOver)
+            fillColor = fillColor.lighter(125);
+        constexpr QColor WIRE_BOOLHIGH_COLOR = {0x6E, 0xEB, 0x83};
+        if(m_component->isComponentActiveFsmCol()){
+            fillColor = WIRE_BOOLHIGH_COLOR;
+        }
+
+        // Draw component outline
+        QPen oldPen = painter->pen();
+        QPen pen = oldPen;
+        int width = COMPONENT_BORDER_WIDTH;
+        if (option->state & QStyle::State_Selected)
+            width += 1;
+
+        if(!m_component->isComponentActivePath() && !m_component->isComponentActiveFsm() ){
+            fillColor = color.darker(250);
+        }
+
+        if(m_label->getText().contains("Processor")){
+            fillColor = fillColor.lighter(250);
+        }
+
+        if(m_component->isComponentActiveFsmCol()){
+            fillColor = WIRE_BOOLHIGH_COLOR.darker(125);
+        }
+
+        pen.setWidth(width);
+        painter->setBrush(QBrush(fillColor.darker((option->state & QStyle::State_Sunken) ? 120 : 100)));
+        if(!m_component->isComponentActivePath()){
+            painter->setPen(pen);
+            painter->setPen(QColorConstants::LightGray);
+        }
+
+
+        if(m_component->isComponentActiveFsm()){
+            painter->setPen(pen);
+
+            painter->setPen(WIRE_BOOLHIGH_COLOR);
+            width += 1;
+            pen.setWidth(width);
+        }
+        else{
+            width = COMPONENT_BORDER_WIDTH;
+            pen.setWidth(width);
+
+        }
+
+
+        painter->drawPath(m_shape);
+
+        painter->setPen(oldPen);
     }
 
-    QColor fillColor = (option->state & QStyle::State_Selected) ? color.darker(150) : color;
-    if (option->state & QStyle::State_MouseOver)
-        fillColor = fillColor.lighter(125);
 
+    else{
+        painter->save();
+        QColor color;
+        if (static_cast<VSRTLScene*>(scene())->darkmode()) {
+               color = hasSubcomponents() && isExpanded() ? QColorConstants::DarkGray.darker() : QColor{0x80, 0x84, 0x8a};
+           } else {
+               color = hasSubcomponents() && isExpanded() ? QColor{0xec, 0xf0, 0xf1} : QColorConstants::White;
+           }
+
+           QColor fillColor = (option->state & QStyle::State_Selected) ? color.darker(150) : color;
+           if (option->state & QStyle::State_MouseOver)
+               fillColor = fillColor.lighter(125);
+
+
+           // Draw component outline
+           QPen oldPen = painter->pen();
+           QPen pen = oldPen;
+           int width = COMPONENT_BORDER_WIDTH;
+           if (option->state & QStyle::State_Selected)
+               width += 1;
+
+           pen.setWidth(width);
+           painter->setBrush(QBrush(fillColor.darker((option->state & QStyle::State_Sunken) ? 120 : 100)));
+           painter->setPen(pen);
+           painter->drawPath(m_shape);
+
+           painter->setPen(oldPen);
+
+    }
     const qreal lod = option->levelOfDetailFromTransform(painter->worldTransform());
-
-    // Draw component outline
-    QPen oldPen = painter->pen();
-    QPen pen = oldPen;
-    int width = COMPONENT_BORDER_WIDTH;
-    if (option->state & QStyle::State_Selected)
-        width += 1;
-
-    pen.setWidth(width);
-    painter->setBrush(QBrush(fillColor.darker((option->state & QStyle::State_Sunken) ? 120 : 100)));
-    painter->setPen(pen);
-    painter->drawPath(m_shape);
-
-    painter->setPen(oldPen);
 
     if (hasSubcomponents()) {
         if (lod >= 0.35) {

@@ -12,6 +12,8 @@
 
 #include "vsrtl_labeleditdialog.h"
 #include "vsrtl_scene.h"
+#include "../interface/vsrtl_interface.h"
+#include "../VSRTL/core/vsrtl_port.h"
 
 namespace vsrtl {
 
@@ -38,6 +40,15 @@ void Label::forceDefaultTextColor(const QColor& color) {
 void Label::setText(const QString& text) {
     setPlainText(text);
     applyFormatChanges();
+}
+
+QString Label::getText() {
+    QString text = toPlainText();
+    return text;
+}
+
+void Label::setActive(bool value){
+    m_active = value;
 }
 
 void Label::updateText() {}
@@ -95,6 +106,13 @@ void Label::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWi
     if (!m_defaultColorOverridden) {
         setDefaultTextColor(static_cast<VSRTLScene*>(scene())->darkmode() ? Qt::white : Qt::black);
     }
+    if(m_active){
+        setDefaultTextColor(static_cast<VSRTLScene*>(scene())->darkmode() ? Qt::white : Qt::black);
+    }
+    else{
+        setDefaultTextColor(static_cast<VSRTLScene*>(scene())->darkmode() ? Qt::darkGray : Qt::white);
+    }
+
 
     QGraphicsTextItem::paint(painter, option, w);
     painter->restore();

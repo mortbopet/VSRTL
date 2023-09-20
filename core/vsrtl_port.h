@@ -12,6 +12,8 @@
 #include "../interface/vsrtl_binutils.h"
 #include "../interface/vsrtl_interface.h"
 
+#include "../graphics/vsrtl_label.h"
+
 namespace vsrtl {
 namespace core {
 
@@ -40,6 +42,11 @@ public:
     virtual void propagateConstant() = 0;
     virtual void setPortValue() = 0;
     virtual bool isConnected() const = 0;
+    virtual bool isActivePath() const = 0;
+    virtual void setActivePath(bool value) = 0;
+    virtual bool isActiveFsm() const = 0;
+    virtual void setActiveFsm(bool value) = 0;
+
 
     /**
      * @brief stringValue
@@ -61,6 +68,7 @@ class Port : public PortBase {
 public:
     Port(const std::string& name, SimComponent* parent, PortType type) : PortBase(name, parent, type) {}
     bool isConnected() const override { return m_inputPort != nullptr || m_propagationFunction; }
+
 
     // Port connections are doubly linked
     void operator>>(Port<W>& toThis) {
@@ -85,6 +93,20 @@ public:
 
     explicit operator VSRTL_VT_S() const { return signextend<W>(m_value); }
 
+    bool isActivePath() const override { return m_activePath; }
+
+    bool isActiveFsm() const override { return m_activeFsm; }
+
+    void setActivePath(bool value) {
+        m_activePath = value;
+
+    }
+
+    void setActiveFsm(bool value) {
+        m_activeFsm = value;
+    }
+
+
     void setPortValue() override {
         auto prePropagateValue = m_value;
         if (m_propagationFunction) {
@@ -92,12 +114,26 @@ public:
         } else {
             m_value = getInputPort<Port<W>>()->uValue();
         }
-        if (m_value != prePropagateValue) {
-            // Signal all watcher of this port that the port value changed
+        QString port =QString::fromStdString(getHierName());
+
+        if(port.contains("MIPS")){
             if (getDesign()->signalsEnabled()) {
                 changed.Emit();
             }
         }
+        else{
+            if (m_value != prePropagateValue) {
+                // Signal all watcher of this port that the port value changed
+                if (getDesign()->signalsEnabled()) {
+                    changed.Emit();
+                }
+            }
+        }
+
+
+
+
+
     }
 
     void propagate(std::vector<PortBase*>& propagationStack) override {
@@ -133,6 +169,8 @@ protected:
     // not be the case - the entire circuit is reset when the registers are reset (to 0), and the circuit state is
     // then propagated.
     VSRTL_VT_U m_value = 0xdeadbeef;
+    bool m_activePath = false;
+    bool m_activeFsm = false;
 
     std::function<VSRTL_VT_U()> m_propagationFunction = {};
 };

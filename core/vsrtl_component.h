@@ -14,9 +14,13 @@
 #include "../interface/vsrtl_binutils.h"
 #include "../interface/vsrtl_defines.h"
 #include "vsrtl_addressspace.h"
+#include "../interface/vsrtl_interface.h"
 #include "vsrtl_port.h"
+#include "../graphics/vsrtl_gridcomponent.h"
+#include "../graphics/vsrtl_graphicsbase.h"
 
 #include "../interface/vsrtl_gfxobjecttypes.h"
+#include "../graphics/vsrtl_label.h"
 
 namespace vsrtl {
 namespace core {
@@ -60,6 +64,30 @@ public:
     bool isPropagated() const { return m_propagationState == PropagationState::propagated; }
     void setSensitiveTo(const PortBase* p) { m_sensitivityList.push_back(p); }
     void setSensitiveTo(const PortBase& p) { setSensitiveTo(&p); }
+
+
+    bool isCompActivePath() const { return m_compActivePath; }
+
+    void setCompActivePath(bool value) {
+        m_compActivePath = value;
+        setComponentActivePath(value);
+    }
+
+    bool isCompActiveFsm() const { return m_compActiveFsm; }
+
+    void setCompActiveFsm(bool value) {
+        m_compActiveFsm = value;
+        setComponentActiveFsm(value);
+    }
+
+    bool isCompActiveFsmCol() const { return m_compActiveFsmCol; }
+
+    void setCompActiveFsmCol(bool value) {
+        m_compActiveFsmCol = value;
+        setComponentActiveFsmCol(value);
+    }
+
+
 
     template <unsigned int W, typename E_t = void>
     Port<W>& createInputPort(const std::string& name) {
@@ -257,6 +285,10 @@ protected:
         }
         return ports;
     }
+
+    bool m_compActivePath = false;
+    bool m_compActiveFsm = false;
+    bool m_compActiveFsmCol = false;
 
     std::vector<const PortBase*> m_sensitivityList;
     PropagationState m_propagationState = PropagationState::unpropagated;

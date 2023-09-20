@@ -111,6 +111,8 @@ private:
     bool m_signalSelected = false;
     bool m_hoverActive = false;
 
+    bool m_activePath = false;
+
     /**
      * @brief m_sourceVisible (for input ports)
      * true if the outport which this inputport connects to, is visible. If not, the port shall not be drawn. However,
