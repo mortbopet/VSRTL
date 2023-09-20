@@ -1,6 +1,7 @@
 #ifndef VSRTL_VCDUTILS_H
 #define VSRTL_VCDUTILS_H
 
+#include <cstdint>
 #include <fstream>
 #include <functional>
 #include <iostream>
