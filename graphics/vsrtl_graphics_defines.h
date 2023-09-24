@@ -6,12 +6,12 @@
 
 #include "../interface/vsrtl_defines.h"
 
-#define DRAW_BOUNDING_RECT(painter)     \
-    painter->save();                    \
-    painter->setPen(QPen(Qt::red, 1));  \
-    painter->setBrush(Qt::transparent); \
-    painter->drawRect(boundingRect());  \
-    painter->restore();
+#define DRAW_BOUNDING_RECT(painter)                                            \
+  painter->save();                                                             \
+  painter->setPen(QPen(Qt::red, 1));                                           \
+  painter->setBrush(Qt::transparent);                                          \
+  painter->drawRect(boundingRect());                                           \
+  painter->restore();
 
 // Allow vsrtl base value types to be used as a QVariant
 Q_DECLARE_METATYPE(vsrtl::VSRTL_VT_S)
@@ -19,7 +19,12 @@ Q_DECLARE_METATYPE(vsrtl::VSRTL_VT_U)
 
 namespace vsrtl {
 
-enum class ValueDisplayFormat { binary = 2, baseTen = 10, hex = 16, unicode = 99 };
+enum class ValueDisplayFormat {
+  binary = 2,
+  baseTen = 10,
+  hex = 16,
+  unicode = 99
+};
 
 constexpr QColor WIRE_DEFAULT_COLOR = {0x63, 0x63, 0x63};
 constexpr QColor WIRE_SELECTED_COLOR = {0xFE, 0xF1, 0x60};
@@ -50,5 +55,5 @@ constexpr QColor BUTTON_EXPAND_COLOR = {0x26, 0xa6, 0x5b};
 
 #define PORT_INNER_MARGIN 5
 
-}  // namespace vsrtl
-#endif  // VSRTL_GRAPHICS_DEFINES_H
+} // namespace vsrtl
+#endif // VSRTL_GRAPHICS_DEFINES_H

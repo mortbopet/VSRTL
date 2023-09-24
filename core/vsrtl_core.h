@@ -12,4 +12,4 @@
 #include "vsrtl_multiplexer.h"
 #include "vsrtl_register.h"
 
-#endif  // VSRTL_CORE_H
+#endif // VSRTL_CORE_H

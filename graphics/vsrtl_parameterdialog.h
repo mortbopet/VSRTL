@@ -16,18 +16,19 @@ class ParameterDialog;
 }
 
 class ParameterDialog : public QDialog {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    ParameterDialog(SimComponent* component, QWidget* parent = nullptr);
-    ~ParameterDialog();
+  ParameterDialog(SimComponent *component, QWidget *parent = nullptr);
+  ~ParameterDialog();
 
-    void accept() override;
+  void accept() override;
 
 private:
-    Ui::ParameterDialog* m_ui;
+  Ui::ParameterDialog *m_ui;
 
-    std::map<ParameterBase*, std::function<void()>> m_parameterChangeApplierFunctions;
+  std::map<ParameterBase *, std::function<void()>>
+      m_parameterChangeApplierFunctions;
 };
 
-}  // namespace vsrtl
+} // namespace vsrtl

@@ -14,7 +14,7 @@ namespace core {
 
 #define Switch(signal, enumname) switch (signal.uValue())
 
-}  // namespace core
-}  // namespace vsrtl
+} // namespace core
+} // namespace vsrtl
 
-#endif  // VSRTL_ENUM_H
+#endif // VSRTL_ENUM_H

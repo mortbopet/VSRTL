@@ -18,17 +18,18 @@ namespace core {
 template <unsigned int W>
 class Decollator : public Component {
 public:
-    Decollator(const std::string& name, SimComponent* parent) : Component(name, parent) {
-        for (int i = 0; i < W; i++) {
-            *out[i] << [=] { return (VT_U(in) >> i) & 0b1; };
-        }
+  Decollator(const std::string &name, SimComponent *parent)
+      : Component(name, parent) {
+    for (int i = 0; i < W; i++) {
+      *out[i] << [=] { return (VT_U(in) >> i) & 0b1; };
     }
+  }
 
-    OUTPUTPORTS(out, 1, W);
-    INPUTPORT(in, W);
+  OUTPUTPORTS(out, 1, W);
+  INPUTPORT(in, W);
 };
 
-}  // namespace core
-}  // namespace vsrtl
+} // namespace core
+} // namespace vsrtl
 
-#endif  // VSRTL_DECOLLATOR_H
+#endif // VSRTL_DECOLLATOR_H

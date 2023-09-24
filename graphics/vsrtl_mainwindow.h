@@ -19,21 +19,21 @@ class MainWindow;
 }
 
 class MainWindow : public QMainWindow {
-    Q_OBJECT
+  Q_OBJECT
 
 public:
-    explicit MainWindow(SimDesign& arch, QWidget* parent = nullptr);
-    ~MainWindow();
+  explicit MainWindow(SimDesign &arch, QWidget *parent = nullptr);
+  ~MainWindow();
 
 private:
-    Ui::MainWindow* ui;
+  Ui::MainWindow *ui;
 
-    VSRTLWidget* m_vsrtlWidget;
-    Netlist* m_netlist;
+  VSRTLWidget *m_vsrtlWidget;
+  Netlist *m_netlist;
 
-    void createToolbar();
+  void createToolbar();
 };
 
-}  // namespace vsrtl
+} // namespace vsrtl
 
-#endif  // VSRTL_MAINWINDOW_H
+#endif // VSRTL_MAINWINDOW_H

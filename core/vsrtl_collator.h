@@ -19,20 +19,21 @@ namespace core {
 template <unsigned int W>
 class Collator : public Component {
 public:
-    Collator(const std::string& name, SimComponent* parent) : Component(name, parent) {
-        out << [=] {
-            VSRTL_VT_U value = 0;
-            for (unsigned i = 0; i < W; i++) {
-                value |= static_cast<bool>(*in[i]) << i;
-            }
-            return value;
-        };
-    }
-    OUTPUTPORT(out, W);
-    INPUTPORTS(in, 1, W);
+  Collator(const std::string &name, SimComponent *parent)
+      : Component(name, parent) {
+    out << [=] {
+      VSRTL_VT_U value = 0;
+      for (unsigned i = 0; i < W; i++) {
+        value |= static_cast<bool>(*in[i]) << i;
+      }
+      return value;
+    };
+  }
+  OUTPUTPORT(out, W);
+  INPUTPORTS(in, 1, W);
 };
 
-}  // namespace core
-}  // namespace vsrtl
+} // namespace core
+} // namespace vsrtl
 
-#endif  // VSRTL_COLLATOR_H
+#endif // VSRTL_COLLATOR_H

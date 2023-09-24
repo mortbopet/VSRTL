@@ -3,13 +3,13 @@
 #include "vsrtl_registerfilecmp.h"
 
 class tst_registerfile : public QObject {
-    Q_OBJECT private slots : void functionalTest();
+  Q_OBJECT private slots : void functionalTest();
 };
 
 void tst_registerfile::functionalTest() {
-    vsrtl::core::RegisterFileTester a;
+  vsrtl::core::RegisterFileTester a;
 
-    a.verifyAndInitialize();
+  a.verifyAndInitialize();
 }
 
 QTEST_APPLESS_MAIN(tst_registerfile)

@@ -9,13 +9,14 @@ namespace vsrtl {
 
 class MultiplexerGraphic : public ComponentGraphic {
 public:
-    MultiplexerGraphic(SimComponent* c, ComponentGraphic* parent);
-    void paintOverlay(QPainter* painter, const QStyleOptionGraphicsItem* item, QWidget* w) override;
+  MultiplexerGraphic(SimComponent *c, ComponentGraphic *parent);
+  void paintOverlay(QPainter *painter, const QStyleOptionGraphicsItem *item,
+                    QWidget *w) override;
 
 private:
-    SimPort* getSelect();
+  SimPort *getSelect();
 };
 
-}  // namespace vsrtl
+} // namespace vsrtl
 
-#endif  // VSRTL_MULTIPLEXERGRAPHIC_H
+#endif // VSRTL_MULTIPLEXERGRAPHIC_H
