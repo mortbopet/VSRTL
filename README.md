@@ -1,6 +1,5 @@
 # VSRTL
-[![Build Status](https://travis-ci.org/mortbopet/VSRTL.svg?branch=master)](https://travis-ci.org/mortbopet/VSRTL)
-[![codecov](https://codecov.io/gh/mortbopet/VSRTL/branch/master/graph/badge.svg)](https://codecov.io/gh/mortbopet/VSRTL)
+[![VSRTL build and test](https://github.com/mortbopet/VSRTL/actions/workflows/build-and-test.yml/badge.svg?branch=master)](https://github.com/mortbopet/VSRTL/actions/workflows/build-and-test.yml)
 [![Gitter](https://badges.gitter.im/Ripes-VSRTL/VSRTL.svg)](https://gitter.im/Ripes-VSRTL/)
 
 ***V**isual **S**imulation of **R**egister **T**ransfer **L**ogic*
