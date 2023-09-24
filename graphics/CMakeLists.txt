@@ -22,7 +22,8 @@ if(VSRTL_DEBUG_DRAWING)
     target_compile_definitions(${VSRTL_GRAPHICS_LIB} PRIVATE VSRTL_DEBUG_DRAW=1)
 endif()
 
-target_link_libraries(${VSRTL_GRAPHICS_LIB} Qt6::Core Qt6::Widgets)
+find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
+target_link_libraries(${VSRTL_GRAPHICS_LIB} Qt6::Core Qt6::Widgets Qt6::OpenGLWidgets)
 
 target_include_directories(${VSRTL_GRAPHICS_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
