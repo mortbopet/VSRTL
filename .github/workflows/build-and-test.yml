@@ -4,12 +4,12 @@ on: [push, pull_request]
 
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest, ubuntu-20.04]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         build-type: [Release, Debug]
 
 
@@ -83,7 +83,7 @@ jobs:
         make -j $(nproc)
 
     - if: contains(matrix.os, 'windows')
-      name: build Ripes (Windows)
+      name: build VSRTL (Windows)
       shell: bash
       run: |
         cmake -GNinja \
