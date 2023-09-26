@@ -95,7 +95,7 @@ void VSRTLWidget::handleSceneSelectionChanged() {
   std::vector<SimComponent *> selectedComponents;
   std::vector<SimPort *> selectedPorts;
   const auto selectedItems = m_scene->selectedItems();
-  for (auto *i : qAsConst(selectedItems)) {
+  for (auto *i : std::as_const(selectedItems)) {
     ComponentGraphic *i_c = dynamic_cast<ComponentGraphic *>(i);
     if (i_c) {
       selectedComponents.push_back(i_c->getComponent());
@@ -191,7 +191,7 @@ void VSRTLWidget::sync() {
   // tell all labels to reset their text value, given that labels manually must
   // have their text updated (ie. text is not updated in the redraw call).
   const auto sceneItems = m_scene->items();
-  for (auto *item : qAsConst(sceneItems)) {
+  for (auto *item : std::as_const(sceneItems)) {
     if (auto *simobject = dynamic_cast<SimQObject *>(item)) {
       simobject->simUpdateSlot();
     }

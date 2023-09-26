@@ -122,7 +122,7 @@ inline void getAllChildren(QGraphicsItem *p, QList<QGraphicsItem *> &acc) {
     acc.push_back(p);
   } else {
     const auto children = p->childItems();
-    for (const auto &c : qAsConst(children)) {
+    for (const auto &c : std::as_const(children)) {
       getAllChildren(c, acc);
     }
     acc.push_back(p);

@@ -165,7 +165,7 @@ void ComponentGraphic::resetWires() {
       }
     }
     // Clear wires from this components input ports
-    for (const auto &p : qAsConst(m_inputPorts)) {
+    for (const auto &p : std::as_const(m_inputPorts)) {
       p->getOutputWire()->clearWirePoints();
     }
   }
@@ -526,7 +526,7 @@ QVariant ComponentGraphic::itemChange(QGraphicsItem::GraphicsItemChange change,
     // of $this. We need to manually signal the wires going to the input ports
     // of this component, to redraw
     if (m_initialized) {
-      for (const auto &inputPort : qAsConst(m_inputPorts)) {
+      for (const auto &inputPort : std::as_const(m_inputPorts)) {
         if (!inputPort->getPort()->isConstant()) {
           if (auto *simInputPort = inputPort->getPort()->getInputPort()) {
             if (auto *graphic = simInputPort->getGraphic<PortGraphic>()) {

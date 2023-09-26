@@ -54,7 +54,7 @@ void VSRTLScene::handleWirePointMove(QGraphicsSceneMouseEvent *event) {
   if (m_selectedPoint != nullptr && event->buttons() == Qt::LeftButton) {
     std::set<WirePoint *> pointsUnderCursor;
     const auto itemsAtPoint = items(event->scenePos());
-    for (const auto &item : qAsConst(itemsAtPoint)) {
+    for (const auto &item : std::as_const(itemsAtPoint)) {
       if (auto *point = dynamic_cast<WirePoint *>(item)) {
         if (m_selectedPoint->canMergeWith(point)) {
           pointsUnderCursor.insert(point);
@@ -180,7 +180,7 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     std::vector<QAction *> showActions;
 
     const auto sceneItems = items();
-    for (const auto &i : qAsConst(sceneItems)) {
+    for (const auto &i : std::as_const(sceneItems)) {
       if (!i->isVisible()) {
         if (auto *c = dynamic_cast<ComponentGraphic *>(i)) {
           // If a components parent is expanded but it itself is not visible,

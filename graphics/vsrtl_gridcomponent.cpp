@@ -147,7 +147,7 @@ bool GridComponent::parentContainsRect(const QRect &r) const {
 std::vector<GridComponent *> GridComponent::getGridSubcomponents() const {
   std::vector<GridComponent *> c;
   const auto children = childItems();
-  for (const auto &subc : qAsConst(children)) {
+  for (const auto &subc : std::as_const(children)) {
     auto *ptr = dynamic_cast<GridComponent *>(subc);
     if (ptr)
       c.push_back(ptr);

@@ -100,7 +100,7 @@ namespace {
 void getIndexComponentPtr(const QItemSelection &selected,
                           std::vector<SimComponent *> &c_v) {
   const auto indexes = selected.indexes();
-  for (const auto &sel : qAsConst(indexes)) {
+  for (const auto &sel : std::as_const(indexes)) {
     auto *c =
         static_cast<NetlistTreeItem *>(sel.internalPointer())->m_component;
     if (c) {

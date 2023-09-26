@@ -19,7 +19,7 @@ VSRTLView::VSRTLView(QWidget *parent) : QGraphicsView(parent) {
 
 ComponentGraphic *VSRTLView::lookupGraphicForComponent(const SimComponent *c) {
   const auto sceneItems = items();
-  for (auto *i : qAsConst(sceneItems)) {
+  for (auto *i : std::as_const(sceneItems)) {
     auto d = dynamic_cast<ComponentGraphic *>(i);
     if (d) {
       // Equality is based on pointer equality

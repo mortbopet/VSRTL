@@ -29,7 +29,7 @@ void MultiplexerGraphic::paintOverlay(QPainter *painter,
   const unsigned int index = select->uValue();
   Q_ASSERT(static_cast<long>(index) < m_inputPorts.size());
 
-  for (const auto &ip : qAsConst(m_inputPorts)) {
+  for (const auto &ip : std::as_const(m_inputPorts)) {
     const auto *p_base = ip->getPort();
     if (p_base != select) {
       if (p_base == inputPorts[index]) {

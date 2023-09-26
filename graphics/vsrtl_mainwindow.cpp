@@ -59,7 +59,7 @@ void MainWindow::createToolbar() {
     m_vsrtlWidget->reset();
     m_netlist->reloadNetlist();
   });
-  resetAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_R));
+  resetAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_R));
   simulatorToolBar->addAction(resetAct);
 
   const QIcon reverseIcon = QIcon(":/vsrtl_icons/reverse.svg");
@@ -68,7 +68,7 @@ void MainWindow::createToolbar() {
     m_vsrtlWidget->reverse();
     m_netlist->reloadNetlist();
   });
-  reverseAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Z));
+  reverseAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_Z));
   simulatorToolBar->addAction(reverseAct);
   reverseAct->setEnabled(false);
   connect(m_vsrtlWidget, &VSRTLWidget::canReverse, reverseAct,
@@ -80,7 +80,7 @@ void MainWindow::createToolbar() {
     m_vsrtlWidget->clock();
     m_netlist->reloadNetlist();
   });
-  clockAct->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_C));
+  clockAct->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_C));
   simulatorToolBar->addAction(clockAct);
 
   QTimer *timer = new QTimer();
