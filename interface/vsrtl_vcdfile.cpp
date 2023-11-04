@@ -23,16 +23,18 @@ std::string binStr(T val, unsigned width) {
   return s;
 }
 
-VCDFile::VCDFile(const std::string &filename) {
-  m_file.open(filename, std::ios_base::trunc);
+VCDFile::VCDFile(const std::string &filename) { m_filename = filename; }
+
+void VCDFile::ensureOpen() {
+  if (m_file.is_open())
+    return;
+  m_file.open(m_filename, std::ios_base::trunc);
 }
 
 VCDFile::~VCDFile() { m_file.close(); }
 
 void VCDFile::writeLine(const std::string &line) {
-  if (!m_file.is_open()) {
-    throw std::runtime_error("Tried to write to file, but file was not open");
-  }
+  ensureOpen();
   const std::string indent = std::string(m_scopeLevel * 4, ' ');
   m_file << indent << line + "\n";
 };

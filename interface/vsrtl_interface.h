@@ -712,14 +712,15 @@ public:
   long long getCycleCount() const { return m_cycleCount; }
 
   /**
-   * @brief vcdDump
-   * @param enabled; enables dumping of all ports to a vcd file. For each port
-   * in the circuit, we connect an additional slot which will queue a notice to
-   * this top-level Design that the variable change is to be written to the VCD
-   * file.
+   * @brief vcdTrace
+   * @param enabled; enables dumping of all ports to a vcd file. For each
+   * port in the circuit, we connect an additional slot which will queue a
+   * notice to this top-level Design that the variable change is to be
+   * written to the VCD file.
    */
-  void vcdDump(bool enabled) {
+  void vcdTrace(bool enabled, const std::string &filename = "") {
     m_dumpVcdFiles = enabled;
+    m_vcdFileName = filename.empty() ? getName() + ".vcd" : filename;
     std::map<SimComponent *, std::vector<SimComponent *>> componentGraph;
     getComponentGraph(componentGraph);
     for (const auto &compIt : componentGraph) {
@@ -745,7 +746,7 @@ public:
    * wherein they reside.
    */
   void resetVcdFile() {
-    m_vcdFile = std::make_unique<VCDFile>(getName() + ".vcd");
+    m_vcdFile = std::make_unique<VCDFile>(m_vcdFileName);
     {
       auto def1 = m_vcdFile->writeHeader();
       auto def2 = m_vcdFile->scopeDef("TOP");
@@ -819,6 +820,7 @@ private:
   std::set<const SimPort *> m_vcdVarChangeQueue;
   std::string m_vcdClkId;
   bool m_dumpVcdFiles = false;
+  std::string m_vcdFileName;
 
 #ifndef NDEBUG
   long long m_cycleCountPre = 0;

@@ -36,12 +36,15 @@ public:
   }
 
 private:
+  // Ensures that the file is opened and ready for writing.
+  void ensureOpen();
   std::string genId();
   void writeLine(const std::string &line);
   std::ofstream m_file;
   std::map<std::string, unsigned> m_varWidths;
   std::map<std::string, uint64_t> m_dumpVars;
 
+  std::string m_filename;
   unsigned m_varCntr = 0;
   unsigned m_scopeLevel = 0;
 };
