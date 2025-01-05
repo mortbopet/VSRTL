@@ -7,7 +7,7 @@
 #include "VSRTL/core/vsrtl_design.h"
 #include "VSRTL/core/vsrtl_logicgate.h"
 #include "VSRTL/core/vsrtl_multiplexer.h"
-#include "vsrtl_shift.h"
+#include "VSRTL/core/vsrtl_shift.h"
 
 namespace vsrtl {
 namespace core {

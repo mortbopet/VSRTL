@@ -1,4 +1,4 @@
-#include "vsrtl_valuelabel.h"
+#include "VSRTL/graphics/vsrtl_valuelabel.h"
 #include "VSRTL/graphics/vsrtl_graphics_util.h"
 #include "VSRTL/graphics/vsrtl_portgraphic.h"
 

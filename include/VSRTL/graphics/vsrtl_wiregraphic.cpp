@@ -1,5 +1,5 @@
 #include "VSRTL/graphics/vsrtl_wiregraphic.h"
-#include "VSRTL/core/vsrtl_componentgraphic.h"
+#include "VSRTL/graphics/vsrtl_componentgraphic.h"
 #include "VSRTL/graphics/vsrtl_portgraphic.h"
 
 #include "VSRTL/graphics/vsrtl_graphics_defines.h"

@@ -12,8 +12,8 @@
 namespace vsrtl {
 namespace core {
 
-Enum(ALU_OPCODE, ADD, SUB, MUL, DIV, AND, OR, XOR, SL, SRA, SRL, LUI, LT, LTU,
-     EQ);
+enum class ALU_OPCODE{ ADD, SUB, MUL, DIV, AND, OR, XOR, SL, SRA, SRL, LUI, LT, LTU,
+     EQ};
 
 template <unsigned int W>
 class ALU : public Component {

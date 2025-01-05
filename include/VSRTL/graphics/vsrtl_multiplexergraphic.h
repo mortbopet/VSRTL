@@ -1,7 +1,7 @@
 #ifndef VSRTL_MULTIPLEXERGRAPHIC_H
 #define VSRTL_MULTIPLEXERGRAPHIC_H
 
-#include "VSRTL/core/vsrtl_componentgraphic.h"
+#include "VSRTL/graphics/vsrtl_componentgraphic.h"
 
 #include "VSRTL/core/vsrtl_multiplexer.h"
 

@@ -1,7 +1,7 @@
 #ifndef VSRTL_WIDGET_H
 #define VSRTL_WIDGET_H
 
-#include "VSRTL/core/vsrtl_componentgraphic.h"
+#include "VSRTL/graphics/vsrtl_componentgraphic.h"
 #include "VSRTL/graphics/vsrtl_portgraphic.h"
 #include <QMainWindow>
 
