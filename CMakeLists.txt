@@ -20,9 +20,31 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 COMPONENTS Core Widgets REQUIRED)
 find_package(Threads REQUIRED)
 
-include_directories(SYSTEM external/cereal/include)
-include_directories(SYSTEM external/Signals)
+######################################################################
+## Fetch dependencies
+######################################################################
 
+include(FetchContent)
+FetchContent_Declare(
+    cereal
+    GIT_REPOSITORY https://github.com/USCiLab/cereal.git
+    GIT_TAG 51cbda5f30e56c801c07fe3d3aba5d7fb9e6cca4
+)
+FetchContent_MakeAvailable(cereal)
+
+FetchContent_Declare(
+  Signals
+  GIT_REPOSITORY https://github.com/pbhogan/Signals.git
+  GIT_TAG 17881fb92ec314bb43549cc2cc8acfac24916f91
+)
+    
+# Signals doesn't have a CMake file, so we download the source files and
+# create the library manually
+FetchContent_Populate(Signals)
+add_library(Signals STATIC
+    ${Signals_SOURCE_DIR}/src/Signal.cpp
+)
+target_include_directories(Signals PUBLIC ${Signals_SOURCE_DIR})
 
 ######################################################################
 ## Code Coverage Configuration
@@ -49,13 +71,13 @@ endif(VSRTL_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 ## Library setup
 ######################################################################
 set(VSRTL_INTERFACE_LIB ${PROJECT_NAME}_int_lib CACHE INTERNAL "")
-add_subdirectory(interface)
+add_subdirectory(include/VSRTL/interface)
 set(VSRTL_CORE_LIB ${PROJECT_NAME}_core_lib CACHE INTERNAL "")
-add_subdirectory(core)
+add_subdirectory(include/VSRTL/core)
 set(VSRTL_GRAPHICS_LIB ${PROJECT_NAME}_gfx_lib CACHE INTERNAL "")
-add_subdirectory(graphics)
+add_subdirectory(include/VSRTL/graphics)
 set(VSRTL_COMPONENTS_LIB ${PROJECT_NAME}_cmp_lib CACHE INTERNAL "")
-add_subdirectory(components)
+add_subdirectory(include/VSRTL/components)
 
 option(VSRTL_BUILD_TESTS "Build the VSRTL test suite" ON)
 if(VSRTL_BUILD_TESTS)
