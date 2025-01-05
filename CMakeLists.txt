@@ -33,18 +33,20 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cereal)
 
 FetchContent_Declare(
-  Signals
+  signals
   GIT_REPOSITORY https://github.com/pbhogan/Signals.git
   GIT_TAG 17881fb92ec314bb43549cc2cc8acfac24916f91
 )
     
 # Signals doesn't have a CMake file, so we download the source files and
 # create the library manually
-FetchContent_Populate(Signals)
-add_library(Signals STATIC
-    ${Signals_SOURCE_DIR}/src/Signal.cpp
-)
-target_include_directories(Signals PUBLIC ${Signals_SOURCE_DIR})
+FetchContent_GetProperties(signals)
+if(NOT signals_POPULATED)
+  FetchContent_Populate(signals)
+endif()
+add_library(Signals INTERFACE)
+add_library(Signals::Signals ALIAS Signals)
+target_include_directories(Signals INTERFACE ${signals_SOURCE_DIR})
 
 ######################################################################
 ## Code Coverage Configuration
