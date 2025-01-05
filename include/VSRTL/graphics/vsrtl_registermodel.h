@@ -5,9 +5,9 @@
 #include <QModelIndex>
 #include <QVariant>
 
-#include "vsrtl_netlistmodelbase.h"
-#include "vsrtl_register.h"
-#include "vsrtl_treeitem.h"
+#include "VSRTL/graphics/vsrtl_netlistmodelbase.h"
+#include "VSRTL/core/vsrtl_register.h"
+#include "VSRTL/graphics/vsrtl_treeitem.h"
 
 namespace vsrtl {
 

@@ -1,4 +1,4 @@
-#include "vsrtl_label.h"
+#include "VSRTL/graphics/vsrtl_label.h"
 
 #include <QAction>
 #include <QFontMetrics>
@@ -10,7 +10,7 @@
 #include <QTextBlock>
 #include <QTextDocument>
 
-#include "vsrtl_labeleditdialog.h"
+#include "VSRTL/graphics/vsrtl_labeleditdialog.h"
 #include "vsrtl_scene.h"
 
 namespace vsrtl {

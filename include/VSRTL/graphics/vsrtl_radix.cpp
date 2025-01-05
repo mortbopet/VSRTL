@@ -1,9 +1,9 @@
-#include "vsrtl_radix.h"
+#include "VSRTL/graphics/vsrtl_radix.h"
 
-#include "../interface/vsrtl_binutils.h"
+#include "VSRTL/interface/vsrtl_binutils.h"
 
-#include "../interface/vsrtl_binutils.h"
-#include "../interface/vsrtl_interface.h"
+#include "VSRTL/interface/vsrtl_binutils.h"
+#include "VSRTL/interface/vsrtl_interface.h"
 
 #include <QAction>
 #include <QActionGroup>

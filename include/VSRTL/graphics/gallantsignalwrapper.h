@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Signals/Signal.h"
+#include "Signal.h"
 #include <QMetaObject>
 #include <functional>
 

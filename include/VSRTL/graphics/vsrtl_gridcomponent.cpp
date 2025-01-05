@@ -1,7 +1,7 @@
-﻿#include "vsrtl_gridcomponent.h"
+﻿#include "VSRTL/graphics/vsrtl_gridcomponent.h"
 
-#include "vsrtl_graphics_defines.h"
-#include "vsrtl_graphics_util.h"
+#include "VSRTL/graphics/vsrtl_graphics_defines.h"
+#include "VSRTL/graphics/vsrtl_graphics_util.h"
 #include "vsrtl_placeroute.h"
 
 #include <math.h>

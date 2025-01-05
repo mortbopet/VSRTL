@@ -1,13 +1,13 @@
 #ifndef REGISTERFILE_H
 #define REGISTERFILE_H
 
-#include "vsrtl_comparator.h"
-#include "vsrtl_component.h"
-#include "vsrtl_constant.h"
-#include "vsrtl_defines.h"
-#include "vsrtl_multiplexer.h"
-#include "vsrtl_port.h"
-#include "vsrtl_register.h"
+#include "VSRTL/core/vsrtl_comparator.h"
+#include "VSRTL/core/vsrtl_component.h"
+#include "VSRTL/core/vsrtl_constant.h"
+#include "VSRTL/interface/vsrtl_defines.h"
+#include "VSRTL/core/vsrtl_multiplexer.h"
+#include "VSRTL/core/vsrtl_port.h"
+#include "VSRTL/core/vsrtl_register.h"
 
 #include <memory>
 

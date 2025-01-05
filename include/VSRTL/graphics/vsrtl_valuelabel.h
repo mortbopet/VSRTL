@@ -1,9 +1,9 @@
 #pragma once
 
-#include "vsrtl_label.h"
-#include "vsrtl_radix.h"
+#include "VSRTL/graphics/vsrtl_label.h"
+#include "VSRTL/graphics/vsrtl_radix.h"
 
-#include "../interface/vsrtl_interface.h"
+#include "VSRTL/interface/vsrtl_interface.h"
 
 #include <QGraphicsItem>
 

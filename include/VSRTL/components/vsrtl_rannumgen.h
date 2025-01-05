@@ -1,12 +1,12 @@
 #ifndef VSRTL_RANNUMGEN_H
 #define VSRTL_RANNUMGEN_H
 
-#include "vsrtl_alu.h"
-#include "vsrtl_comparator.h"
-#include "vsrtl_constant.h"
-#include "vsrtl_design.h"
-#include "vsrtl_logicgate.h"
-#include "vsrtl_multiplexer.h"
+#include "VSRTL/core/vsrtl_alu.h"
+#include "VSRTL/core/vsrtl_comparator.h"
+#include "VSRTL/core/vsrtl_constant.h"
+#include "VSRTL/core/vsrtl_design.h"
+#include "VSRTL/core/vsrtl_logicgate.h"
+#include "VSRTL/core/vsrtl_multiplexer.h"
 #include "vsrtl_shift.h"
 
 namespace vsrtl {

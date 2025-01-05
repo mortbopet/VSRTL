@@ -1,8 +1,8 @@
 #ifndef VSRTL_DECOLLATOR_H
 #define VSRTL_DECOLLATOR_H
 
-#include "vsrtl_component.h"
-#include "vsrtl_port.h"
+#include "VSRTL/core/vsrtl_component.h"
+#include "VSRTL/core/vsrtl_port.h"
 
 namespace vsrtl {
 namespace core {

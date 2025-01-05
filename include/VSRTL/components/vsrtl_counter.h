@@ -1,10 +1,10 @@
 #ifndef VSRTL_NBITADDER_H
 #define VSRTL_NBITADDER_H
 
-#include "vsrtl_collator.h"
-#include "vsrtl_constant.h"
-#include "vsrtl_design.h"
-#include "vsrtl_fulladder.h"
+#include "VSRTL/core/vsrtl_collator.h"
+#include "VSRTL/core/vsrtl_constant.h"
+#include "VSRTL/core/vsrtl_design.h"
+#include "VSRTL/components/vsrtl_fulladder.h"
 
 #include <string>
 

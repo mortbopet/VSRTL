@@ -1,4 +1,4 @@
-#include "vsrtl_parameterdialog.h"
+#include "VSRTL/graphics/vsrtl_parameterdialog.h"
 #include "ui_vsrtl_parameterdialog.h"
 
 #include <QCheckBox>

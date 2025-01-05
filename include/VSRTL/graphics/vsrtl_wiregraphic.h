@@ -1,9 +1,9 @@
 #ifndef VSRTL_WIREGRAPHIC_H
 #define VSRTL_WIREGRAPHIC_H
 
-#include "vsrtl_graphics_util.h"
-#include "vsrtl_graphicsbaseitem.h"
-#include "vsrtl_portgraphic.h"
+#include "VSRTL/graphics/vsrtl_graphics_util.h"
+#include "VSRTL/graphics/vsrtl_graphicsbaseitem.h"
+#include "VSRTL/graphics/vsrtl_portgraphic.h"
 
 #include "cereal/cereal.hpp"
 #include "cereal/types/map.hpp"

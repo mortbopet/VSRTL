@@ -4,10 +4,10 @@
 #include <QDebug>
 #include <QIcon>
 
-#include "vsrtl_netlistmodel.h"
+#include "VSRTL/graphics/vsrtl_netlistmodel.h"
 
-#include "../interface/vsrtl_gfxobjecttypes.h"
-#include "../interface/vsrtl_interface.h"
+#include "VSRTL/interface/vsrtl_gfxobjecttypes.h"
+#include "VSRTL/interface/vsrtl_interface.h"
 
 namespace vsrtl {
 

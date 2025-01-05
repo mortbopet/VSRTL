@@ -1,10 +1,10 @@
 #ifndef VSRTL_DESIGN_H
 #define VSRTL_DESIGN_H
 
-#include "../interface/vsrtl_defines.h"
-#include "vsrtl_component.h"
-#include "vsrtl_memory.h"
-#include "vsrtl_register.h"
+#include "VSRTL/interface/vsrtl_defines.h"
+#include "VSRTL/core/vsrtl_component.h"
+#include "VSRTL/core/vsrtl_memory.h"
+#include "VSRTL/core/vsrtl_register.h"
 
 #include <memory>
 #include <set>

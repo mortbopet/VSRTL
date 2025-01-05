@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vsrtl_component.h"
+#include "VSRTL/core/vsrtl_component.h"
 
 #include "common.h"
 

@@ -5,7 +5,7 @@
 #include "cereal/cereal.hpp"
 #include "cereal/types/map.hpp"
 
-#include "../interface/vsrtl_interface.h"
+#include "VSRTL/interface/vsrtl_interface.h"
 
 namespace vsrtl {
 

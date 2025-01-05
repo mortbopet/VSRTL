@@ -4,7 +4,7 @@
 #include <QColor>
 #include <QMetaType>
 
-#include "../interface/vsrtl_defines.h"
+#include "VSRTL/interface/vsrtl_defines.h"
 
 #define DRAW_BOUNDING_RECT(painter)                                            \
   painter->save();                                                             \

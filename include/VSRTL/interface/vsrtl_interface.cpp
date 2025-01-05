@@ -1,4 +1,4 @@
-#include "vsrtl_interface.h"
+#include "VSRTL/interface/vsrtl_interface.h"
 
 namespace vsrtl {
 void SimPort::queueVcdVarChange() { getDesign()->queueVcdVarChange(this); }

@@ -1,6 +1,6 @@
 #include <QtTest/QTest>
 
-#include "vsrtl_counter.h"
+#include "VSRTL/components/vsrtl_counter.h"
 
 #include <cmath>
 

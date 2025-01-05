@@ -1,9 +1,9 @@
 #ifndef VSRTL_MULTIPLEXERGRAPHIC_H
 #define VSRTL_MULTIPLEXERGRAPHIC_H
 
-#include "vsrtl_componentgraphic.h"
+#include "VSRTL/core/vsrtl_componentgraphic.h"
 
-#include "vsrtl_multiplexer.h"
+#include "VSRTL/core/vsrtl_multiplexer.h"
 
 namespace vsrtl {
 

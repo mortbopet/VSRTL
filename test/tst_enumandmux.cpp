@@ -1,6 +1,6 @@
 #include <QtTest/QTest>
 
-#include "vsrtl_enumandmux.h"
+#include "VSRTL/components/vsrtl_enumandmux.h"
 
 class tst_enumAndMux : public QObject {
   Q_OBJECT private slots : void functionalTest();

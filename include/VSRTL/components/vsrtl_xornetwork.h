@@ -1,12 +1,12 @@
 #pragma once
 
-#include "vsrtl_adder.h"
-#include "vsrtl_constant.h"
+#include "VSRTL/core/vsrtl_adder.h"
+#include "VSRTL/core/vsrtl_constant.h"
 #include "vsrtl_decollator.h"
-#include "vsrtl_design.h"
-#include "vsrtl_logicgate.h"
-#include "vsrtl_multiplexer.h"
-#include "vsrtl_register.h"
+#include "VSRTL/core/vsrtl_design.h"
+#include "VSRTL/core/vsrtl_logicgate.h"
+#include "VSRTL/core/vsrtl_multiplexer.h"
+#include "VSRTL/core/vsrtl_register.h"
 
 namespace vsrtl {
 namespace core {

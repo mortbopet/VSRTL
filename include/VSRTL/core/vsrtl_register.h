@@ -1,9 +1,9 @@
 #ifndef VSRTL_REGISTER_H
 #define VSRTL_REGISTER_H
 
-#include "../interface/vsrtl_binutils.h"
-#include "vsrtl_component.h"
-#include "vsrtl_port.h"
+#include "VSRTL/interface/vsrtl_binutils.h"
+#include "VSRTL/core/vsrtl_component.h"
+#include "VSRTL/core/vsrtl_port.h"
 
 #include <algorithm>
 #include <deque>

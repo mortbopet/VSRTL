@@ -5,7 +5,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QPainter>
 
-#include "vsrtl_graphics_defines.h"
+#include "VSRTL/graphics/vsrtl_graphics_defines.h"
 
 namespace vsrtl {
 

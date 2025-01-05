@@ -1,6 +1,6 @@
 #include "vsrtl_valuelabel.h"
-#include "vsrtl_graphics_util.h"
-#include "vsrtl_portgraphic.h"
+#include "VSRTL/graphics/vsrtl_graphics_util.h"
+#include "VSRTL/graphics/vsrtl_portgraphic.h"
 
 #include <QAction>
 #include <QGraphicsSceneContextMenuEvent>

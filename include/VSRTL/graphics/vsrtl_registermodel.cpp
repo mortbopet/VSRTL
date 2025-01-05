@@ -1,11 +1,11 @@
 #include <QItemSelectionModel>
 #include <QWidget>
 
-#include "vsrtl_radix.h"
-#include "vsrtl_registermodel.h"
-#include "vsrtl_treeitem.h"
+#include "VSRTL/graphics/vsrtl_radix.h"
+#include "VSRTL/graphics/vsrtl_registermodel.h"
+#include "VSRTL/graphics/vsrtl_treeitem.h"
 
-#include "vsrtl_design.h"
+#include "VSRTL/core/vsrtl_design.h"
 
 namespace vsrtl {
 

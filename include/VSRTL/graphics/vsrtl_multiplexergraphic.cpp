@@ -1,5 +1,5 @@
-#include "vsrtl_multiplexergraphic.h"
-#include "vsrtl_portgraphic.h"
+#include "VSRTL/graphics/vsrtl_multiplexergraphic.h"
+#include "VSRTL/graphics/vsrtl_portgraphic.h"
 
 #include <QPainter>
 

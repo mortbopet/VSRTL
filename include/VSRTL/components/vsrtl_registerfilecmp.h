@@ -1,9 +1,9 @@
 #ifndef VSRTL_REGISTERFILECMP_H
 #define VSRTL_REGISTERFILECMP_H
 
-#include "vsrtl_adder.h"
-#include "vsrtl_design.h"
-#include "vsrtl_registerfile.h"
+#include "VSRTL/core/vsrtl_adder.h"
+#include "VSRTL/core/vsrtl_design.h"
+#include "VSRTL/core/vsrtl_registerfile.h"
 
 namespace vsrtl {
 namespace core {

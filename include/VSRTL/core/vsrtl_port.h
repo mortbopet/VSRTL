@@ -9,8 +9,8 @@
 #include <memory>
 #include <type_traits>
 
-#include "../interface/vsrtl_binutils.h"
-#include "../interface/vsrtl_interface.h"
+#include "VSRTL/interface/vsrtl_binutils.h"
+#include "VSRTL/interface/vsrtl_interface.h"
 
 namespace vsrtl {
 namespace core {

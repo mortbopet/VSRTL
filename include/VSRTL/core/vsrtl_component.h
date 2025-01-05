@@ -11,12 +11,12 @@
 #include <typeinfo>
 #include <vector>
 
-#include "../interface/vsrtl_binutils.h"
-#include "../interface/vsrtl_defines.h"
+#include "VSRTL/interface/vsrtl_binutils.h"
+#include "VSRTL/interface/vsrtl_defines.h"
 #include "vsrtl_addressspace.h"
-#include "vsrtl_port.h"
+#include "VSRTL/core/vsrtl_port.h"
 
-#include "../interface/vsrtl_gfxobjecttypes.h"
+#include "VSRTL/interface/vsrtl_gfxobjecttypes.h"
 
 namespace vsrtl {
 namespace core {

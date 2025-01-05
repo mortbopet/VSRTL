@@ -1,15 +1,14 @@
-#include "vsrtl_componentgraphic.h"
-
-#include "vsrtl_componentbutton.h"
-#include "vsrtl_graphics_defines.h"
-#include "vsrtl_graphics_util.h"
-#include "vsrtl_label.h"
-#include "vsrtl_multiplexergraphic.h"
-#include "vsrtl_parameterdialog.h"
-#include "vsrtl_placeroute.h"
-#include "vsrtl_portgraphic.h"
-#include "vsrtl_scene.h"
-#include "vsrtl_wiregraphic.h"
+#include "VSRTL/graphics/vsrtl_componentgraphic.h"
+#include "VSRTL/graphics/vsrtl_componentbutton.h"
+#include "VSRTL/graphics/vsrtl_graphics_defines.h"
+#include "VSRTL/graphics/vsrtl_graphics_util.h"
+#include "VSRTL/graphics/vsrtl_label.h"
+#include "VSRTL/graphics/vsrtl_multiplexergraphic.h"
+#include "VSRTL/graphics/vsrtl_parameterdialog.h"
+#include "VSRTL/graphics/vsrtl_placeroute.h"
+#include "VSRTL/graphics/vsrtl_portgraphic.h"
+#include "VSRTL/graphics/vsrtl_scene.h"
+#include "VSRTL/graphics/vsrtl_wiregraphic.h"
 
 #include <cereal/archives/json.hpp>
 

@@ -5,8 +5,8 @@
 #include <QGraphicsScene>
 #include <QPainter>
 
-#include "../interface/vsrtl_interface.h"
-#include "vsrtl_graphics_defines.h"
+#include "VSRTL/interface/vsrtl_interface.h"
+#include "VSRTL/graphics/vsrtl_graphics_defines.h"
 
 #include <functional>
 #include <set>

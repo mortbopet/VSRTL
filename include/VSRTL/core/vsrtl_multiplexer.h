@@ -1,9 +1,8 @@
 #ifndef VSRTL_MULTIPLEXER_H
 #define VSRTL_MULTIPLEXER_H
 
-#include "vsrtl_component.h"
-#include "vsrtl_defines.h"
-#include "vsrtl_enum.h"
+#include "VSRTL/core/vsrtl_component.h"
+#include "VSRTL/interface/vsrtl_defines.h"
 #include <array>
 
 namespace vsrtl {

@@ -1,7 +1,7 @@
 #ifndef VSRTL_Radix_H
 #define VSRTL_Radix_H
 
-#include "../interface/vsrtl_defines.h"
+#include "VSRTL/interface/vsrtl_defines.h"
 #include <QRegularExpression>
 
 QT_FORWARD_DECLARE_CLASS(QString)

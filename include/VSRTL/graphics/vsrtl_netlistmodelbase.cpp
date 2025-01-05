@@ -1,4 +1,4 @@
-#include "vsrtl_netlistmodelbase.h"
+#include "VSRTL/graphics/vsrtl_netlistmodelbase.h"
 
 namespace vsrtl {
 

@@ -1,7 +1,7 @@
 #ifndef VSRTL_SHIFT_H
 #define VSRTL_SHIFT_H
 
-#include "vsrtl_component.h"
+#include "VSRTL/core/vsrtl_component.h"
 
 namespace vsrtl {
 namespace core {

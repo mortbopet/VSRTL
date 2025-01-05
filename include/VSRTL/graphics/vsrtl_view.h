@@ -1,7 +1,7 @@
 #ifndef VSRTL_VSRTLVIEW_H
 #define VSRTL_VSRTLVIEW_H
 
-#include "vsrtl_componentgraphic.h"
+#include "VSRTL/core/vsrtl_componentgraphic.h"
 #include <QGraphicsView>
 #include <QOpenGLWidget>
 

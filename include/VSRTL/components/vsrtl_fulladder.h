@@ -1,8 +1,8 @@
 #ifndef VSRTL_FULLADDER_H
 #define VSRTL_FULLADDER_H
 
-#include "vsrtl_design.h"
-#include "vsrtl_logicgate.h"
+#include "VSRTL/core/vsrtl_design.h"
+#include "VSRTL/core/vsrtl_logicgate.h"
 
 namespace vsrtl {
 namespace core {

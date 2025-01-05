@@ -1,7 +1,7 @@
 #pragma once
 
-#include "vsrtl_graphicsbaseitem.h"
-#include "vsrtl_qt_serializers.h"
+#include "VSRTL/graphics/vsrtl_graphicsbaseitem.h"
+#include "VSRTL/graphics/vsrtl_qt_serializers.h"
 
 #include "cereal/cereal.hpp"
 

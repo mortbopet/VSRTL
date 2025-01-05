@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vsrtl_graphicsbase.h"
+#include "VSRTL/graphics/vsrtl_graphicsbase.h"
 #include "vsrtl_scene.h"
 #include <QGraphicsItem>
 

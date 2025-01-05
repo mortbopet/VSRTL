@@ -1,6 +1,6 @@
 #include <QtTest/QTest>
 
-#include "vsrtl_aluandreg.h"
+#include "VSRTL/components/vsrtl_aluandreg.h"
 
 class tst_ALUAndReg : public QObject {
   Q_OBJECT private slots : void functionalTest();

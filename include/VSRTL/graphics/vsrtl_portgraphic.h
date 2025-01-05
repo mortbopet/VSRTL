@@ -1,14 +1,14 @@
 #ifndef VSRTL_PORTGRAPHIC_H
 #define VSRTL_PORTGRAPHIC_H
 
-#include "vsrtl_componentborder.h"
-#include "vsrtl_graphics_defines.h"
-#include "vsrtl_graphicsbaseitem.h"
-#include "vsrtl_label.h"
-#include "vsrtl_simqobject.h"
+#include "VSRTL/core/vsrtl_componentborder.h"
+#include "VSRTL/graphics/vsrtl_graphics_defines.h"
+#include "VSRTL/graphics/vsrtl_graphicsbaseitem.h"
+#include "VSRTL/graphics/vsrtl_label.h"
+#include "VSRTL/graphics/vsrtl_simqobject.h"
 #include "vsrtl_valuelabel.h"
 
-#include "../interface/vsrtl_interface.h"
+#include "VSRTL/interface/vsrtl_interface.h"
 
 #include "cereal/cereal.hpp"
 #include "cereal/types/memory.hpp"

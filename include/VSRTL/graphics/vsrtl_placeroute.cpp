@@ -1,7 +1,7 @@
 #include "vsrtl_placeroute.h"
-#include "vsrtl_component.h"
-#include "vsrtl_graphics_defines.h"
-#include "vsrtl_gridcomponent.h"
+#include "VSRTL/core/vsrtl_component.h"
+#include "VSRTL/graphics/vsrtl_graphics_defines.h"
+#include "VSRTL/graphics/vsrtl_gridcomponent.h"
 
 #include <deque>
 #include <map>

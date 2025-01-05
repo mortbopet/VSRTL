@@ -1,7 +1,7 @@
 #ifndef VSRTL_COMPARATOR_H
 #define VSRTL_COMPARATOR_H
 
-#include "vsrtl_component.h"
+#include "VSRTL/core/vsrtl_component.h"
 
 namespace vsrtl {
 namespace core {

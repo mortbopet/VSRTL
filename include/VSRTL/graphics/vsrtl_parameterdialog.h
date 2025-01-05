@@ -5,7 +5,7 @@
 #include <functional>
 #include <map>
 
-#include "vsrtl_interface.h"
+#include "VSRTL/interface/vsrtl_interface.h"
 
 namespace vsrtl {
 

@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <memory>
 
-#include "../interface/vsrtl_interface.h"
+#include "VSRTL/interface/vsrtl_interface.h"
 
 QT_FORWARD_DECLARE_CLASS(QTreeView)
 

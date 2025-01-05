@@ -1,13 +1,13 @@
 #ifndef VSRTL_SINGLECYCLELEROS_H
 #define VSRTL_SINGLECYCLELEROS_H
 
-#include "vsrtl_adder.h"
-#include "vsrtl_comparator.h"
-#include "vsrtl_constant.h"
-#include "vsrtl_design.h"
-#include "vsrtl_memory.h"
-#include "vsrtl_multiplexer.h"
-#include "vsrtl_register.h"
+#include "VSRTL/core/vsrtl_adder.h"
+#include "VSRTL/core/vsrtl_comparator.h"
+#include "VSRTL/core/vsrtl_constant.h"
+#include "VSRTL/core/vsrtl_design.h"
+#include "VSRTL/core/vsrtl_memory.h"
+#include "VSRTL/core/vsrtl_multiplexer.h"
+#include "VSRTL/core/vsrtl_register.h"
 
 #include "alu.h"
 #include "branch.h"

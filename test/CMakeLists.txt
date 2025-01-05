@@ -7,18 +7,17 @@ find_package(Qt6 COMPONENTS Test REQUIRED)
 macro(create_qtest name)
     add_executable(${name} ${name}.cpp)
     add_test(${name} ${name})
-    target_link_libraries(${name} Qt6::Core Qt6::Widgets Qt6::Test)
+    target_link_libraries(${name}
+        Qt6::Core
+        Qt6::Widgets
+        Qt6::Test
+        vsrtl::vsrtl
+    )
     target_link_libraries(${name} ${VSRTL_CORE_LIB} ${VSRTL_GRAPHICS_LIB} ${VSRTL_COMPONENTS_LIB})
     if (COVERAGE)
         target_link_libraries(${name} ${COVERAGE_LIB})
     endif()
 endmacro()
-
-INCLUDE_DIRECTORIES("../core/")
-INCLUDE_DIRECTORIES("../graphics/")
-INCLUDE_DIRECTORIES("../components/")
-
-
 
 create_qtest(tst_adderandreg)
 create_qtest(tst_nestedcomponent)

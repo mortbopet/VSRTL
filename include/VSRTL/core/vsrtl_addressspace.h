@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../interface/vsrtl_defines.h"
+#include "VSRTL/interface/vsrtl_defines.h"
 
 namespace vsrtl {
 namespace core {

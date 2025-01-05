@@ -4,8 +4,8 @@
 #include <QItemSelection>
 #include <QWidget>
 
-#include "../interface/vsrtl_interface.h"
-#include "vsrtl_netlistview.h"
+#include "VSRTL/interface/vsrtl_interface.h"
+#include "VSRTL/graphics/vsrtl_netlistview.h"
 
 namespace vsrtl {
 

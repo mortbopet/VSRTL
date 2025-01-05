@@ -1,13 +1,13 @@
 #pragma once
-#include "vsrtl_alu.h"
-#include "vsrtl_constant.h"
-#include "vsrtl_design.h"
-#include "vsrtl_register.h"
+#include "VSRTL/core/vsrtl_alu.h"
+#include "VSRTL/core/vsrtl_constant.h"
+#include "VSRTL/core/vsrtl_design.h"
+#include "VSRTL/core/vsrtl_register.h"
 
-#include "vsrtl_alu.h"
-#include "vsrtl_constant.h"
-#include "vsrtl_design.h"
-#include "vsrtl_register.h"
+#include "VSRTL/core/vsrtl_alu.h"
+#include "VSRTL/core/vsrtl_constant.h"
+#include "VSRTL/core/vsrtl_design.h"
+#include "VSRTL/core/vsrtl_register.h"
 namespace vsrtl {
 namespace core {
 

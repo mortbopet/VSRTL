@@ -1,5 +1,5 @@
-#include "vsrtl_treeitem.h"
-#include "vsrtl_netlistmodel.h"
+#include "VSRTL/graphics/vsrtl_treeitem.h"
+#include "VSRTL/graphics/vsrtl_netlistmodel.h"
 
 #include <QMenu>
 

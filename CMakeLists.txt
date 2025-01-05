@@ -25,6 +25,7 @@ find_package(Threads REQUIRED)
 ######################################################################
 
 include(FetchContent)
+set(JUST_INSTALL_CEREAL ON)
 FetchContent_Declare(
     cereal
     GIT_REPOSITORY https://github.com/USCiLab/cereal.git
@@ -47,6 +48,15 @@ endif()
 add_library(Signals INTERFACE)
 add_library(Signals::Signals ALIAS Signals)
 target_include_directories(Signals INTERFACE ${signals_SOURCE_DIR})
+
+# Better enum
+FetchContent_Declare(
+  magic-enum
+  GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+  GIT_TAG v0.9.7
+)
+
+FetchContent_MakeAvailable(magic-enum)
 
 ######################################################################
 ## Code Coverage Configuration
@@ -72,6 +82,7 @@ endif(VSRTL_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 ######################################################################
 ## Library setup
 ######################################################################
+set(VSRTL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(VSRTL_INTERFACE_LIB ${PROJECT_NAME}_int_lib CACHE INTERNAL "")
 add_subdirectory(include/VSRTL/interface)
 set(VSRTL_CORE_LIB ${PROJECT_NAME}_core_lib CACHE INTERNAL "")
@@ -80,6 +91,16 @@ set(VSRTL_GRAPHICS_LIB ${PROJECT_NAME}_gfx_lib CACHE INTERNAL "")
 add_subdirectory(include/VSRTL/graphics)
 set(VSRTL_COMPONENTS_LIB ${PROJECT_NAME}_cmp_lib CACHE INTERNAL "")
 add_subdirectory(include/VSRTL/components)
+
+# Global library that pulls in everything
+add_library(vsrtl_lib INTERFACE)
+target_link_libraries(vsrtl_lib INTERFACE
+    ${VSRTL_INTERFACE_LIB}
+    ${VSRTL_CORE_LIB}
+    ${VSRTL_GRAPHICS_LIB}
+    ${VSRTL_COMPONENTS_LIB}
+)
+add_library(vsrtl::vsrtl ALIAS vsrtl_lib)
 
 option(VSRTL_BUILD_TESTS "Build the VSRTL test suite" ON)
 if(VSRTL_BUILD_TESTS)

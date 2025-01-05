@@ -23,9 +23,17 @@ if(VSRTL_DEBUG_DRAWING)
 endif()
 
 find_package(Qt6 REQUIRED COMPONENTS OpenGLWidgets)
-target_link_libraries(${VSRTL_GRAPHICS_LIB} Qt6::Core Qt6::Widgets Qt6::OpenGLWidgets)
+target_link_libraries(${VSRTL_GRAPHICS_LIB}
+    Qt6::Core
+    Qt6::Widgets
+    Qt6::OpenGLWidgets
+    cereal
+    Signals::Signals
+)
 
-target_include_directories(${VSRTL_GRAPHICS_LIB} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${VSRTL_GRAPHICS_LIB} PUBLIC PUBLIC
+    ${VSRTL_INCLUDE_DIR}
+)
 
 include_directories("../core/")
 

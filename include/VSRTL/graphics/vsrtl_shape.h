@@ -7,7 +7,7 @@
 #include <typeindex>
 #include <typeinfo>
 
-#include "../interface/vsrtl_gfxobjecttypes.h"
+#include "VSRTL/interface/vsrtl_gfxobjecttypes.h"
 
 namespace vsrtl {
 

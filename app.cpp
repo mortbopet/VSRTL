@@ -1,14 +1,14 @@
 #include <QApplication>
 
-#include "components/vsrtl_adderandreg.h"
-#include "components/vsrtl_counter.h"
-#include "components/vsrtl_manynestedcomponents.h"
-#include "components/vsrtl_nestedexponenter.h"
-#include "components/vsrtl_rannumgen.h"
+#include "VSRTL/components/vsrtl_adderandreg.h"
+#include "VSRTL/components/vsrtl_counter.h"
+#include "VSRTL/components/vsrtl_manynestedcomponents.h"
+#include "VSRTL/components/vsrtl_nestedexponenter.h"
+#include "VSRTL/components/vsrtl_rannumgen.h"
 
-#include "vsrtl_mainwindow.h"
+#include "VSRTL/graphics/vsrtl_mainwindow.h"
 
-#include "components/Leros/SingleCycleLeros/SingleCycleLeros.h"
+#include "VSRTL/components/Leros/SingleCycleLeros/SingleCycleLeros.h"
 
 #include <chrono>
 

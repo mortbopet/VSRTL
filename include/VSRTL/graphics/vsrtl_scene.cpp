@@ -8,9 +8,9 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QMenu>
 
-#include "vsrtl_componentgraphic.h"
-#include "vsrtl_portgraphic.h"
-#include "vsrtl_wiregraphic.h"
+#include "VSRTL/core/vsrtl_componentgraphic.h"
+#include "VSRTL/graphics/vsrtl_portgraphic.h"
+#include "VSRTL/graphics/vsrtl_wiregraphic.h"
 
 namespace vsrtl {
 

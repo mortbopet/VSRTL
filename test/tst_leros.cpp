@@ -1,6 +1,6 @@
 #include <QtTest/QTest>
 
-#include "Leros/SingleCycleLeros/SingleCycleLeros.h"
+#include "VSRTL/components/Leros/SingleCycleLeros/SingleCycleLeros.h"
 
 class tst_Leros : public QObject {
   Q_OBJECT

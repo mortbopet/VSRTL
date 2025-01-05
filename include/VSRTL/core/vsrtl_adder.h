@@ -1,9 +1,9 @@
 #pragma once
 
-#include "vsrtl_component.h"
-#include "vsrtl_defines.h"
+#include "VSRTL/core/vsrtl_component.h"
+#include "VSRTL/interface/vsrtl_defines.h"
 
-#include "../interface/vsrtl_gfxobjecttypes.h"
+#include "VSRTL/interface/vsrtl_gfxobjecttypes.h"
 
 namespace vsrtl {
 namespace core {

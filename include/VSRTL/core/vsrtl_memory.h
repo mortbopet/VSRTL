@@ -2,11 +2,11 @@
 #define MEMORY_H
 
 #include "vsrtl_addressspace.h"
-#include "vsrtl_component.h"
-#include "vsrtl_register.h"
+#include "VSRTL/core/vsrtl_component.h"
+#include "VSRTL/core/vsrtl_register.h"
 
-#include "../interface/vsrtl_defines.h"
-#include "../interface/vsrtl_gfxobjecttypes.h"
+#include "VSRTL/interface/vsrtl_defines.h"
+#include "VSRTL/interface/vsrtl_gfxobjecttypes.h"
 
 #include <cstdint>
 #include <unordered_map>

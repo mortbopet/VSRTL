@@ -7,7 +7,7 @@
 #include <QVariant>
 #include <QVector>
 
-#include "vsrtl_radix.h"
+#include "VSRTL/graphics/vsrtl_radix.h"
 
 QT_FORWARD_DECLARE_CLASS(QMenu)
 

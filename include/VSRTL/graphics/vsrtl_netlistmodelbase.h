@@ -6,7 +6,7 @@
 #include <QModelIndex>
 #include <QVariant>
 
-#include "../interface/vsrtl_interface.h"
+#include "VSRTL/interface/vsrtl_interface.h"
 
 namespace vsrtl {
 

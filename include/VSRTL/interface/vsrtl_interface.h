@@ -12,10 +12,10 @@
 #include <vector>
 
 #include "Signal.h"
-#include "vsrtl_defines.h"
-#include "vsrtl_gfxobjecttypes.h"
-#include "vsrtl_parameter.h"
-#include "vsrtl_vcdfile.h"
+#include "VSRTL/interface/vsrtl_defines.h"
+#include "VSRTL/interface/vsrtl_gfxobjecttypes.h"
+#include "VSRTL/interface/vsrtl_parameter.h"
+#include "VSRTL/interface/vsrtl_vcdfile.h"
 
 namespace vsrtl {
 
