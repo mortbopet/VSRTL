@@ -18,7 +18,7 @@ public:
 
     expIn >> mul->op1;
     expIn >> mul->op2;
-    (ALU_OPCODE::MUL) >> mul->ctrl;
+    (static_cast<size_t>(ALU_OPCODE::MUL)) >> mul->ctrl;
 
     expReg->out >> out;
   }
@@ -34,14 +34,14 @@ public:
   NestedExponenter() : Design("Nested Exponenter") {
     exp->out >> adder->op1;
     reg->out >> adder->op2;
-    (ALU_OPCODE::ADD) >> adder->ctrl;
+    (static_cast<size_t>(ALU_OPCODE::ADD)) >> adder->ctrl;
 
     add2->out >> reg->in;
     adder->out >> exp->expIn;
 
     adder->out >> add2->op1;
     2 >> add2->op2;
-    (ALU_OPCODE::ADD) >> add2->ctrl;
+    (static_cast<size_t>(ALU_OPCODE::ADD)) >> add2->ctrl;
   }
   // Create objects
   SUBCOMPONENT(exp, Exponenter);

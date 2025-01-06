@@ -17,7 +17,7 @@ public:
     // Connect objects
     4 >> alu->op1;
     reg->out >> alu->op2;
-    ALU_OPCODE::ADD >> alu->ctrl;
+    (static_cast<size_t>(ALU_OPCODE::ADD)) >> alu->ctrl;
     alu->out >> reg->in;
   }
   static constexpr int m_cVal = 4;

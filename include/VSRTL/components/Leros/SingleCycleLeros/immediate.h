@@ -17,7 +17,7 @@ public:
       const auto imm8 = instr.uValue() & 0xFF;
       const auto simm8 = signextend<8>(imm8);
       const auto imm12 = instr.uValue() & 0xFFF;
-      switch (ctrl, imm_op) {
+      switch (static_cast<imm_op>(ctrl.uValue())) {
       case imm_op::nop:
         return VSRTL_VT_S(0);
       case imm_op::shl1:

@@ -10,7 +10,7 @@
 namespace vsrtl {
 namespace core {
 
-enum class TestEnum { A, B, C, D, E, F };
+enum TestEnum { A, B, C, D, E, F };
 
 class EnumAndMux : public Design {
 public:

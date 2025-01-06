@@ -138,15 +138,24 @@ public:
     m_propagationFunction = propagationFunction;
   }
 
+  // Like the above, but with enable_if if it's an enum. This allows users to
+  // use the enum type directly in the lambda return value, instead of manually
+  // casting it to VSRTL_VT_U.
+  template <typename F, typename E_t = decltype(std::declval<F>()()),
+            typename = typename std::enable_if<std::is_enum<E_t>::value>::type>
+  void operator<<(F &&propagationFunction) {
+    *this << [=]() { return static_cast<VSRTL_VT_U>(propagationFunction()); };
+  }
+
   // Value access operators
   explicit operator VSRTL_VT_U() const { return m_value; }
   explicit operator bool() const { return m_value & 0b1; }
 
 protected:
   // Port values are initialized to 0xdeadbeef for error detection reasons. In
-  // reality (in a circuit), this would not be the case - the entire circuit is
-  // reset when the registers are reset (to 0), and the circuit state is then
-  // propagated.
+  // reality (in a circuit), this would not be the case - the entire circuit
+  // is reset when the registers are reset (to 0), and the circuit state is
+  // then propagated.
   VSRTL_VT_U m_value = 0xdeadbeef;
 
   std::function<VSRTL_VT_U()> m_propagationFunction = {};

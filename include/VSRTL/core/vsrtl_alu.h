@@ -12,23 +12,21 @@
 namespace vsrtl {
 namespace core {
 
-struct ALU_OPCODE {
-  enum opcodes {
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    AND,
-    OR,
-    XOR,
-    SL,
-    SRA,
-    SRL,
-    LUI,
-    LT,
-    LTU,
-    EQ
-  };
+enum class ALU_OPCODE {
+  ADD,
+  SUB,
+  MUL,
+  DIV,
+  AND,
+  OR,
+  XOR,
+  SL,
+  SRA,
+  SRL,
+  LUI,
+  LT,
+  LTU,
+  EQ
 };
 
 template <unsigned int W>

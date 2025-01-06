@@ -79,7 +79,7 @@ public:
     mem_out_addr_mux->out >> data_mem->addr;
     dm_wr_en->out >> data_mem->wr_en;
     ctrl_comp->dm_op >> dm_wr_en->op1;
-    mem_op::wr >> dm_wr_en->op2;
+    static_cast<size_t>(mem_op::wr) >> dm_wr_en->op2;
 
     // -----------------------------------------------------------------------
     // Registers
@@ -94,7 +94,7 @@ public:
 
     reg_wr_en->out >> regs->wr_en;
     ctrl_comp->reg_op >> reg_wr_en->op1;
-    mem_op::wr >> reg_wr_en->op2;
+    static_cast<size_t>(mem_op::wr) >> reg_wr_en->op2;
 
     regs->setMemory(m_regMemory);
 
