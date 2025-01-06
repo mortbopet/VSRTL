@@ -1,9 +1,9 @@
 #include "VSRTL/graphics/vsrtl_mainwindow.h"
-#include "ui_vsrtl_mainwindow.h"
 #include "VSRTL/core/vsrtl_design.h"
 #include "VSRTL/graphics/vsrtl_netlist.h"
 #include "VSRTL/graphics/vsrtl_netlistmodel.h"
 #include "VSRTL/graphics/vsrtl_widget.h"
+#include "ui_vsrtl_mainwindow.h"
 
 #include <QAction>
 #include <QHeaderView>

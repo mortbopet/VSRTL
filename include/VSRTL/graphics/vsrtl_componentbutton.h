@@ -12,10 +12,8 @@ namespace vsrtl {
 class ComponentButton : public QGraphicsObject {
   Q_OBJECT
 public:
-  ComponentButton(QGraphicsItem *parentItem = nullptr)
-      : QGraphicsObject(parentItem) {
-    setFlags(ItemIsSelectable);
-  }
+  ComponentButton(QGraphicsItem *parentItem = nullptr);
+
   void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override {
     if (boundingRect().contains(event->pos())) {
       m_expanded = !m_expanded;

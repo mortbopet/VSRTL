@@ -13,6 +13,8 @@
 #include "VSRTL/graphics/vsrtl_labeleditdialog.h"
 #include "vsrtl_scene.h"
 
+#include "ui_vsrtl_labeleditdialog.h"
+
 namespace vsrtl {
 
 Label::Label(QGraphicsItem *parent, const QString &text,

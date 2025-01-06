@@ -3,17 +3,18 @@ cmake_minimum_required(VERSION 3.9)
 file(GLOB TST_SOURCES *.cpp)
 
 find_package(Qt6 COMPONENTS Test REQUIRED)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_AUTOMOC ON)
 
 macro(create_qtest name)
     add_executable(${name} ${name}.cpp)
     add_test(${name} ${name})
     target_link_libraries(${name}
-        Qt6::Core
-        Qt6::Widgets
         Qt6::Test
         vsrtl::vsrtl
     )
-    target_link_libraries(${name} ${VSRTL_CORE_LIB} ${VSRTL_GRAPHICS_LIB} ${VSRTL_COMPONENTS_LIB})
+    target_link_libraries(${name} vsrtl::vsrtl)
     if (COVERAGE)
         target_link_libraries(${name} ${COVERAGE_LIB})
     endif()

@@ -75,7 +75,6 @@ class EnumMultiplexer : public MultiplexerBase {
 public:
   EnumMultiplexer(const std::string &name, SimComponent *parent)
       : MultiplexerBase(name, parent) {
-    constexpr size_t enumSize = magic_enum::enum_count<E_t>();
     if (this->ins.size() != magic_enum::enum_count<E_t>()) {
       throw std::runtime_error(
           "EnumMultiplexer: Number of input ports does not "
