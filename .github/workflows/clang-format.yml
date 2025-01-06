@@ -15,6 +15,7 @@ jobs:
     - name: clang-format
       run: |
         # Run clang-format
+        sudo apt-get install clang-format
         CHANGED_FILES=`git diff --name-only -r HEAD~ | grep -E '.(c|cpp|h|hpp)$' | xargs`
         echo "Changed files: $CHANGED_FILES"
         [ -z "$CHANGED_FILES" ] && exit 0
