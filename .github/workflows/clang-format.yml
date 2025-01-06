@@ -1,3 +1,4 @@
+
 name: Check code format
 
 on: [push, pull_request]
@@ -7,7 +8,7 @@ jobs:
     name: Check with clang-format
     runs-on: ubuntu-latest
     steps:
-    - name: Get Ripes
+    - name: Get VSRTL
       uses: actions/checkout@v2
       with:
         submodules: recursive
@@ -15,8 +16,7 @@ jobs:
     - name: clang-format
       run: |
         # Run clang-format
-        sudo apt-get install clang-format
-        CHANGED_FILES=`git diff --name-only -r HEAD~ | grep -E '.(c|cpp|h|hpp)$' | xargs`
+        CHANGED_FILES=`git diff --name-only -r HEAD~ --diff-filter=d | grep -E '.(c|cpp|h|hpp)$' | xargs`
         echo "Changed files: $CHANGED_FILES"
         [ -z "$CHANGED_FILES" ] && exit 0
         clang-format -i $CHANGED_FILES
