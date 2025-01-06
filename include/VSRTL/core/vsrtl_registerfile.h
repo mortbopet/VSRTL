@@ -4,10 +4,10 @@
 #include "VSRTL/core/vsrtl_comparator.h"
 #include "VSRTL/core/vsrtl_component.h"
 #include "VSRTL/core/vsrtl_constant.h"
-#include "VSRTL/interface/vsrtl_defines.h"
 #include "VSRTL/core/vsrtl_multiplexer.h"
 #include "VSRTL/core/vsrtl_port.h"
 #include "VSRTL/core/vsrtl_register.h"
+#include "VSRTL/interface/vsrtl_defines.h"
 
 #include <memory>
 

@@ -1,8 +1,8 @@
 #include "VSRTL/graphics/vsrtl_netlist.h"
-#include "ui_vsrtl_netlist.h"
 #include "VSRTL/graphics/vsrtl_netlistdelegate.h"
 #include "VSRTL/graphics/vsrtl_netlistmodel.h"
 #include "VSRTL/graphics/vsrtl_registermodel.h"
+#include "ui_vsrtl_netlist.h"
 
 #include "VSRTL/graphics/vsrtl_netlistview.h"
 

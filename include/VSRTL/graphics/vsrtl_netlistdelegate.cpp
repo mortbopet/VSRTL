@@ -1,7 +1,7 @@
 #include "VSRTL/graphics/vsrtl_netlistdelegate.h"
-#include "VSRTL/interface/vsrtl_defines.h"
 #include "VSRTL/graphics/vsrtl_netlistmodel.h"
 #include "VSRTL/graphics/vsrtl_radix.h"
+#include "VSRTL/interface/vsrtl_defines.h"
 
 #include "VSRTL/graphics/vsrtl_registermodel.h"
 

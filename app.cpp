@@ -15,16 +15,16 @@
 #include <QDebug>
 #include <QFile>
 
-int main(int argc, char** argv) {
-    QApplication app(argc, argv);
+int main(int argc, char **argv) {
+  QApplication app(argc, argv);
 
-    Q_INIT_RESOURCE(vsrtl_icons);
+  Q_INIT_RESOURCE(vsrtl_icons);
 
-    vsrtl::AdderAndReg design;
+  vsrtl::AdderAndReg design;
 
-    vsrtl::MainWindow w(design);
+  vsrtl::MainWindow w(design);
 
-    w.show();
+  w.show();
 
-    app.exec();
+  app.exec();
 }

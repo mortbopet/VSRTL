@@ -1,9 +1,9 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
-#include "vsrtl_addressspace.h"
 #include "VSRTL/core/vsrtl_component.h"
 #include "VSRTL/core/vsrtl_register.h"
+#include "vsrtl_addressspace.h"
 
 #include "VSRTL/interface/vsrtl_defines.h"
 #include "VSRTL/interface/vsrtl_gfxobjecttypes.h"

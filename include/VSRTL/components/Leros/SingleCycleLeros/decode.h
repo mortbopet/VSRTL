@@ -11,13 +11,14 @@ namespace leros {
 
 class Decode : public Component {
 public:
-    Decode(const std::string& name, SimComponent* parent) : Component(name, parent) {
-        lowByte << [=] { return instr.uValue() & 0xFF; };
+  Decode(const std::string &name, SimComponent *parent)
+      : Component(name, parent) {
+    lowByte << [=] { return instr.uValue() & 0xFF; };
 
-        op << [=] {
-            const uint8_t instruction = instr.uValue() >> 8;
+    op << [=] {
+      const uint8_t instruction = instr.uValue() >> 8;
 
-            // clang-format off
+      // clang-format off
             switch ((instruction >> 4) & 0xF) {
                 default: break;
                 case 0b1000: return LerosInstr::br;
@@ -59,14 +60,14 @@ public:
                 case 0x72: return LerosInstr::stindh;
                 case 0xff: return LerosInstr::scall;
             }
-            // clang-format on
-        };
-    }
+      // clang-format on
+    };
+  }
 
-    INPUTPORT(instr, LEROS_INSTR_WIDTH);
-    OUTPUTPORT_ENUM(op, LerosInstr);
-    OUTPUTPORT(lowByte, LEROS_INSTR_WIDTH / 2);
+  INPUTPORT(instr, LEROS_INSTR_WIDTH);
+  OUTPUTPORT_ENUM(op, LerosInstr);
+  OUTPUTPORT(lowByte, LEROS_INSTR_WIDTH / 2);
 };
 
-}  // namespace leros
-}  // namespace vsrtl
+} // namespace leros
+} // namespace vsrtl

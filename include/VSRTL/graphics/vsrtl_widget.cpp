@@ -1,9 +1,9 @@
 #include "VSRTL/graphics/vsrtl_widget.h"
+#include "VSRTL/graphics/vsrtl_portgraphic.h"
+#include "VSRTL/graphics/vsrtl_shape.h"
 #include "VSRTL/interface/vsrtl_gfxobjecttypes.h"
 #include "ui_vsrtl_widget.h"
-#include "VSRTL/graphics/vsrtl_portgraphic.h"
 #include "vsrtl_scene.h"
-#include "VSRTL/graphics/vsrtl_shape.h"
 #include "vsrtl_view.h"
 
 #include <memory>

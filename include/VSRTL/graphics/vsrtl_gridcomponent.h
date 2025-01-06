@@ -4,11 +4,11 @@
 #include <QRect>
 #include <map>
 
-#include "VSRTL/interface/vsrtl_interface.h"
 #include "VSRTL/graphics/vsrtl_componentborder.h"
 #include "VSRTL/graphics/vsrtl_graphicsbaseitem.h"
 #include "VSRTL/graphics/vsrtl_shape.h"
 #include "VSRTL/graphics/vsrtl_simqobject.h"
+#include "VSRTL/interface/vsrtl_interface.h"
 
 namespace vsrtl {
 

@@ -2,11 +2,11 @@
 
 #include "VSRTL/core/vsrtl_adder.h"
 #include "VSRTL/core/vsrtl_constant.h"
-#include "vsrtl_decollator.h"
 #include "VSRTL/core/vsrtl_design.h"
 #include "VSRTL/core/vsrtl_logicgate.h"
 #include "VSRTL/core/vsrtl_multiplexer.h"
 #include "VSRTL/core/vsrtl_register.h"
+#include "vsrtl_decollator.h"
 
 namespace vsrtl {
 namespace core {

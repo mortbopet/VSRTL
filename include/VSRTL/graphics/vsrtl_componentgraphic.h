@@ -4,7 +4,6 @@
 #include <QFont>
 #include <QToolButton>
 
-#include "VSRTL/interface/vsrtl_gfxobjecttypes.h"
 #include "VSRTL/graphics/vsrtl_graphics_defines.h"
 #include "VSRTL/graphics/vsrtl_graphics_util.h"
 #include "VSRTL/graphics/vsrtl_graphicsbase.h"
@@ -14,6 +13,7 @@
 #include "VSRTL/graphics/vsrtl_qt_serializers.h"
 #include "VSRTL/graphics/vsrtl_shape.h"
 #include "VSRTL/graphics/vsrtl_wiregraphic.h"
+#include "VSRTL/interface/vsrtl_gfxobjecttypes.h"
 
 #include "cereal/cereal.hpp"
 #include "cereal/types/set.hpp"
