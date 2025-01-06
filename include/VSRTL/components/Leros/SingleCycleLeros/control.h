@@ -12,10 +12,11 @@ namespace leros {
 
 class Control : public Component {
 public:
-    Control(const std::string& name, SimComponent* parent) : Component(name, parent) {
-        alu_ctrl << [=] {
-            // clang-format off
-            Switch(instr_op, LerosInstr) {
+  Control(const std::string &name, SimComponent *parent)
+      : Component(name, parent) {
+    alu_ctrl << [=] {
+      // clang-format off
+            switch(instr_op, LerosInstr) {
                 case LerosInstr::add:    case LerosInstr::addi:   case LerosInstr::br:     case LerosInstr::brz:
                 case LerosInstr::brnz:   case LerosInstr::brp:    case LerosInstr::brn:    case LerosInstr::jal:
                 case LerosInstr::ldind:  case LerosInstr::ldindb: case LerosInstr::ldindh: case LerosInstr::stind:
@@ -42,12 +43,12 @@ public:
                 default:
                     return alu_op::nop;
             }
-            // clang-format on
-        };
+      // clang-format on
+    };
 
-        acc_reg_src_ctrl << [=] {
-            // clang-format off
-            Switch(instr_op, LerosInstr) {
+    acc_reg_src_ctrl << [=] {
+      // clang-format off
+            switch(instr_op, LerosInstr) {
                 case LerosInstr::add:    case LerosInstr::addi:   case LerosInstr::sub:    case LerosInstr::subi:
                 case LerosInstr::shra:   case LerosInstr::andi:   case LerosInstr::andr:   case LerosInstr::xori:
                 case LerosInstr::xorr:   case LerosInstr::ori:    case LerosInstr::orr:    case LerosInstr::loadi:
@@ -61,12 +62,12 @@ public:
                     return acc_reg_src::acc;
 
             }
-            // clang-format on
-        };
+      // clang-format on
+    };
 
-        dm_op << [=] {
-            // clang-format off
-            Switch(instr_op, LerosInstr) {
+    dm_op << [=] {
+      // clang-format off
+            switch(instr_op) {
                 case LerosInstr::ldind:  case LerosInstr::ldindb: case LerosInstr::ldindh:
                     return mem_op::rd;
                 case LerosInstr::stind: case LerosInstr::stindb: case LerosInstr::stindh:
@@ -74,12 +75,12 @@ public:
                 default:
                     return mem_op::nop;
             }
-            // clang-format on
-        };
+      // clang-format on
+    };
 
-        dm_access_size << [=] {
-            // clang-format off
-            Switch(instr_op, LerosInstr) {
+    dm_access_size << [=] {
+      // clang-format off
+            switch(instr_op) {
                 case LerosInstr::ldindb: case LerosInstr::stindb:
                     return access_size_op::byte;
                 case LerosInstr::ldindh: case LerosInstr::stindh:
@@ -89,12 +90,12 @@ public:
                 default:
                     return access_size_op::byte;
             }
-            // clang-format on
-        };
+      // clang-format on
+    };
 
-        reg_op << [=] {
-            // clang-format off
-            Switch(instr_op, LerosInstr) {
+    reg_op << [=] {
+      // clang-format off
+            switch(instr_op) {
                 case LerosInstr::add: case LerosInstr::sub: case LerosInstr::andr:
                 case LerosInstr::orr: case LerosInstr::xorr: case LerosInstr::load: case LerosInstr::ldaddr:
                     return mem_op::rd;
@@ -103,12 +104,12 @@ public:
                 default:
                     return mem_op::nop;
             }
-            // clang-format on
-        };
+      // clang-format on
+    };
 
-        imm_ctrl << [=] {
-            // clang-format off
-            Switch(instr_op, LerosInstr) {
+    imm_ctrl << [=] {
+      // clang-format off
+            switch(instr_op) {
                 case LerosInstr::addi: case LerosInstr::subi: case LerosInstr::andi: case LerosInstr::ori:
                 case LerosInstr::xori: case LerosInstr::loadi:
                     return imm_op::loadi;
@@ -132,12 +133,12 @@ public:
                 default:
                     return imm_op::nop;
             }
-            // clang-format on
-        };
+      // clang-format on
+    };
 
-        alu_op1_ctrl << [=] {
-            // clang-format off
-            Switch(instr_op, LerosInstr) {
+    alu_op1_ctrl << [=] {
+      // clang-format off
+            switch(instr_op) {
                 case LerosInstr::br:     case LerosInstr::brz:    case LerosInstr::brnz:   case LerosInstr::brp:
                 case LerosInstr::brn:    case LerosInstr::jal:
                     return alu_op1_op::pc;
@@ -148,12 +149,12 @@ public:
                     return alu_op1_op::acc;
 
             }
-            // clang-format on
-        };
+      // clang-format on
+    };
 
-        alu_op2_ctrl << [=] {
-            // clang-format off
-            Switch(instr_op, LerosInstr) {
+    alu_op2_ctrl << [=] {
+      // clang-format off
+            switch(instr_op) {
                 case LerosInstr::addi: case LerosInstr::subi: case LerosInstr::andi: case LerosInstr::ori:
                 case LerosInstr::xori: case LerosInstr::jal: case LerosInstr::br: case LerosInstr::brz:
                 case LerosInstr::brnz: case LerosInstr::brp: case LerosInstr::brn: case LerosInstr::ldind:
@@ -167,12 +168,12 @@ public:
                 default:
                     return alu_op2_op::unused;
             }
-            // clang-format on
-        };
+      // clang-format on
+    };
 
-        br_ctrl << [=] {
-            // clang-format off
-            Switch(instr_op, LerosInstr) {
+    br_ctrl << [=] {
+      // clang-format off
+            switch(instr_op) {
                 case LerosInstr::br:     return br_op::br;
                 case LerosInstr::brz:    return br_op::brz;
                 case LerosInstr::brnz:   return br_op::brnz;
@@ -181,44 +182,44 @@ public:
                 default:            return br_op::nop;
 
             }
-            // clang-format on
-        };
+      // clang-format on
+    };
 
-        addr_reg_src_ctrl << [=] {
-            Switch(instr_op, LerosInstr) {
-                case LerosInstr::ldaddr:
-                    return addr_reg_src::reg;
-                default:
-                    return addr_reg_src::addrreg;
-            }
-        };
+    addr_reg_src_ctrl << [=] {
+      switch (instr_op) {
+      case LerosInstr::ldaddr:
+        return addr_reg_src::reg;
+      default:
+        return addr_reg_src::addrreg;
+      }
+    };
 
-        reg_data_src_ctrl << [=] {
-            Switch(instr_op, LerosInstr) {
-                case LerosInstr::jal:
-                    return reg_data_src::alu;
-                case LerosInstr::store:
-                    return reg_data_src::acc;
-                default:
-                    return reg_data_src::nop;
-            }
-        };
-    }
+    reg_data_src_ctrl << [=] {
+      switch (instr_op) {
+      case LerosInstr::jal:
+        return reg_data_src::alu;
+      case LerosInstr::store:
+        return reg_data_src::acc;
+      default:
+        return reg_data_src::nop;
+      }
+    };
+  }
 
-    INPUTPORT_ENUM(instr_op, LerosInstr);
+  INPUTPORT_ENUM(instr_op, LerosInstr);
 
-    OUTPUTPORT_ENUM(reg_data_src_ctrl, reg_data_src);
-    OUTPUTPORT_ENUM(addr_reg_src_ctrl, addr_reg_src);
-    OUTPUTPORT_ENUM(acc_reg_src_ctrl, acc_reg_src);
-    OUTPUTPORT_ENUM(alu_ctrl, alu_op);
-    OUTPUTPORT_ENUM(imm_ctrl, imm_op);
-    OUTPUTPORT_ENUM(alu_op1_ctrl, alu_op1_op);
-    OUTPUTPORT_ENUM(alu_op2_ctrl, alu_op2_op);
-    OUTPUTPORT_ENUM(br_ctrl, br_op);
-    OUTPUTPORT_ENUM(dm_access_size, access_size_op);
-    OUTPUTPORT_ENUM(dm_op, mem_op);
-    OUTPUTPORT_ENUM(reg_op, mem_op);
+  OUTPUTPORT_ENUM(reg_data_src_ctrl, reg_data_src);
+  OUTPUTPORT_ENUM(addr_reg_src_ctrl, addr_reg_src);
+  OUTPUTPORT_ENUM(acc_reg_src_ctrl, acc_reg_src);
+  OUTPUTPORT_ENUM(alu_ctrl, alu_op);
+  OUTPUTPORT_ENUM(imm_ctrl, imm_op);
+  OUTPUTPORT_ENUM(alu_op1_ctrl, alu_op1_op);
+  OUTPUTPORT_ENUM(alu_op2_ctrl, alu_op2_op);
+  OUTPUTPORT_ENUM(br_ctrl, br_op);
+  OUTPUTPORT_ENUM(dm_access_size, access_size_op);
+  OUTPUTPORT_ENUM(dm_op, mem_op);
+  OUTPUTPORT_ENUM(reg_op, mem_op);
 };
 
-}  // namespace leros
-}  // namespace vsrtl
+} // namespace leros
+} // namespace vsrtl

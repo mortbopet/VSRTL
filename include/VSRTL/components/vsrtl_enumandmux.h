@@ -10,7 +10,7 @@
 namespace vsrtl {
 namespace core {
 
-enum class TestEnum{ A, B, C, D, E, F};
+enum class TestEnum { A, B, C, D, E, F };
 
 class EnumAndMux : public Design {
 public:
@@ -26,7 +26,7 @@ public:
     1 >> adder->op1;
     reg->out >> adder->op2;
 
-    (TestEnum::_size() - 1) >> cmp->op1;
+    (magic_enum::enum_count<TestEnum>() - 1) >> cmp->op1;
     reg->out >> cmp->op2;
 
     // Register next-state input mux
@@ -39,10 +39,10 @@ public:
 
   // Create objects
   SUBCOMPONENT(mux, TYPE(EnumMultiplexer<TestEnum, width>));
-  SUBCOMPONENT(adder, Adder<TestEnum::width()>);
-  SUBCOMPONENT(reg, Register<TestEnum::width()>);
-  SUBCOMPONENT(regIn_mux, TYPE(Multiplexer<2, TestEnum::width()>));
-  SUBCOMPONENT(cmp, Eq<TestEnum::width()>);
+  SUBCOMPONENT(adder, Adder<enumBitWidth<TestEnum>()>);
+  SUBCOMPONENT(reg, Register<enumBitWidth<TestEnum>()>);
+  SUBCOMPONENT(regIn_mux, TYPE(Multiplexer<2, enumBitWidth<TestEnum>()>));
+  SUBCOMPONENT(cmp, Eq<enumBitWidth<TestEnum>()>);
 };
 
 } // namespace core

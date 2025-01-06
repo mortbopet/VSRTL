@@ -11,10 +11,10 @@
 #include <typeinfo>
 #include <vector>
 
+#include "VSRTL/core/vsrtl_port.h"
 #include "VSRTL/interface/vsrtl_binutils.h"
 #include "VSRTL/interface/vsrtl_defines.h"
 #include "vsrtl_addressspace.h"
-#include "VSRTL/core/vsrtl_port.h"
 
 #include "VSRTL/interface/vsrtl_gfxobjecttypes.h"
 
@@ -31,16 +31,16 @@ namespace core {
 #define INPUTPORT(name, W)                                                     \
   Port<W> &name = this->template createInputPort<W>(#name)
 #define INPUTPORT_ENUM(name, E_t)                                              \
-  Port<E_t::width()> &name =                                                   \
-      this->template createInputPort<E_t::width(), E_t>(#name)
+  Port<enumBitWidth<E_t>()> &name =                                            \
+      this->template createInputPort<enumBitWidth<E_t>(), E_t>(#name)
 #define INPUTPORTS(name, W, N)                                                 \
   std::vector<Port<W> *> name = this->template createInputPorts<W>("in", N)
 
 #define OUTPUTPORT(name, W)                                                    \
   Port<W> &name = this->template createOutputPort<W>(#name)
 #define OUTPUTPORT_ENUM(name, E_t)                                             \
-  Port<E_t::width()> &name =                                                   \
-      this->template createOutputPort<E_t::width(), E_t>(#name)
+  Port<enumBitWidth<E_t>()> &name =                                            \
+      this->template createOutputPort<enumBitWidth<E_t>(), E_t>(#name)
 #define OUTPUTPORTS(name, W, N)                                                \
   std::vector<Port<W> *> name = this->template createOutputPorts<W>("in", N)
 

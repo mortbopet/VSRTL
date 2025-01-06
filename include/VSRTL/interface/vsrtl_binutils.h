@@ -12,6 +12,8 @@
 
 #include "VSRTL/interface/vsrtl_defines.h"
 
+#include "magic_enum/magic_enum.hpp"
+
 namespace vsrtl {
 
 // Sign extension of arbitrary bitfield size.
@@ -80,6 +82,12 @@ constexpr T floorlog2(const T &x) {
 template <typename T>
 constexpr const T ceillog2(const T &x) {
   return x == 1 || x == 0 ? 1 : floorlog2(x - 1) + 1;
+}
+
+template <typename T>
+constexpr size_t enumBitWidth() {
+  static_assert(std::is_enum<T>::value, "T must be an enum class");
+  return floorlog2(static_cast<size_t>(magic_enum::enum_count<T>())) + 1;
 }
 
 } // namespace vsrtl

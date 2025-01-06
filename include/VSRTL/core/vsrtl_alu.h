@@ -1,7 +1,7 @@
 #pragma once
 
-#include "VSRTL/interface/vsrtl_binutils.h"
 #include "VSRTL/core/vsrtl_component.h"
+#include "VSRTL/interface/vsrtl_binutils.h"
 #include "VSRTL/interface/vsrtl_defines.h"
 
 #include "VSRTL/core/vsrtl_port.h"
@@ -12,8 +12,22 @@
 namespace vsrtl {
 namespace core {
 
-enum class ALU_OPCODE{ ADD, SUB, MUL, DIV, AND, OR, XOR, SL, SRA, SRL, LUI, LT, LTU,
-     EQ};
+enum class ALU_OPCODE {
+  ADD,
+  SUB,
+  MUL,
+  DIV,
+  AND,
+  OR,
+  XOR,
+  SL,
+  SRA,
+  SRL,
+  LUI,
+  LT,
+  LTU,
+  EQ
+};
 
 template <unsigned int W>
 class ALU : public Component {
@@ -27,7 +41,7 @@ public:
 
   INPUTPORT(op1, W);
   INPUTPORT(op2, W);
-  INPUTPORT(ctrl, ALU_OPCODE::width());
+  INPUTPORT(ctrl, enumBitWidth<ALU_OPCODE>());
 
   OUTPUTPORT(out, W);
 
@@ -37,7 +51,7 @@ private:
     const auto uop2 = op2.uValue();
     const auto _op1 = op1.sValue();
     const auto _op2 = op2.sValue();
-    Switch(ctrl, ALU_OPCODE) {
+    switch (ctrl.uValue()) {
     case ALU_OPCODE::ADD:
       return uop1 + uop2;
     case ALU_OPCODE::SUB:
