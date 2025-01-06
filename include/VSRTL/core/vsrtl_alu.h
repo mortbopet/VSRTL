@@ -12,21 +12,23 @@
 namespace vsrtl {
 namespace core {
 
-enum class ALU_OPCODE {
-  ADD,
-  SUB,
-  MUL,
-  DIV,
-  AND,
-  OR,
-  XOR,
-  SL,
-  SRA,
-  SRL,
-  LUI,
-  LT,
-  LTU,
-  EQ
+struct ALU_OPCODE {
+  enum opcodes {
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+    AND,
+    OR,
+    XOR,
+    SL,
+    SRA,
+    SRL,
+    LUI,
+    LT,
+    LTU,
+    EQ
+  };
 };
 
 template <unsigned int W>
@@ -51,7 +53,7 @@ private:
     const auto uop2 = op2.uValue();
     const auto _op1 = op1.sValue();
     const auto _op2 = op2.sValue();
-    switch (ctrl.uValue()) {
+    switch (magic_enum::enum_value<ALU_OPCODE>(ctrl.uValue())) {
     case ALU_OPCODE::ADD:
       return uop1 + uop2;
     case ALU_OPCODE::SUB:

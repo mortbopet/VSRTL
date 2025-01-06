@@ -15,7 +15,7 @@ public:
     res << [=] {
       const auto op1s = op1.sValue();
       const auto op2s = op2.sValue();
-      switch (ctrl, alu_op) {
+      switch (ctrl) {
       case alu_op::nop:
         return VSRTL_VT_S(0);
       case alu_op::add:

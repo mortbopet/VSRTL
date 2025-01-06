@@ -16,7 +16,7 @@ public:
       : Component(name, parent) {
     alu_ctrl << [=] {
       // clang-format off
-            switch(instr_op, LerosInstr) {
+            switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::add:    case LerosInstr::addi:   case LerosInstr::br:     case LerosInstr::brz:
                 case LerosInstr::brnz:   case LerosInstr::brp:    case LerosInstr::brn:    case LerosInstr::jal:
                 case LerosInstr::ldind:  case LerosInstr::ldindb: case LerosInstr::ldindh: case LerosInstr::stind:
@@ -48,7 +48,7 @@ public:
 
     acc_reg_src_ctrl << [=] {
       // clang-format off
-            switch(instr_op, LerosInstr) {
+            switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::add:    case LerosInstr::addi:   case LerosInstr::sub:    case LerosInstr::subi:
                 case LerosInstr::shra:   case LerosInstr::andi:   case LerosInstr::andr:   case LerosInstr::xori:
                 case LerosInstr::xorr:   case LerosInstr::ori:    case LerosInstr::orr:    case LerosInstr::loadi:
@@ -67,7 +67,7 @@ public:
 
     dm_op << [=] {
       // clang-format off
-            switch(instr_op) {
+            switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::ldind:  case LerosInstr::ldindb: case LerosInstr::ldindh:
                     return mem_op::rd;
                 case LerosInstr::stind: case LerosInstr::stindb: case LerosInstr::stindh:
@@ -80,7 +80,7 @@ public:
 
     dm_access_size << [=] {
       // clang-format off
-            switch(instr_op) {
+            switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::ldindb: case LerosInstr::stindb:
                     return access_size_op::byte;
                 case LerosInstr::ldindh: case LerosInstr::stindh:
@@ -95,7 +95,7 @@ public:
 
     reg_op << [=] {
       // clang-format off
-            switch(instr_op) {
+            switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::add: case LerosInstr::sub: case LerosInstr::andr:
                 case LerosInstr::orr: case LerosInstr::xorr: case LerosInstr::load: case LerosInstr::ldaddr:
                     return mem_op::rd;
@@ -109,7 +109,7 @@ public:
 
     imm_ctrl << [=] {
       // clang-format off
-            switch(instr_op) {
+            switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::addi: case LerosInstr::subi: case LerosInstr::andi: case LerosInstr::ori:
                 case LerosInstr::xori: case LerosInstr::loadi:
                     return imm_op::loadi;
@@ -138,7 +138,7 @@ public:
 
     alu_op1_ctrl << [=] {
       // clang-format off
-            switch(instr_op) {
+            switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::br:     case LerosInstr::brz:    case LerosInstr::brnz:   case LerosInstr::brp:
                 case LerosInstr::brn:    case LerosInstr::jal:
                     return alu_op1_op::pc;
@@ -154,7 +154,7 @@ public:
 
     alu_op2_ctrl << [=] {
       // clang-format off
-            switch(instr_op) {
+            switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::addi: case LerosInstr::subi: case LerosInstr::andi: case LerosInstr::ori:
                 case LerosInstr::xori: case LerosInstr::jal: case LerosInstr::br: case LerosInstr::brz:
                 case LerosInstr::brnz: case LerosInstr::brp: case LerosInstr::brn: case LerosInstr::ldind:
@@ -173,7 +173,7 @@ public:
 
     br_ctrl << [=] {
       // clang-format off
-            switch(instr_op) {
+            switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::br:     return br_op::br;
                 case LerosInstr::brz:    return br_op::brz;
                 case LerosInstr::brnz:   return br_op::brnz;
@@ -186,7 +186,7 @@ public:
     };
 
     addr_reg_src_ctrl << [=] {
-      switch (instr_op) {
+      switch (magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
       case LerosInstr::ldaddr:
         return addr_reg_src::reg;
       default:
@@ -195,7 +195,7 @@ public:
     };
 
     reg_data_src_ctrl << [=] {
-      switch (instr_op) {
+      switch (magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
       case LerosInstr::jal:
         return reg_data_src::alu;
       case LerosInstr::store:

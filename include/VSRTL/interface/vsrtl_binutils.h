@@ -86,7 +86,6 @@ constexpr const T ceillog2(const T &x) {
 
 template <typename T>
 constexpr size_t enumBitWidth() {
-  static_assert(std::is_enum<T>::value, "T must be an enum class");
   return floorlog2(static_cast<size_t>(magic_enum::enum_count<T>())) + 1;
 }
 

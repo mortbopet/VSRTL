@@ -1,6 +1,12 @@
+/*
+Various hardware enums for Leros.
+Dev note: enum's are used instead of enum class to have "easy" access to the
+underlying enum index values, which is used when propagating enum values through
+VSRTL.
+the outer structs are used for namespacing the enums - required, since some enum
+values alias (e.g. 'nop').
+*/
 #pragma once
-
-
 
 namespace vsrtl {
 namespace leros {
@@ -10,20 +16,110 @@ namespace leros {
 
 #define LEROS_REGS 256
 
-enum class alu_op{ nop, add, sub, shra, alu_and, alu_or, alu_xor, loadi, loadhi, loadh2i, loadh3i};
-enum class imm_op{ nop, shl1, shl2, branch, loadi, loadhi, loadh2i, loadh3i, jal};
-enum class mem_op{ nop, wr, rd};
-enum class acc_reg_src{ acc, alu, reg, dm};
-enum class alu_op1_op{ acc, pc, addr};
-enum class alu_op2_op{ unused, reg, imm};
-enum class access_size_op{ byte, half, word};
-enum class br_op{ nop, br, brz, brnz, brp, brn};
-enum class LerosInstr{nop, add, addi, sub, subi, shra, load, loadi, andr, andi, orr, ori, xorr, xori, loadhi, loadh2i,
-     loadh3i, store, ioout, ioin, jal, ldaddr, ldind, ldindb, ldindh, stind, stindb, stindh, br, brz, brnz, brp, brn,
-     scall};
-enum class pc_reg_src{ alu, acc, pc2};
-enum class addr_reg_src{ reg, addrreg};
-enum class reg_data_src{ alu, acc, nop};
+struct alu_op {
+  enum opcodes {
+    nop,
+    add,
+    sub,
+    shra,
+    alu_and,
+    alu_or,
+    alu_xor,
+    loadi,
+    loadhi,
+    loadh2i,
+    loadh3i
+  };
+};
 
-}  // namespace leros
-}  // namespace vsrtl
+struct imm_op {
+  enum opcodes {
+    nop,
+    shl1,
+    shl2,
+    branch,
+    loadi,
+    loadhi,
+    loadh2i,
+    loadh3i,
+    jal
+  };
+};
+
+struct mem_op {
+  enum opcodes { nop, wr, rd };
+};
+
+struct acc_reg_src {
+  enum opcodes { acc, alu, reg, dm };
+};
+
+struct alu_op1_op {
+  enum opcodes { acc, pc, addr };
+};
+
+struct alu_op2_op {
+  enum opcodes { unused, reg, imm };
+};
+
+struct access_size_op {
+  enum opcodes { byte, half, word };
+};
+
+struct br_op {
+  enum opcodes { nop, br, brz, brnz, brp, brn };
+};
+
+struct LerosInstr {
+  enum opcodes {
+    nop,
+    add,
+    addi,
+    sub,
+    subi,
+    shra,
+    load,
+    loadi,
+    andr,
+    andi,
+    orr,
+    ori,
+    xorr,
+    xori,
+    loadhi,
+    loadh2i,
+    loadh3i,
+    store,
+    ioout,
+    ioin,
+    jal,
+    ldaddr,
+    ldind,
+    ldindb,
+    ldindh,
+    stind,
+    stindb,
+    stindh,
+    br,
+    brz,
+    brnz,
+    brp,
+    brn,
+    scall
+  };
+};
+
+struct pc_reg_src {
+  enum opcodes { alu, acc, pc2 };
+};
+
+struct addr_reg_src {
+  enum opcodes { reg, addrreg };
+};
+
+struct reg_data_src {
+  enum opcodes { alu, acc, nop };
+};
+
+} // namespace leros
+} // namespace vsrtl

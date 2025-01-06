@@ -160,11 +160,17 @@ public:
       : Port<W>(name, parent, type) {}
 
   bool isEnumPort() const override { return true; }
+
+  E_t enumValue() const { return magic_enum::enum_value<E_t>(this->uValue()); }
+  E_t stringToEnum(const std::string &str) const {
+    return magic_enum::enum_cast<E_t>(str).value();
+  }
+
   std::string valueToEnumString() const override {
-    return E_t::_from_integral(this->uValue())._to_string();
+    return std::string(magic_enum::enum_name<E_t>(this->enumValue()));
   }
   VSRTL_VT_U enumStringToValue(const char *str) const override {
-    return E_t::_from_string(str);
+    return magic_enum::enum_index<E_t>(stringToEnum(str)).value();
   }
 };
 

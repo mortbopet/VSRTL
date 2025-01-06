@@ -1,9 +1,9 @@
 #ifndef CONSTANT_H
 #define CONSTANT_H
 
-#include "VSRTL/interface/vsrtl_binutils.h"
 #include "VSRTL/core/vsrtl_component.h"
 #include "VSRTL/core/vsrtl_port.h"
+#include "VSRTL/interface/vsrtl_binutils.h"
 
 #include "VSRTL/interface/vsrtl_gfxobjecttypes.h"
 
@@ -43,6 +43,8 @@ public:
 private:
   VSRTL_VT_U m_value;
 };
+
+// Constant ports
 
 template <unsigned int W>
 void operator>>(VSRTL_VT_S c, Port<W> &toThis) {

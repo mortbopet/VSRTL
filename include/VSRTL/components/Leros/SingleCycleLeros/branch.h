@@ -14,7 +14,7 @@ public:
   Branch(const std::string &name, SimComponent *parent)
       : Component(name, parent) {
     do_branch << [=] {
-      switch (op, imm_op) {
+      switch (op) {
       case br_op::br:
         return true;
       case br_op::brp:
@@ -32,7 +32,7 @@ public:
     };
 
     pc_ctrl << [=] {
-      switch (op, imm_op) {
+      switch (op) {
       case br_op::br:
       case br_op::brp:
       case br_op::brn:
@@ -43,7 +43,7 @@ public:
         break;
       }
 
-      switch (instr_op, LerosInstr) {
+      switch (instr_op) {
       case LerosInstr::jal:
         return pc_reg_src::acc;
       default:
