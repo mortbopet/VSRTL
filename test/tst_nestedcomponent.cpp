@@ -1,6 +1,6 @@
 #include <QtTest/QTest>
 
-#include "vsrtl_nestedexponenter.h"
+#include "VSRTL/components/vsrtl_nestedexponenter.h"
 
 class tst_NestedComponents : public QObject {
   Q_OBJECT private slots : void functionalTest();

@@ -1,6 +1,6 @@
 #include <QtTest/QTest>
 
-#include "vsrtl_adderandreg.h"
+#include "VSRTL/components/vsrtl_adderandreg.h"
 
 class tst_adderAndReg : public QObject {
   Q_OBJECT private slots : void functionalTest();

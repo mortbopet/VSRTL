@@ -1,6 +1,6 @@
 #include <QtTest/QTest>
 
-#include "vsrtl_rannumgen.h"
+#include "VSRTL/components/vsrtl_rannumgen.h"
 
 using namespace vsrtl;
 using namespace core;

@@ -1,6 +1,6 @@
 #include <QtTest/QTest>
 
-#include "vsrtl_registerfilecmp.h"
+#include "VSRTL/components/vsrtl_registerfilecmp.h"
 
 class tst_registerfile : public QObject {
   Q_OBJECT private slots : void functionalTest();

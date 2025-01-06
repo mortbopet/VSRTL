@@ -4,3 +4,4 @@
 *.o
 Makefile
 build*/
+.vscode
