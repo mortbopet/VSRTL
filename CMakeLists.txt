@@ -25,13 +25,15 @@ set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 set(JUST_INSTALL_CEREAL ON)
 FetchContent_Declare(
     cereal
+    SYSTEM
     GIT_REPOSITORY https://github.com/USCiLab/cereal.git
-    GIT_TAG 51cbda5f30e56c801c07fe3d3aba5d7fb9e6cca4
+    GIT_TAG v1.3.2
 )
 FetchContent_MakeAvailable(cereal)
 
 FetchContent_Declare(
   signals
+  SYSTEM
   GIT_REPOSITORY https://github.com/pbhogan/Signals.git
   GIT_TAG 17881fb92ec314bb43549cc2cc8acfac24916f91
 )
@@ -49,9 +51,10 @@ target_include_directories(Signals INTERFACE ${signals_SOURCE_DIR})
 # Better enum
 FetchContent_Declare(
   magic-enum
+  SYSTEM
   GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
   GIT_TAG v0.9.7
-)
+  )
 
 FetchContent_MakeAvailable(magic-enum)
 
