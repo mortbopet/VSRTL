@@ -95,6 +95,10 @@ public:
 
   VSRTL_VT_U uValue() const override { return m_value & generateBitmask(W); }
   VSRTL_VT_S sValue() const override { return signextend<W>(m_value); }
+  template <typename T>
+  T eValue() const {
+    return magic_enum::enum_value<T>(m_value);
+  }
   unsigned int getWidth() const override { return W; }
 
   explicit operator VSRTL_VT_S() const { return signextend<W>(m_value); }

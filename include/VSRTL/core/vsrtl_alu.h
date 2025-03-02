@@ -51,7 +51,7 @@ private:
     const auto uop2 = op2.uValue();
     const auto _op1 = op1.sValue();
     const auto _op2 = op2.sValue();
-    switch (magic_enum::enum_value<ALU_OPCODE>(ctrl.uValue())) {
+    switch (ctrl.eValue<ALU_OPCODE>()) {
     case ALU_OPCODE::ADD:
       return uop1 + uop2;
     case ALU_OPCODE::SUB:

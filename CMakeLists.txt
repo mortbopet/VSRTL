@@ -90,6 +90,7 @@ add_library(vsrtl_lib INTERFACE)
 target_link_libraries(vsrtl_lib INTERFACE
     vsrtl::interface
     vsrtl::graphics
+    Signals::Signals
 )
 add_library(vsrtl::vsrtl ALIAS vsrtl_lib)
 
