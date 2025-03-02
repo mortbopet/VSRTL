@@ -148,7 +148,8 @@ public:
   template <typename F, typename E_t = decltype(std::declval<F>()()),
             typename = typename std::enable_if<std::is_enum<E_t>::value>::type>
   void operator<<(F &&propagationFunction) {
-    *this << [=]() { return static_cast<VSRTL_VT_U>(propagationFunction()); };
+    *this <<
+        [=]() { return magic_enum::enum_value<E_t>(propagationFunction()); };
   }
 
   // Value access operators
