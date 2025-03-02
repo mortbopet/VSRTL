@@ -46,7 +46,7 @@ if(NOT signals_POPULATED)
 endif()
 add_library(Signals INTERFACE)
 add_library(Signals::Signals ALIAS Signals)
-target_include_directories(Signals INTERFACE ${signals_SOURCE_DIR})
+target_include_directories(Signals SYSTEM INTERFACE ${signals_SOURCE_DIR})
 
 # Better enum
 FetchContent_Declare(
