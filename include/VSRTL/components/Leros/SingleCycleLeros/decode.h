@@ -13,9 +13,9 @@ class Decode : public Component {
 public:
   Decode(const std::string &name, SimComponent *parent)
       : Component(name, parent) {
-    lowByte << [=] { return instr.uValue() & 0xFF; };
+    lowByte << [this] { return instr.uValue() & 0xFF; };
 
-    op << [=] {
+    op << [this] {
       const uint8_t instruction = instr.uValue() >> 8;
 
       // clang-format off

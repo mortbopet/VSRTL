@@ -14,7 +14,7 @@ class Control : public Component {
 public:
   Control(const std::string &name, SimComponent *parent)
       : Component(name, parent) {
-    alu_ctrl << [=] {
+    alu_ctrl << [this] {
       // clang-format off
             switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::add:    case LerosInstr::addi:   case LerosInstr::br:     case LerosInstr::brz:
@@ -46,7 +46,7 @@ public:
       // clang-format on
     };
 
-    acc_reg_src_ctrl << [=] {
+    acc_reg_src_ctrl << [this] {
       // clang-format off
             switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::add:    case LerosInstr::addi:   case LerosInstr::sub:    case LerosInstr::subi:
@@ -65,7 +65,7 @@ public:
       // clang-format on
     };
 
-    dm_op << [=] {
+    dm_op << [this] {
       // clang-format off
             switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::ldind:  case LerosInstr::ldindb: case LerosInstr::ldindh:
@@ -78,7 +78,7 @@ public:
       // clang-format on
     };
 
-    dm_access_size << [=] {
+    dm_access_size << [this] {
       // clang-format off
             switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::ldindb: case LerosInstr::stindb:
@@ -93,7 +93,7 @@ public:
       // clang-format on
     };
 
-    reg_op << [=] {
+    reg_op << [this] {
       // clang-format off
             switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::add: case LerosInstr::sub: case LerosInstr::andr:
@@ -107,7 +107,7 @@ public:
       // clang-format on
     };
 
-    imm_ctrl << [=] {
+    imm_ctrl << [this] {
       // clang-format off
             switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::addi: case LerosInstr::subi: case LerosInstr::andi: case LerosInstr::ori:
@@ -136,7 +136,7 @@ public:
       // clang-format on
     };
 
-    alu_op1_ctrl << [=] {
+    alu_op1_ctrl << [this] {
       // clang-format off
             switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::br:     case LerosInstr::brz:    case LerosInstr::brnz:   case LerosInstr::brp:
@@ -152,7 +152,7 @@ public:
       // clang-format on
     };
 
-    alu_op2_ctrl << [=] {
+    alu_op2_ctrl << [this] {
       // clang-format off
             switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::addi: case LerosInstr::subi: case LerosInstr::andi: case LerosInstr::ori:
@@ -171,7 +171,7 @@ public:
       // clang-format on
     };
 
-    br_ctrl << [=] {
+    br_ctrl << [this] {
       // clang-format off
             switch(magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
                 case LerosInstr::br:     return br_op::br;
@@ -185,7 +185,7 @@ public:
       // clang-format on
     };
 
-    addr_reg_src_ctrl << [=] {
+    addr_reg_src_ctrl << [this] {
       switch (magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
       case LerosInstr::ldaddr:
         return addr_reg_src::reg;
@@ -194,7 +194,7 @@ public:
       }
     };
 
-    reg_data_src_ctrl << [=] {
+    reg_data_src_ctrl << [this] {
       switch (magic_enum::enum_value<LerosInstr>(instr_op.uValue())) {
       case LerosInstr::jal:
         return reg_data_src::alu;

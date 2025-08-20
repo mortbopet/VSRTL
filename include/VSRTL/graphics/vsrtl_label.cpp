@@ -25,7 +25,7 @@ Label::Label(QGraphicsItem *parent, const QString &text,
     m_visibilityAction->setCheckable(true);
     m_visibilityAction->setChecked(false);
     connect(m_visibilityAction.get(), &QAction::toggled,
-            [=](bool checked) { setVisible(checked); });
+            [this](bool checked) { setVisible(checked); });
   } else {
     m_visibilityAction = visibilityAction;
   }

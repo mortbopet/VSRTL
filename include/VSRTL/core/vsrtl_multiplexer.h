@@ -25,7 +25,7 @@ public:
   Multiplexer(const std::string &name, SimComponent *parent)
       : MultiplexerBase(name, parent) {
     setSpecialPort(GFX_MUX_SELECT, &select);
-    out << [=] { return ins.at(select.uValue())->uValue(); };
+    out << [this] { return ins.at(select.uValue())->uValue(); };
   }
 
   std::vector<PortBase *> getIns() override {
@@ -86,7 +86,7 @@ public:
       m_enumToPort[v.first] =
           this->ins.at(magic_enum::enum_index<E_t>(v.first).value());
     }
-    out << [=] { return ins.at(select.uValue())->uValue(); };
+    out << [this] { return ins.at(select.uValue())->uValue(); };
   }
 
   Port<W> &get(E_t e) {

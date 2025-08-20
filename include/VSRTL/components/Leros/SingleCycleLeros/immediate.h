@@ -13,7 +13,7 @@ class Immediate : public Component {
 public:
   Immediate(const std::string &name, SimComponent *parent)
       : Component(name, parent) {
-    imm << [=] {
+    imm << [this] {
       const auto imm8 = instr.uValue() & 0xFF;
       const auto simm8 = signextend<8>(imm8);
       const auto imm12 = instr.uValue() & 0xFFF;

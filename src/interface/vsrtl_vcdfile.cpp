@@ -44,7 +44,7 @@ Defer VCDFile::dumpVars() {
   for (const auto &it : m_dumpVars) {
     writeVarChange(it.first, it.second);
   }
-  return Defer([=] { writeLine("$end"); });
+  return Defer([this] { writeLine("$end"); });
 }
 
 Defer VCDFile::writeHeader() {
@@ -56,13 +56,13 @@ Defer VCDFile::writeHeader() {
 
   writeLine("$date " + oss.str() + " $end");
   writeLine("$timescale 1ns $end");
-  return Defer([=] { writeLine("$enddefinitions $end"); });
+  return Defer([this] { writeLine("$enddefinitions $end"); });
 }
 
 Defer VCDFile::scopeDef(const std::string &name) {
   writeLine("$scope module " + vcdSafeString(name) + " $end");
   m_scopeLevel++;
-  return Defer([=] {
+  return Defer([this] {
     m_scopeLevel--;
     writeLine("$upscope $end");
   });

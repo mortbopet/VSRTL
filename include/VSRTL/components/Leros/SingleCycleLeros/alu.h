@@ -12,7 +12,7 @@ namespace leros {
 class ALU : public Component {
 public:
   ALU(const std::string &name, SimComponent *parent) : Component(name, parent) {
-    res << [=] {
+    res << [this] {
       const auto op1s = op1.sValue();
       const auto op2s = op2.sValue();
       switch (static_cast<alu_op>(ctrl.uValue())) {

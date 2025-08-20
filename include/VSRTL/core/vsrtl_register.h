@@ -116,7 +116,7 @@ public:
   Register(const std::string &name, SimComponent *parent)
       : RegisterBase(name, parent) {
     // Calling out.propagate() will clock the register the register
-    out << ([=] { return m_savedValue; });
+    out << ([this] { return m_savedValue; });
   }
 
   void setInitValue(VSRTL_VT_U value) { m_initvalue = value; }
@@ -206,7 +206,7 @@ public:
 
     // Calling out.propagate() will clock the register the register.
     // Output the value for the last register in the shift register array
-    out << ([=] { return m_savedValues.at(stages.getValue() - 1); });
+    out << ([this] { return m_savedValues.at(stages.getValue() - 1); });
   }
 
   void setInitValue(VSRTL_VT_U value) { m_initvalue = value; }

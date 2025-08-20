@@ -35,7 +35,7 @@ public:
       throw std::runtime_error("Value does not fit inside provided bit-width");
     }
 
-    out << ([=] { return m_value; });
+    out << ([this] { return m_value; });
   }
 
   OUTPUTPORT(out, W);

@@ -133,7 +133,7 @@ class MemorySyncRd : public WrMemory<addrWidth, dataWidth, byteIndexed> {
 public:
   MemorySyncRd(const std::string &name, SimComponent *parent)
       : WrMemory<addrWidth, dataWidth, byteIndexed>(name, parent) {
-    data_out << [=] {
+    data_out << [this] {
       return this->read(
           this->addr.uValue(), dataWidth / CHAR_BIT,
           ceillog2((byteIndexed ? addrWidth : dataWidth) / CHAR_BIT));
@@ -156,7 +156,7 @@ public:
   SetGraphicsType(ClockedComponent);
   RdMemory(const std::string &name, SimComponent *parent)
       : Component(name, parent) {
-    data_out << [=] {
+    data_out << [this] {
       auto _addr = addr.uValue();
       auto val = this->read(
           _addr, dataWidth / CHAR_BIT,

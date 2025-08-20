@@ -269,7 +269,7 @@ public:
     // Construct all missing wires between the source port
     for (const auto &p : m_toGraphicPorts) {
       const auto iter = std::find_if(
-          idxToPointPtr.begin(), idxToPointPtr.end(), [=](const auto &itp) {
+          idxToPointPtr.begin(), idxToPointPtr.end(), [=, this](const auto &itp) {
             return itp.second == p->getPortPoint(vsrtl::SimPort::PortType::in);
           });
       if (iter == idxToPointPtr.end()) {

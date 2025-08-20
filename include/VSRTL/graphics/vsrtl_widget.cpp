@@ -201,7 +201,7 @@ void VSRTLWidget::sync() {
 }
 
 QFuture<void> VSRTLWidget::run(const std::function<void()> &cycleFunctor) {
-  auto future = QtConcurrent::run([=] {
+  auto future = QtConcurrent::run([=, this] {
     if (m_design) {
       m_design->setEnableSignals(false);
       if (cycleFunctor) {

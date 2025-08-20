@@ -12,7 +12,7 @@ namespace core {
   public:                                                                      \
     classname(const std::string &name, SimComponent *parent)                   \
         : Component(name, parent) {                                            \
-      out << [=] { return op1.valFunc() op op2.valFunc(); };                   \
+      out << [this] { return op1.valFunc() op op2.valFunc(); };                   \
     }                                                                          \
     OUTPUTPORT(out, 1);                                                        \
     INPUTPORT(op1, W);                                                         \

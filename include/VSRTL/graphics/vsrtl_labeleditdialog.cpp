@@ -3,6 +3,8 @@
 
 namespace vsrtl {
 
+LabelEditDialog::~LabelEditDialog(){ delete m_ui; }
+
 LabelEditDialog::LabelEditDialog(QWidget *parent)
     : QDialog(parent), m_ui(new Ui::LabelEditDialog) {
   m_ui->setupUi(this);
@@ -19,7 +21,7 @@ LabelEditDialog::LabelEditDialog(QWidget *parent)
   alignment->setExclusive(true);
   m_ui->alignCenter->setChecked(true);
 
-  connect(m_ui->text, &QTextEdit::textChanged, [=]() {
+  connect(m_ui->text, &QTextEdit::textChanged, [this]() {
     const auto text = m_ui->text->toPlainText();
     m_ui->buttonBox->button(QDialogButtonBox::Ok)->setEnabled(!text.isEmpty());
   });

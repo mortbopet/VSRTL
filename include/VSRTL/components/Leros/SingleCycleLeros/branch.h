@@ -13,7 +13,7 @@ class Branch : public Component {
 public:
   Branch(const std::string &name, SimComponent *parent)
       : Component(name, parent) {
-    do_branch << [=] {
+    do_branch << [this] {
       switch (static_cast<br_op>(op.uValue())) {
       case br_op::br:
         return true;
@@ -31,7 +31,7 @@ public:
       }
     };
 
-    pc_ctrl << [=] {
+    pc_ctrl << [this] {
       switch (static_cast<br_op>(op.uValue())) {
       case br_op::br:
       case br_op::brp:

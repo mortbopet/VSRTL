@@ -29,9 +29,9 @@ ParameterDialog::ParameterDialog(SimComponent *component, QWidget *parent)
       }
 
       connect(intWidget, QOverload<int>::of(&QSpinBox::valueChanged),
-              [=](int value) {
+              [=, this](int value) {
                 if (value != pt->getValue()) {
-                  m_parameterChangeApplierFunctions[p] = [=] {
+                  m_parameterChangeApplierFunctions[p] = [=, this] {
                     pt->setValue(value);
                   };
                 } else {
@@ -42,9 +42,9 @@ ParameterDialog::ParameterDialog(SimComponent *component, QWidget *parent)
       auto *textWidget = new QLineEdit();
       textWidget->setText(QString::fromStdString(pt->getValue()));
       editWidget = textWidget;
-      connect(textWidget, &QLineEdit::textChanged, [=](const QString &text) {
+      connect(textWidget, &QLineEdit::textChanged, [=, this](const QString &text) {
         if (text != QString::fromStdString(pt->getValue())) {
-          m_parameterChangeApplierFunctions[p] = [=] {
+          m_parameterChangeApplierFunctions[p] = [=, this] {
             pt->setValue(text.toStdString());
           };
         } else {
@@ -55,9 +55,9 @@ ParameterDialog::ParameterDialog(SimComponent *component, QWidget *parent)
       auto *intWidget = new QCheckBox();
       intWidget->setChecked(pt->getValue());
       editWidget = intWidget;
-      connect(intWidget, &QCheckBox::toggled, [=](bool state) {
+      connect(intWidget, &QCheckBox::toggled, [=, this](bool state) {
         if (state != pt->getValue()) {
-          m_parameterChangeApplierFunctions[p] = [=] { pt->setValue(state); };
+          m_parameterChangeApplierFunctions[p] = [=, this] { pt->setValue(state); };
         } else {
           m_parameterChangeApplierFunctions.erase(pt);
         }

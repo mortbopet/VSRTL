@@ -14,7 +14,7 @@ public:
   Shift(const std::string &name, SimComponent *parent, ShiftType t,
         unsigned int shamt)
       : Component(name, parent) {
-    out << [=] {
+    out << [=, this] {
       if (t == ShiftType::sl) {
         return in.uValue() << shamt;
       } else if (t == ShiftType::sra) {

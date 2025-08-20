@@ -170,7 +170,7 @@ void PortGraphic::setSide(Side side) {
 }
 
 void PortGraphic::propagateRedraw() {
-  m_port->traverseToSinks([=](SimPort *port) {
+  m_port->traverseToSinks([this](SimPort *port) {
     if (auto *portGraphic = port->getGraphic<PortGraphic>()) {
       portGraphic->redraw();
     }
@@ -316,7 +316,7 @@ void PortGraphic::updatePenColor() {
 }
 
 void PortGraphic::updatePen(bool aboutToBeSelected, bool aboutToBeDeselected) {
-  m_port->traverseToRoot([=](SimPort *node) {
+  m_port->traverseToRoot([=, this](SimPort *node) {
     if (node->isConstant()) {
       return;
     }

@@ -25,7 +25,7 @@ public:
 
   Qt::Alignment getAlignment() const;
 
-  ~LabelEditDialog() { delete m_ui; }
+  ~LabelEditDialog();
 };
 
 } // namespace vsrtl

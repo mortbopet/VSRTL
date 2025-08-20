@@ -21,7 +21,7 @@ class Collator : public Component {
 public:
   Collator(const std::string &name, SimComponent *parent)
       : Component(name, parent) {
-    out << [=] {
+    out << [this] {
       VSRTL_VT_U value = 0;
       for (unsigned i = 0; i < W; i++) {
         value |= static_cast<bool>(*in[i]) << i;

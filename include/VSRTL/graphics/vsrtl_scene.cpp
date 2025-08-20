@@ -30,7 +30,7 @@ VSRTLScene::VSRTLScene(QObject *parent) : QGraphicsScene(parent) {
   m_darkmodeAction = new QAction("Darkmode", this);
   m_darkmodeAction->setCheckable(true);
   m_darkmodeAction->setChecked(m_darkmode);
-  connect(m_darkmodeAction, &QAction::toggled, [=](bool checked) {
+  connect(m_darkmodeAction, &QAction::toggled, [this](bool checked) {
     m_darkmode = checked;
 
     // Background
@@ -154,22 +154,22 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
   // ==================== Port modifying actions ====================
   auto *portMenu = menu.addMenu("Ports");
   auto *showValuesAction = portMenu->addAction("Show all values");
-  connect(showValuesAction, &QAction::triggered, [=] {
+  connect(showValuesAction, &QAction::triggered, [this] {
     this->setPortValuesVisibleForType(vsrtl::SimPort::PortType::out, true);
   });
 
   auto *hideValuesAction = portMenu->addAction("Hide all values");
-  connect(hideValuesAction, &QAction::triggered, [=] {
+  connect(hideValuesAction, &QAction::triggered, [this] {
     this->setPortValuesVisibleForType(vsrtl::SimPort::PortType::out, false);
   });
 
   auto *showWidthsAction = portMenu->addAction("Show all widths");
   connect(showWidthsAction, &QAction::triggered,
-          [=] { this->setPortWidthsVisible(true); });
+          [this] { this->setPortWidthsVisible(true); });
 
   auto *hideWidthsAction = portMenu->addAction("Hide all widths");
   connect(hideWidthsAction, &QAction::triggered,
-          [=] { this->setPortWidthsVisible(false); });
+          [this] { this->setPortWidthsVisible(false); });
 
   // ==================== Scene modifying actions ====================
   if (!m_isLocked) {
@@ -216,7 +216,7 @@ void VSRTLScene::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto *showGridAction = drawMenu->addAction("Show grid");
     showGridAction->setCheckable(true);
     showGridAction->setChecked(m_showGrid);
-    connect(showGridAction, &QAction::toggled, [=](bool checked) {
+    connect(showGridAction, &QAction::toggled, [this](bool checked) {
       m_showGrid = checked;
       this->update();
     });

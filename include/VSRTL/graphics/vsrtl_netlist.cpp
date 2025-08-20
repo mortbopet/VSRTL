@@ -51,14 +51,14 @@ Netlist::Netlist(SimDesign &design, QWidget *parent)
   const QIcon expandIcon = QIcon(":/vsrtl_icons/expand.svg");
   QAction *expandAct = new QAction(expandIcon, "Expand All", this);
   connect(expandAct, &QAction::triggered,
-          [=] { this->setCurrentViewExpandState(true); });
+          [this] { this->setCurrentViewExpandState(true); });
   ui->expand->setIcon(expandIcon);
   connect(ui->expand, &QPushButton::clicked, expandAct, &QAction::trigger);
 
   const QIcon collapseIcon = QIcon(":/vsrtl_icons/collapse.svg");
   QAction *collapseAct = new QAction(collapseIcon, "Collapse All", this);
   connect(collapseAct, &QAction::triggered,
-          [=] { this->setCurrentViewExpandState(false); });
+          [this] { this->setCurrentViewExpandState(false); });
   ui->collapse->setIcon(collapseIcon);
   connect(ui->collapse, &QPushButton::clicked, collapseAct, &QAction::trigger);
 }

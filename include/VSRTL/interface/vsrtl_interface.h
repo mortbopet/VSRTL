@@ -199,7 +199,7 @@ public:
                   "Must cast to a simulator-specific port type");
     std::vector<T *> portsInConnection;
     traverseConnection(
-        [=](T *port, std::vector<T *> &ports) { ports.push_back(port); },
+        [this](T *port, std::vector<T *> &ports) { ports.push_back(port); },
         portsInConnection);
     return portsInConnection;
   }
@@ -706,7 +706,7 @@ public:
   bool clockedSignalsEnabled() const { return m_emitsClockedSignals; }
 
   virtual std::vector<SimComponent *> getRegisters() const {
-    return getSubComponents([=](SimComponent &c) { return c.isSynchronous(); });
+    return getSubComponents([this](SimComponent &c) { return c.isSynchronous(); });
   }
 
   long long getCycleCount() const { return m_cycleCount; }

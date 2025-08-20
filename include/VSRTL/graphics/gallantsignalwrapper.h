@@ -25,7 +25,7 @@ class GallantSignalWrapper : public GallantSignalWrapperBase {
 public:
   GallantSignalWrapper(T *obj, F &&fun, D &sig,
                        Qt::ConnectionType type = Qt::AutoConnection) {
-    wrapper = [=] { QMetaObject::invokeMethod(obj, fun, type); };
+    wrapper = [=, this] { QMetaObject::invokeMethod(obj, fun, type); };
     sig.Connect(this, &GallantSignalWrapper::ftunnel);
   }
 

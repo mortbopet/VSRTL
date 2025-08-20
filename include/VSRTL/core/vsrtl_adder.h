@@ -14,7 +14,7 @@ public:
   SetGraphicsType(Adder);
   Adder(const std::string &name, SimComponent *parent)
       : Component(name, parent) {
-    out << [=] { return op1.sValue() + op2.sValue(); };
+    out << [this] { return op1.sValue() + op2.sValue(); };
   }
 
   INPUTPORT(op1, W);

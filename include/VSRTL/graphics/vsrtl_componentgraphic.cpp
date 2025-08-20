@@ -78,7 +78,7 @@ void ComponentGraphic::initialize(bool doPlaceAndRoute) {
   m_labelVisibilityAction->setCheckable(true);
   m_labelVisibilityAction->setChecked(true);
   connect(m_labelVisibilityAction.get(), &QAction::toggled,
-          [=](bool checked) { m_label->setVisible(checked); });
+          [this](bool checked) { m_label->setVisible(checked); });
 
   m_label =
       new Label(this, QString::fromStdString(m_component->getDisplayName()),
@@ -268,11 +268,11 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto *portMenu = menu.addMenu("Ports");
     auto *showOutputsAction = portMenu->addAction("Show output values");
     auto *hideOutputsAction = portMenu->addAction("Hide output values");
-    connect(showOutputsAction, &QAction::triggered, [=] {
+    connect(showOutputsAction, &QAction::triggered, [this] {
       for (auto &c : m_outputPorts)
         c->setValueLabelVisible(true);
     });
-    connect(hideOutputsAction, &QAction::triggered, [=] {
+    connect(hideOutputsAction, &QAction::triggered, [this] {
       for (auto &c : m_outputPorts)
         c->setValueLabelVisible(false);
     });
@@ -285,7 +285,7 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
           auto *showPortAction =
               hiddenPortsMenu->addAction(QString::fromStdString(p->getName()));
           connect(showPortAction, &QAction::triggered,
-                  [=] { gp->setUserVisible(true); });
+                  [=, this] { gp->setUserVisible(true); });
         }
       }
       if (hiddenPortsMenu->actions().size() == 0) {
@@ -307,7 +307,7 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
           indicatorAction->setCheckable(true);
           indicatorAction->setChecked(m_indicators.count(p));
           connect(indicatorAction, &QAction::triggered,
-                  [=](bool checked) { setIndicatorState(p, checked); });
+                  [=, this](bool checked) { setIndicatorState(p, checked); });
         }
       }
     }
@@ -322,14 +322,14 @@ void ComponentGraphic::contextMenuEvent(QGraphicsSceneContextMenuEvent *event) {
     auto *rotateClockwiseAction = rotationMenu->addAction("+90º");
     auto *rotateCounterClockwiseAction = rotationMenu->addAction("-90º");
     connect(rotateClockwiseAction, &QAction::triggered,
-            [=] { gridRotate(RotationDirection::RightHand); });
+            [this] { gridRotate(RotationDirection::RightHand); });
     connect(rotateCounterClockwiseAction, &QAction::triggered,
-            [=] { gridRotate(RotationDirection::LeftHand); });
+            [this] { gridRotate(RotationDirection::LeftHand); });
   }
 
   if ((m_component->getParent() != nullptr) && !isLocked()) {
     auto *hideAction = menu.addAction("Hide component");
-    connect(hideAction, &QAction::triggered, [=] {
+    connect(hideAction, &QAction::triggered, [this] {
       m_userHidden = true;
       this->hide();
     });

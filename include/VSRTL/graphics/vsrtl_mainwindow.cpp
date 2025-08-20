@@ -91,7 +91,7 @@ void MainWindow::createToolbar() {
   QAction *clockTimerAct = new QAction(startTimerIcon, "Auto Clock", this);
   clockTimerAct->setCheckable(true);
   clockTimerAct->setChecked(false);
-  connect(clockTimerAct, &QAction::triggered, this, [=] {
+  connect(clockTimerAct, &QAction::triggered, this, [=, this] {
     if (timer->isActive()) {
       timer->stop();
       clockTimerAct->setIcon(startTimerIcon);
@@ -118,7 +118,7 @@ void MainWindow::createToolbar() {
   runAct->setChecked(false);
   connect(runAct, &QAction::triggered, [this](bool state) {
     if (state) {
-      auto thread = QThread::create([=] { this->m_vsrtlWidget->run(); });
+      auto thread = QThread::create([this] { this->m_vsrtlWidget->run(); });
       thread->start();
     } else {
       this->m_vsrtlWidget->stop();

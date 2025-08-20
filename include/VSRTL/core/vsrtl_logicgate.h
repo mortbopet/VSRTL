@@ -20,7 +20,7 @@ class And : public LogicGate<W, nInputs> {
 public:
   SetGraphicsType(And) And(const std::string &name, SimComponent *parent)
       : LogicGate<W, nInputs>(name, parent) {
-    this->out << [=] {
+    this->out << [this] {
       auto v = this->in[0]->uValue();
       for (unsigned i = 1; i < this->in.size(); i++) {
         v = v & this->in[i]->uValue();
@@ -35,7 +35,7 @@ class Nand : public LogicGate<W, nInputs> {
 public:
   SetGraphicsType(Nand) Nand(const std::string &name, SimComponent *parent)
       : LogicGate<W, nInputs>(name, parent) {
-    this->out << [=] {
+    this->out << [this] {
       auto v = this->in[0]->uValue();
       for (unsigned i = 1; i < this->in.size(); i++) {
         v = v & this->in[i]->uValue();
@@ -51,7 +51,7 @@ public:
   SetGraphicsType(Or);
   Or(const std::string &name, SimComponent *parent)
       : LogicGate<W, nInputs>(name, parent) {
-    this->out << [=] {
+    this->out << [this] {
       auto v = this->in[0]->uValue();
       for (unsigned i = 1; i < this->in.size(); i++) {
         v = v | this->in[i]->uValue();
@@ -67,7 +67,7 @@ public:
   SetGraphicsType(Xor);
   Xor(const std::string &name, SimComponent *parent)
       : LogicGate<W, nInputs>(name, parent) {
-    this->out << [=] {
+    this->out << [this] {
       auto v = this->in[0]->uValue();
       for (unsigned i = 1; i < this->in.size(); i++) {
         v = v ^ this->in[i]->uValue();
@@ -83,7 +83,7 @@ public:
   SetGraphicsType(Not);
   Not(const std::string &name, SimComponent *parent)
       : LogicGate<W, nInputs>(name, parent) {
-    this->out << [=] { return ~this->in[0]->uValue(); };
+    this->out << [this] { return ~this->in[0]->uValue(); };
   }
 };
 
