@@ -15,7 +15,7 @@ struct PortPos {
   int index;
   bool validIndex() const { return index > 0; }
 
-  bool operator==(const PortPos &rhs) {
+  bool operator==(const PortPos &rhs) const {
     return (this->index == rhs.index) && (this->side == rhs.side);
   }
 };
