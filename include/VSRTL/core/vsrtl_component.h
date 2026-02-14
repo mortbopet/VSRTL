@@ -250,13 +250,13 @@ public:
   virtual void verifyComponent() const {
     for (const auto &ip : getPorts<SimPort::PortType::in, PortBase>()) {
       if (!ip->isConnected()) {
-        throw std::runtime_error("Component: '" + getName() +
+        throw std::runtime_error("Component: '" + getHierName() +
                                  "' has unconnected input '" + ip->getName());
       }
     }
     for (const auto &op : getPorts<SimPort::PortType::out, PortBase>()) {
       if (!op->isConnected()) {
-        throw std::runtime_error("Component: '" + getName() +
+        throw std::runtime_error("Component: '" + getHierName() +
                                  "' has unconnected output '" + op->getName());
       }
     }
