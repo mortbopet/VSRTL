@@ -26,6 +26,10 @@ public:
 
 protected:
   void wheelEvent(QWheelEvent *) override;
+  void mousePressEvent(QMouseEvent *) override;
+  void mouseMoveEvent(QMouseEvent *) override;
+  void mouseReleaseEvent(QMouseEvent *) override;
+  void resizeEvent(QResizeEvent *) override;
 
 private slots:
   void setupMatrix();
@@ -33,8 +37,19 @@ private slots:
   void zoomOut(double level = s_zoomInterval);
 
 private:
+  /**
+   * @brief ensureNavigableSceneRect
+   * Grows the scene rect so that it always extends generously beyond both the
+   * content and the current viewport. This makes the view freely pannable in
+   * every direction and allows the content to be centered regardless of its
+   * aspect ratio. The current view center is preserved across the change.
+   */
+  void ensureNavigableSceneRect();
+
   QOpenGLWidget *m_renderer;
   double m_zoom = s_zoomDefault;
+  bool m_panning = false;
+  QPoint m_lastPanPos;
 };
 } // namespace vsrtl
 

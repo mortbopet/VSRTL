@@ -1,7 +1,11 @@
 #include "vsrtl_view.h"
 
-#include <QSlider>
+#include <QMouseEvent>
+#include <QResizeEvent>
+#include <QScrollBar>
 #include <QWheelEvent>
+
+#include <algorithm>
 
 #include "math.h"
 
@@ -54,6 +58,7 @@ void VSRTLView::zoomToFit(const QGraphicsItem *tlc) {
   }
 
   setupMatrix();
+  ensureNavigableSceneRect();
 }
 
 void VSRTLView::wheelEvent(QWheelEvent *e) {
@@ -85,5 +90,72 @@ void VSRTLView::setupMatrix() {
   matrix.scale(scale, scale);
 
   setTransform(matrix);
+}
+
+void VSRTLView::ensureNavigableSceneRect() {
+  if (scene() == nullptr)
+    return;
+
+  const QRectF content = scene()->itemsBoundingRect();
+  const QRectF viewportScene = mapToScene(viewport()->rect()).boundingRect();
+  QRectF wanted = content.united(viewportScene);
+
+  // Extend by (at least) one content/viewport span in each direction so the
+  // view can always be panned past its content and the content can be centered.
+  const qreal marginX = std::max(content.width(), viewportScene.width());
+  const qreal marginY = std::max(content.height(), viewportScene.height());
+  wanted.adjust(-marginX, -marginY, marginX, marginY);
+
+  const QRectF current = sceneRect();
+  if (!current.contains(wanted)) {
+    // Preserve the current view center across the scene rect change to avoid
+    // any visual jump while panning.
+    const QPointF center = mapToScene(viewport()->rect().center());
+    setSceneRect(current.isEmpty() ? wanted : current.united(wanted));
+    centerOn(center);
+  }
+}
+
+void VSRTLView::mousePressEvent(QMouseEvent *e) {
+  const bool startPan =
+      e->button() == Qt::MiddleButton ||
+      (e->button() == Qt::LeftButton && (e->modifiers() & Qt::ControlModifier));
+  if (startPan) {
+    m_panning = true;
+    m_lastPanPos = e->pos();
+    viewport()->setCursor(Qt::ClosedHandCursor);
+    e->accept();
+    return;
+  }
+  QGraphicsView::mousePressEvent(e);
+}
+
+void VSRTLView::mouseMoveEvent(QMouseEvent *e) {
+  if (m_panning) {
+    const QPoint delta = e->pos() - m_lastPanPos;
+    m_lastPanPos = e->pos();
+    ensureNavigableSceneRect();
+    horizontalScrollBar()->setValue(horizontalScrollBar()->value() - delta.x());
+    verticalScrollBar()->setValue(verticalScrollBar()->value() - delta.y());
+    e->accept();
+    return;
+  }
+  QGraphicsView::mouseMoveEvent(e);
+}
+
+void VSRTLView::mouseReleaseEvent(QMouseEvent *e) {
+  if (m_panning &&
+      (e->button() == Qt::MiddleButton || e->button() == Qt::LeftButton)) {
+    m_panning = false;
+    viewport()->setCursor(Qt::ArrowCursor);
+    e->accept();
+    return;
+  }
+  QGraphicsView::mouseReleaseEvent(e);
+}
+
+void VSRTLView::resizeEvent(QResizeEvent *e) {
+  QGraphicsView::resizeEvent(e);
+  ensureNavigableSceneRect();
 }
 } // namespace vsrtl
