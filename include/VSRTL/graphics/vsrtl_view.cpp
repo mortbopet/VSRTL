@@ -35,30 +35,47 @@ ComponentGraphic *VSRTLView::lookupGraphicForComponent(const SimComponent *c) {
 }
 
 void VSRTLView::zoomToFit(const QGraphicsItem *tlc) {
-  if (tlc == nullptr) {
+  if (tlc == nullptr || scene() == nullptr) {
     return;
   }
 
-  fitInView(tlc->boundingRect(), Qt::KeepAspectRatio);
-  const auto m = transform();
+  // Fit the *visible* scene content, with a small margin so nothing is clipped
+  // at the viewport edges. We compute this from visible items only: hidden wire
+  // graphics retain large, stale bounding rects, so relying on the top-level
+  // component's childrenBoundingRect (or the scene's itemsBoundingRect) would
+  // inflate the fitted area and push the diagram off-center.
+  QRectF target;
+  const auto sceneItems = scene()->items();
+  for (auto *item : sceneItems) {
+    if (item->isVisibleTo(nullptr))
+      target = target.united(item->sceneBoundingRect());
+  }
+  if (target.isNull())
+    target = tlc->sceneBoundingRect();
+  const qreal margin = 0.02 * std::max(target.width(), target.height());
+  target.adjust(-margin, -margin, margin, margin);
 
-  // When zooming to fit, we want to adjust the current view via. fitInView, and
-  // then derive the zoom factor corresponding to the scale factor which was set
-  // by fitInView.
+  // Ensure there is room around the content in every direction *before*
+  // fitting, so fitInView can properly center the target within the viewport.
+  ensureNavigableSceneRect();
 
-  if (m.m11() < 0.1) {
+  // fitInView both scales and centers the target within the viewport.
+  fitInView(target, Qt::KeepAspectRatio);
+  const qreal scale = transform().m11();
+
+  if (scale < 0.1) {
     // There is some strange bug in the QGraphicsScene/QGraphicsView logic which
     // does not calculate the bounding matrix of the top level component
-    // correctly, if the qgraphicsview is not currently visible. In this case,
-    // revert to the deafult zoom amount if some too small zoom is detected when
-    // trying to fit into view.
+    // correctly if the view is not currently visible. In this case, revert to
+    // the default zoom amount.
     m_zoom = s_zoomDefault;
+    setupMatrix();
   } else {
-    m_zoom = std::log2(transform().m11()) * s_zoomScale + s_zoomDefault;
+    // Keep the zoom state in sync with the scale that fitInView applied,
+    // without re-applying the transform via setupMatrix() (which would reset
+    // the view to the top-left and undo fitInView's centering).
+    m_zoom = std::log2(scale) * s_zoomScale + s_zoomDefault;
   }
-
-  setupMatrix();
-  ensureNavigableSceneRect();
 }
 
 void VSRTLView::wheelEvent(QWheelEvent *e) {
