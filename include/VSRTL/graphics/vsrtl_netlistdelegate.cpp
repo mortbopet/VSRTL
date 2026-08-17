@@ -25,7 +25,9 @@ QWidget *NetlistDelegate::createEditor(QWidget *parent,
   editor->setFont(QFont("monospace"));
 
   QPalette palette = QApplication::palette();
-  palette.setBrush(QPalette::Text, Qt::blue);
+  // Use a blue that stays legible on both light and dark backgrounds.
+  const bool dark = palette.color(QPalette::Base).lightness() < 128;
+  palette.setBrush(QPalette::Text, dark ? QColor(0x4d, 0x9e, 0xff) : Qt::blue);
   editor->setPalette(palette);
   editor->setValidator(m_validator);
 

@@ -37,7 +37,7 @@ void ValueLabel::paint(QPainter *painter,
     painter->fillRect(textRect, darkmode ? QColor{0x45, 0x45, 0x45}
                                          : QColorConstants::White);
     painter->setBrush(Qt::NoBrush);
-    painter->setPen(QPen(Qt::black, 1));
+    painter->setPen(QPen(darkmode ? QColor{0x5a, 0x61, 0x6c} : Qt::black, 1));
     painter->drawRect(textRect);
   }
   painter->restore();

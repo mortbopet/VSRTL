@@ -573,14 +573,21 @@ void ComponentGraphic::paint(QPainter *painter,
                              const QStyleOptionGraphicsItem *option,
                              QWidget *w) {
   painter->save();
+  const bool darkmode = static_cast<VSRTLScene *>(scene())->darkmode();
   QColor color;
-  if (static_cast<VSRTLScene *>(scene())->darkmode()) {
-    color = hasSubcomponents() && isExpanded()
-                ? QColorConstants::DarkGray.darker()
-                : QColor{0x80, 0x84, 0x8a};
+  QColor borderColor;
+  if (darkmode) {
+    // Dark mode: draw components as subtly-elevated dark surfaces (a leaf is
+    // slightly lighter than an expanded parent) with a soft gray border. This
+    // reads as distinct panels without the harsh, high-contrast outline that a
+    // black border produces against a dark background.
+    color = hasSubcomponents() && isExpanded() ? QColor{0x2c, 0x31, 0x3a}
+                                               : QColor{0x3b, 0x41, 0x4d};
+    borderColor = QColor{0x5a, 0x61, 0x6c};
   } else {
     color = hasSubcomponents() && isExpanded() ? QColor{0xec, 0xf0, 0xf1}
                                                : QColorConstants::White;
+    borderColor = Qt::black;
   }
 
   QColor fillColor =
@@ -594,6 +601,7 @@ void ComponentGraphic::paint(QPainter *painter,
   // Draw component outline
   QPen oldPen = painter->pen();
   QPen pen = oldPen;
+  pen.setColor(borderColor);
   int width = COMPONENT_BORDER_WIDTH;
   if (option->state & QStyle::State_Selected)
     width += 1;
@@ -619,7 +627,8 @@ void ComponentGraphic::paint(QPainter *painter,
       if (isExpanded()) {
         // Draw grid
         painter->save();
-        painter->setPen(QPen(Qt::lightGray, 1));
+        painter->setPen(
+            QPen(darkmode ? QColor{0x45, 0x4b, 0x54} : Qt::lightGray, 1));
         painter->drawPoints(m_gridPoints);
         painter->restore();
       }

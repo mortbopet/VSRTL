@@ -34,9 +34,8 @@ VSRTLScene::VSRTLScene(QObject *parent) : QGraphicsScene(parent) {
     m_darkmode = checked;
 
     // Background
-    this->setBackgroundBrush(m_darkmode
-                                 ? QBrush(QColorConstants::DarkGray.darker(300))
-                                 : Qt::NoBrush);
+    this->setBackgroundBrush(
+        m_darkmode ? QBrush(QColor{0x21, 0x25, 0x2b}) : Qt::NoBrush);
 
     this->update();
   });
